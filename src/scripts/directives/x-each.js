@@ -1,7 +1,6 @@
 import { directive } from '../directives';
 import { saferEval } from '../utils';
 
-let iterations = {};
 let contextStack = [];
 
 directive('each', (el, expression, attribute, x, component) => {
@@ -21,18 +20,12 @@ directive('each', (el, expression, attribute, x, component) => {
    * Step 2: extracting the data, based on the expression & nested context
    */
   let dataItems;
-
-  iterations[items] = 0;
   if (Number.isInteger(+items)) {
     dataItems = Array.from({length: +items}, (_, i) => i + 1);
   } else {
-    let parentContext = contextStack.length ? contextStack[contextStack.length - 1] : items;
-    if (iterations[items] >= 0) {
-      items = items.replace(/^[^.]+/, `${items}[${iterations[items]}]`)
+    if (contextStack.length) {
+      items = items.replace(/^[^.]+/, `${contextStack[contextStack.length - 1]}`);
     }
-    console.log(el)
-    console.log(items)
-    console.log(parentContext)
     dataItems = saferEval(`${items}`, component.data);
   }
 
@@ -43,7 +36,7 @@ directive('each', (el, expression, attribute, x, component) => {
     el.nextSibling.remove();
   }
 
-  Object.entries(dataItems).forEach(([key, dataItem]) => {
+  Object.entries(dataItems ?? []).forEach(([key, dataItem]) => {
     const clone = el.cloneNode(true);
 
     clone.removeAttribute('x-each');
@@ -51,7 +44,15 @@ directive('each', (el, expression, attribute, x, component) => {
     (async () => {
       clone.__x_for_data = {[item]: dataItem, [index]: key};
 
+      if (!Number.isInteger(+items)) {
+        contextStack.push(`${items}[${key}]`);
+      }
+
       await component.initialize(clone, component.data, clone.__x_for_data);
+
+      // if (!Number.isInteger(+items)) {
+      //   contextStack.pop();
+      // }
 
       el.parentNode.appendChild(clone);
     })();

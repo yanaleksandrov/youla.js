@@ -20,7 +20,7 @@
 
 <div x-data="{ colors: ['Red', 'Orange', 'Yellow'] }">
   <ul>
-    <li x-eachs="color in colors" x-text="color"></li>
+    <li x-each="color in colors" x-text="color"></li>
   </ul>
 </div>
 
@@ -41,7 +41,7 @@
 </pre>
 
 <ul x-data="{ cars: { make: 'Jeep', model: 'Grand Cherokee', color: 'Black' } }">
-  <li x-eachs="(car, key) in cars">
+  <li x-each="(car, key) in cars">
     <span x-text="key"></span>: <span x-text="car"></span>
   </li>
 </ul>
@@ -62,21 +62,45 @@
 </pre>
 
 <ul x-data="{ names: ['Ivan', 'Yulia', 'Evgeny'] }">
-  <li x-eachs="(name, index) in names">
+  <li x-each="(name, index) in names">
     <span x-text="`${++index}: ${name}`"></span>
   </li>
 </ul>
 
 <h2>Вложенные x-each</h2>
 
-<div x-data="{categories: [{name: 'Category 1', products: [{name: 'product 1'}]}, {name: 'Category 2', products: [{name: 'product 2'}, {name: 'product 3', items: [1, 2, 3]}]}]}">
+<div x-data="{
+  categories: [
+    {
+      name: 'Category 1',
+      products: [
+        { name: 'product 1' },
+        { name: 'product 2' },
+        { name: 'product 3' },
+        { name: 'product 4' },
+      ]
+    },
+    {
+      name: 'Category 2',
+      products: [
+        { name: 'product name 1' },
+        { name: 'product name 2', items: [1, 2, 3] },
+        { name: 'product name 3', items: [5, 6, 7] },
+      ]
+    }
+  ]
+}">
   <div x-each="(category, index) in categories">
     <h3 x-text="category.name"></h3>
     <ul>
       <li x-each="(product, i) in category.products">
         <span x-text="`${++i}: ${product.name}`"></span>
-        <span x-each="kkk in product.items" x-text="kkk"></span>
-        <span x-each="i in 4">⭐</span>
+        <div>
+          <span x-each="item in product.items" x-text="item"></span>
+        </div>
+        <div>
+          <span x-each="i in 5">⭐</span>
+        </div>
       </li>
     </ul>
   </div>
@@ -95,7 +119,7 @@
 
 <div x-data>
   Рейтинг:
-  <span x-eachs="i in 5">⭐</span>
+  <span x-each="i in 5">⭐</span>
 </div>
 
 <p>Обратите внимание, что в таком случае значения <code>i</code> начинаются с 1, а не с 0.</p>

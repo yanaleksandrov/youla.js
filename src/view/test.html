@@ -8,14 +8,14 @@
 <div class="notice" x-data="{notices: []}">
   <button type="button" @click="$notice.add(); notices = [{message: 'New Message', closable: true, type: 'info'}]">Toggle Dark Mode</button>
 
-  <div x-for="(notice, id) in notices">
+  <div x-each="(notice, id) in notices">
     <div class="notice__item" :class="notice.type">
       <div class="notice__msg" x-html="notice.message"></div>
       <div class="notice__close" x-show="notice.closable" :style="`--anim:${item.anim}`" @click="$notice.remove(id)"></div>
     </div>
   </div>
 
-<!--  <div x-for="(notice, id) in $store.notices.items">-->
+<!--  <div x-each="(notice, id) in $store.notices.items">-->
 <!--    <div class="notice__item" :class="item.classes()">-->
 <!--      <div class="notice__msg" x-html="notice.message"></div>-->
 <!--      <div class="notice__close" x-show="notice.closable" :style="`&#45;&#45;anim:${item.anim}`" @click="$store.notice.close(id)"></div>-->
@@ -49,7 +49,7 @@
   </div>
 
   <!-- step 2 -->
-  <div x-step="dbname.trim() && username.trim() && db_password.trim() && hostname.trim() && prefix.trim()" x-cloak>
+  <div x-step="dbname.trim() && username.trim() && db_password.trim() && hostname.trim() && prefix.trim()" x-hide>
     <div class="t-center p-8">
       <h2>Step 1: Database</h2>
       <p class="t-muted">Enter information about connecting to the database here. If you are not sure about it, contact your hosting provider.</p>
@@ -91,7 +91,7 @@
   </div>
 
   <!-- step 3 -->
-  <div x-step="login.trim() && email.trim() && password.trim()" x-cloak>
+  <div x-step="login.trim() && email.trim() && password.trim()" x-hide>
     <div class="t-center p-8">
       <h2>Step 2: Create account</h2>
       <p class="t-muted">The last step. Create a site administrator.</p>

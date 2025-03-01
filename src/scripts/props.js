@@ -3,31 +3,29 @@ import { domWalk } from './dom';
 
 export function fetchProps(rootElement, data) {
   const fetched = [];
-  domWalk(rootElement, el => {
-    getAttributes(el).forEach(attribute => {
-      let {modifiers, prop, name} = attribute;
+  domWalk(rootElement, el => getAttributes(el).forEach(attribute => {
+    let {modifiers, prop, name} = attribute;
 
-      if (prop) {
-        // try fetch multiple checkboxes with same prop
-        if (el.type === 'checkbox' && data[prop] === undefined) {
-          data[prop] = (rootElement.querySelectorAll(`[${CSS.escape(name)}]`)).length > 1 ? [] : '';
-        }
-
-        // just for input form fields
-        if (isInputField(el)) {
-          let modelExpression = generateExpressionForProp(el, data, prop, modifiers);
-
-          let oldValue = data[prop] !== undefined ? data[prop] : null,
-              newValue = saferEval(modelExpression, data, {'$el': el});
-
-          data[prop] = oldValue && isEmpty( newValue ) ? oldValue : newValue;
-        }
-        // TODO: what we do for none input fields, like "div" etc?
-
-        fetched.push({el, attribute});
+    if (prop) {
+      // try fetch multiple checkboxes with same prop
+      if (el.type === 'checkbox' && data[prop] === undefined) {
+        data[prop] = (rootElement.querySelectorAll(`[${CSS.escape(name)}]`)).length > 1 ? [] : '';
       }
-    })
-  })
+
+      // just for input form fields
+      if (isInputField(el)) {
+        let modelExpression = generateExpressionForProp(el, data, prop, modifiers);
+
+        let oldValue = data[prop] !== undefined ? data[prop] : null,
+          newValue = saferEval(modelExpression, data, {'$el': el});
+
+        data[prop] = oldValue && isEmpty( newValue ) ? oldValue : newValue;
+      }
+      // TODO: what we do for none input fields, like "div" etc?
+
+      fetched.push({el, attribute});
+    }
+  }))
 
   document.dispatchEvent(eventCreate('x:fetched', {data, fetched}))
 

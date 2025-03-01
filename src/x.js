@@ -18,12 +18,12 @@ import './scripts/storage';
  * Now that the core is all set up, we can register X directives like x-text or
  * x-html that form the basis of how X adds behavior to an app's static markup.
  */
-import './scripts/directives/x-for';
+import './scripts/directives/x-each';
 import './scripts/directives/x-bind';
 import './scripts/directives/x-html';
 import './scripts/directives/x-text';
 import './scripts/directives/x-show';
-import './scripts/directives/x-cloak';
+import './scripts/directives/x-hide';
 
 /**
  * The Methods

@@ -1,0 +1,103 @@
+<% var data = {
+  title: "To Do List"
+}; %>
+<%= _.template(require('./parts/header.html').default)(data) %>
+
+<h1>x-each</h1>
+
+<p>
+  Директива <code>x-each</code> позволяет создавать элементы DOM путем перебора списка.
+  Вот простой пример создания списка цветов на основе массива.
+</p>
+
+<pre>
+&lt;div x-data=&quot;{ colors: ['Red', 'Orange', 'Yellow'] }&quot;&gt;
+    &lt;ul&gt;
+        &lt;li x-each=&quot;color in colors&quot; x-text=&quot;color&quot;&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+&lt;/div&gt;
+</pre>
+
+<div x-data="{ colors: ['Red', 'Orange', 'Yellow'] }">
+  <ul>
+    <li x-eachs="color in colors" x-text="color"></li>
+  </ul>
+</div>
+
+<p>
+  Есть правило, на которое стоит обратить внимание: <code>x-each</code> должен быть объявлен
+  на том элементе-шаблоне, который повторяется для каждой итерации цикла. Чтобы скрыть сам шаблон,
+  добавьте css правило <code>display: none</code> для селектора <code> [x-each]</code>.
+</p>
+
+<p>Вы также можете передавать объекты:</p>
+
+<pre>
+  &lt;ul x-data=&quot;{ cars: { make: 'Jeep', model: 'Grand Cherokee', color: 'Black' } }&quot;&gt;
+    &lt;li x-each=&quot;car in cars&quot;&gt;
+      &lt;span x-text=&quot;key&quot;&gt;&lt;/span&gt;: &lt;span x-text=&quot;car&quot;&gt;&lt;/span&gt;
+    &lt;/li&gt;
+  &lt;/ul&gt;
+</pre>
+
+<ul x-data="{ cars: { make: 'Jeep', model: 'Grand Cherokee', color: 'Black' } }">
+  <li x-eachs="(car, key) in cars">
+    <span x-text="key"></span>: <span x-text="car"></span>
+  </li>
+</ul>
+
+<h2>Доступ к индексам</h2>
+
+<p>
+  Если вам нужно получить доступ к индексу каждого элемента в итерации, вы
+  можете сделать это, используя следующий синтаксис: <code>(item, index) in items</code>
+</p>
+
+<pre>
+&lt;ul x-data=&quot;{ names: ['Ivan', 'Yulia', 'Evgeny'] }&quot;&gt;
+  &lt;li x-each=&quot;(name, index) in names&quot;&gt;
+    &lt;span x-text=&quot;&#x60;${++index}: ${name}&#x60;&quot;&gt;&lt;/span&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+</pre>
+
+<ul x-data="{ names: ['Ivan', 'Yulia', 'Evgeny'] }">
+  <li x-eachs="(name, index) in names">
+    <span x-text="`${++index}: ${name}`"></span>
+  </li>
+</ul>
+
+<h2>Вложенные x-each</h2>
+
+<div x-data="{categories: [{name: 'Category 1', products: [{name: 'product 1'}]}, {name: 'Category 2', products: [{name: 'product 2'}, {name: 'product 3', items: [1, 2, 3]}]}]}">
+  <div x-each="(category, index) in categories">
+    <h3 x-text="category.name"></h3>
+    <ul>
+      <li x-each="(product, i) in category.products">
+        <span x-text="`${++i}: ${product.name}`"></span>
+        <span x-each="kkk in product.items" x-text="kkk"></span>
+        <span x-each="i in 4">⭐</span>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<h2>Итерация по диапазону</h2>
+
+<p>Если вам нужно просто зациклить несколько раз, а не перебирать массив, X.js предлагает короткий синтаксис с указанием целого числа вместо свойства:</p>
+
+<pre>
+  &lt;div x-data&gt;
+    Рейтинг:
+    &lt;span x-each=&quot;i in 5&quot;&gt;⭐&lt;/span&gt;
+  &lt;/div&gt;
+</pre>
+
+<div x-data>
+  Рейтинг:
+  <span x-eachs="i in 5">⭐</span>
+</div>
+
+<p>Обратите внимание, что в таком случае значения <code>i</code> начинаются с 1, а не с 0.</p>
+
+<%= _.template(require('./parts/footer.html').default)(data) %>

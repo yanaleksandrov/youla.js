@@ -14,13 +14,13 @@
 <div class="accordion" x-data="{ i: -1 }">
   <div class="accordion__item">
     <div class="accordion__title" @click="i = i !== 1 ? 1 : -1">Title of item 1</div>
-    <div class="accordion__panel" x-collapse="i === 1" x-cloak>
+    <div class="accordion__panel" x-collapse="i === 1" x-hide>
       <p>Description of item 1</p>
     </div>
   </div>
   <div class="accordion__item">
     <div class="accordion__title" @click="i = i !== 2 ? 2 : -1">Title of item 2</div>
-    <div class="accordion__panel" x-collapse="i === 2" x-cloak>
+    <div class="accordion__panel" x-collapse="i === 2" x-hide>
       <p>Description of item 2</p>
     </div>
   </div>
@@ -44,7 +44,7 @@
 
     <button type="button" @click.delay.1000ms.once="$ajax('https://jsonplaceholder.typicode.com/posts', {}, response => items = response.json)">Test Fetch</button>
     <ul>
-      <li x-for="item in items">
+      <li x-each="item in items">
         <span x-text="item.id"></span>
         <a x-text="item.title"></a>
       </li>

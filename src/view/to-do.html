@@ -12,7 +12,7 @@
 
   <div>Tasks list:</div>
   <ul>
-    <li x-for="(task, index) in tasks">
+    <li x-each="(task, index) in tasks">
       <label>
         <input type="checkbox" @change="task.checked = !task.checked" :checked="task.checked">
         <span x-text="task.title" :class="task.checked && 'strike'"></span>

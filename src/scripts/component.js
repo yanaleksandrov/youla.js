@@ -16,8 +16,6 @@ export default class Component {
 
     this.root    = el;
     this.rawData = saferEval(el.getAttribute('x-data') || '{}', dataProviderContext);
-    // console.log(this.rawData)
-    // console.log('        ')
     this.rawData = fetchProps(el, this.rawData);
     this.data    = this.wrapDataInObservable(this.rawData);
 
@@ -68,81 +66,78 @@ export default class Component {
 
   initialize(root, data, additionalHelperVariables) {
     const self = this;
-    domWalk(root, el => {
-      getAttributes(el).forEach(attribute => {
-        let {directive, event, expression, modifiers, prop} = attribute;
 
-        // init events
-        if (event) {
-          self.registerListener(el, event, modifiers, expression);
+    domWalk(root, el => getAttributes(el).forEach(attribute => {
+      let {directive, event, expression, modifiers, prop} = attribute;
+
+      // init events
+      if (event) {
+        self.registerListener(el, event, modifiers, expression);
+      }
+
+      // init props
+      if (prop) {
+        // If the element we are binding to is a select, a radio, or checkbox
+        // we'll listen for the change event instead of the "input" event.
+        let event = ['select-multiple', 'select', 'checkbox', 'radio'].includes(el.type) || modifiers.includes('lazy') ? 'change' : 'input';
+
+        self.registerListener(
+          el,
+          event,
+          modifiers,
+          generateExpressionForProp(el, data, prop, modifiers)
+        );
+
+        let { output } = self.evaluate(prop, additionalHelperVariables)
+        updateAttribute(el, 'value', output)
+      }
+
+      // init directives
+      if (directive in x.directives) {
+        let output = expression;
+        if (directive !== 'x-each') {
+          try {
+            ({ output } = self.evaluate(expression, additionalHelperVariables));
+          } catch (error) {}
         }
-
-        // init props
-        if (prop) {
-          // If the element we are binding to is a select, a radio, or checkbox
-          // we'll listen for the change event instead of the "input" event.
-          let event = ['select-multiple', 'select', 'checkbox', 'radio'].includes(el.type) || modifiers.includes('lazy') ? 'change' : 'input';
-
-          self.registerListener(
-            el,
-            event,
-            modifiers,
-            generateExpressionForProp(el, data, prop, modifiers)
-          );
-
-          let { output } = self.evaluate(prop, additionalHelperVariables)
-          updateAttribute(el, 'value', output)
-        }
-
-        // init directives
-        if (directive in x.directives) {
-          let output = expression;
-          if (directive !== 'x-for') {
-            try {
-              ({ output } = self.evaluate(expression, additionalHelperVariables));
-            } catch (error) {}
-          }
-          x.directives[directive](el, output, attribute, x, self);
-        }
-      })
-    })
+        x.directives[directive](el, output, attribute, x, self);
+      }
+    }));
   }
 
   refresh() {
     const self = this;
     debounce(() => {
-      domWalk(self.root, el => {
-        getAttributes(el).forEach(attribute => {
-          let {directive, expression, prop} = attribute;
+      domWalk(self.root, el => getAttributes(el).forEach(attribute => {
+        let {directive, expression, prop} = attribute;
 
-          if (prop) {
-            let { output, deps } = self.evaluate(prop)
-            if (self.concernedData.filter(i => deps.includes(i)).length > 0) {
-              updateAttribute(el, 'value', output);
+        if (prop) {
+          let { output, deps } = self.evaluate(prop)
+          if (self.concernedData.filter(i => deps.includes(i)).length > 0) {
+            updateAttribute(el, 'value', output);
 
-              document.dispatchEvent(
-                eventCreate('x:refreshed', {attribute, output})
-              );
-            }
+            document.dispatchEvent(
+              eventCreate('x:refreshed', {attribute, output})
+            );
+          }
+        }
+
+        if (directive in x.directives) {
+          let output = expression,
+            deps   = [];
+          if (directive !== 'x-each') {
+            try {
+              ({ output, deps } = self.evaluate(expression));
+            } catch (error) {}
+          } else {
+            [, deps] = expression.split(' in ');
           }
 
-          if (directive in x.directives) {
-            let output = expression,
-                deps   = [];
-            if (directive !== 'x-for') {
-              try {
-                ({ output, deps } = self.evaluate(expression));
-              } catch (error) {}
-            } else {
-              [, deps] = expression.split(' in ');
-            }
-
-            if (self.concernedData.filter(i => deps.includes(i)).length > 0) {
-              x.directives[directive](el, output, attribute, x, self);
-            }
+          if (self.concernedData.filter(i => deps.includes(i)).length > 0) {
+            x.directives[directive](el, output, attribute, x, self);
           }
-        })
-      })
+        }
+      }));
 
       self.concernedData = []
     }, 0)()
@@ -161,11 +156,21 @@ export default class Component {
     let options = {};
     let handler = e => this.runListenerHandler(expression, e);
 
-    if (modifiers.includes('window'))   target = window;
-    if (modifiers.includes('document')) target = document;
+    if (modifiers.includes('window')) {
+      target = window;
+    }
 
-    if (modifiers.includes('passive')) options.passive = true;
-    if (modifiers.includes('capture')) options.capture = true;
+    if (modifiers.includes('document')) {
+      target = document;
+    }
+
+    if (modifiers.includes('passive')) {
+      options.passive = true;
+    }
+
+    if (modifiers.includes('capture')) {
+      options.capture = true;
+    }
 
     // delay an event for a certain time
     if (modifiers.includes('delay')) {
@@ -173,12 +178,12 @@ export default class Component {
     }
 
     if (modifiers.includes('prevent')) {
-      handler = wrapHandler(handler, (next, e) => { e.preventDefault(); next(e); })
+      handler = wrapHandler(handler, (next, e) => { e.preventDefault(); next(e); });
     }
 
     // stopping event propagation in DOM.
     if (modifiers.includes('stop')) {
-      handler = wrapHandler(handler, (next, e) => { e.stopPropagation(); next(e); })
+      handler = wrapHandler(handler, (next, e) => { e.stopPropagation(); next(e); });
     }
 
     // event outside of element
@@ -200,10 +205,10 @@ export default class Component {
 
     // one time run event
     if (modifiers.includes('once')) {
+      options.once = true;
+
       handler = wrapHandler(handler, (next, e) => {
         next(e);
-
-        target.removeEventListener(event, handler, options);
 
         if (e instanceof IntersectionObserverEntry) {
           removeIntersectionObserver(e.target);
@@ -228,7 +233,9 @@ export default class Component {
 
   runListenerHandler(expression, e) {
     const methods = {};
-    Object.keys(x.methods).forEach(key => methods[key] = x.methods[key](e, e.target, this));
+    Object.keys(x.methods).forEach(key => {
+      methods[key] = x.methods[key](e, e.target, this);
+    });
 
     let data = {}, el = e.target;
     while (el && !(data = el.__x_for_data)) {
@@ -259,11 +266,12 @@ export default class Component {
         let ref
 
         // We can't just query the DOM because it's hard to filter out refs in nested components.
-        domWalk(self.root, el => {
-          if (el.hasAttribute('x-ref') && el.getAttribute('x-ref') === property) {
-            ref = el
-          }
-        })
+        domWalk(self.root, el => (el.getAttribute('x-ref') === property ? (ref = el) : null));
+        // domWalk(self.root, el => {
+        //   if (el.hasAttribute('x-ref') && el.getAttribute('x-ref') === property) {
+        //     ref = el
+        //   }
+        // })
 
         return ref
       }

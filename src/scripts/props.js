@@ -5,22 +5,22 @@ export function fetchProps(rootElement, data) {
   const fetched = [];
 
   domWalk(rootElement, el => getAttributes(el).forEach(attribute => {
-    let {modifiers, prop, name} = attribute;
+    let {name, directive, expression, modifiers} = attribute;
 
-    if (prop) {
+    if (directive === 'x-prop') {
       // try fetch multiple checkboxes with same prop
-      if (el.type === 'checkbox' && data[prop] === undefined) {
-        data[prop] = (rootElement.querySelectorAll(`[${CSS.escape(name)}]`)).length > 1 ? [] : '';
+      if (el.type === 'checkbox' && data[expression] === undefined) {
+        data[expression] = (rootElement.querySelectorAll(`[${CSS.escape(name)}]`)).length > 1 ? [] : '';
       }
 
       // just for input form fields
       if (isInputField(el)) {
-        let modelExpression = generateExpressionForProp(el, data, prop, modifiers);
+        let modelExpression = generateExpressionForProp(el, data, expression, modifiers);
 
-        let oldValue = data[prop] !== undefined ? data[prop] : null,
+        let oldValue = data[expression] !== undefined ? data[expression] : null,
           newValue = saferEval(modelExpression, data, {'$el': el});
 
-        data[prop] = oldValue && isEmpty( newValue ) ? oldValue : newValue;
+        data[expression] = oldValue && isEmpty(newValue) ? oldValue : newValue;
       }
 
       fetched.push({el, attribute});

@@ -17,6 +17,7 @@ export default class Component {
     this.root    = el;
     this.rawData = saferEval(el.getAttribute('x-data') || '{}', dataProviderContext);
     this.rawData = fetchProps(el, this.rawData);
+    console.log(this.rawData)
     this.data    = this.wrapDataInObservable(this.rawData);
 
     this.initialize(el, this.data);
@@ -76,7 +77,7 @@ export default class Component {
       }
 
       // init props
-      if (prop) {
+      if (directive === 'x-prop') {
         // If the element we are binding to is a select, a radio, or checkbox
         // we'll listen for the change event instead of the "input" event.
         let event = ['select-multiple', 'select', 'checkbox', 'radio'].includes(el.type) || modifiers.includes('lazy') ? 'change' : 'input';
@@ -85,10 +86,10 @@ export default class Component {
           el,
           event,
           modifiers,
-          generateExpressionForProp(el, data, prop, modifiers)
+          generateExpressionForProp(el, data, expression, modifiers)
         );
 
-        let { output } = self.evaluate(prop, additionalHelperVariables)
+        let { output } = self.evaluate(expression, additionalHelperVariables)
         updateAttribute(el, 'value', output)
       }
 

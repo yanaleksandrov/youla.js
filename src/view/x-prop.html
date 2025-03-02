@@ -15,27 +15,27 @@ title: "To Do List"
   <tbody>
     <tr>
       <td>
-        <pre>
-
-        </pre>
+        <pre>&lt;form x-data&gt;
+  &lt;input type=&quot;text&quot; value=&quot;Hello&quot; x-prop=&quot;test&quot;&gt;
+  &lt;span x-text=&quot;test&quot;&gt;&lt;/span&gt;
+&lt;/form&gt;</pre>
       </td>
       <td>
-        <pre>
-
-        </pre>
+        <pre>&lt;form x-data=&quot;{test: 'Hello'}&quot;&gt;
+  &lt;input type=&quot;text&quot; value=&quot;Hello&quot; @keydown.delay.1ms=&quot;test = $el.value&quot;&gt;
+  &lt;span x-text=&quot;test&quot;&gt;&lt;/span&gt;
+&lt;/form&gt;</pre>
       </td>
     </tr>
   </tbody>
 </table>
 
-<form x-data="{test: 'Hello'}">
-  <input type="text" :value="Hello" @keydown.delay.1ms="test = $el.value" placeholder="Enter text">
-  <span x-text="test"></span>
-</form>
+<p>Во втором случае не требуется объявления в директиве x-data</p>
 
-<form x-data>
-  <input type="text" value="Hello" x-prop="test" placeholder="Enter text">
-  <span x-text="test"></span>
-</form>
+<h2>Модификаторы</h2>
+
+<p><code>.local</code></p>
+
+<p><code>.cookie</code></p>
 
 <%= _.template(require('./parts/footer.html').default)(data) %>

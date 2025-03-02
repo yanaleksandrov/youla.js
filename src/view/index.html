@@ -56,14 +56,14 @@
     <div>
       sign-in prop
     </div>
-    <input x.sign-in type="text">
+    <input x-prop="sign-in" type="text">
     <div x-text="sign-in"></div>
     <br>
     <br>
     <div>
       inputo
     </div>
-    <input value="10" x.inputo :min="8" :max="12" :type="'number'">
+    <input value="10" x-prop="inputo" :min="8" :max="12" :type="'number'">
     <div x-text="inputo"></div>
     <div x-text="count"></div>
     <br>
@@ -71,19 +71,17 @@
     <div>
       Single checkbox with boolean (single)
     </div>
-    <input type="checkbox" x.single.checkbox checked>
+    <input type="checkbox" x-prop="single" checked>
     <div x-text="single"></div>
-    <template x-if="single">
-      <div>Checkbox is checked</div>
-    </template>
+    <div x-hide="single === 'on'">Checkbox is checked</div>
     <br>
 
     <div>
       Multiple checkboxes bound to array (colors)
     </div>
-    <input type="checkbox" value="Red color!" x.colors checked>
-    <input type="checkbox" value="Orange color!" x.colors checked>
-    <input type="checkbox" value="Yellow color!" x.colors checked>
+    <input type="checkbox" value="Red color!" x-prop="colors" checked>
+    <input type="checkbox" value="Orange color!" x-prop="colors" checked>
+    <input type="checkbox" value="Yellow color!" x-prop="colors" checked>
     <br>
     Colors: <span x-text="colors"></span>
     <br>
@@ -92,7 +90,7 @@
     <div>
       Select
     </div>
-    <select x.select>
+    <select x-prop="select">
       <option value="">Select A Color</option>
       <option value="Value 1">Value 1</option>
       <option value="Value 2">Value 2</option>
@@ -106,7 +104,7 @@
     <div>
       Multiple select
     </div>
-    <select multiple x.multiple>
+    <select multiple x-prop="multiple">
       <option value="">Select A Color</option>
       <option value="Value 1">Value 1</option>
       <option value="Value 2">Value 2</option>
@@ -120,8 +118,8 @@
     <div>
       Radio inputs (answer)
     </div>
-    <input type="radio" value="yes" x.answer>
-    <input type="radio" value="no" x.answer>
+    <input type="radio" value="yes" x-prop="answer">
+    <input type="radio" value="no" x-prop="answer">
     <br>
     Answer: <span x-text="answer"></span>
     <br>
@@ -130,7 +128,7 @@
     <div>
       Textarea
     </div>
-    <textarea @keyup="content" x.content>Hello World!</textarea>
+    <textarea @keyup="content" x-prop="content">Hello World!</textarea>
     <div x-text="content"></div>
   </form>
 
@@ -166,7 +164,7 @@
 
   Model input:
   <div x-text="friends"></div>
-  <input value="Hello, my friend!" x.friends>
+  <input value="Hello, my friend!" x-prop="friends">
   <button @click="friends = 'Hello world!'">Change text</button>
   <br>
   <br>

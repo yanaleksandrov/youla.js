@@ -40,6 +40,7 @@ pre {
 	background-color: #f8f8f8;
 	padding: 0.75rem 1rem;
 	margin: 1rem 0;
+	white-space: pre-wrap;
 }
 
 blockquote {
@@ -95,9 +96,9 @@ table {
 	display: flex;
 	flex-wrap: wrap;
 	width: 100%;
-	max-width: 1240px;
+	max-width: 1340px;
 	margin: 0 auto;
-	gap: 128px;
+	gap: 64px;
 	padding: 64px;
 	min-height: 100vh;
 

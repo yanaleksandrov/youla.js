@@ -13,7 +13,7 @@ title: "To Do List"
 
 <table>
   <tbody>
-    <th>
+    <tr>
       <td>
         <pre>
 
@@ -24,17 +24,17 @@ title: "To Do List"
 
         </pre>
       </td>
-    </th>
+    </tr>
   </tbody>
 </table>
 
 <form x-data="{test: 'Hello'}">
-  <input type="text" :value="test" @keydown.delay.1ms="test = $el.value" placeholder="Enter text">
+  <input type="text" :value="Hello" @keydown.delay.1ms="test = $el.value" placeholder="Enter text">
   <span x-text="test"></span>
 </form>
 
 <form x-data>
-  <input type="text" x.test="Hello" placeholder="Enter text">
+  <input type="text" value="Hello" x-prop="test" placeholder="Enter text">
   <span x-text="test"></span>
 </form>
 

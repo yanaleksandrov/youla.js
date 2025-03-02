@@ -76,6 +76,9 @@ p:last-child {
 
 table {
 	width: 100%;
+	border-spacing: 0;
+	border-collapse: collapse;
+	padding: 0;
 }
 
 [\@click] {

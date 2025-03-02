@@ -12,9 +12,9 @@
 
 <pre>
 &lt;div x-data=&quot;{ colors: ['Red', 'Orange', 'Yellow'] }&quot;&gt;
-    &lt;ul&gt;
-        &lt;li x-each=&quot;color in colors&quot; x-text=&quot;color&quot;&gt;&lt;/li&gt;
-    &lt;/ul&gt;
+  &lt;ul&gt;
+    &lt;li x-each=&quot;color in colors&quot; x-text=&quot;color&quot;&gt;&lt;/li&gt;
+  &lt;/ul&gt;
 &lt;/div&gt;
 </pre>
 
@@ -54,16 +54,16 @@
     {
       name: &#039;Category 1&#039;,
       products: [
-        { name: &#039;product 1&#039; },
-        { name: &#039;product 2&#039; },
+        { name: &#039;Product 1&#039; },
+        { name: &#039;Product 2&#039; },
       ]
     },
     {
       name: &#039;Category 2&#039;,
       products: [
-        { name: &#039;product name 1&#039; },
-        { name: &#039;product name 2&#039;, attributes: [&#039;30x40mm&#039;, &#039;White&#039;] },
-        { name: &#039;product name 3&#039;, attributes: [&#039;20x20mm&#039;, &#039;Black&#039;] },
+        { name: &#039;Product 3&#039; },
+        { name: &#039;Product 4&#039;, attributes: [&#039;30x40mm&#039;, &#039;White&#039;] },
+        { name: &#039;Product 5&#039;, attributes: [&#039;20x20mm&#039;, &#039;Black&#039;] },
       ]
     }
   ]
@@ -86,16 +86,16 @@
     {
       name: 'Category 1',
       products: [
-        { name: 'product 1' },
-        { name: 'product 2' },
+        { name: 'Product 1' },
+        { name: 'Product 2' },
       ]
     },
     {
       name: 'Category 2',
       products: [
-        { name: 'product name 1' },
-        { name: 'product name 2', attributes: ['30x40mm', 'White'] },
-        { name: 'product name 3', attributes: ['20x20mm', 'Black'] },
+        { name: 'Product 3' },
+        { name: 'Product 4', attributes: ['30x40mm', 'White'] },
+        { name: 'Product 5', attributes: ['20x20mm', 'Black'] },
       ]
     }
   ]
@@ -115,9 +115,8 @@
 <h2>Добавление разделителя</h2>
 
 <p>
-  Ключ <code>join</code> используется для вставки текстового разделителя между элементами массива
-  при их выводе в HTML. Это упрощает форматирование списков, позволяя автоматически добавлять нужный символ
-  (например, запятую, пробел, слэш и т. д.) между элементами.
+  Ключ <code>join</code> позволяет вставлять разделитель между элементами. Это упрощает создание списков,
+  автоматически добавляя нужный символ (например, запятую, пробел или слэш) между элементами.
 </p>
 
 <pre>

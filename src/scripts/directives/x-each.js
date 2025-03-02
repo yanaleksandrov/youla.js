@@ -22,8 +22,9 @@ directive('each', (el, expression, attribute, x, component) => {
   let dataItems;
 
   let hasChildEach = el.querySelector('[x-each]');
+  console.log('')
   console.log(el)
-  console.log(join)
+  console.log(contextStack)
   if (Number.isInteger(+items)) {
     dataItems = Array.from({length: +items}, (_, i) => i + 1);
   } else {

@@ -14,7 +14,7 @@ directive('each', (el, expression, attribute, x, component) => {
    * may be "i in 5", "dog in dogs", "(car, index) in cars" syntax
    * with support dot notation, like: "(person, index) in data.list.persons"
    */
-  let [, item, index = 'key', items] = expression.match(/^\(?([\w]+)(?:,\s*(\w+))?\)?\s+in\s+(.*)$/) || [];
+  let [, item, index = 'key', items, join] = expression.match(/^\(?([\w]+)(?:,\s*(\w+))?\)?\s+in\s+(.*?)(?:\s+join\s+'([^']+)')?$/) || [];
 
   /**
    * Step 2: extracting the data, based on the expression & nested context
@@ -22,6 +22,8 @@ directive('each', (el, expression, attribute, x, component) => {
   let dataItems;
 
   let hasChildEach = el.querySelector('[x-each]');
+  console.log(el)
+  console.log(join)
   if (Number.isInteger(+items)) {
     dataItems = Array.from({length: +items}, (_, i) => i + 1);
   } else {
@@ -44,7 +46,7 @@ directive('each', (el, expression, attribute, x, component) => {
     next.remove();
   }
 
-  Object.entries(dataItems ?? []).forEach(([key, dataItem]) => {
+  Object.entries(dataItems ?? []).forEach(([key, dataItem], idx, array) => {
     const clone = el.cloneNode(true);
 
     clone.removeAttribute('x-each');
@@ -63,6 +65,9 @@ directive('each', (el, expression, attribute, x, component) => {
       }
 
       el.parentNode.appendChild(clone);
+      if (array[idx + 1] && join) {
+        clone.insertAdjacentText('afterend', join);
+      }
     })();
   });
 });

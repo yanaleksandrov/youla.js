@@ -49,36 +49,36 @@
 <p>А также создавать вложенные циклы с неограниченной глубиной</p>
 
 <pre>
-&#60;div x-data="{
+&lt;div x-data=&quot;{
   categories: [
     {
-      name: 'Category 1',
+      name: &#039;Category 1&#039;,
       products: [
-        { name: 'product 1' },
-        { name: 'product 2' },
+        { name: &#039;product 1&#039; },
+        { name: &#039;product 2&#039; },
       ]
     },
     {
-      name: 'Category 2',
+      name: &#039;Category 2&#039;,
       products: [
-        { name: 'product name 1' },
-        { name: 'product name 2', attributes: ['30x40mm', 'White'] },
-        { name: 'product name 3', attributes: ['20x20mm', 'Black'] },
+        { name: &#039;product name 1&#039; },
+        { name: &#039;product name 2&#039;, attributes: [&#039;30x40mm&#039;, &#039;White&#039;] },
+        { name: &#039;product name 3&#039;, attributes: [&#039;20x20mm&#039;, &#039;Black&#039;] },
       ]
     }
   ]
-}"&#62;
-  &#60;div x-each="(category, index) in categories"&#62;
-    &#60;h3 x-text="category.name"&#62;&#60;/h3&#62;
-    &#60;ul&#62;
-      &#60;li x-each="(product, i) in category.products"&#62;
-        &#60;strong x-text="product.name"&#62;&#60;/strong&#62;
+}&quot;&gt;
+  &lt;div x-each=&quot;(category, index) in categories&quot;&gt;
+    &lt;h3 x-text=&quot;category.name&quot;&gt;&lt;/h3&gt;
+    &lt;ul&gt;
+      &lt;li x-each=&quot;product in category.products&quot;&gt;
+        &lt;strong x-text=&quot;product.name&quot;&gt;&lt;/strong&gt;
         Attributes:
-        &#60;em x-each="attribute in product.attributes" x-text="attribute"&#62;&#60;/em&#62;
-      &#60;/li&#62;
-    &#60;/ul&#62;
-  &#60;/div&#62;
-&#60;/div&#62;
+        &lt;em x-each=&quot;attribute in product.attributes join &#039;, &#039;&quot; x-text=&quot;attribute&quot;&gt;&lt;/em&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
 </pre>
 
 <div x-data="{
@@ -106,11 +106,29 @@
       <li x-each="product in category.products">
         <strong x-text="product.name"></strong>
         Attributes:
-        <em x-each="attribute in product.attributes" x-text="attribute"></em>
+        <em x-each="attribute in product.attributes join ', '" x-text="attribute"></em>
       </li>
     </ul>
   </div>
 </div>
+
+<h2>Добавление разделителя</h2>
+
+<p>
+  Ключ <code>join</code> используется для вставки текстового разделителя между элементами массива
+  при их выводе в HTML. Это упрощает форматирование списков, позволяя автоматически добавлять нужный символ
+  (например, запятую, пробел, слэш и т. д.) между элементами.
+</p>
+
+<pre>
+&lt;p x-data=&quot;{ attributes: [&#039;White&#039;, &#039;20x30mm&#039;, &#039;Google LLC&#039;] }&quot;&gt;
+  Характеристики: &lt;i x-each=&quot;attribute in attributes join &#039;, &#039;&quot; x-text=&quot;attribute&quot;&gt;&lt;/i&gt;
+&lt;/p&gt;
+</pre>
+
+<p x-data="{ attributes: ['White', '20x30mm', 'Google LLC'] }">
+  Характеристики: <i x-each="attribute in attributes join ', '" x-text="attribute"></i>
+</p>
 
 <h2>Доступ к индексам</h2>
 
@@ -138,10 +156,10 @@
 <p>Если вам нужно просто зациклить несколько раз, а не перебирать массив, X.js предлагает короткий синтаксис с указанием целого числа вместо свойства:</p>
 
 <pre>
-  &lt;div x-data&gt;
-    Рейтинг:
-    &lt;span x-each=&quot;i in 5&quot;&gt;⭐&lt;/span&gt;
-  &lt;/div&gt;
+&lt;div x-data&gt;
+  Рейтинг:
+  &lt;span x-each=&quot;i in 5&quot;&gt;⭐&lt;/span&gt;
+&lt;/div&gt;
 </pre>
 
 <div x-data>

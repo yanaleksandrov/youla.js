@@ -46,6 +46,72 @@
   </li>
 </ul>
 
+<p>А также создавать вложенные циклы с неограниченной глубиной</p>
+
+<pre>
+&#60;div x-data="{
+  categories: [
+    {
+      name: 'Category 1',
+      products: [
+        { name: 'product 1' },
+        { name: 'product 2' },
+      ]
+    },
+    {
+      name: 'Category 2',
+      products: [
+        { name: 'product name 1' },
+        { name: 'product name 2', attributes: ['30x40mm', 'White'] },
+        { name: 'product name 3', attributes: ['20x20mm', 'Black'] },
+      ]
+    }
+  ]
+}"&#62;
+  &#60;div x-each="(category, index) in categories"&#62;
+    &#60;h3 x-text="category.name"&#62;&#60;/h3&#62;
+    &#60;ul&#62;
+      &#60;li x-each="(product, i) in category.products"&#62;
+        &#60;strong x-text="product.name"&#62;&#60;/strong&#62;
+        Attributes:
+        &#60;em x-each="attribute in product.attributes" x-text="attribute"&#62;&#60;/em&#62;
+      &#60;/li&#62;
+    &#60;/ul&#62;
+  &#60;/div&#62;
+&#60;/div&#62;
+</pre>
+
+<div x-data="{
+  categories: [
+    {
+      name: 'Category 1',
+      products: [
+        { name: 'product 1' },
+        { name: 'product 2' },
+      ]
+    },
+    {
+      name: 'Category 2',
+      products: [
+        { name: 'product name 1' },
+        { name: 'product name 2', attributes: ['30x40mm', 'White'] },
+        { name: 'product name 3', attributes: ['20x20mm', 'Black'] },
+      ]
+    }
+  ]
+}">
+  <div x-each="(category, index) in categories">
+    <h3 x-text="category.name"></h3>
+    <ul>
+      <li x-each="product in category.products">
+        <strong x-text="product.name"></strong>
+        Attributes:
+        <em x-each="attribute in product.attributes" x-text="attribute"></em>
+      </li>
+    </ul>
+  </div>
+</div>
+
 <h2>Доступ к индексам</h2>
 
 <p>
@@ -66,41 +132,6 @@
     <span x-text="`${++index}: ${name}`"></span>
   </li>
 </ul>
-
-<h2>Вложенные x-each</h2>
-
-<div x-data="{
-  categories: [
-    {
-      name: 'Category 1',
-      products: [
-        { name: 'product 1' },
-        { name: 'product 2' },
-        { name: 'product 3' },
-        { name: 'product 4' },
-      ]
-    },
-    {
-      name: 'Category 2',
-      products: [
-        { name: 'product name 1' },
-        { name: 'product name 2', items: [1, 2, 3] },
-        { name: 'product name 3', items: [5, 6, 7] },
-      ]
-    }
-  ]
-}">
-  <div x-each="(category, index) in categories">
-    <h3 x-text="category.name"></h3>
-    <ul>
-      <li x-each="(product, i) in category.products">
-        <span x-text="`${++i}: ${product.name}`"></span>
-        <span x-each="item in product.items" x-text="item"></span>
-        <span x-each="i in 5">⭐</span>
-      </li>
-    </ul>
-  </div>
-</div>
 
 <h2>Итерация по диапазону</h2>
 

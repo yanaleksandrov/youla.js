@@ -19,7 +19,7 @@ export default class Component {
     this.rawData = fetchProps(el, this.rawData);
     this.data    = this.wrapDataInObservable(this.rawData);
 
-    this.initialize(el, this.data)
+    this.initialize(el, this.data);
   }
 
   store(name, value) {
@@ -51,15 +51,15 @@ export default class Component {
     self.concernedData = []
     return new Proxy(data, {
       set(obj, property, value) {
-        const setWasSuccessful = Reflect.set(obj, property, value)
+        const setWasSuccessful = Reflect.set(obj, property, value);
 
         if (self.concernedData.indexOf(property) === -1) {
-          self.concernedData.push(property)
+          self.concernedData.push(property);
         }
 
-        self.refresh()
+        self.refresh();
 
-        return setWasSuccessful
+        return setWasSuccessful;
       }
     })
   }
@@ -218,9 +218,9 @@ export default class Component {
         }
       }));
       observer.observe(el);
-    } else {
-      target.addEventListener(event, handler, options);
     }
+
+    target.addEventListener(event, handler, options);
   }
 
   runListenerHandler(expression, e) {

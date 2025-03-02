@@ -3,6 +3,7 @@ import { domWalk } from './dom';
 
 export function fetchProps(rootElement, data) {
   const fetched = [];
+
   domWalk(rootElement, el => getAttributes(el).forEach(attribute => {
     let {modifiers, prop, name} = attribute;
 
@@ -21,11 +22,10 @@ export function fetchProps(rootElement, data) {
 
         data[prop] = oldValue && isEmpty( newValue ) ? oldValue : newValue;
       }
-      // TODO: what we do for none input fields, like "div" etc?
 
       fetched.push({el, attribute});
     }
-  }))
+  }));
 
   document.dispatchEvent(eventCreate('x:fetched', {data, fetched}))
 

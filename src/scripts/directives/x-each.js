@@ -50,7 +50,7 @@ directive('each', (el, expression, attribute, x, component) => {
     clone.removeAttribute('x-each');
 
     (async () => {
-      clone.__x_for_data = {[item]: dataItem, [index]: key};
+      clone.__x_for_data = {[item]: dataItem, [index]: +key};
 
       if (hasChildEach) {
         contextStack.push(`${items}[${key}]`);

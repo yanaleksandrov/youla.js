@@ -3,21 +3,21 @@
 }; %>
 <%= _.template(require('./parts/header.html').default)(data) %>
 
-<div x-data="{ tasks: [] }">
+<div x-data="{tasks: []}">
   <div>Add task:</div>
   <input placeholder="Add new task..." x.value />
-  <button type="button" @click="tasks = tasks.concat({title: value, checked: false}); value = ''" :disabled="!value.trim()">Add</button>
+  <button type="button" @click="tasks = [...tasks, {title: value, checked: false}]; value = ''" :disabled="!value.trim()">Add</button>
   <br>
   <br>
 
-  <div>Tasks list:</div>
+  <div x-show="tasks.length">Tasks list:</div>
   <ul>
     <li x-each="(task, index) in tasks">
       <label>
-        <input type="checkbox" @change="task.checked = !task.checked" :checked="task.checked">
+        <input type="checkbox" @change="task.checked = !task.checked; console.log(tasks)" :checked="task.checked">
         <span x-text="task.title" :class="task.checked && 'strike'"></span>
       </label>
-      <button @click="tasks = tasks.filter((task, key) => key !== index)">Remove</button>
+      <button @click="tasks = tasks.filter((_, i) => i != index)">Remove</button>
     </li>
   </ul>
   <button x-show="tasks.length" @click="tasks = []" hidden>Clear all</button>

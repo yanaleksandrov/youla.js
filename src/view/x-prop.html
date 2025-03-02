@@ -1,0 +1,41 @@
+<% var data = {
+title: "To Do List"
+}; %>
+<%= _.template(require('./parts/header.html').default)(data) %>
+
+<h1>x-prop</h1>
+
+<p>
+  Директива позволяет связать значения полей ввода <code>input</code>, <code>select</code>
+  и <code>textarea</code> к <code>x-data</code> без объявления их в директиве.
+  Такой подход позволяет не повторяться и сделать html представление более лаконичным. Сравните 2 по смыслу идентичных подхода:
+</p>
+
+<table>
+  <tbody>
+    <th>
+      <td>
+        <pre>
+
+        </pre>
+      </td>
+      <td>
+        <pre>
+
+        </pre>
+      </td>
+    </th>
+  </tbody>
+</table>
+
+<form x-data="{test: 'Hello'}">
+  <input type="text" :value="test" @keydown.delay.1ms="test = $el.value" placeholder="Enter text">
+  <span x-text="test"></span>
+</form>
+
+<form x-data>
+  <input type="text" x.test="Hello" placeholder="Enter text">
+  <span x-text="test"></span>
+</form>
+
+<%= _.template(require('./parts/footer.html').default)(data) %>

@@ -20,6 +20,8 @@ directive('each', (el, expression, attribute, x, component) => {
    * Step 2: extracting the data, based on the expression & nested context
    */
   let dataItems;
+
+  let hasChildEach = el.querySelector('[x-each]');
   if (Number.isInteger(+items)) {
     dataItems = Array.from({length: +items}, (_, i) => i + 1);
   } else {
@@ -33,7 +35,13 @@ directive('each', (el, expression, attribute, x, component) => {
    * Step 3: remove all and start elements rendering
    */
   while (el.nextSibling) {
-    el.nextSibling.remove();
+    let next = el.nextSibling;
+
+    if (next.nodeType === Node.ELEMENT_NODE && next.hasAttribute('x-each')) {
+      break;
+    }
+
+    next.remove();
   }
 
   Object.entries(dataItems ?? []).forEach(([key, dataItem]) => {
@@ -44,15 +52,15 @@ directive('each', (el, expression, attribute, x, component) => {
     (async () => {
       clone.__x_for_data = {[item]: dataItem, [index]: key};
 
-      if (!Number.isInteger(+items)) {
+      if (hasChildEach) {
         contextStack.push(`${items}[${key}]`);
       }
 
       await component.initialize(clone, component.data, clone.__x_for_data);
 
-      // if (!Number.isInteger(+items)) {
-      //   contextStack.pop();
-      // }
+      if (hasChildEach) {
+        contextStack.pop();
+      }
 
       el.parentNode.appendChild(clone);
     })();

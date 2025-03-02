@@ -95,12 +95,8 @@
     <ul>
       <li x-each="(product, i) in category.products">
         <span x-text="`${++i}: ${product.name}`"></span>
-        <div>
-          <span x-each="item in product.items" x-text="item"></span>
-        </div>
-        <div>
-          <span x-each="i in 5">⭐</span>
-        </div>
+        <span x-each="item in product.items" x-text="item"></span>
+        <span x-each="i in 5">⭐</span>
       </li>
     </ul>
   </div>
@@ -119,7 +115,7 @@
 
 <div x-data>
   Рейтинг:
-  <span x-each="i in 5">⭐</span>
+  <span x-eachs="i in 5">⭐</span>
 </div>
 
 <p>Обратите внимание, что в таком случае значения <code>i</code> начинаются с 1, а не с 0.</p>

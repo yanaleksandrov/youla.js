@@ -9,14 +9,17 @@ export function domReady() {
 }
 
 export function domWalk(el, callback) {
-  callback(el)
+  callback(el);
 
-  let node = el.firstElementChild
+  let node = el.firstElementChild;
 
   while (node) {
-    if (node.hasAttribute('x-data')) return
+    if (node.hasAttribute('x-data')) {
+      return;
+    }
 
-    domWalk(node, callback)
-    node = node.nextElementSibling
+    domWalk(node, callback);
+
+    node = node.nextElementSibling;
   }
 }

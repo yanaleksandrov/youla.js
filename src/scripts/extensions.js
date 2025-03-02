@@ -1,7 +1,3 @@
 export function extend(...args) {
-  args.forEach(arg => {
-    if (typeof arg === 'function') {
-      arg();
-    }
-  });
+  args.forEach(fn => typeof fn === 'function' && fn());
 }

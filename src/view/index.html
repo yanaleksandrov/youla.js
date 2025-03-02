@@ -139,8 +139,8 @@
   <br><br><br><br><br><br><br><br><br><br>
   <br><br><br><br><br><br><br><br><br><br>
   <div @load="console.log('I\'m loaded!')"></div>
-  <div @intersect.once="console.log('First observer: I\'m being showed!')">First observer</div>
-  <div @intersect.once="console.log('Second observer: I\'m being showed!')">Second observer</div>
+  <div @intersect="console.log('Infinity observer: I\'m being showed!')">Infinity observer</div>
+  <div @intersect.once="console.log('Once observer: I\'m being showed!')">Once observer</div>
 
   <div @click.capture="console.log('I will log first')">
     <button @click="console.log('I will log second')">Click Me!</button>

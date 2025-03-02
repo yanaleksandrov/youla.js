@@ -144,12 +144,7 @@ export default class Component {
   }
 
   registerListener(el, event, modifiers, expression) {
-    const observers = {};
-
-    // Helper for remove exist observer from element
-    const removeIntersectionObserver = element => (observers[element]?.unobserve(element), delete observers[element]);
-
-    // Helper allows to add functionality to the listener's handler more flexibly in a "middleware" style.
+    // helper allows to add functionality to the listener's handler more flexibly in a "middleware" style.
     const wrapHandler = (callback, wrapper) => e => wrapper(callback, e);
 
     let target  = el;
@@ -206,14 +201,6 @@ export default class Component {
     // one time run event
     if (modifiers.includes('once')) {
       options.once = true;
-
-      handler = wrapHandler(handler, (next, e) => {
-        next(e);
-
-        if (e instanceof IntersectionObserverEntry) {
-          removeIntersectionObserver(e.target);
-        }
-      })
     }
 
     if (event === 'load') {
@@ -221,14 +208,19 @@ export default class Component {
     }
 
     if (event === 'intersect') {
-      const observer = new IntersectionObserver(entries => entries.forEach(entry => entry.isIntersecting && handler(entry)));
-      if (!observers[el]) {
-        observers[el] = observer;
-      }
-      observer.observe(el);
-    }
+      const observer = new IntersectionObserver(entries => entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          handler(entry);
 
-    target.addEventListener(event, handler, options);
+          if (modifiers.includes('once')) {
+            observer.disconnect();
+          }
+        }
+      }));
+      observer.observe(el);
+    } else {
+      target.addEventListener(event, handler, options);
+    }
   }
 
   runListenerHandler(expression, e) {
@@ -267,11 +259,6 @@ export default class Component {
 
         // We can't just query the DOM because it's hard to filter out refs in nested components.
         domWalk(self.root, el => (el.getAttribute('x-ref') === property ? (ref = el) : null));
-        // domWalk(self.root, el => {
-        //   if (el.hasAttribute('x-ref') && el.getAttribute('x-ref') === property) {
-        //     ref = el
-        //   }
-        // })
 
         return ref
       }

@@ -3,6 +3,17 @@
 }; %>
 <%= _.template(require('./parts/header.html').default)(data) %>
 
-<h1>x-show</h1>
+<h1>x-hide</h1>
+
+<p>
+  Это аналог директивы <code>x-show</code> управляет видимостью элемента с помощью свойства <code>display</code>.
+  Она не удаляет элемент из DOM, а лишь скрывает его, устанавливая <code>display: none</code>.
+</p>
+
+<p>Однако, чтобы <code>x-hide</code> работал, вы должны добавить на страницу следующий CSS-код.</p>
+
+<pre>
+[x-hide] { display: none !important; }
+</pre>
 
 <%= _.template(require('./parts/footer.html').default)(data) %>

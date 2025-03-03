@@ -17,7 +17,6 @@ export default class Component {
     this.root    = el;
     this.rawData = saferEval(el.getAttribute('x-data') || '{}', dataProviderContext);
     this.rawData = fetchProps(el, this.rawData);
-    console.log(this.rawData)
     this.data    = this.wrapDataInObservable(this.rawData);
 
     this.initialize(el, this.data);
@@ -69,7 +68,7 @@ export default class Component {
     const self = this;
 
     domWalk(root, el => getAttributes(el).forEach(attribute => {
-      let {directive, event, expression, modifiers, prop} = attribute;
+      let {directive, event, expression, modifiers} = attribute;
 
       // init events
       if (event) {
@@ -110,10 +109,10 @@ export default class Component {
     const self = this;
     debounce(() => {
       domWalk(self.root, el => getAttributes(el).forEach(attribute => {
-        let {directive, expression, prop} = attribute;
+        let {directive, expression} = attribute;
 
-        if (prop) {
-          let { output, deps } = self.evaluate(prop)
+        if (directive === 'x-prop') {
+          let { output, deps } = self.evaluate(expression)
           if (self.concernedData.filter(i => deps.includes(i)).length > 0) {
             updateAttribute(el, 'value', output);
 

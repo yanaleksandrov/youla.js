@@ -1,0 +1,33 @@
+<% var data = {
+  title: "To Do List"
+}; %>
+<%= _.template(require('./parts/header.html').default)(data) %>
+
+<h1>x-html</h1>
+
+<p>
+  Директива <code>x-html</code> позволяет вставлять HTML-код в элемент,
+  заменяя его текущее содержимое. Это аналог свойства innerHTML в JavaScript.
+</p>
+
+<blockquote>
+  <p>⚠️ Опасность XSS</p>
+  <p>
+    Используйте только для доверенного контента и никогда - для контента, предоставленного пользователем.
+    Динамический рендеринг HTML третьими лицами может легко привести к уязвимостям XSS.
+  </p>
+</blockquote>
+
+<p>Вот простой пример использования <code>x-html</code> для отображения имени пользователя:</p>
+
+<pre>
+&lt;div x-data=&quot;{ username: &#039;&lt;strong&gt;Yan Aleksandrov&lt;/strong&gt;&#039; }&quot;&gt;
+  Имя: &lt;span x-html=&quot;username&quot;&gt;&lt;/span&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" x-data="{ username: '<strong>Yan Aleksandrov</strong>' }">
+  Имя: <span x-html="username"></span>
+</div>
+
+<%= _.template(require('./parts/footer.html').default)(data) %>

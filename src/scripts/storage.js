@@ -127,25 +127,25 @@ function castToType(a, value) {
       if (a === null) {
         return null;
       }
-      return value === 'true' ? true : ( value === 'false' ? false : value );
+      return value === 'true' ? true : (value === 'false' ? false : value);
     default:
       return value;
   }
 }
 
 document.addEventListener('x:refreshed', ({detail}) => {
-  const { modifiers, prop } = detail.attribute;
+  const { modifiers, directive, expression } = detail.attribute;
 
-  if (isStorageModifier(modifiers)) {
+  if (directive === 'x-prop' && isStorageModifier(modifiers)) {
     const type   = getStorageType(modifiers);
     const expire = getNextModifier(modifiers, type);
     if (detail.output) {
-      storage.set(prop, detail.output, type,{
+      storage.set(expression, detail.output, type,{
         expires: computeExpires(expire),
         secure: true,
       });
     } else {
-      storage.set(prop, null, type, {expires: new Date(), path: '/' })
+      storage.set(expression, null, type, {expires: new Date(), path: '/' })
     }
   }
 });
@@ -154,13 +154,13 @@ document.addEventListener('x:fetched', ({detail}) => {
   const { data, fetched } = detail;
 
   fetched.forEach(item => {
-    const { attribute: { modifiers, prop } } = item;
+    const { attribute: { modifiers, directive, expression } } = item;
 
-    if (isStorageModifier(modifiers)) {
+    if (directive === 'x-prop' && isStorageModifier(modifiers)) {
       const type  = getStorageType(modifiers);
-      const value = storage.get(prop, type);
+      const value = storage.get(expression, type);
 
-      data[prop] = castToType(data[prop], value || data[prop]);
+      data[expression] = castToType(data[expression], value || data[expression]);
     }
   })
 });

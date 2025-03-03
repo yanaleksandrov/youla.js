@@ -1,0 +1,46 @@
+<% var data = {
+  title: "To Do List"
+}; %>
+<%= _.template(require('./parts/header.html').default)(data) %>
+
+<h1>x-show</h1>
+
+<p>
+  Директива <code>x-show</code> управляет видимостью элемента с помощью свойства <code>display</code>.
+  Она не удаляет элемент из DOM, а лишь скрывает его, устанавливая <code>display: none</code>.
+</p>
+
+<pre>
+&lt;div x-data=&quot;{ open: false }&quot;&gt;
+  &lt;button @click=&quot;open = ! open&quot;&gt;Переключить&lt;/button&gt;
+
+  &lt;div x-show=&quot;open&quot;&gt;
+    Контент...
+  &lt;/div&gt;
+&lt;/div&gt;
+</pre>
+
+<p>
+  При нажатии кнопки "Переключить" выпадающий список будет отображаться и скрываться соответствующим образом.
+</p>
+
+<div class="demo" x-data="{ open: false }">
+  <button @click="open = ! open">Переключить</button>
+
+  <div x-show="open">
+    Контент...
+  </div>
+</div>
+
+<blockquote>
+  <p>
+    Если состояние <code>x-show</code> при загрузке страницы "по умолчанию" равно "false", вы можете захотеть
+    использовать директиву <code>x-hide</code>, чтобы избежать "мерцания страницы" (эффекта, который возникает, когда
+    браузер отображает ваш контент до того, как X.js завершит его инициализацию и скрытие).
+  </p>
+  <p>
+    <code>x-hide</code> - это обратный аналог x-show, в котором стартовое состояние - скрыто.
+  </p>
+</blockquote>
+
+<%= _.template(require('./parts/footer.html').default)(data) %>

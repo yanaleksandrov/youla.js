@@ -5,7 +5,7 @@
 
 <div x-data="{tasks: []}">
   <div>Add task:</div>
-  <input placeholder="Add new task..." x.value />
+  <input placeholder="Add new task..." x-prop="value" />
   <button type="button" @click="tasks = [...tasks, {title: value, checked: false}]; value = ''" :disabled="!value.trim()">Add</button>
   <br>
   <br>

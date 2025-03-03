@@ -1,0 +1,102 @@
+<% var data = {
+title: "To Do List"
+}; %>
+<%= _.template(require('./parts/header.html').default)(data) %>
+
+<h1>x-data</h1>
+
+<p>
+  В X.js всё начинается с директивы x-data. <code>x-data</code> определяет фрагмент HTML
+  как новый компонент и предоставляет реактивные данные для ссылки на этот компонент.
+</p>
+
+<h2>Модификаторы</h2>
+
+<p><code>.local</code> и <code>.cookie</code></p>
+
+<p>
+  Позволяют автоматически сохранять значение привязанного свойства в куках или локальном
+  хранилище и восстанавливать его при последующих загрузках страницы. Это удобно для хранения
+  пользовательских предпочтений, например, темы оформления, имени пользователя или других параметров.
+</p>
+
+<h3>Принять всплывающее окно с файлами cookie</h3>
+
+<p>
+  Окно "Мы используем файлы cookie!" будет появляться при каждой перезагрузке страницы. Однако
+  после нажатия кнопки "Ок, принято" x.js запомнит выбор пользователя и не будет отображать его.
+</p>
+
+<div x-data="{popup: false}">
+  <div x-prop.cookie="popup" x-show="!popup" hidden>
+    <span>We use cookie!</span>
+    <button type="button" @click="popup = !popup">Ок, принято</button>
+  </div>
+  <p x-show="popup">
+    Модальное окно уже было показано
+  </p>
+</div>
+
+<div x-data="{voices: 1000, voted: false}">
+  <h3>Restriction of repeated voting</h3>
+  <p>
+    The page saves data to localStorage with information that the user has already voted to prevent a repeat vote.
+  </p>
+  <div x-prop.local="voices" x-prop.local="voted">
+    <button type="button" @click="--voices; voted = true" :disabled="voted">
+      <i class="ph ph-thumbs-down"></i>
+    </button>
+    <span x-text="voices"></span>
+    <button type="button" @click="++voices; voted = true" :disabled="voted">
+      <i class="ph ph-thumbs-up"></i>
+    </button>
+    <span class="hidden" @click="voices = 1000; voted = false" x-show="voted">Reset</span>
+  </div>
+</div>
+
+<div x-data>
+  <h3>Saving video playback time</h3>
+  <p>
+    TODO:
+    After starting the video x.js will remember the time from the beginning that has already been viewed
+    and, when the page is reloaded, it will prompt you to start viewing from the point of departure.
+  </p>
+  <div>
+    <video x-prop.cookie="time" x-ref="video" @play="$el.ontimeupdate = () => time = $el.currentTime" width="640px" height="267px" controls muted>
+      <source src="https://vjs.zencdn.net/v/oceans.mp4" type='video/mp4' />
+    </video>
+    <div x-show="time > 0">
+      Start playback from <span x-text="parseInt(time, 10)"></span> seconds?
+      <button type="button" @click="$refs.video.currentTime = time; $refs.video.play()">Yes</button>
+    </div>
+  </div>
+</div>
+
+<div x-data class="test test--content" :class="dark && 'dark'">
+  <h3>Dark & Light theme switcher</h3>
+  <p>
+    The "We use cookies!" window will pop up whenever the page is reloaded. However, after clicking
+    on the "Ok, accepted" button, x.js will remember the user's choice and will not display it.
+  </p>
+  <button type="button" x-prop.local="dark" @click="dark = !dark">
+    <i class="ph ph-sun" :class="{ 'ph-sun': !dark, 'ph-moon': dark }"></i>
+  </button>
+  <style>
+		:root {
+			--background-color: #ffffff;
+			--text-color: #000000;
+		}
+
+		.dark {
+			--background-color: #000000;
+			--text-color: #ffffff;
+		}
+
+		div {
+			background-color: var(--background-color);
+			color: var(--text-color);
+		}
+  </style>
+</div>
+
+<%= _.template(require('./parts/footer.html').default)(data) %>

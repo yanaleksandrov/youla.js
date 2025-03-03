@@ -34,7 +34,7 @@
 
 <pre>
   &lt;ul x-data=&quot;{ cars: { make: 'Jeep', model: 'Grand Cherokee', color: 'Black' } }&quot;&gt;
-    &lt;li x-each=&quot;car in cars&quot;&gt;
+    &lt;li x-each=&quot;(car, key) in cars&quot;&gt;
       &lt;span x-text=&quot;key&quot;&gt;&lt;/span&gt;: &lt;span x-text=&quot;car&quot;&gt;&lt;/span&gt;
     &lt;/li&gt;
   &lt;/ul&gt;

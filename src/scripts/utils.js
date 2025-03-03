@@ -41,9 +41,10 @@ export function getAttributes(el) {
     const startsWith = name.match(regexp)[0];
     const root       = name.replace(startsWith, '');
     const parts      = root.split('.');
+
     return {
       name,
-      directive: startsWith === 'x-' ? name : (startsWith === ':' ? 'x-bind' : ''),
+      directive: startsWith === 'x-' ? name.split('.')[0] : (startsWith === ':' ? 'x-bind' : ''),
       event: startsWith === '@' ? parts[0] : '',
       expression: value,
       modifiers: root.split('.').slice(1)

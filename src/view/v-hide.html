@@ -1,0 +1,19 @@
+<% var data = {
+  title: "To Do List"
+}; %>
+<%= _.template(require('./parts/header.html').default)(data) %>
+
+<h1>v-hide</h1>
+
+<p>
+  Это аналог директивы <code>v-show</code> управляет видимостью элемента с помощью свойства <code>display</code>.
+  Она не удаляет элемент из DOM, а лишь скрывает его, устанавливая <code>display: none</code>.
+</p>
+
+<p>Однако, чтобы <code>v-hide</code> работал, вы должны добавить на страницу следующий CSS-код.</p>
+
+<pre>
+[v-hide] { display: none !important; }
+</pre>
+
+<%= _.template(require('./parts/footer.html').default)(data) %>

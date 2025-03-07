@@ -36,7 +36,7 @@ export function saferEval(expression, dataContext, additionalHelperVariables = {
 }
 
 export function getAttributes(el) {
-  const regexp = /^(x-|@|:)/;
+  const regexp = /^(v-|@|:)/;
   return [...el.attributes].filter(({ name }) => regexp.test(name)).map(({ name, value }) => {
     const startsWith = name.match(regexp)[0];
     const root       = name.replace(startsWith, '');
@@ -44,7 +44,7 @@ export function getAttributes(el) {
 
     return {
       name,
-      directive: startsWith === 'x-' ? name.split('.')[0] : (startsWith === ':' ? 'x-bind' : ''),
+      directive: startsWith === 'v-' ? name.split('.')[0] : (startsWith === ':' ? 'v-bind' : ''),
       event: startsWith === '@' ? parts[0] : '',
       expression: value,
       modifiers: root.split('.').slice(1)

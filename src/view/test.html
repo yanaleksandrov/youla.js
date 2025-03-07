@@ -5,27 +5,27 @@
 
 <link rel="stylesheet" href="https://cms.codyshop.ru/dashboard/assets/css/main.css" id="main-css" />
 
-<div class="notice" x-data="{notices: []}">
+<div class="notice" v-data="{notices: []}">
   <button type="button" @click="$notice.add(); notices = [{message: 'New Message', closable: true, type: 'info'}]">Toggle Dark Mode</button>
 
-  <div x-each="(notice, id) in notices">
+  <div v-each="(notice, id) in notices">
     <div class="notice__item" :class="notice.type">
-      <div class="notice__msg" x-html="notice.message"></div>
-      <div class="notice__close" x-show="notice.closable" :style="`--anim:${item.anim}`" @click="$notice.remove(id)"></div>
+      <div class="notice__msg" v-html="notice.message"></div>
+      <div class="notice__close" v-show="notice.closable" :style="`--anim:${item.anim}`" @click="$notice.remove(id)"></div>
     </div>
   </div>
 
-<!--  <div x-each="(notice, id) in $store.notices.items">-->
+<!--  <div v-each="(notice, id) in $store.notices.items">-->
 <!--    <div class="notice__item" :class="item.classes()">-->
-<!--      <div class="notice__msg" x-html="notice.message"></div>-->
-<!--      <div class="notice__close" x-show="notice.closable" :style="`&#45;&#45;anim:${item.anim}`" @click="$store.notice.close(id)"></div>-->
+<!--      <div class="notice__msg" v-html="notice.message"></div>-->
+<!--      <div class="notice__close" v-show="notice.closable" :style="`&#45;&#45;anim:${item.anim}`" @click="$store.notice.close(id)"></div>-->
 <!--    </div>-->
 <!--  </div>-->
 </div>
 
-<form class="card card-border" method="post" x-data>
+<form class="card card-border" method="post" v-data>
   <!-- step 1 -->
-  <div x-step="name.trim()">
+  <div v-step="name.trim()">
     <div class="t-center p-8">
       <h2>Welcome to Grafema!</h2>
       <p class="t-muted">This is installation wizard. Before start, you need to set some settings. Please fill the information about your website.</p>
@@ -35,13 +35,13 @@
       <div class="dg g-1">
         <label class="dg g-1">
           <span class="df aic jcsb fw-600">Site name</span>
-          <input type="text" value="Ian Aleksandrov" x.name placeholder="Example: My Blog" x-autocomplete required>
+          <input type="text" value="Ian Aleksandrov" x.name placeholder="Example: My Blog" v-autocomplete required>
         </label>
       </div>
       <div class="dg g-1">
         <label class="dg g-1">
           <span class="df aic jcsb fw-600">Site description</span>
-          <input type="text" x.description placeholder="Example: Just Another Website" x-autocomplete>
+          <input type="text" x.description placeholder="Example: Just Another Website" v-autocomplete>
         </label>
         <div class="fs-13 t-muted"><?php I18n::e( 'Don\'t worry, you can always change these settings later.' ); ?></div>
       </div>
@@ -49,7 +49,7 @@
   </div>
 
   <!-- step 2 -->
-  <div x-step="dbname.trim() && username.trim() && db_password.trim() && hostname.trim() && prefix.trim()" x-hide>
+  <div v-step="dbname.trim() && username.trim() && db_password.trim() && hostname.trim() && prefix.trim()" v-hide>
     <div class="t-center p-8">
       <h2>Step 1: Database</h2>
       <p class="t-muted">Enter information about connecting to the database here. If you are not sure about it, contact your hosting provider.</p>
@@ -59,31 +59,31 @@
       <div class="dg g-1 ga-2">
         <label class="dg g-1">
           <span class="df aic jcsb fw-600">Database name</span>
-          <input type="text" x.dbname placeholder="database_name" x-autocomplete required>
+          <input type="text" x.dbname placeholder="database_name" v-autocomplete required>
         </label>
       </div>
       <div class="dg g-1 ga-2">
         <label class="dg g-1">
           <span class="df aic jcsb fw-600">Database username</span>
-          <input type="text" x.username placeholder="user_name" x-autocomplete required>
+          <input type="text" x.username placeholder="user_name" v-autocomplete required>
         </label>
       </div>
       <div class="dg g-1 ga-2">
         <label class="dg g-1">
           <span class="df aic jcsb fw-600">Database password</span>
-          <input type="text" x.db_password placeholder="Password" x-autocomplete required>
+          <input type="text" x.db_password placeholder="Password" v-autocomplete required>
         </label>
       </div>
       <div class="dg g-1 sm:ga-2">
         <label class="dg g-1">
           <span class="df aic jcsb fw-600">Hostname</span>
-          <input type="text" x.hostname placeholder="Hostname" x-autocomplete required>
+          <input type="text" x.hostname placeholder="Hostname" v-autocomplete required>
         </label>
       </div>
       <div class="dg g-1 sm:ga-2">
         <label class="dg g-1">
           <span class="df aic jcsb fw-600">Prefix</span>
-          <input type="text" x.prefix placeholder="Prefix" x-autocomplete required>
+          <input type="text" x.prefix placeholder="Prefix" v-autocomplete required>
         </label>
         <div class="fs-13 t-muted"><?php I18n::e( 'Don\'t worry, you can always change these settings later.' ); ?></div>
       </div>
@@ -91,7 +91,7 @@
   </div>
 
   <!-- step 3 -->
-  <div x-step="login.trim() && email.trim() && password.trim()" x-hide>
+  <div v-step="login.trim() && email.trim() && password.trim()" v-hide>
     <div class="t-center p-8">
       <h2>Step 2: Create account</h2>
       <p class="t-muted">The last step. Create a site administrator.</p>
@@ -115,7 +115,7 @@
       <div class="dg g-1">
         <label class="dg g-1">
           <span class="df aic jcsb fw-600">Password</span>
-          <input type="password" x.password placeholder="Password" x-autocomplete required>
+          <input type="password" x.password placeholder="Password" v-autocomplete required>
         </label>
         <div class="fs-13 t-muted"><?php I18n::e( 'You will need this password to sign&nbsp;in. Please store it in a secure location.' ); ?></div>
       </div>
@@ -127,46 +127,46 @@
     <button type="button" class="btn btn--outline" :disableds="$step.cannotGoBack()" @click="$step.goBack()" disableds>
       Back
     </button>
-    <button type="button" class="btn btn--primary" :disableds="$step.cannotGoNext()" x-show="$step.isNotLast()" @click="$step.goNext()" disableds>
+    <button type="button" class="btn btn--primary" :disableds="$step.cannotGoNext()" v-show="$step.isNotLast()" @click="$step.goNext()" disableds>
       Continue
     </button>
-    <button type="submit" class="btn btn--primary" :disableds="$step.isUncompleted()" x-show="$step.isLast()" disableds>
+    <button type="submit" class="btn btn--primary" :disableds="$step.isUncompleted()" v-show="$step.isLast()" disableds>
       Install Grafema
     </button>
   </div>
 </form>
 
-<!--<div x-data="dropdown">-->
+<!--<div v-data="dropdown">-->
 <!--  <button @click="toggle">Toggle Content</button>-->
 
-<!--  <div x-show="open">-->
+<!--  <div v-show="open">-->
 <!--    Content...-->
 <!--  </div>-->
 <!--</div>-->
 
-<div class="df aic g-1" x-data="timer( new Date( new Date().getTime() + ( 220000 * 1000 ) ).toISOString() )">
+<div class="df aic g-1" v-data="timer( new Date( new Date().getTime() + ( 220000 * 1000 ) ).toISOString() )">
   <div class="p-2 py-3 ta-center b mw-20x4">
-    <div class="fw-600" x-text="day">00</div>
+    <div class="fw-600" v-text="day">00</div>
     <div class="t-hint t-muted">days</div>
   </div>
   :
   <div class="p-2 py-3 ta-center b mw-20x4">
-    <div class="fw-600" x-text="hour">00</div>
+    <div class="fw-600" v-text="hour">00</div>
     <div class="t-hint t-muted">hours</div>
   </div>
   :
   <div class="p-2 py-3 ta-center b mw-20x4">
-    <div class="fw-600" x-text="min">00</div>
+    <div class="fw-600" v-text="min">00</div>
     <div class="t-hint t-muted">minutes</div>
   </div>
   :
   <div class="p-2 py-3 ta-center b mw-20x4">
-    <div class="fw-600" x-text="sec">00</div>
+    <div class="fw-600" v-text="sec">00</div>
     <div class="t-hint t-muted">seconds</div>
   </div>
 </div>
 
-<form method="POST" class="card card-border g-6 p-8" x-datas="{close: false}" @submit.prevent="$ajax(&quot;user/sign-in&quot;)">
+<form method="POST" class="card card-border g-6 p-8" v-datas="{close: false}" @submit.prevent="$ajax(&quot;user/sign-in&quot;)">
   <header class="t-center">
     <h4>Welcome to Grafema</h4>
     <p class="t-muted">Login to you account and enjoy exclusive features and many more</p>
@@ -179,7 +179,7 @@
       </span>
     </label>
   </div>
-  <div class="dg g-1" x-datas="{show: true, data: {}}">
+  <div class="dg g-1" v-datas="{show: true, data: {}}">
     <div class="dg g-1">
       <div class="df aic jcsb fw-600">
         Password</div>
@@ -193,7 +193,7 @@
     </div>
 
   </div>
-  <div class="dg g-1" x-datas="{remember: []}">
+  <div class="dg g-1" v-datas="{remember: []}">
     <label class="df aic">
       <input type="checkbox" x.remember="prop" value="1">
       <span class="df aic mw">Remember me on this device</span>

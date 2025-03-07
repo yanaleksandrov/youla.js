@@ -15,7 +15,7 @@
 </p>
 
 <pre>
-&lt;div x-data&gt;
+&lt;div v-data&gt;
   &lt;button @click=&quot;alert(&#039;Привет 👋&#039;)&quot;&gt;Скажи привет&lt;/button&gt;
 &lt;/div&gt;
 </pre>
@@ -24,7 +24,7 @@
   В данном примере кнопка реагирует на событие click, и при его срабатывании появляется окно с сообщением "clicked".
 </p>
 
-<div class="demo" x-data>
+<div class="demo" v-data>
   <button @click="alert('Привет 👋')">Скажи привет</button>
 </div>
 
@@ -52,7 +52,7 @@
 </p>
 
 <pre>
-&lt;form x-data @submit.prevent=&quot;console.log(&#039;submitted&#039;)&quot; action=&quot;/foo&quot;&gt;
+&lt;form v-data @submit.prevent=&quot;console.log(&#039;submitted&#039;)&quot; action=&quot;/foo&quot;&gt;
   &lt;button&gt;Submit&lt;/button&gt;
 &lt;/form&gt;
 </pre>
@@ -80,9 +80,9 @@
 </p>
 
 <pre>
-&lt;div x-data=&quot;{ open: false }&quot;&gt;
+&lt;div v-data=&quot;{ open: false }&quot;&gt;
   &lt;button @click=&quot;open = ! open&quot;&gt;Открыть&lt;/button&gt;
-  &lt;div x-show=&quot;open&quot; @click.outside=&quot;open = false&quot;&gt;
+  &lt;div v-show=&quot;open&quot; @click.outside=&quot;open = false&quot;&gt;
     Контент...
   &lt;/div&gt;
 &lt;/div&gt;
@@ -97,7 +97,7 @@
 </p>
 
 <pre>
-&lt;div x-data @keyup.prevent.ctrl.s.window=&quot;alert(&#039;No need save&#039;)&quot;&gt;...&lt;/div&gt;
+&lt;div v-data @keyup.prevent.ctrl.s.window=&quot;alert(&#039;No need save&#039;)&quot;&gt;...&lt;/div&gt;
 </pre>
 
 <h4><code>.once</code></h4>
@@ -105,7 +105,7 @@
 <p>Гарантирует, что обработчик будет вызван только один раз.</p>
 
 <pre>
-&lt;button x-data @click.once=&quot;alert(&#039;Я появлюсь только один раз&#039;)&quot;&gt;Кликни&lt;/button&gt;
+&lt;button v-data @click.once=&quot;alert(&#039;Я появлюсь только один раз&#039;)&quot;&gt;Кликни&lt;/button&gt;
 </pre>
 
 <h3><code>.delay[.250ms]</code></h3>
@@ -118,7 +118,7 @@
 </p>
 
 <pre>
-&lt;input x-data @input.delay.500ms=&quot;alert(&#039;Я вызван&#039;)&quot;&gt;
+&lt;input v-data @input.delay.500ms=&quot;alert(&#039;Я вызван&#039;)&quot;&gt;
 </pre>
 
 <%= _.template(require('./parts/footer.html').default)(data) %>

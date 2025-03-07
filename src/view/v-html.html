@@ -3,10 +3,10 @@
 }; %>
 <%= _.template(require('./parts/header.html').default)(data) %>
 
-<h1>x-html</h1>
+<h1>v-html</h1>
 
 <p>
-  Директива <code>x-html</code> позволяет вставлять HTML-код в элемент,
+  Директива <code>v-html</code> позволяет вставлять HTML-код в элемент,
   заменяя его текущее содержимое. Это аналог свойства innerHTML в JavaScript.
 </p>
 
@@ -18,16 +18,16 @@
   </p>
 </blockquote>
 
-<p>Вот простой пример использования <code>x-html</code> для отображения имени пользователя:</p>
+<p>Вот простой пример использования <code>v-html</code> для отображения имени пользователя:</p>
 
 <pre>
-&lt;div x-data=&quot;{ username: &#039;&lt;strong&gt;Yan Aleksandrov&lt;/strong&gt;&#039; }&quot;&gt;
-  Имя: &lt;span x-html=&quot;username&quot;&gt;&lt;/span&gt;
+&lt;div v-data=&quot;{ username: &#039;&lt;strong&gt;Yan Aleksandrov&lt;/strong&gt;&#039; }&quot;&gt;
+  Имя: &lt;span v-html=&quot;username&quot;&gt;&lt;/span&gt;
 &lt;/div&gt;
 </pre>
 
-<div class="demo" x-data="{ username: '<strong>Yan Aleksandrov</strong>' }">
-  Имя: <span x-html="username"></span>
+<div class="demo" v-data="{ username: '<strong>Yan Aleksandrov</strong>' }">
+  Имя: <span v-html="username"></span>
 </div>
 
 <%= _.template(require('./parts/footer.html').default)(data) %>

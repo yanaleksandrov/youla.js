@@ -136,7 +136,7 @@ function castToType(a, value) {
 document.addEventListener('x:refreshed', ({detail}) => {
   const { modifiers, directive, expression } = detail.attribute;
 
-  if (directive === 'x-prop' && isStorageModifier(modifiers)) {
+  if (directive === 'v-prop' && isStorageModifier(modifiers)) {
     const type   = getStorageType(modifiers);
     const expire = getNextModifier(modifiers, type);
     if (detail.output) {
@@ -156,7 +156,7 @@ document.addEventListener('x:fetched', ({detail}) => {
   fetched.forEach(item => {
     const { attribute: { modifiers, directive, expression } } = item;
 
-    if (directive === 'x-prop' && isStorageModifier(modifiers)) {
+    if (directive === 'v-prop' && isStorageModifier(modifiers)) {
       const type  = getStorageType(modifiers);
       const value = storage.get(expression, type);
 

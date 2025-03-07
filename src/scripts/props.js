@@ -7,7 +7,7 @@ export function fetchProps(rootElement, data) {
   domWalk(rootElement, el => getAttributes(el).forEach(attribute => {
     let {name, directive, expression, modifiers} = attribute;
 
-    if (directive === 'x-prop') {
+    if (directive === 'v-prop') {
       // try fetch multiple checkboxes with same prop
       if (el.type === 'checkbox' && data[expression] === undefined) {
         data[expression] = (rootElement.querySelectorAll(`[${CSS.escape(name)}]`)).length > 1 ? [] : '';

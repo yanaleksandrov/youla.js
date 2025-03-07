@@ -3,10 +3,10 @@ title: "To Do List"
 }; %>
 <%= _.template(require('./parts/header.html').default)(data) %>
 
-<h1>x-data</h1>
+<h1>v-data</h1>
 
 <p>
-  В X.js всё начинается с директивы x-data. <code>x-data</code> определяет фрагмент HTML
+  В X.js всё начинается с директивы v-data. <code>v-data</code> определяет фрагмент HTML
   как новый компонент и предоставляет реактивные данные для ссылки на этот компонент.
 </p>
 
@@ -27,34 +27,34 @@ title: "To Do List"
   после нажатия кнопки "Ок, принято" x.js запомнит выбор пользователя и не будет отображать его.
 </p>
 
-<div x-data="{popup: false}">
-  <div x-prop.cookie="popup" x-show="!popup" hidden>
+<div v-data="{popup: false}">
+  <div v-prop.cookie="popup" v-show="!popup" hidden>
     <span>We use cookie!</span>
     <button type="button" @click="popup = !popup">Ок, принято</button>
   </div>
-  <p x-show="popup">
+  <p v-show="popup">
     Модальное окно уже было показано
   </p>
 </div>
 
-<div x-data="{voices: 1000, voted: false}">
+<div v-data="{voices: 1000, voted: false}">
   <h3>Restriction of repeated voting</h3>
   <p>
     The page saves data to localStorage with information that the user has already voted to prevent a repeat vote.
   </p>
-  <div x-prop.local="voices" x-prop.local="voted">
+  <div v-prop.local="voices" v-prop.local="voted">
     <button type="button" @click="--voices; voted = true" :disabled="voted">
       <i class="ph ph-thumbs-down"></i>
     </button>
-    <span x-text="voices"></span>
+    <span v-text="voices"></span>
     <button type="button" @click="++voices; voted = true" :disabled="voted">
       <i class="ph ph-thumbs-up"></i>
     </button>
-    <span class="hidden" @click="voices = 1000; voted = false" x-show="voted">Reset</span>
+    <span class="hidden" @click="voices = 1000; voted = false" v-show="voted">Reset</span>
   </div>
 </div>
 
-<div x-data>
+<div v-data>
   <h3>Saving video playback time</h3>
   <p>
     TODO:
@@ -62,23 +62,23 @@ title: "To Do List"
     and, when the page is reloaded, it will prompt you to start viewing from the point of departure.
   </p>
   <div>
-    <video x-prop.cookie="time" x-ref="video" @play="$el.ontimeupdate = () => time = $el.currentTime" width="640px" height="267px" controls muted>
+    <video v-prop.cookie="time" v-ref="video" @play="$el.ontimeupdate = () => time = $el.currentTime" width="640px" height="267px" controls muted>
       <source src="https://vjs.zencdn.net/v/oceans.mp4" type='video/mp4' />
     </video>
-    <div x-show="time > 0">
-      Start playback from <span x-text="parseInt(time, 10)"></span> seconds?
+    <div v-show="time > 0">
+      Start playback from <span v-text="parseInt(time, 10)"></span> seconds?
       <button type="button" @click="$refs.video.currentTime = time; $refs.video.play()">Yes</button>
     </div>
   </div>
 </div>
 
-<div x-data class="test test--content" :class="dark && 'dark'">
+<div v-data class="test test--content" :class="dark && 'dark'">
   <h3>Dark & Light theme switcher</h3>
   <p>
     The "We use cookies!" window will pop up whenever the page is reloaded. However, after clicking
     on the "Ok, accepted" button, x.js will remember the user's choice and will not display it.
   </p>
-  <button type="button" x-prop.local="dark" @click="dark = !dark">
+  <button type="button" v-prop.local="dark" @click="dark = !dark">
     <i class="ph ph-sun" :class="{ 'ph-sun': !dark, 'ph-moon': dark }"></i>
   </button>
   <style>

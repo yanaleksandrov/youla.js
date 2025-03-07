@@ -1,0 +1,211 @@
+<% var data = {
+title: "To Do List"
+}; %>
+<%= _.template(require('./parts/header.html').default)(data) %>
+
+<h1>v-prop</h1>
+
+<p>
+  Директива позволяет связать значения полей ввода <code>input</code>, <code>select</code>
+  и <code>textarea</code> к <code>v-data</code> без объявления их в директиве.
+  Такой подход позволяет не повторяться и сделать html представление более лаконичным. Сравните 2 по смыслу идентичных подхода:
+</p>
+
+<table>
+  <tbody>
+    <tr>
+      <td>
+        <pre>&lt;form v-data&gt;
+  &lt;input type=&quot;text&quot; value=&quot;Hello&quot; v-prop=&quot;test&quot;&gt;
+  &lt;span v-text=&quot;test&quot;&gt;&lt;/span&gt;
+&lt;/form&gt;</pre>
+      </td>
+      <td>
+        <pre>&lt;form v-data=&quot;{test: 'Hello'}&quot;&gt;
+  &lt;input type=&quot;text&quot; value=&quot;Hello&quot; @keydown.delay.1ms=&quot;test = $el.value&quot;&gt;
+  &lt;span v-text=&quot;test&quot;&gt;&lt;/span&gt;
+&lt;/form&gt;</pre>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Во втором случае не требуется объявления в директиве <code>v-data</code> и события ввода.</p>
+
+<h2>Text inputs</h2>
+
+<pre>
+&lt;form v-data&gt;
+  &lt;input v-prop=&quot;message&quot; type=&quot;text&quot;&gt;
+  &lt;span v-text=&quot;message&quot;&gt;&lt;/span&gt;
+&lt;/form&gt;
+</pre>
+
+<form class="demo" v-data>
+  <input v-prop="message" type="text">
+  <span v-text="message"></span>
+</form>
+
+<h2>Textarea inputs</h2>
+
+<pre>
+&lt;form v-data&gt;
+  &lt;textarea v-prop=&quot;message&quot;&gt;&lt;/textarea&gt;
+  &lt;span v-text=&quot;message&quot;&gt;&lt;/span&gt;
+&lt;/form&gt;
+</pre>
+
+<form class="demo" v-data>
+  <textarea v-prop="message"></textarea>
+  <span v-text="message"></span>
+</form>
+
+<h2>Checkbox inputs</h2>
+
+<h3>Одиночный checkbox с логическим значением</h3>
+
+<pre>
+&lt;form v-data&gt;
+  &lt;input type=&quot;checkbox&quot; id=&quot;checkbox&quot; v-prop=&quot;show&quot;&gt;
+  &lt;label for=&quot;checkbox&quot; v-text=&quot;show&quot;&gt;&lt;/label&gt;
+&lt;/form&gt;
+</pre>
+
+<form class="demo" v-data>
+  <input type="checkbox" id="checkbox" v-prop="show">
+  <label for="checkbox" v-text="show"></label>
+</form>
+
+<h3>Несколько checkbox, привязанных к массиву</h3>
+
+<pre>
+&lt;form v-data&gt;
+  &lt;input type=&quot;checkbox&quot; value=&quot;red&quot; v-prop=&quot;colors&quot;&gt;
+  &lt;input type=&quot;checkbox&quot; value=&quot;orange&quot; v-prop=&quot;colors&quot;&gt;
+  &lt;input type=&quot;checkbox&quot; value=&quot;yellow&quot; v-prop=&quot;colors&quot;&gt;
+  Colors: &lt;span v-text=&quot;colors&quot;&gt;&lt;/span&gt;
+&lt;/form&gt;
+</pre>
+
+<form class="demo" v-data>
+  <input type="checkbox" value="red" v-prop="colors">
+  <input type="checkbox" value="orange" v-prop="colors">
+  <input type="checkbox" value="yellow" v-prop="colors">
+  Colors: <span v-text="colors"></span>
+</form>
+
+<h2>Radio кнопки</h2>
+
+<pre>
+&lt;form v-data&gt;
+  &lt;input type=&quot;radio&quot; value=&quot;yes&quot; v-prop=&quot;answer&quot;&gt;
+  &lt;input type=&quot;radio&quot; value=&quot;no&quot; v-prop=&quot;answer&quot;&gt;
+  Answer: &lt;span v-text=&quot;answer&quot;&gt;&lt;/span&gt;
+&lt;/form&gt;
+</pre>
+
+<form class="demo" v-data>
+  <input type="radio" value="yes" v-prop="answer">
+  <input type="radio" value="no" v-prop="answer">
+  Answer: <span v-text="answer"></span>
+</form>
+
+<h2>Выпадающий список select</h2>
+
+<h3>Одиночный выбор</h3>
+
+<pre>
+&lt;form v-data&gt;
+  &lt;select v-prop=&quot;color&quot;&gt;
+    &lt;option&gt;Red&lt;/option&gt;
+    &lt;option&gt;Orange&lt;/option&gt;
+    &lt;option&gt;Yellow&lt;/option&gt;
+  &lt;/select&gt;
+
+  Color: &lt;span v-text=&quot;color&quot;&gt;&lt;/span&gt;
+&lt;/form&gt;
+</pre>
+
+<form class="demo" v-data>
+  <select v-prop="color">
+    <option>Red</option>
+    <option>Orange</option>
+    <option>Yellow</option>
+  </select>
+
+  Color: <span v-text="color"></span>
+</form>
+
+<h3>Множественный выбор</h3>
+
+<pre>
+&lt;form v-data&gt;
+  &lt;select v-prop=&quot;color&quot; multiple&gt;
+    &lt;option&gt;Red&lt;/option&gt;
+    &lt;option&gt;Orange&lt;/option&gt;
+    &lt;option&gt;Yellow&lt;/option&gt;
+  &lt;/select&gt;
+
+  Colors: &lt;span v-text=&quot;color&quot;&gt;&lt;/span&gt;
+&lt;/form&gt;
+</pre>
+
+<form class="demo" v-data>
+  <select v-prop="color" multiple>
+    <option>Red</option>
+    <option>Orange</option>
+    <option>Yellow</option>
+  </select>
+
+  Colors: <span v-text="color"></span>
+</form>
+
+<h2>Диапазон inputs</h2>
+
+<pre>
+&lt;form v-data&gt;
+  &lt;input type=&quot;range&quot; v-prop=&quot;range&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.1&quot;&gt;
+  &lt;span v-text=&quot;range&quot;&gt;&lt;/span&gt;
+&lt;/form&gt;
+</pre>
+
+<form class="demo" v-data>
+  <input type="range" v-prop="range" min="0" max="1" step="0.1">
+  <span v-text="range"></span>
+</form>
+
+<h2>Модификаторы</h2>
+
+<p><code>.local</code> и <code>.cookie</code></p>
+
+<p>
+  Позволяют автоматически сохранять значение привязанного свойства в куках или локальном
+  хранилище и восстанавливать его при последующих загрузках страницы. Это удобно для хранения
+  пользовательских предпочтений, например, темы оформления, имени пользователя или других параметров.
+</p>
+
+<h3>Сохранение значений формы</h3>
+
+<pre>
+&lt;form v-data&gt;
+  &lt;div&gt;Сохранение в local storage&lt;/div&gt;
+  &lt;input type=&quot;text&quot; v-prop.local=&quot;local&quot;&gt;
+  &lt;div v-text=&quot;local&quot;&gt;&lt;/div&gt;
+  &lt;br&gt;
+  &lt;div&gt;Сохранение в куках&lt;/div&gt;
+  &lt;input type=&quot;text&quot; v-prop.cookie=&quot;cookie&quot;&gt;
+  &lt;div v-text=&quot;cookie&quot;&gt;&lt;/div&gt;
+&lt;/form&gt;
+</pre>
+
+<form v-data>
+  <div>Сохранение в local storage</div>
+  <input type="text" v-prop.local="firstName">
+  <div v-text="firstName"></div>
+  <br>
+  <div>Сохранение в куках</div>
+  <input type="text" v-prop.cookie="lastName">
+  <div v-text="lastName"></div>
+</form>
+
+<%= _.template(require('./parts/footer.html').default)(data) %>

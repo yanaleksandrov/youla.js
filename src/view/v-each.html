@@ -3,53 +3,53 @@
 }; %>
 <%= _.template(require('./parts/header.html').default)(data) %>
 
-<h1>x-each</h1>
+<h1>v-each</h1>
 
 <p>
-  Директива <code>x-each</code> позволяет создавать элементы DOM путем перебора списка.
+  Директива <code>v-each</code> позволяет создавать элементы DOM путем перебора списка.
   Вот простой пример создания списка цветов на основе массива.
 </p>
 
 <pre>
-&lt;div x-data=&quot;{ colors: ['Red', 'Orange', 'Yellow'] }&quot;&gt;
+&lt;div v-data=&quot;{ colors: ['Red', 'Orange', 'Yellow'] }&quot;&gt;
   &lt;ul&gt;
-    &lt;li x-each=&quot;color in colors&quot; x-text=&quot;color&quot;&gt;&lt;/li&gt;
+    &lt;li v-each=&quot;color in colors&quot; v-text=&quot;color&quot;&gt;&lt;/li&gt;
   &lt;/ul&gt;
 &lt;/div&gt;
 </pre>
 
-<div x-data="{ colors: ['Red', 'Orange', 'Yellow'] }">
+<div v-data="{ colors: ['Red', 'Orange', 'Yellow'] }">
   <ul>
-    <li x-each="color in colors" x-text="color"></li>
+    <li v-each="color in colors" v-text="color"></li>
   </ul>
 </div>
 
 <p>
-  Есть правило, на которое стоит обратить внимание: <code>x-each</code> должен быть объявлен
+  Есть правило, на которое стоит обратить внимание: <code>v-each</code> должен быть объявлен
   на том элементе-шаблоне, который повторяется для каждой итерации цикла. Чтобы скрыть сам шаблон,
-  добавьте css правило <code>display: none</code> для селектора <code> [x-each]</code>.
+  добавьте css правило <code>display: none</code> для селектора <code> [v-each]</code>.
 </p>
 
 <p>Вы также можете передавать объекты:</p>
 
 <pre>
-  &lt;ul x-data=&quot;{ cars: { make: 'Jeep', model: 'Grand Cherokee', color: 'Black' } }&quot;&gt;
-    &lt;li x-each=&quot;(car, key) in cars&quot;&gt;
-      &lt;span x-text=&quot;key&quot;&gt;&lt;/span&gt;: &lt;span x-text=&quot;car&quot;&gt;&lt;/span&gt;
+  &lt;ul v-data=&quot;{ cars: { make: 'Jeep', model: 'Grand Cherokee', color: 'Black' } }&quot;&gt;
+    &lt;li v-each=&quot;(car, key) in cars&quot;&gt;
+      &lt;span v-text=&quot;key&quot;&gt;&lt;/span&gt;: &lt;span v-text=&quot;car&quot;&gt;&lt;/span&gt;
     &lt;/li&gt;
   &lt;/ul&gt;
 </pre>
 
-<ul x-data="{ cars: { make: 'Jeep', model: 'Grand Cherokee', color: 'Black' } }">
-  <li x-each="(car, key) in cars">
-    <span x-text="key"></span>: <span x-text="car"></span>
+<ul v-data="{ cars: { make: 'Jeep', model: 'Grand Cherokee', color: 'Black' } }">
+  <li v-each="(car, key) in cars">
+    <span v-text="key"></span>: <span v-text="car"></span>
   </li>
 </ul>
 
 <p>А также создавать вложенные циклы с неограниченной глубиной</p>
 
 <pre>
-&lt;div x-data=&quot;{
+&lt;div v-data=&quot;{
   categories: [
     {
       name: &#039;Category 1&#039;,
@@ -68,20 +68,20 @@
     }
   ]
 }&quot;&gt;
-  &lt;div x-each=&quot;(category, index) in categories&quot;&gt;
-    &lt;h3 x-text=&quot;category.name&quot;&gt;&lt;/h3&gt;
+  &lt;div v-each=&quot;(category, index) in categories&quot;&gt;
+    &lt;h3 v-text=&quot;category.name&quot;&gt;&lt;/h3&gt;
     &lt;ul&gt;
-      &lt;li x-each=&quot;product in category.products&quot;&gt;
-        &lt;strong x-text=&quot;product.name&quot;&gt;&lt;/strong&gt;
+      &lt;li v-each=&quot;product in category.products&quot;&gt;
+        &lt;strong v-text=&quot;product.name&quot;&gt;&lt;/strong&gt;
         Attributes:
-        &lt;em x-each=&quot;attribute in product.attributes join &#039;, &#039;&quot; x-text=&quot;attribute&quot;&gt;&lt;/em&gt;
+        &lt;em v-each=&quot;attribute in product.attributes join &#039;, &#039;&quot; v-text=&quot;attribute&quot;&gt;&lt;/em&gt;
       &lt;/li&gt;
     &lt;/ul&gt;
   &lt;/div&gt;
 &lt;/div&gt;
 </pre>
 
-<div x-data="{
+<div v-data="{
   categories: [
     {
       name: 'Category 1',
@@ -100,13 +100,13 @@
     }
   ]
 }">
-  <div x-each="(category, index) in categories">
-    <h3 x-text="category.name"></h3>
+  <div v-each="(category, index) in categories">
+    <h3 v-text="category.name"></h3>
     <ul>
-      <li x-each="product in category.products">
-        <strong x-text="product.name"></strong>
+      <li v-each="product in category.products">
+        <strong v-text="product.name"></strong>
         Attributes:
-        <em x-each="attribute in product.attributes join ', '" x-text="attribute"></em>
+        <em v-each="attribute in product.attributes join ', '" v-text="attribute"></em>
       </li>
     </ul>
   </div>
@@ -120,13 +120,13 @@
 </p>
 
 <pre>
-&lt;p x-data=&quot;{ attributes: [&#039;White&#039;, &#039;20x30mm&#039;, &#039;Google LLC&#039;] }&quot;&gt;
-  Характеристики: &lt;i x-each=&quot;attribute in attributes join &#039;, &#039;&quot; x-text=&quot;attribute&quot;&gt;&lt;/i&gt;
+&lt;p v-data=&quot;{ attributes: [&#039;White&#039;, &#039;20x30mm&#039;, &#039;Google LLC&#039;] }&quot;&gt;
+  Характеристики: &lt;i v-each=&quot;attribute in attributes join &#039;, &#039;&quot; v-text=&quot;attribute&quot;&gt;&lt;/i&gt;
 &lt;/p&gt;
 </pre>
 
-<p x-data="{ attributes: ['White', '20x30mm', 'Google LLC'] }">
-  Характеристики: <i x-each="attribute in attributes join ', '" x-text="attribute"></i>
+<p v-data="{ attributes: ['White', '20x30mm', 'Google LLC'] }">
+  Характеристики: <i v-each="attribute in attributes join ', '" v-text="attribute"></i>
 </p>
 
 <h2>Доступ к индексам</h2>
@@ -137,16 +137,16 @@
 </p>
 
 <pre>
-&lt;ul x-data=&quot;{ names: ['Ivan', 'Yulia', 'Evgeny'] }&quot;&gt;
-  &lt;li x-each=&quot;(name, index) in names&quot;&gt;
-    &lt;span x-text=&quot;&#x60;${++index}: ${name}&#x60;&quot;&gt;&lt;/span&gt;
+&lt;ul v-data=&quot;{ names: ['Ivan', 'Yulia', 'Evgeny'] }&quot;&gt;
+  &lt;li v-each=&quot;(name, index) in names&quot;&gt;
+    &lt;span v-text=&quot;&#x60;${++index}: ${name}&#x60;&quot;&gt;&lt;/span&gt;
   &lt;/li&gt;
 &lt;/ul&gt;
 </pre>
 
-<ul x-data="{ names: ['Ivan', 'Yulia', 'Evgeny'] }">
-  <li x-each="(name, index) in names">
-    <span x-text="`${++index}: ${name}`"></span>
+<ul v-data="{ names: ['Ivan', 'Yulia', 'Evgeny'] }">
+  <li v-each="(name, index) in names">
+    <span v-text="`${++index}: ${name}`"></span>
   </li>
 </ul>
 
@@ -155,15 +155,15 @@
 <p>Если вам нужно просто зациклить несколько раз, а не перебирать массив, X.js предлагает короткий синтаксис с указанием целого числа вместо свойства:</p>
 
 <pre>
-&lt;div x-data&gt;
+&lt;div v-data&gt;
   Рейтинг:
-  &lt;span x-each=&quot;i in 5&quot;&gt;⭐&lt;/span&gt;
+  &lt;span v-each=&quot;i in 5&quot;&gt;⭐&lt;/span&gt;
 &lt;/div&gt;
 </pre>
 
-<div x-data>
+<div v-data>
   Рейтинг:
-  <span x-each="i in 5">⭐</span>
+  <span v-each="i in 5">⭐</span>
 </div>
 
 <p>Обратите внимание, что в таком случае значения <code>i</code> начинаются с 1, а не с 0.</p>

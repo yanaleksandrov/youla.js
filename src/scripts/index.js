@@ -18,14 +18,14 @@ export const x = {
   },
 
   discoverComponents: callback => {
-    Array.from(document.querySelectorAll('[x-data]')).forEach(callback)
+    Array.from(document.querySelectorAll('[v-data]')).forEach(callback)
   },
 
   listenUninitializedComponentsAtRunTime: callback => {
     let observer = new MutationObserver(mutations =>
       mutations.forEach(mutation =>
         Array.from(mutation.addedNodes)
-          .filter(node => node.nodeType === 1 && node.matches('[x-data]'))
+          .filter(node => node.nodeType === 1 && node.matches('[v-data]'))
           .forEach(callback)
       )
     );

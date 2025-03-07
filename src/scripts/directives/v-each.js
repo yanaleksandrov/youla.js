@@ -9,7 +9,7 @@ directive('each', (el, expression, attribute, x, component) => {
   }
 
   /**
-   * Step 1: parse x-each value
+   * Step 1: parse v-each value
    *
    * may be "i in 5", "dog in dogs", "(car, index) in cars" syntax
    * with support dot notation, like: "(person, index) in data.list.persons"
@@ -21,7 +21,7 @@ directive('each', (el, expression, attribute, x, component) => {
    */
   let dataItems;
 
-  let hasChildEach = el.querySelector('[x-each]');
+  let hasChildEach = el.querySelector('[v-each]');
   if (Number.isInteger(+items)) {
     dataItems = Array.from({length: +items}, (_, i) => i + 1);
   } else {
@@ -37,7 +37,7 @@ directive('each', (el, expression, attribute, x, component) => {
   while (el.nextSibling) {
     let next = el.nextSibling;
 
-    if (next.nodeType === Node.ELEMENT_NODE && next.hasAttribute('x-each')) {
+    if (next.nodeType === Node.ELEMENT_NODE && next.hasAttribute('v-each')) {
       break;
     }
 
@@ -47,7 +47,7 @@ directive('each', (el, expression, attribute, x, component) => {
   Object.entries(dataItems ?? []).forEach(([key, dataItem], idx, array) => {
     const clone = el.cloneNode(true);
 
-    clone.removeAttribute('x-each');
+    clone.removeAttribute('v-each');
 
     (async () => {
       clone.__x_for_data = {[item]: dataItem, [index]: +key};

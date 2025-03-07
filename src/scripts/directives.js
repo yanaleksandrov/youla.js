@@ -1,6 +1,6 @@
 import { x } from '../scripts/index';
 
-const prefix = 'x-';
+const prefix = 'v-';
 
 export function directive(name, callback) {
   name = `${prefix}${name}`;

@@ -89,8 +89,8 @@ table {
 }
 
 .hidden,
-[x-each],
-[x-hide] {
+[v-each],
+[v-hide] {
 	display: none;
 }
 

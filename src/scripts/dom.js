@@ -14,7 +14,7 @@ export function domWalk(el, callback) {
   let node = el.firstElementChild;
 
   while (node) {
-    if (node.hasAttribute('x-data')) {
+    if (node.hasAttribute('v-data')) {
       return;
     }
 

@@ -15,7 +15,7 @@ export default class Component {
     //console.log(dataProviderContext)
 
     this.root    = el;
-    this.rawData = saferEval(el.getAttribute('x-data') || '{}', dataProviderContext);
+    this.rawData = saferEval(el.getAttribute('v-data') || '{}', dataProviderContext);
     this.rawData = fetchProps(el, this.rawData);
     this.data    = this.wrapDataInObservable(this.rawData);
 
@@ -76,7 +76,7 @@ export default class Component {
       }
 
       // init props
-      if (directive === 'x-prop') {
+      if (directive === 'v-prop') {
         // If the element we are binding to is a select, a radio, or checkbox
         // we'll listen for the change event instead of the "input" event.
         let event = ['select-multiple', 'select', 'checkbox', 'radio'].includes(el.type) || modifiers.includes('lazy') ? 'change' : 'input';
@@ -95,7 +95,7 @@ export default class Component {
       // init directives
       if (directive in x.directives) {
         let output = expression;
-        if (directive !== 'x-each') {
+        if (directive !== 'v-each') {
           try {
             ({ output } = self.evaluate(expression, additionalHelperVariables));
           } catch (error) {}
@@ -111,7 +111,7 @@ export default class Component {
       domWalk(self.root, el => getAttributes(el).forEach(attribute => {
         let {directive, expression} = attribute;
 
-        if (directive === 'x-prop') {
+        if (directive === 'v-prop') {
           let { output, deps } = self.evaluate(expression)
           if (self.concernedData.filter(i => deps.includes(i)).length > 0) {
             updateAttribute(el, 'value', output);
@@ -125,7 +125,7 @@ export default class Component {
         if (directive in x.directives) {
           let output = expression,
             deps   = [];
-          if (directive !== 'x-each') {
+          if (directive !== 'v-each') {
             try {
               ({ output, deps } = self.evaluate(expression));
             } catch (error) {}
@@ -258,7 +258,7 @@ export default class Component {
         let ref
 
         // We can't just query the DOM because it's hard to filter out refs in nested components.
-        domWalk(self.root, el => (el.getAttribute('x-ref') === property ? (ref = el) : null));
+        domWalk(self.root, el => (el.getAttribute('v-ref') === property ? (ref = el) : null));
 
         return ref
       }

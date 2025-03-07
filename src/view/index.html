@@ -3,24 +3,24 @@
 }; %>
 <%= _.template(require('./parts/header.html').default)(data) %>
 
-<div x-data="timer( new Date( new Date().getTime() + ( 110000 * 1000 ) ).toISOString() )">
-  <span @load="init()" x-text="day">01</span>:<span x-text="hour">06</span>:<span x-text="min">33</span>:<span x-text="sec">20</span>
+<div v-data="timer( new Date( new Date().getTime() + ( 110000 * 1000 ) ).toISOString() )">
+  <span @load="init()" v-text="day">01</span>:<span v-text="hour">06</span>:<span v-text="min">33</span>:<span v-text="sec">20</span>
 </div>
 <br>
 <br>
 <br>
 <br>
 
-<div class="accordion" x-data="{ i: -1 }">
+<div class="accordion" v-data="{ i: -1 }">
   <div class="accordion__item">
     <div class="accordion__title" @click="i = i !== 1 ? 1 : -1">Title of item 1</div>
-    <div class="accordion__panel" x-collapse="i === 1" x-hide>
+    <div class="accordion__panel" v-collapse="i === 1" v-hide>
       <p>Description of item 1</p>
     </div>
   </div>
   <div class="accordion__item">
     <div class="accordion__title" @click="i = i !== 2 ? 2 : -1">Title of item 2</div>
-    <div class="accordion__panel" x-collapse="i === 2" x-hide>
+    <div class="accordion__panel" v-collapse="i === 2" v-hide>
       <p>Description of item 2</p>
     </div>
   </div>
@@ -30,7 +30,7 @@
 <br>
 <br>
 
-<div x-data="{'sign-in': 'привет', viewed: false, data: {percent: 0}, items: [], count: 11, lists: [{attributes: {href: 'https://poe.com/chat/2shu93txki2jj53eflg', target: '_blank'}, title: 'Hello World!'}, {attributes: {href: '#', target: '_blank'}, title: 'How are you?'}]}">
+<div v-data="{'sign-in': 'привет', viewed: false, data: {percent: 0}, items: [], count: 11, lists: [{attributes: {href: 'https://poe.com/chat/2shu93txki2jj53eflg', target: '_blank'}, title: 'Hello World!'}, {attributes: {href: '#', target: '_blank'}, title: 'How are you?'}]}">
   <form @submit.prevent="$ajax('https://jsonplaceholder.typicode.com/posts', {}, response => data = response).then(r => console.log(r))">
     <input type="file" name="testFile" placeholder="Choose file">
     <br>
@@ -44,9 +44,9 @@
 
     <button type="button" @click.delay.1000ms.once="$ajax('https://jsonplaceholder.typicode.com/posts', {}, response => items = response.json)">Test Fetch</button>
     <ul>
-      <li x-each="item in items">
-        <span x-text="item.id"></span>
-        <a x-text="item.title"></a>
+      <li v-each="item in items">
+        <span v-text="item.id"></span>
+        <a v-text="item.title"></a>
       </li>
     </ul>
     <br>
@@ -56,80 +56,80 @@
     <div>
       sign-in prop
     </div>
-    <input x-prop="sign-in" type="text">
-    <div x-text="sign-in"></div>
+    <input v-prop="sign-in" type="text">
+    <div v-text="sign-in"></div>
     <br>
     <br>
     <div>
       inputo
     </div>
-    <input value="10" x-prop="inputo" :min="8" :max="12" :type="'number'">
-    <div x-text="inputo"></div>
-    <div x-text="count"></div>
+    <input value="10" v-prop="inputo" :min="8" :max="12" :type="'number'">
+    <div v-text="inputo"></div>
+    <div v-text="count"></div>
     <br>
 
     <div>
       Single checkbox with boolean (single)
     </div>
-    <input type="checkbox" x-prop="single" checked>
-    <div x-text="single"></div>
-    <div x-hide="single === 'on'">Checkbox is checked</div>
+    <input type="checkbox" v-prop="single" checked>
+    <div v-text="single"></div>
+    <div v-hide="single === 'on'">Checkbox is checked</div>
     <br>
 
     <div>
       Multiple checkboxes bound to array (colors)
     </div>
-    <input type="checkbox" value="Red color!" x-prop="colors" checked>
-    <input type="checkbox" value="Orange color!" x-prop="colors" checked>
-    <input type="checkbox" value="Yellow color!" x-prop="colors" checked>
+    <input type="checkbox" value="Red color!" v-prop="colors" checked>
+    <input type="checkbox" value="Orange color!" v-prop="colors" checked>
+    <input type="checkbox" value="Yellow color!" v-prop="colors" checked>
     <br>
-    Colors: <span x-text="colors"></span>
+    Colors: <span v-text="colors"></span>
     <br>
     <br>
 
     <div>
       Select
     </div>
-    <select x-prop="select">
+    <select v-prop="select">
       <option value="">Select A Color</option>
       <option value="Value 1">Value 1</option>
       <option value="Value 2">Value 2</option>
       <option value="Value 3">Value 3</option>
     </select>
     <br>
-    Value of select: <span x-text="select"></span>
+    Value of select: <span v-text="select"></span>
     <br>
     <br>
 
     <div>
       Multiple select
     </div>
-    <select multiple x-prop="multiple">
+    <select multiple v-prop="multiple">
       <option value="">Select A Color</option>
       <option value="Value 1">Value 1</option>
       <option value="Value 2">Value 2</option>
       <option value="Value 3">Value 3</option>
     </select>
     <br>
-    Value of select: <span x-text="multiple"></span>
+    Value of select: <span v-text="multiple"></span>
     <br>
     <br>
 
     <div>
       Radio inputs (answer)
     </div>
-    <input type="radio" value="yes" x-prop="answer">
-    <input type="radio" value="no" x-prop="answer">
+    <input type="radio" value="yes" v-prop="answer">
+    <input type="radio" value="no" v-prop="answer">
     <br>
-    Answer: <span x-text="answer"></span>
+    Answer: <span v-text="answer"></span>
     <br>
     <br>
 
     <div>
       Textarea
     </div>
-    <textarea @keyup="content" x-prop="content">Hello World!</textarea>
-    <div x-text="content"></div>
+    <textarea @keyup="content" v-prop="content">Hello World!</textarea>
+    <div v-text="content"></div>
   </form>
 
   <br><br><br><br><br><br><br><br><br><br>
@@ -145,14 +145,14 @@
   </div>
 </div>
 
-<div x-data="{ foo: 'bar', count: '2', hel: '<strong>x-html directive</strong>', test: 'X-text directive', open: false, tab: 'foo' }">
-  <div x-text="test"></div>
-  <div x-html="hel"></div>
+<div v-data="{ foo: 'bar', count: '2', hel: '<strong>v-html directive</strong>', test: 'X-text directive', open: false, tab: 'foo' }">
+  <div v-text="test"></div>
+  <div v-html="hel"></div>
   <br>
   <br>
   <br>
 
-  <span x-text="foo" x-ref="lob"></span>
+  <span v-text="foo" v-ref="lob"></span>
   <br>
   <br>
   <br>
@@ -163,8 +163,8 @@
   <br>
 
   Model input:
-  <div x-text="friends"></div>
-  <input value="Hello, my friend!" x-prop="friends">
+  <div v-text="friends"></div>
+  <input value="Hello, my friend!" v-prop="friends">
   <button @click="friends = 'Hello world!'">Change text</button>
   <br>
   <br>
@@ -172,15 +172,15 @@
 
   <div>
     <button @click="count--">-</button>
-    <span x-text="count"></span>
+    <span v-text="count"></span>
     <button @click="count++">+</button>
   </div>
-  <div x-show="count > 2" style="font-size: 20px;">This is shown because count is more than 2</div>
+  <div v-show="count > 2" style="font-size: 20px;">This is shown because count is more than 2</div>
   <br>
   <br>
   <br>
 
-  <input x-model="test">
+  <input v-model="test">
   <button @click="test = 'baz'">Change to baz</button>
   <br>
   <br>

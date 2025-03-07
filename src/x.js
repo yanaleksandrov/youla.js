@@ -15,15 +15,15 @@ import './scripts/storage';
 /**
  * The Directives
  *
- * Now that the core is all set up, we can register X directives like x-text or
- * x-html that form the basis of how X adds behavior to an app's static markup.
+ * Now that the core is all set up, we can register X directives like v-text or
+ * v-html that form the basis of how X adds behavior to an app's static markup.
  */
-import './scripts/directives/x-each';
-import './scripts/directives/x-bind';
-import './scripts/directives/x-html';
-import './scripts/directives/x-text';
-import './scripts/directives/x-show';
-import './scripts/directives/x-hide';
+import './scripts/directives/v-each';
+import './scripts/directives/v-bind';
+import './scripts/directives/v-html';
+import './scripts/directives/v-text';
+import './scripts/directives/v-show';
+import './scripts/directives/v-hide';
 
 /**
  * The Methods
@@ -35,7 +35,7 @@ import './scripts/methods/$store';
 import './scripts/methods/$dispatch';
 
 // experimental directives & methods for grafema project
-import './scripts/directives/x-grafema';
+import './scripts/directives/v-grafema';
 import './scripts/methods/$grafema';
 
 window.x.start();

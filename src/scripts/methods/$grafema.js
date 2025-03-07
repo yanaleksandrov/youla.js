@@ -138,7 +138,7 @@ let getWizard = (el, {root}) => {
       getStep(el) {
         let step = this.steps.find(step => step.el === el);
         if (!step) {
-          el.setAttribute('x-show', 'console.log($step.current());$step.current().el === $el');
+          el.setAttribute('v-show', 'console.log($step.current());$step.current().el === $el');
           step = {
             el,
             title: '',
@@ -673,7 +673,7 @@ data('avatar', () => ({
     }
   },
   remove() {
-    let root  = this.$el.closest('[x-data]'),
+    let root  = this.$el.closest('[v-data]'),
       input = root && root.querySelector('input[type="file"]');
     if (input) {
       input.value = '';

@@ -30,7 +30,7 @@
   добавьте css правило <code>display: none</code> для селектора <code> [v-each]</code>.
 </p>
 
-<p>Вы также можете передавать объекты:</p>
+<p>Вы также можете передавать объекты и разбирать их следующим синтаксисом:</p>
 
 <pre>
   &lt;ul v-data=&quot;{ cars: { make: 'Jeep', model: 'Grand Cherokee', color: 'Black' } }&quot;&gt;
@@ -115,7 +115,7 @@
 <h2>Добавление разделителя</h2>
 
 <p>
-  Ключ <code>join</code> позволяет вставлять разделитель между элементами. Это упрощает создание списков,
+  Ключ <code>join</code> позволяет вставлять текстовый разделитель между элементами. Это упрощает создание списков,
   автоматически добавляя нужный символ (например, запятую, пробел или слэш) между элементами.
 </p>
 
@@ -167,5 +167,43 @@
 </div>
 
 <p>Обратите внимание, что в таком случае значения <code>i</code> начинаются с 1, а не с 0.</p>
+
+<h2>Модификаторы</h2>
+
+<p><code>.lazy</code></p>
+
+<p>
+  Предотвращает рендеринг списка при инициализации компонента и запускает рендер только при изменении привязанных данных.
+  Это особенно полезно для предотвращения эффекта «flickering» (мерцания страницы) страницы и улучшения SEO-оптимизации.
+</p>
+
+<blockquote>
+  <p>Как это работает</p>
+  <p>
+    Первичный рендеринг реализуется через серверную часть: браузер сразу отображает контент, не дожидаясь
+    загрузки JS или данных. После загрузки JS, происходит гидратация: X.js "привязывает" данные к уже
+    отрендеренному HTML, обеспечивая интерактивность и возможность динамического обновления.
+  </p>
+</blockquote>
+
+<pre>
+&lt;div v-data=&quot;{devices: []}&quot;&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;devices = [&#039;Headphones&#039;, &#039;VR Glasses&#039;]&quot;&gt;Обновить список&lt;/button&gt;
+  &lt;ul&gt;
+    &lt;li v-each.lazy=&quot;device in devices&quot; v-text=&quot;device&quot;&gt;&lt;/li&gt;
+    &lt;li&gt;Phones&lt;/li&gt;
+    &lt;li&gt;Laptops&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/div&gt;
+</pre>
+
+<div v-data="{devices: []}">
+  <button type="button" @click="devices = ['Headphones', 'VR Glasses']">Обновить список</button>
+  <ul>
+    <li v-each.lazy="device in devices" v-text="device"></li>
+    <li>Phones</li>
+    <li>Laptops</li>
+  </ul>
+</div>
 
 <%= _.template(require('./parts/footer.html').default)(data) %>

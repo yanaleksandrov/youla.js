@@ -176,6 +176,29 @@ title: "To Do List"
 
 <h2>Модификаторы</h2>
 
+<p><code>.query</code></p>
+
+<p>Передача значений в GET параметры</p>
+
+<form class="demo" v-data>
+  <p>
+    <input type="range" v-prop.query="range" min="0" max="1" step="0.1">
+    <span v-text="range"></span>
+  </p>
+
+  <p>
+    <input type="text" v-prop.query="s">
+    <span v-text="s"></span>
+  </p>
+
+  <p>
+    <input type="checkbox" value="red" v-prop.query="colors">
+    <input type="checkbox" value="orange" v-prop.query="colors">
+    <input type="checkbox" value="yellow" v-prop.query="colors">
+    Colors: <span v-text="colors"></span>
+  </p>
+</form>
+
 <p><code>.local</code> и <code>.cookie</code></p>
 
 <p>
@@ -184,7 +207,7 @@ title: "To Do List"
   пользовательских предпочтений, например, темы оформления, имени пользователя или других параметров.
 </p>
 
-<h3>Сохранение значений формы</h3>
+<p>В этом примере пользовательские данные будут сохранены в хранилище куки и localstorage.</p>
 
 <pre>
 &lt;form v-data&gt;
@@ -198,7 +221,7 @@ title: "To Do List"
 &lt;/form&gt;
 </pre>
 
-<form v-data>
+<form class="demo" v-data>
   <div>Сохранение в local storage</div>
   <input type="text" v-prop.local="firstName">
   <div v-text="firstName"></div>

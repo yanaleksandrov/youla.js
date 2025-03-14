@@ -24,6 +24,7 @@ import './scripts/directives/v-html';
 import './scripts/directives/v-text';
 import './scripts/directives/v-show';
 import './scripts/directives/v-hide';
+import './scripts/directives/v-prop';
 
 /**
  * The Methods

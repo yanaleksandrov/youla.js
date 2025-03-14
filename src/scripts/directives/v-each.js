@@ -34,6 +34,12 @@ directive('each', (el, expression, attribute, x, component) => {
   /**
    * Step 3: remove all and start elements rendering
    */
+  if (attribute.modifiers.includes('lazy')) {
+    el.setAttribute(attribute.directive, expression);
+    el.removeAttribute(attribute.name);
+    return;
+  }
+
   while (el.nextSibling) {
     let next = el.nextSibling;
 
@@ -50,7 +56,7 @@ directive('each', (el, expression, attribute, x, component) => {
     clone.removeAttribute('v-each');
 
     (async () => {
-      clone.__x_for_data = {[item]: dataItem, [index]: +key};
+      clone.__x_for_data = {[item]: dataItem, [index]: +key || key};
 
       if (hasChildEach) {
         contextStack.push(`${items}[${key}]`);

@@ -123,8 +123,7 @@ export default class Component {
         }
 
         if (directive in x.directives) {
-          let output = expression,
-            deps   = [];
+          let output = expression, deps = [];
           if (directive !== 'v-each') {
             try {
               ({ output, deps } = self.evaluate(expression));
@@ -187,15 +186,21 @@ export default class Component {
 
       handler = wrapHandler(handler, (next, e) => {
         // Don't do anything if the click came form the element or within it.
-        if (el.contains(e.target)) return;
+        if (el.contains(e.target)) {
+          return;
+        }
 
         // Don't do anything if this element isn't currently visible.
-        if (el.offsetWidth < 1 && el.offsetHeight < 1) return;
+        if (el.offsetWidth < 1 && el.offsetHeight < 1) {
+          return;
+        }
 
-        if (e.target.isConnected === false) return;
+        if (e.target.isConnected === false) {
+          return;
+        }
 
         next(e);
-      })
+      });
     }
 
     // one time run event

@@ -1,0 +1,52 @@
+.editrix-section {
+	padding: 0.8125rem 1rem;
+	border-bottom: 1px solid #e6e6e6;
+	user-select: none;
+
+	&:last-child {
+		border: 0;
+	}
+
+	&-head {
+		font-weight: 600;
+		user-select: none;
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+		justify-content: space-between;
+		width: 100%;
+		line-height: 1;
+		position: relative;
+
+		+ .editrix-control {
+			margin-top: 0.5rem;
+		}
+	}
+
+	&-body {
+		width: 100%;
+		position: relative;
+	}
+
+	&-buttons {
+		display: flex;
+		align-items: center;
+		font-size: 0.8125rem;
+		position: absolute;
+		right: 0;
+
+		i {
+			border-radius: 0.25rem;
+			cursor: pointer;
+			height: 1.5rem;
+			width: 1.5rem;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+
+			&:hover {
+				background-color: #f5f5f5;
+			}
+		}
+	}
+}

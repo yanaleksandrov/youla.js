@@ -1,0 +1,427 @@
+
+<div class="editrix-section">
+  <div class="editrix-section-body">
+    <div class="editrix-control">
+      <textarea placeholder="Add title..." spellcheck="false" autocomplete="off" autocapitalize="off">Some title for new post about Expansa and hekllo</textarea>
+    </div>
+
+    <div class="editrix-control">
+      <div class="editrix-gallery" x-data>
+        <div class="editrix-gallery-item" x-drag>
+          <img class="editrix-gallery-image" src="https://placeholder.pagebee.io/api/random/200/200">
+        </div>
+        <div class="editrix-gallery-item" x-drag>
+          <img class="editrix-gallery-image" src="https://placeholder.pagebee.io/api/random/201/201">
+        </div>
+        <div class="editrix-gallery-item" x-drag>
+          <img class="editrix-gallery-image" src="https://placeholder.pagebee.io/api/random/205/205">
+        </div>
+        <div class="editrix-gallery-item">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="rgba(0, 0, 0, 0.4)" viewBox="0 0 256 256">
+            <path d="M239.31,54.49a11.88,11.88,0,0,0-10.39-2.08l-3.47.93C206.47,58.47,171.14,68,128,68S49.53,58.47,30.55,53.34l-3.47-.93A12,12,0,0,0,12,64V192a11.95,11.95,0,0,0,15.09,11.59l3.18-.85C49.27,197.58,84.64,188,128,188s78.73,9.58,97.73,14.73l3.18.85A12,12,0,0,0,244,192V64A11.92,11.92,0,0,0,239.31,54.49ZM21.57,60.83A4,4,0,0,1,24,60a4.19,4.19,0,0,1,1,.14l3.44.93C47.8,66.29,83.8,76,128,76s80.2-9.71,99.54-14.93l3.45-.93A4,4,0,0,1,236,64V192c0,.13,0,.24,0,.37l-64.85-64.85a12,12,0,0,0-17,0l-22.83,22.83L84.49,103.51a12,12,0,0,0-17,0L20,151V64A4,4,0,0,1,21.57,60.83ZM28.17,195l-3.15.85A4,4,0,0,1,20,192V162.34l53.17-53.17a4,4,0,0,1,5.66,0l71.67,71.67c-7.24-.53-14.76-.84-22.5-.84C83.57,180,46.16,190.13,28.17,195ZM163,182l-26-26,22.83-22.83a4,4,0,0,1,5.66,0l61.64,61.64C214,191.25,191.11,185.14,163,182Zm33-74a8,8,0,1,1,8,8A8,8,0,0,1,196,108Z"></path>
+          </svg>
+          ADD IMAGE
+        </div>
+      </div>
+    </div>
+
+    <div class="editrix-control">
+      <div class="editrix-inputs">
+        <div class="editrix-inputs-label">Status</div>
+        <details @click.outside="$el.removeAttribute('open')">
+          <summary>Published</summary>
+          <p>
+            <label>
+              <input type="checkbox" name="ingredient" value="cheese">Published
+              <span>Visible to everyone</span>
+            </label>
+            <label>
+              <input type="checkbox" name="ingredient" value="tomato">Draft
+              <span>Not ready to publish</span>
+            </label>
+            <label>
+              <input type="checkbox" name="ingredient" value="tomato">Pending
+              <span>Waiting for review before publishing</span>
+            </label>
+            <label>
+              <input type="checkbox" name="ingredient" value="tomato">Scheduled
+              <span>Publish automatically on a chosen date</span>
+            </label>
+            <label>
+              <input type="checkbox" name="ingredient" value="tomato">Private
+              <span>Only visible to site admins and editors</span>
+            </label>
+          </p>
+          <p>
+            <label>
+              <input type="checkbox" name="ingredient" value="cheese"> Password protected
+              <span>Only visible to those who know the password</span>
+            </label>
+            <label>
+              <input type="checkbox" name="ingredient" value="tomato"> Sticky
+              <span>Pin this post to the top of the blog</span>
+            </label>
+          </p>
+        </details>
+      </div>
+
+      <div class="editrix-inputs">
+        <div class="editrix-inputs-label">Published from</div>
+        <input type="date" value="2025-03-15" />
+      </div>
+
+      <div class="editrix-inputs">
+        <div class="editrix-inputs-label">Author</div>
+        <details @click.outside="$el.removeAttribute('open')">
+          <summary>John Smith</summary>
+          <p>
+            <label><input type="checkbox" name="ingredient" value="cheese">Joe Doe</label>
+          </p>
+        </details>
+      </div>
+
+      <div class="editrix-inputs">
+        <div class="editrix-inputs-label">Discussion</div>
+        <details @click.outside="$el.removeAttribute('open')">
+          <summary>Open</summary>
+          <p>
+            <label>
+              <input type="checkbox" name="ingredient" value="cheese">Open
+              <span>Visitors can add new comments and replies</span>
+            </label>
+            <label>
+              <input type="checkbox" name="ingredient" value="tomato">Closed
+              <span>Visitors cannot add new comments or replies. Existing comments remain visible.</span>
+            </label>
+          </p>
+        </details>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="editrix-section">
+  <div class="editrix-section-head">
+    Categories
+    <div class="editrix-section-buttons">
+      <i class="ph ph-plus"></i>
+    </div>
+  </div>
+  <div class="editrix-section-body">
+    <div class="editrix-control">
+      <div class="editrix-inputs">
+        <div class="editrix-inputs-item">
+          <div class="editrix-inputs-box">
+            <i class="ph ph-magnifying-glass"></i> <input type="text" placeholder="Type for find..." />
+          </div>
+        </div>
+      </div>
+
+      <ul class="editrix-categories editrix-categories--root">
+        <li class="editrix-categories-items">
+          <label class="editrix-categories-item">
+            <input type="checkbox" v-prop="categories"> Electronic
+          </label>
+          <ul class="editrix-categories">
+            <li class="editrix-categories-items">
+              <label class="editrix-categories-item">
+                <input type="checkbox" name="ingredient" value="tomato"> Phones
+              </label>
+            </li>
+            <li class="editrix-categories-items">
+              <label class="editrix-categories-item">
+                <input type="checkbox" name="ingredient" value="tomato"> Laptops
+              </label>
+            </li>
+          </ul>
+        </li>
+        <li class="editrix-categories-items">
+          <label class="editrix-categories-item">
+            <input type="checkbox" name="ingredient" value="tomato"> Books
+          </label>
+          <ul class="editrix-categories">
+            <li class="editrix-categories-items">
+              <label class="editrix-categories-item">
+                <input type="checkbox" name="ingredient" value="tomato"> Drama
+              </label>
+            </li>
+            <li class="editrix-categories-items">
+              <label class="editrix-categories-item">
+                <input type="checkbox" name="ingredient" value="tomato"> For kids
+              </label>
+            </li>
+          </ul>
+        </li>
+        <li class="editrix-categories-items">
+          <label class="editrix-categories-item">
+            <input type="checkbox" name="ingredient" value="tomato"> Cars
+          </label>
+          <ul class="editrix-categories">
+            <li class="editrix-categories-items">
+              <label class="editrix-categories-item">
+                <input type="checkbox" name="ingredient" value="tomato"> Honda
+              </label>
+              <ul class="editrix-categories">
+                <li class="editrix-categories-items">
+                  <label class="editrix-categories-item">
+                    <input type="checkbox" name="ingredient" value="tomato"> Civic
+                  </label>
+                </li>
+                <li class="editrix-categories-items">
+                  <label class="editrix-categories-item">
+                    <input type="checkbox" name="ingredient" value="tomato"> Musta
+                  </label>
+                </li>
+              </ul>
+            </li>
+            <li class="editrix-categories-items">
+              <label class="editrix-categories-item">
+                <input type="checkbox" name="ingredient" value="tomato"> Toyota
+              </label>
+              <ul class="editrix-categories">
+                <li class="editrix-categories-items">
+                  <label class="editrix-categories-item">
+                    <input type="checkbox" name="ingredient" value="tomato"> Vitz
+                  </label>
+                </li>
+                <li class="editrix-categories-items">
+                  <label class="editrix-categories-item">
+                    <input type="checkbox" name="ingredient" value="tomato"> Passo
+                  </label>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="editrix-section">
+  <div class="editrix-section-head">
+    Position
+  </div>
+  <div class="editrix-section-body">
+    <div class="editrix-control">
+      <div class="editrix-control-head">
+        Margin
+      </div>
+      <div class="editrix-inputs">
+        <div class="editrix-inputs-item">
+          <div class="editrix-inputs-box">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M1 0.5C1 0.367392 0.947321 0.240215 0.853553 0.146447C0.759785 0.0526785 0.632608 0 0.5 0C0.367392 0 0.240215 0.0526785 0.146447 0.146447C0.0526785 0.240215 0 0.367392 0 0.5V9.5C0 9.63261 0.0526785 9.75979 0.146447 9.85355C0.240215 9.94732 0.367392 10 0.5 10C0.632608 10 0.759785 9.94732 0.853553 9.85355C0.947321 9.75979 1 9.63261 1 9.5V0.5ZM9.5 0C9.63261 0 9.75979 0.0526785 9.85355 0.146447C9.94732 0.240215 10 0.367392 10 0.5V9.5C10 9.63261 9.94732 9.75979 9.85355 9.85355C9.75979 9.94732 9.63261 10 9.5 10C9.36739 10 9.24021 9.94732 9.14645 9.85355C9.05268 9.75979 9 9.63261 9 9.5V0.5C9 0.367392 9.05268 0.240215 9.14645 0.146447C9.24021 0.0526785 9.36739 0 9.5 0ZM6 6V4H4V6H6ZM7 4C7 3.73478 6.89464 3.48043 6.70711 3.29289C6.51957 3.10536 6.26522 3 6 3H4C3.73478 3 3.48043 3.10536 3.29289 3.29289C3.10536 3.48043 3 3.73478 3 4V6C3 6.26522 3.10536 6.51957 3.29289 6.70711C3.48043 6.89464 3.73478 7 4 7H6C6.26522 7 6.51957 6.89464 6.70711 6.70711C6.89464 6.51957 7 6.26522 7 6V4Z" fill="black"/>
+            </svg>
+            <input type="number" value="0" />
+            <select>
+              <option>px</option>
+              <option>em</option>
+              <option>rem</option>
+            </select>
+          </div>
+        </div>
+        <div class="editrix-inputs-item">
+          <div class="editrix-inputs-box">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M0.5 9C0.367392 9 0.240215 9.05268 0.146447 9.14645C0.0526785 9.24021 0 9.36739 0 9.5C0 9.63261 0.0526785 9.75979 0.146447 9.85355C0.240215 9.94732 0.367392 10 0.5 10H9.5C9.63261 10 9.75979 9.94732 9.85355 9.85355C9.94732 9.75979 10 9.63261 10 9.5C10 9.36739 9.94732 9.24021 9.85355 9.14645C9.75979 9.05268 9.63261 9 9.5 9H0.5ZM0 0.5C0 0.367392 0.0526785 0.240215 0.146447 0.146447C0.240215 0.0526785 0.367392 0 0.5 0H9.5C9.63261 0 9.75979 0.0526785 9.85355 0.146447C9.94732 0.240215 10 0.367392 10 0.5C10 0.632608 9.94732 0.759785 9.85355 0.853553C9.75979 0.947321 9.63261 1 9.5 1H0.5C0.367392 1 0.240215 0.947321 0.146447 0.853553C0.0526785 0.759785 0 0.632608 0 0.5ZM6 4H4V6H6V4ZM4 3C3.73478 3 3.48043 3.10536 3.29289 3.29289C3.10536 3.48043 3 3.73478 3 4V6C3 6.26522 3.10536 6.51957 3.29289 6.70711C3.48043 6.89464 3.73478 7 4 7H6C6.26522 7 6.51957 6.89464 6.70711 6.70711C6.89464 6.51957 7 6.26522 7 6V4C7 3.73478 6.89464 3.48043 6.70711 3.29289C6.51957 3.10536 6.26522 3 6 3H4Z" fill="black"/>
+            </svg>
+            <input type="number" value="0" />
+            <select>
+              <option>px</option>
+              <option>em</option>
+              <option>rem</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="editrix-buttons-item">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M1 2.5C1 2.36739 0.947321 2.24021 0.853553 2.14645C0.759785 2.05268 0.632608 2 0.5 2C0.367392 2 0.240215 2.05268 0.146447 2.14645C0.0526785 2.24021 0 2.36739 0 2.5V7.5C0 7.63261 0.0526785 7.75979 0.146447 7.85355C0.240215 7.94732 0.367392 8 0.5 8C0.632608 8 0.759785 7.94732 0.853553 7.85355C0.947321 7.75979 1 7.63261 1 7.5V2.5ZM10 2.5C10 2.36739 9.94732 2.24021 9.85355 2.14645C9.75979 2.05268 9.63261 2 9.5 2C9.36739 2 9.24021 2.05268 9.14645 2.14645C9.05268 2.24021 9 2.36739 9 2.5V7.5C9 7.63261 9.05268 7.75979 9.14645 7.85355C9.24021 7.94732 9.36739 8 9.5 8C9.63261 8 9.75979 7.94732 9.85355 7.85355C9.94732 7.75979 10 7.63261 10 7.5V2.5ZM2 0.5C2 0.367392 2.05268 0.240215 2.14645 0.146447C2.24021 0.0526785 2.36739 0 2.5 0H7.5C7.63261 0 7.75979 0.0526785 7.85355 0.146447C7.94732 0.240215 8 0.367392 8 0.5C8 0.632608 7.94732 0.759785 7.85355 0.853553C7.75979 0.947321 7.63261 1 7.5 1H2.5C2.36739 1 2.24021 0.947321 2.14645 0.853553C2.05268 0.759785 2 0.632608 2 0.5ZM2.5 9C2.36739 9 2.24021 9.05268 2.14645 9.14645C2.05268 9.24021 2 9.36739 2 9.5C2 9.63261 2.05268 9.75979 2.14645 9.85355C2.24021 9.94732 2.36739 10 2.5 10H7.5C7.63261 10 7.75979 9.94732 7.85355 9.85355C7.94732 9.75979 8 9.63261 8 9.5C8 9.36739 7.94732 9.24021 7.85355 9.14645C7.75979 9.05268 7.63261 9 7.5 9H2.5Z" fill="black"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="editrix-control">
+      <div class="editrix-control-head">
+        Padding
+      </div>
+      <div class="editrix-inputs">
+        <div class="editrix-inputs-item">
+          <div class="editrix-inputs-box">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M1 0.5C1 0.367392 0.947321 0.240215 0.853553 0.146447C0.759785 0.0526785 0.632608 0 0.5 0C0.367392 0 0.240215 0.0526785 0.146447 0.146447C0.0526785 0.240215 0 0.367392 0 0.5V9.5C0 9.63261 0.0526785 9.75979 0.146447 9.85355C0.240215 9.94732 0.367392 10 0.5 10C0.632608 10 0.759785 9.94732 0.853553 9.85355C0.947321 9.75979 1 9.63261 1 9.5V0.5ZM9.5 0C9.63261 0 9.75979 0.0526785 9.85355 0.146447C9.94732 0.240215 10 0.367392 10 0.5V9.5C10 9.63261 9.94732 9.75979 9.85355 9.85355C9.75979 9.94732 9.63261 10 9.5 10C9.36739 10 9.24021 9.94732 9.14645 9.85355C9.05268 9.75979 9 9.63261 9 9.5V0.5C9 0.367392 9.05268 0.240215 9.14645 0.146447C9.24021 0.0526785 9.36739 0 9.5 0ZM6 6V4H4V6H6ZM7 4C7 3.73478 6.89464 3.48043 6.70711 3.29289C6.51957 3.10536 6.26522 3 6 3H4C3.73478 3 3.48043 3.10536 3.29289 3.29289C3.10536 3.48043 3 3.73478 3 4V6C3 6.26522 3.10536 6.51957 3.29289 6.70711C3.48043 6.89464 3.73478 7 4 7H6C6.26522 7 6.51957 6.89464 6.70711 6.70711C6.89464 6.51957 7 6.26522 7 6V4Z" fill="black"/>
+            </svg>
+            <input type="number" value="130" />
+            <select>
+              <option>px</option>
+              <option>em</option>
+              <option>rem</option>
+            </select>
+          </div>
+        </div>
+        <div class="editrix-inputs-item">
+          <div class="editrix-inputs-box">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M0.5 9C0.367392 9 0.240215 9.05268 0.146447 9.14645C0.0526785 9.24021 0 9.36739 0 9.5C0 9.63261 0.0526785 9.75979 0.146447 9.85355C0.240215 9.94732 0.367392 10 0.5 10H9.5C9.63261 10 9.75979 9.94732 9.85355 9.85355C9.94732 9.75979 10 9.63261 10 9.5C10 9.36739 9.94732 9.24021 9.85355 9.14645C9.75979 9.05268 9.63261 9 9.5 9H0.5ZM0 0.5C0 0.367392 0.0526785 0.240215 0.146447 0.146447C0.240215 0.0526785 0.367392 0 0.5 0H9.5C9.63261 0 9.75979 0.0526785 9.85355 0.146447C9.94732 0.240215 10 0.367392 10 0.5C10 0.632608 9.94732 0.759785 9.85355 0.853553C9.75979 0.947321 9.63261 1 9.5 1H0.5C0.367392 1 0.240215 0.947321 0.146447 0.853553C0.0526785 0.759785 0 0.632608 0 0.5ZM6 4H4V6H6V4ZM4 3C3.73478 3 3.48043 3.10536 3.29289 3.29289C3.10536 3.48043 3 3.73478 3 4V6C3 6.26522 3.10536 6.51957 3.29289 6.70711C3.48043 6.89464 3.73478 7 4 7H6C6.26522 7 6.51957 6.89464 6.70711 6.70711C6.89464 6.51957 7 6.26522 7 6V4C7 3.73478 6.89464 3.48043 6.70711 3.29289C6.51957 3.10536 6.26522 3 6 3H4Z" fill="black"/>
+            </svg>
+            <input type="number" value="0" />
+            <select>
+              <option>px</option>
+              <option>em</option>
+              <option>rem</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="editrix-buttons-item">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M1 2.5C1 2.36739 0.947321 2.24021 0.853553 2.14645C0.759785 2.05268 0.632608 2 0.5 2C0.367392 2 0.240215 2.05268 0.146447 2.14645C0.0526785 2.24021 0 2.36739 0 2.5V7.5C0 7.63261 0.0526785 7.75979 0.146447 7.85355C0.240215 7.94732 0.367392 8 0.5 8C0.632608 8 0.759785 7.94732 0.853553 7.85355C0.947321 7.75979 1 7.63261 1 7.5V2.5ZM10 2.5C10 2.36739 9.94732 2.24021 9.85355 2.14645C9.75979 2.05268 9.63261 2 9.5 2C9.36739 2 9.24021 2.05268 9.14645 2.14645C9.05268 2.24021 9 2.36739 9 2.5V7.5C9 7.63261 9.05268 7.75979 9.14645 7.85355C9.24021 7.94732 9.36739 8 9.5 8C9.63261 8 9.75979 7.94732 9.85355 7.85355C9.94732 7.75979 10 7.63261 10 7.5V2.5ZM2 0.5C2 0.367392 2.05268 0.240215 2.14645 0.146447C2.24021 0.0526785 2.36739 0 2.5 0H7.5C7.63261 0 7.75979 0.0526785 7.85355 0.146447C7.94732 0.240215 8 0.367392 8 0.5C8 0.632608 7.94732 0.759785 7.85355 0.853553C7.75979 0.947321 7.63261 1 7.5 1H2.5C2.36739 1 2.24021 0.947321 2.14645 0.853553C2.05268 0.759785 2 0.632608 2 0.5ZM2.5 9C2.36739 9 2.24021 9.05268 2.14645 9.14645C2.05268 9.24021 2 9.36739 2 9.5C2 9.63261 2.05268 9.75979 2.14645 9.85355C2.24021 9.94732 2.36739 10 2.5 10H7.5C7.63261 10 7.75979 9.94732 7.85355 9.85355C7.94732 9.75979 8 9.63261 8 9.5C8 9.36739 7.94732 9.24021 7.85355 9.14645C7.75979 9.05268 7.63261 9 7.5 9H2.5Z" fill="black"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="editrix-control">
+      <div class="editrix-borders">
+        <div class="editrix-borders-values" data-title="Borders">
+          <input type="number" value="0" x.margin-top />
+          <input type="number" value="0" x.margin-right />
+          <input type="number" value="0" x.margin-bottom />
+          <input type="number" value="0" x.margin-left />
+        </div>
+
+        <details class="editrix-buttons-item" @click.outside="$el.removeAttribute('open')">
+          <summary>px</summary>
+          <p>
+            <label><input type="checkbox" name="ingredient" value="cheese">em</label>
+            <label><input type="checkbox" name="ingredient" value="tomato">rem</label>
+          </p>
+        </details>
+      </div>
+    </div>
+
+    <div class="editrix-control">
+      <div class="editrix-control-head">
+        Alignment
+      </div>
+      <div class="editrix-buttons">
+        <div class="editrix-buttons-items">
+          <span class="editrix-buttons-item"><i class="ph ph-align-left"></i></span>
+          <span class="editrix-buttons-item"><i class="ph ph-align-center-horizontal"></i></span>
+          <span class="editrix-buttons-item"><i class="ph ph-align-right"></i></span>
+        </div>
+        <div class="editrix-buttons-items">
+          <span class="editrix-buttons-item"><i class="ph ph-align-top"></i></span>
+          <span class="editrix-buttons-item"><i class="ph ph-align-center-vertical-simple"></i></span>
+          <span class="editrix-buttons-item"><i class="ph ph-align-bottom"></i></span>
+        </div>
+        <span class="editrix-buttons-item"><i class="ph ph-dots-three"></i></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="editrix-section">
+  <div class="editrix-section-head">
+    Typography
+    <div class="editrix-section-buttons">
+      <i class="ph ph-squares-four"></i>
+      <i class="ph" :class="typo ? 'ph-minus' : 'ph-plus'" @click="typo = !typo"></i>
+    </div>
+  </div>
+  <div class="editrix-section-body" v-hide="typo" v-hide>
+    <div class="editrix-control">
+      <div class="editrix-inputs">
+        <div class="editrix-inputs-item">
+          <div class="editrix-inputs-box">
+            <i class="ph ph-text-aa"></i>
+            <select>
+              <option>Inter</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="editrix-control">
+      <div class="editrix-inputs">
+        <div class="editrix-inputs-item">
+          <div class="editrix-inputs-box">
+            <select>
+              <option>Regular</option>
+            </select>
+          </div>
+        </div>
+        <div class="editrix-inputs-item">
+          <div class="editrix-inputs-box">
+            <select>
+              <option>11</option>
+              <option>12</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="editrix-control">
+      <div class="editrix-inputs">
+        <div class="editrix-inputs-item">
+          <div class="editrix-inputs-label">Line height</div>
+          <div class="editrix-inputs-box">
+            <i class="ph ph-text-a-underline"></i> <input type="number" value="130" /> %
+          </div>
+        </div>
+        <div class="editrix-inputs-item">
+          <div class="editrix-inputs-label">Letter spacing</div>
+          <div class="editrix-inputs-box">
+            <i class="ph ph-arrows-in-line-horizontal"></i> <input type="number" value="0" /> %
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="editrix-control">
+      <div class="editrix-control-head">
+        Alignment
+      </div>
+      <div class="editrix-buttons">
+        <div class="editrix-buttons-items">
+          <span class="editrix-buttons-item"><i class="ph ph-text-align-left"></i></span>
+          <span class="editrix-buttons-item"><i class="ph ph-text-align-center"></i></span>
+          <span class="editrix-buttons-item"><i class="ph ph-text-align-right"></i></span>
+        </div>
+        <div class="editrix-buttons-items">
+          <span class="editrix-buttons-item">Ag</span>
+          <span class="editrix-buttons-item">AG</span>
+          <span class="editrix-buttons-item">ag</span>
+        </div>
+        <span class="editrix-buttons-item"><i class="ph ph-dots-three"></i></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="editrix-section">
+  <div class="editrix-section-head">
+    Advanced
+    <div class="editrix-section-buttons">
+      <i class="ph" :class="advanced ? 'ph-minus' : 'ph-plus'" @click="advanced = !advanced"></i>
+    </div>
+  </div>
+
+  <div class="editrix-section-body" v-hide="advanced">
+    <div class="editrix-control">
+      <div class="editrix-inputs">
+        <div class="editrix-inputs-item">
+          <div class="editrix-inputs-label">CSS Classes</div>
+          <div class="editrix-inputs-box">
+            <i class="ph ph-code"></i> <input type="text" placeholder="e.g. my-class" />
+          </div>
+          <div class="editrix-inputs-label">List separated by spaces</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

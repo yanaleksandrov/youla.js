@@ -1,0 +1,135 @@
+.editrix-container {
+	$tools-color: #f3bafd;
+	$max-width: 800px;
+
+	padding: 0 calc(50% - (#{$max-width} / 2));
+	transition: border 0.15s;
+	border: 1px solid transparent;
+	position: relative;
+
+	&:hover {
+		border: 1px solid $tools-color;
+	}
+
+	&.editrix-dragging-start {
+		opacity: 0.4;
+
+		&.editrix-dragging-over {
+			content: none !important;
+		}
+	}
+
+	&.editrix-dragging-over {
+
+		&:after {
+			position: absolute;
+			height: 4px;
+			background-color: $tools-color;
+			left: 0;
+			right: 0;
+		}
+
+		&.editrix-dragging-top:after {
+			content: '';
+			top: -2px;
+		}
+
+		&.editrix-dragging-bottom:after {
+			content: '';
+			bottom: -2px;
+		}
+	}
+
+	&.editrix-dragging-start.editrix-dragging-over {
+
+		&:after {
+			content: none;
+		}
+	}
+
+	&-tools {
+		position: absolute;
+		top: -22px;
+		left: 0;
+		right: 0;
+		margin: 0 auto;
+		padding: 0;
+		display: flex;
+		list-style: none;
+		font-size: 12px;
+		width: fit-content;
+
+		&:before,
+		&:after {
+			content: '';
+			position: absolute;
+			top: 2px;
+			border-block-start: 20px solid transparent;
+			border-block-end: 0 none transparent;
+			transition: all .15s;
+		}
+
+		&:before {
+			right: calc(100% - 1px);
+			border-inline-start: 0 none transparent;
+			border-inline-end: 12px solid $tools-color;
+		}
+
+		&:after {
+			left: calc(100% - 1px);
+			border-inline-start: 12px solid $tools-color;
+			border-inline-end: 0 none transparent;
+		}
+	}
+
+	&-tools-item {
+		padding: 0 5px;
+		height: 22px;
+		width: 22px;
+		cursor: pointer;
+		transition: background-color 0.15s;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		text-align: center;
+		background-color: $tools-color;
+
+		&:hover {
+			background-color: darken($tools-color, 5%);
+		}
+
+		&:first-child {
+			border-start-start-radius: 5px;
+		}
+
+		&:last-child {
+			border-start-end-radius: 5px;
+		}
+	}
+}
+
+.editor {
+	margin: 3rem;
+	position: relative;
+	border-radius: 0.25rem;
+	border: 1px solid #e6e6e6;
+	display: grid;
+
+	&-content {
+		min-height: 2em;
+		padding: 0.65rem 0.75rem;
+		outline: none;
+
+		p {
+			margin-block: 0.5rem;
+
+			&:first-child {
+				margin-top: 0;
+			}
+
+			&:last-child {
+				margin-bottom: 0;
+			}
+		}
+	}
+}

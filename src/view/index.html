@@ -11,6 +11,21 @@
 <br>
 <br>
 
+<div class="accordion">
+  <details class="accordion__item" name="accordion">
+    <summary class="accordion__title">Title of item 1</summary>
+    <div class="accordion__panel">
+      <p>Description of item 1</p>
+    </div>
+  </details>
+  <details class="accordion__item" name="accordion">
+    <summary class="accordion__title">Title of item 2</summary>
+    <div class="accordion__panel">
+      <p>Description of item 2</p>
+    </div>
+  </details>
+</div>
+
 <div class="accordion" v-data="{ i: -1 }">
   <div class="accordion__item">
     <div class="accordion__title" @click="i = i !== 1 ? 1 : -1">Title of item 1</div>

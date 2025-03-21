@@ -1,0 +1,52 @@
+.editrix-gallery {
+	gap: 0.25rem;
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	width: 100%;
+	position: relative;
+
+	&:has(:nth-child(n+7)) {
+		width: calc(100% + 0.5rem);
+	}
+
+	&-item {
+		overflow: hidden;
+		border-radius: 0.375rem;
+		background-color: #f8f8f8;
+		aspect-ratio: 1 / 1;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border: 1px dashed #e6e6e6;
+		flex-direction: column;
+		gap: 0.25rem;
+		font-size: 0.5rem;
+		color: rgba(0, 0, 0, 0.5);
+		transition: all 0.25s;
+
+		&:last-child {
+			grid-area: span 1 / span 3;
+			max-height: 3rem;
+			aspect-ratio: initial;
+			padding: 0.625rem;
+		}
+
+		&:hover {
+			border-color: rgba(0, 0, 0, 0.5);
+		}
+
+		&[x-drag] {
+			border: 0;
+			cursor: grab;
+		}
+	}
+
+	&-image {
+		display: block;
+		object-fit: cover;
+		width: auto;
+		height: 100%;
+		min-width: 100%;
+	}
+}

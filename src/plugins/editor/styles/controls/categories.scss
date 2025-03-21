@@ -1,0 +1,25 @@
+.editrix-categories {
+	display: grid;
+	gap: 0.25rem;
+	list-style: none;
+	margin: 0;
+	padding: 0 0 0 1rem;
+	max-height: 15.5rem;
+	overflow-y: auto;
+
+	&--root {
+		padding: 0.5rem 0 0 0;
+	}
+
+	&-items {
+		display: grid;
+		gap: 0.25rem;
+	}
+
+	&-item {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		cursor: pointer;
+	}
+}

@@ -18,7 +18,7 @@ const parseHtmlPages = dir => {
       acc.push(new HtmlWebpackPlugin({
         filename: `${name}.html`,
         template: path.resolve(__dirname, `${dir}/${name}.${extension}`),
-        inject: false,
+        inject: true,
       }));
     }
     return acc;
@@ -133,6 +133,11 @@ module.exports = {
       {
         test: /\.html$/,
         include: path.resolve(__dirname, 'src/view/parts'),
+        use: ['raw-loader'],
+      },
+      {
+        test: /\.html$/,
+        include: path.resolve(__dirname, 'src/view/sections'),
         use: ['raw-loader'],
       },
     ],

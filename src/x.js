@@ -25,6 +25,7 @@ import './scripts/directives/v-text';
 import './scripts/directives/v-show';
 import './scripts/directives/v-hide';
 import './scripts/directives/v-prop';
+//import './scripts/directives/v-ref';
 
 /**
  * The Methods
@@ -38,5 +39,9 @@ import './scripts/methods/$dispatch';
 // experimental directives & methods for grafema project
 import './scripts/directives/v-grafema';
 import './scripts/methods/$grafema';
+
+// plugin editor
+import './plugins/editor/directives/v-editor';
+import './plugins/editor/directives/v-drag';
 
 window.x.start();

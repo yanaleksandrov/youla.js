@@ -1,0 +1,14 @@
+.editrix-control {
+	position: relative;
+	width: 100%;
+	margin-top: 0.875rem;
+
+	&-head {
+		color: #00000080;
+		font-weight: 400;
+		user-select: none;
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+	}
+}

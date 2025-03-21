@@ -1,0 +1,31 @@
+.editrix-buttons {
+	display: flex;
+	gap: 0.5rem;
+
+	&-items {
+		display: flex;
+		gap: 1px;
+		border-radius: 0.25rem;
+		overflow: hidden;
+		flex: 1;
+	}
+
+	&-item {
+		background-color: #f5f5f5;
+		cursor: pointer;
+		font-size: 0.875rem;
+		width: 1.5rem;
+		min-width: 1.5rem;
+		height: 1.5rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: all 0.25s;
+		color: #2d2d2d;
+		border-radius: 0.25rem;
+
+		&:hover {
+			background-color: #ececec;
+		}
+	}
+}

@@ -9,7 +9,16 @@
   },
   "license": "MIT",
   "dependencies": {
-    "normalize.css": "^8.0.1"
+    "normalize.css": "^8.0.1",
+    "prosemirror-commands": "^1.7.0",
+    "prosemirror-example-setup": "^1.2.3",
+    "prosemirror-history": "^1.4.1",
+    "prosemirror-inputrules": "^1.4.0",
+    "prosemirror-model": "^1.24.1",
+    "prosemirror-schema-basic": "^1.2.3",
+    "prosemirror-schema-list": "^1.5.1",
+    "prosemirror-state": "^1.4.3",
+    "prosemirror-view": "^1.38.1"
   },
   "browserslist": [
     "last 4 versions",

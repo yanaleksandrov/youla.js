@@ -148,7 +148,7 @@ export default class Component {
 
     let target  = el;
     let options = {};
-    let handler = e => this.runListenerHandler(expression, e);
+    let handler = e => this.runListenerHandler(expression, e, el);
 
     if (modifiers.includes('window')) {
       target = window;
@@ -228,20 +228,20 @@ export default class Component {
     target.addEventListener(event, handler, options);
   }
 
-  runListenerHandler(expression, e) {
+  runListenerHandler(expression, e, target) {
     const methods = {};
     Object.keys(x.methods).forEach(key => {
-      methods[key] = x.methods[key](e, e.target, this);
+      methods[key] = x.methods[key](e, target, this);
     });
 
-    let data = {}, el = e.target;
+    let data = {}, el = target;
     while (el && !(data = el.__x_for_data)) {
       el = el.parentElement;
     }
 
     saferEval(expression, this.data, {
       ...{
-        '$el': e.target,
+        '$el': target,
         '$event': e,
         '$refs': this.getRefsProxy(),
         '$root': this.root,

@@ -15,7 +15,7 @@
   <div class="editrix-toolbar-page">
     Page
 
-    <details>
+    <details @click.outside="$el.open = false">
       <summary v-text="zoom + '%'">100%</summary>
       <p>
         <label @click="zoom = 75 , $el.closest('details').open = false" :class="zoom === 75 && 'active'">Zoom to 75%</label>

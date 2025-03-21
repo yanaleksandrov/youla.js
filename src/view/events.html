@@ -82,11 +82,18 @@
 <pre>
 &lt;div v-data=&quot;{ open: false }&quot;&gt;
   &lt;button @click=&quot;open = ! open&quot;&gt;Открыть&lt;/button&gt;
-  &lt;div v-show=&quot;open&quot; @click.outside=&quot;open = false&quot;&gt;
+  &lt;div v-hide=&quot;open&quot; @click.outside=&quot;open = false&quot;&gt;
     Контент...
   &lt;/div&gt;
 &lt;/div&gt;
 </pre>
+
+<div class="demo" v-data="{ open: false }">
+  <button @click="open = ! open">Открыть</button>
+  <div v-hide="open" @click.outside="open = false">
+    Контент...
+  </div>
+</div>
 
 <h4><code>.window</code></h4>
 

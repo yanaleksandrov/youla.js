@@ -4,6 +4,7 @@
 	width: 100%;
 	display: flex;
 	flex-flow: wrap;
+	align-content: flex-start;
 
 	*::-webkit-scrollbar {
 		background-color: transparent;
@@ -93,45 +94,5 @@
 		min-height: auto !important;
 		line-height: 1.25em;
 		field-sizing: content;
-	}
-
-	details {
-		position: relative;
-
-		&[open] {
-
-			p {
-				display: grid;
-			}
-		}
-
-		summary {
-			align-items: center;
-			height: 1.25rem;
-			border-radius: 0.25rem;
-			color: #2d2d2d;
-			cursor: pointer;
-			display: flex;
-			flex: 1;
-			gap: .375rem;
-			overflow: hidden;
-			padding-inline: .5rem;
-			transition: all .25s;
-		}
-
-		p {
-			position: absolute;
-			right: 0;
-			top: 1rem;
-			z-index: 2;
-			background-color: #fff;
-			border: 1px solid #e6e6e6;
-			padding: 1rem;
-			width: 13rem;
-			border-radius: 0.5rem;
-			gap: 0.5rem;
-			font-weight: 500;
-			display: none;
-		}
 	}
 }

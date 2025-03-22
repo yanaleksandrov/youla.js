@@ -6,17 +6,14 @@
     </div>
 
     <div class="editrix-control">
-      <div class="editrix-gallery" x-data>
-        <div class="editrix-gallery-item" x-drag>
-          <img class="editrix-gallery-image" src="https://placeholder.pagebee.io/api/random/200/200">
+      <div class="editrix-gallery">
+        <div class="editrix-gallery-items" v-sort="thumbnails">
+          <div class="editrix-gallery-item" v-each="(thumbnail, id) in thumbnails">
+            <span class="editrix-gallery-remove" @click="thumbnails = (delete thumbnails[id]) && thumbnails"><i class="ph ph-trash"></i></span>
+            <img class="editrix-gallery-image" :src="thumbnail">
+          </div>
         </div>
-        <div class="editrix-gallery-item" x-drag>
-          <img class="editrix-gallery-image" src="https://placeholder.pagebee.io/api/random/201/201">
-        </div>
-        <div class="editrix-gallery-item" x-drag>
-          <img class="editrix-gallery-image" src="https://placeholder.pagebee.io/api/random/205/205">
-        </div>
-        <div class="editrix-gallery-item">
+        <div class="editrix-gallery-add">
           <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="rgba(0, 0, 0, 0.4)" viewBox="0 0 256 256">
             <path d="M239.31,54.49a11.88,11.88,0,0,0-10.39-2.08l-3.47.93C206.47,58.47,171.14,68,128,68S49.53,58.47,30.55,53.34l-3.47-.93A12,12,0,0,0,12,64V192a11.95,11.95,0,0,0,15.09,11.59l3.18-.85C49.27,197.58,84.64,188,128,188s78.73,9.58,97.73,14.73l3.18.85A12,12,0,0,0,244,192V64A11.92,11.92,0,0,0,239.31,54.49ZM21.57,60.83A4,4,0,0,1,24,60a4.19,4.19,0,0,1,1,.14l3.44.93C47.8,66.29,83.8,76,128,76s80.2-9.71,99.54-14.93l3.45-.93A4,4,0,0,1,236,64V192c0,.13,0,.24,0,.37l-64.85-64.85a12,12,0,0,0-17,0l-22.83,22.83L84.49,103.51a12,12,0,0,0-17,0L20,151V64A4,4,0,0,1,21.57,60.83ZM28.17,195l-3.15.85A4,4,0,0,1,20,192V162.34l53.17-53.17a4,4,0,0,1,5.66,0l71.67,71.67c-7.24-.53-14.76-.84-22.5-.84C83.57,180,46.16,190.13,28.17,195ZM163,182l-26-26,22.83-22.83a4,4,0,0,1,5.66,0l61.64,61.64C214,191.25,191.11,185.14,163,182Zm33-74a8,8,0,1,1,8,8A8,8,0,0,1,196,108Z"></path>
           </svg>
@@ -28,72 +25,87 @@
     <div class="editrix-control">
       <div class="editrix-inputs">
         <div class="editrix-inputs-label">Status</div>
-        <details @click.outside="$el.removeAttribute('open')">
-          <summary>Published</summary>
-          <p>
-            <label>
-              <input type="checkbox" name="ingredient" value="cheese">Published
-              <span>Visible to everyone</span>
-            </label>
-            <label>
-              <input type="checkbox" name="ingredient" value="tomato">Draft
-              <span>Not ready to publish</span>
-            </label>
-            <label>
-              <input type="checkbox" name="ingredient" value="tomato">Pending
-              <span>Waiting for review before publishing</span>
-            </label>
-            <label>
-              <input type="checkbox" name="ingredient" value="tomato">Scheduled
-              <span>Publish automatically on a chosen date</span>
-            </label>
-            <label>
-              <input type="checkbox" name="ingredient" value="tomato">Private
-              <span>Only visible to site admins and editors</span>
-            </label>
-          </p>
-          <p>
-            <label>
-              <input type="checkbox" name="ingredient" value="cheese"> Password protected
-              <span>Only visible to those who know the password</span>
-            </label>
-            <label>
-              <input type="checkbox" name="ingredient" value="tomato"> Sticky
-              <span>Pin this post to the top of the blog</span>
-            </label>
-          </p>
+
+        <details class="editrix-details" @click.outside="$el.open = false">
+          <summary class="editrix-details-summary" v-text="status">Published</summary>
+          <div class="editrix-details-content">
+            <div class="editrix-list">
+              <label v-each="stat in statuses" class="editrix-list-item" @click="$el.closest('details').open = false" :class="status === stat.value && 'active'">
+                <input type="radio" v-prop="status" :value="stat.value">
+                <i :class="stat.icon"></i> <span v-text="stat.label"></span>
+                <span class="editrix-list-caption" v-text="stat.caption"></span>
+              </label>
+            </div>
+            <div class="editrix-section" v-hide="stat.value !== 'scheduled'">
+              <div class="editrix-inputs">
+                <div class="editrix-inputs-item">
+                  <div class="editrix-inputs-label">Time</div>
+                  <div class="editrix-inputs-box">
+                    <input type="time" value="11:44">
+                  </div>
+                </div>
+                <div class="editrix-inputs-item">
+                  <div class="editrix-inputs-label">Date</div>
+                  <div class="editrix-inputs-box">
+                    <input type="date" value="2025-03-15" />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="editrix-list">
+              <label v-each="vision in visibilities" class="editrix-list-item" :class="vision.value && 'checked'">
+                <input type="checkbox" v-prop="visibility" :class="vision.icon"> <span v-text="vision.label"></span>
+                <span class="editrix-list-caption" v-text="vision.caption"></span>
+              </label>
+            </div>
+            <div class="editrix-section" v-hide="vision.value">
+              <div class="editrix-inputs">
+                <div class="editrix-inputs-item">
+                  <div class="editrix-inputs-label">Password</div>
+                  <div class="editrix-inputs-box">
+                    <input type="text" placeholder="Use a secure password">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </details>
       </div>
 
-      <div class="editrix-inputs">
+      <div class="editrix-inputs" x-init="console.log(visibility)">
         <div class="editrix-inputs-label">Published from</div>
         <input type="date" value="2025-03-15" />
       </div>
 
       <div class="editrix-inputs">
-        <div class="editrix-inputs-label">Author</div>
-        <details @click.outside="$el.removeAttribute('open')">
-          <summary>John Smith</summary>
-          <p>
-            <label><input type="checkbox" name="ingredient" value="cheese">Joe Doe</label>
-          </p>
+        <div class="editrix-inputs-label">Authors</div>
+        <details class="editrix-details" @click.outside="$el.open = false">
+          <summary class="editrix-details-summary" v-text="status">John Smith</summary>
+          <div class="editrix-details-content">
+            <div class="editrix-list">
+              <label v-each="author in authors" class="editrix-list-item" @click="$el.closest('details').open = false" :class="status === stat.value && 'active'">
+                <input type="radio" v-prop="status" :value="stat.value">
+                <span v-text="author.name"></span>
+                <span class="editrix-list-caption" v-text="author.email"></span>
+              </label>
+            </div>
+          </div>
         </details>
       </div>
 
       <div class="editrix-inputs">
         <div class="editrix-inputs-label">Discussion</div>
-        <details @click.outside="$el.removeAttribute('open')">
-          <summary>Open</summary>
-          <p>
-            <label>
-              <input type="checkbox" name="ingredient" value="cheese">Open
-              <span>Visitors can add new comments and replies</span>
-            </label>
-            <label>
-              <input type="checkbox" name="ingredient" value="tomato">Closed
-              <span>Visitors cannot add new comments or replies. Existing comments remain visible.</span>
-            </label>
-          </p>
+        <details class="editrix-details" @click.outside="$el.open = false">
+          <summary class="editrix-details-summary" v-text="status">John Smith</summary>
+          <div class="editrix-details-content">
+            <div class="editrix-list">
+              <label v-each="discussion in discussions" class="editrix-list-item" @click="$el.closest('details').open = false" :class="status === stat.value && 'active'">
+                <input type="radio" v-prop="status" :value="discussion.value">
+                <i :class="discussion.icon"></i> <span v-text="discussion.label"></span>
+                <span class="editrix-list-caption" v-text="discussion.caption"></span>
+              </label>
+            </div>
+          </div>
         </details>
       </div>
     </div>
@@ -415,11 +427,10 @@
     <div class="editrix-control">
       <div class="editrix-inputs">
         <div class="editrix-inputs-item">
-          <div class="editrix-inputs-label">CSS Classes</div>
+          <div class="editrix-inputs-label">CSS Classes (separated by spaces)</div>
           <div class="editrix-inputs-box">
             <i class="ph ph-code"></i> <input type="text" placeholder="e.g. my-class" />
           </div>
-          <div class="editrix-inputs-label">List separated by spaces</div>
         </div>
       </div>
     </div>

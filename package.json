@@ -9,6 +9,7 @@
   },
   "license": "MIT",
   "dependencies": {
+    "dragula": "^3.7.3",
     "normalize.css": "^8.0.1",
     "prosemirror-commands": "^1.7.0",
     "prosemirror-example-setup": "^1.2.3",

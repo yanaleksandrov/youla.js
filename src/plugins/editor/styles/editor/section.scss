@@ -1,7 +1,8 @@
 .editrix-section {
 	padding: 0.8125rem 1rem;
 	border-bottom: 1px solid #e6e6e6;
-	user-select: none;
+	gap: 0.875rem;
+	display: grid;
 
 	&:last-child {
 		border: 0;
@@ -26,6 +27,8 @@
 	&-body {
 		width: 100%;
 		position: relative;
+		gap: 0.5rem;
+		display: grid;
 	}
 
 	&-buttons {

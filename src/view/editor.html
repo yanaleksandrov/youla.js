@@ -14,13 +14,84 @@
 			font-family: "Inter", sustem-ui, sans-serif !important;
 		}
   </style>
-  <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css" />
 </head>
 <body
   v-data="{
     tab: 'blocks',
     advanced: false,
     zoom: 100,
+    status: 'published',
+    visibility: '',
+    statuses: [
+      {
+        value: 'published',
+        label: 'Published',
+        icon: 'ph ph-pen',
+        caption: 'Visible to everyone',
+      },
+      {
+        value: 'draft',
+        label: 'Draft',
+        icon: 'ph ph-text-t-slash',
+        caption: 'Not ready to publish',
+      },
+      {
+        value: 'pending',
+        label: 'Pending',
+        icon: 'ph ph-spinner-gap',
+        caption: 'Waiting for review before publishing',
+      },
+      {
+        value: 'scheduled',
+        label: 'Scheduled',
+        icon: 'ph ph-hourglass-medium',
+        caption: 'Publish automatically on a chosen date',
+      },
+      {
+        value: 'private',
+        label: 'Private',
+        icon: 'ph ph-detective',
+        caption: 'Only visible to site admins and editors',
+      },
+    ],
+    visibilities: [
+      {
+        value: 'protected',
+        label: 'Password protected',
+        icon: 'ph ph-password',
+        caption: 'Only visible to those who know the password',
+      },
+    ],
+    discussions: [
+      {
+        value: 'open',
+        label: 'Open',
+        icon: 'ph ph-eye',
+        caption: 'Visitors can add new comments and replies',
+      },
+      {
+        value: 'closed',
+        label: 'Closed',
+        icon: 'ph ph-eye-closed',
+        caption: 'Visitors can\'t add comments, but existing ones stay visible',
+      },
+    ],
+    authors: [
+      {
+        name: 'John Doe',
+        email: 'john@gmail.com',
+      },
+      {
+        name: 'Nina Kovalski',
+        email: 'kovalski@gmail.com',
+      },
+    ],
+    thumbnails: {
+      200: 'https://placeholder.pagebee.io/api/random/200/200',
+      201: 'https://placeholder.pagebee.io/api/random/201/201',
+      202: 'https://placeholder.pagebee.io/api/random/202/202',
+    },
   }"
 >
   <div class="editrix">

@@ -8,9 +8,29 @@
     <div class="editrix-control">
       <div class="editrix-gallery">
         <div class="editrix-gallery-items" v-sort="thumbnails">
-          <div class="editrix-gallery-item" v-each="(thumbnail, id) in thumbnails">
+          <div class="editrix-gallery-item" v-sort.item>
             <span class="editrix-gallery-remove" @click="thumbnails = (delete thumbnails[id]) && thumbnails"><i class="ph ph-trash"></i></span>
-            <img class="editrix-gallery-image" :src="thumbnail">
+            <img class="editrix-gallery-image" src="https://placeholder.pagebee.io/api/random/200/200">
+          </div>
+          <div class="editrix-gallery-item" v-sort.item>
+            <span class="editrix-gallery-remove" @click="thumbnails = (delete thumbnails[id]) && thumbnails"><i class="ph ph-trash"></i></span>
+            <img class="editrix-gallery-image" src="https://placeholder.pagebee.io/api/random/205/205">
+          </div>
+          <div class="editrix-gallery-item" v-sort.item>
+            <span class="editrix-gallery-remove" @click="thumbnails = (delete thumbnails[id]) && thumbnails"><i class="ph ph-trash"></i></span>
+            <img class="editrix-gallery-image" src="https://placeholder.pagebee.io/api/random/210/210">
+          </div>
+          <div class="editrix-gallery-item" v-sort.item>
+            <span class="editrix-gallery-remove" @click="thumbnails = (delete thumbnails[id]) && thumbnails"><i class="ph ph-trash"></i></span>
+            <img class="editrix-gallery-image" src="https://placeholder.pagebee.io/api/random/215/215">
+          </div>
+          <div class="editrix-gallery-item" v-sort.item>
+            <span class="editrix-gallery-remove" @click="thumbnails = (delete thumbnails[id]) && thumbnails"><i class="ph ph-trash"></i></span>
+            <img class="editrix-gallery-image" src="https://placeholder.pagebee.io/api/random/216/216">
+          </div>
+          <div class="editrix-gallery-item" v-sort.item>
+            <span class="editrix-gallery-remove" @click="thumbnails = (delete thumbnails[id]) && thumbnails"><i class="ph ph-trash"></i></span>
+            <img class="editrix-gallery-image" src="https://placeholder.pagebee.io/api/random/217/217">
           </div>
         </div>
         <div class="editrix-gallery-add">
@@ -112,6 +132,66 @@
   </div>
 </div>
 
+
+<div class="editrix-section">
+  <div class="editrix-section-head">
+    Categories TEST
+    <div class="editrix-section-buttons">
+      <i class="ph ph-plus"></i>
+    </div>
+  </div>
+  <div class="editrix-section-body">
+    <div class="editrix-control">
+      <div class="editrix-inputs">
+        <div class="editrix-inputs-item">
+          <div class="editrix-inputs-box">
+            <i class="ph ph-magnifying-glass"></i> <input type="text" placeholder="Type for find..." />
+          </div>
+        </div>
+      </div>
+
+      <div v-text="terms"></div>
+      <div v-text="lvl1"></div>
+      <ul class="editrix-categories editrix-categories--root">
+        <li class="editrix-categories-items">
+          <label class="editrix-categories-item">
+            <input type="radio" value="electronic" v-prop="terms" @click="terms = $el.checked ? '' : 'electronic'"> Electronic2
+          </label>
+          <ul class="editrix-categories">
+            <li class="editrix-categories-items">
+              <label class="editrix-categories-item">
+                <input type="radio" value="phone" v-prop="lvl1" @click="lvl1 = $el.checked ? '' : 'phone', terms = 'electronic'"> Phones
+              </label>
+            </li>
+            <li class="editrix-categories-items">
+              <label class="editrix-categories-item">
+                <input type="radio" value="laptops" v-prop="lvl1" @click="lvl1 = $el.checked ? '' : 'laptops', terms = 'electronic'"> Laptops
+              </label>
+            </li>
+          </ul>
+        </li>
+        <li class="editrix-categories-items">
+          <label class="editrix-categories-item">
+            <input type="radio" value="books" v-prop="terms" @click="terms = $el.checked ? '' : 'books'"> Books
+          </label>
+          <ul class="editrix-categories">
+            <li class="editrix-categories-items">
+              <label class="editrix-categories-item">
+                <input type="radio" value="drama" v-prop="lvl1" @click="lvl1 = $el.checked ? '' : 'drama', terms = 'books'"> Drama
+              </label>
+            </li>
+            <li class="editrix-categories-items">
+              <label class="editrix-categories-item">
+                <input type="radio" value="kids" v-prop="lvl1" @click="lvl1 = $el.checked ? '' : 'kids', terms = 'books'"> For kids
+              </label>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+
 <div class="editrix-section">
   <div class="editrix-section-head">
     Categories
@@ -129,76 +209,78 @@
         </div>
       </div>
 
+      <div v-text="categories"></div>
+      <div v-text="one"></div>
       <ul class="editrix-categories editrix-categories--root">
         <li class="editrix-categories-items">
           <label class="editrix-categories-item">
-            <input type="checkbox" v-prop="categories"> Electronic
+            <input type="radio" value="electronic" v-prop="categories" @click="categories = categories === 'electronic' ? '' : 'electronic'"> Electronic
           </label>
           <ul class="editrix-categories">
             <li class="editrix-categories-items">
               <label class="editrix-categories-item">
-                <input type="checkbox" name="ingredient" value="tomato"> Phones
+                <input type="radio" value="phone" v-prop="one" @click="one = one === 'phone' ? '' : 'phone', categories = 'electronic'"> Phones
               </label>
             </li>
             <li class="editrix-categories-items">
               <label class="editrix-categories-item">
-                <input type="checkbox" name="ingredient" value="tomato"> Laptops
+                <input type="radio" value="laptops" v-prop="one" @click="one = one === 'laptops' ? '' : 'laptops', categories = 'electronic'"> Laptops
               </label>
             </li>
           </ul>
         </li>
         <li class="editrix-categories-items">
           <label class="editrix-categories-item">
-            <input type="checkbox" name="ingredient" value="tomato"> Books
+            <input type="radio" value="books" v-prop="categories" @click="categories = categories === 'books' ? '' : 'books'"> Books
           </label>
           <ul class="editrix-categories">
             <li class="editrix-categories-items">
               <label class="editrix-categories-item">
-                <input type="checkbox" name="ingredient" value="tomato"> Drama
+                <input type="radio" value="drama" v-prop="one" @click="one = one === 'drama' ? '' : 'drama', categories = 'books'"> Drama
               </label>
             </li>
             <li class="editrix-categories-items">
               <label class="editrix-categories-item">
-                <input type="checkbox" name="ingredient" value="tomato"> For kids
+                <input type="radio" value="kids" v-prop="one" @click="one = one === 'kids' ? '' : 'kids', categories = 'books'"> For kids
               </label>
             </li>
           </ul>
         </li>
         <li class="editrix-categories-items">
           <label class="editrix-categories-item">
-            <input type="checkbox" name="ingredient" value="tomato"> Cars
+            <input type="radio" value="cars" v-prop="categories" @click="categories = categories === 'cars' ? '' : 'cars'"> Cars
           </label>
           <ul class="editrix-categories">
             <li class="editrix-categories-items">
               <label class="editrix-categories-item">
-                <input type="checkbox" name="ingredient" value="tomato"> Honda
+                <input type="radio" name="ingredient" value="tomato"> Honda
               </label>
               <ul class="editrix-categories">
                 <li class="editrix-categories-items">
                   <label class="editrix-categories-item">
-                    <input type="checkbox" name="ingredient" value="tomato"> Civic
+                    <input type="radio" name="ingredient" value="tomato"> Civic
                   </label>
                 </li>
                 <li class="editrix-categories-items">
                   <label class="editrix-categories-item">
-                    <input type="checkbox" name="ingredient" value="tomato"> Musta
+                    <input type="radio" name="ingredient" value="tomato"> Musta
                   </label>
                 </li>
               </ul>
             </li>
             <li class="editrix-categories-items">
               <label class="editrix-categories-item">
-                <input type="checkbox" name="ingredient" value="tomato"> Toyota
+                <input type="radio" name="ingredient" value="tomato"> Toyota
               </label>
               <ul class="editrix-categories">
                 <li class="editrix-categories-items">
                   <label class="editrix-categories-item">
-                    <input type="checkbox" name="ingredient" value="tomato"> Vitz
+                    <input type="radio" name="ingredient" value="tomato"> Vitz
                   </label>
                 </li>
                 <li class="editrix-categories-items">
                   <label class="editrix-categories-item">
-                    <input type="checkbox" name="ingredient" value="tomato"> Passo
+                    <input type="radio" name="ingredient" value="tomato"> Passo
                   </label>
                 </li>
               </ul>
@@ -308,7 +390,7 @@
           <summary>px</summary>
           <p>
             <label><input type="checkbox" name="ingredient" value="cheese">em</label>
-            <label><input type="checkbox" name="ingredient" value="tomato">rem</label>
+            <label><input type="radio" name="ingredient" value="tomato">rem</label>
           </p>
         </details>
       </div>
@@ -335,85 +417,84 @@
   </div>
 </div>
 
-<div class="editrix-section">
-  <div class="editrix-section-head">
-    Typography
-    <div class="editrix-section-buttons">
-      <i class="ph ph-squares-four"></i>
-      <i class="ph" :class="typo ? 'ph-minus' : 'ph-plus'" @click="typo = !typo"></i>
-    </div>
-  </div>
-  <div class="editrix-section-body" v-hide="typo" v-hide>
-    <div class="editrix-control">
-      <div class="editrix-inputs">
-        <div class="editrix-inputs-item">
-          <div class="editrix-inputs-box">
-            <i class="ph ph-text-aa"></i>
-            <select>
-              <option>Inter</option>
-            </select>
-          </div>
-        </div>
-      </div>
-    </div>
+<!--<div class="editrix-section">-->
+<!--  <div class="editrix-section-head">-->
+<!--    Typography-->
+<!--    <div class="editrix-section-buttons">-->
+<!--      <i class="ph ph-squares-four"></i>-->
+<!--    </div>-->
+<!--  </div>-->
+<!--  <div class="editrix-section-body">-->
+<!--    <div class="editrix-control">-->
+<!--      <div class="editrix-inputs">-->
+<!--        <div class="editrix-inputs-item">-->
+<!--          <div class="editrix-inputs-box">-->
+<!--            <i class="ph ph-text-aa"></i>-->
+<!--            <select>-->
+<!--              <option>Inter</option>-->
+<!--            </select>-->
+<!--          </div>-->
+<!--        </div>-->
+<!--      </div>-->
+<!--    </div>-->
 
-    <div class="editrix-control">
-      <div class="editrix-inputs">
-        <div class="editrix-inputs-item">
-          <div class="editrix-inputs-box">
-            <select>
-              <option>Regular</option>
-            </select>
-          </div>
-        </div>
-        <div class="editrix-inputs-item">
-          <div class="editrix-inputs-box">
-            <select>
-              <option>11</option>
-              <option>12</option>
-            </select>
-          </div>
-        </div>
-      </div>
-    </div>
+<!--    <div class="editrix-control">-->
+<!--      <div class="editrix-inputs">-->
+<!--        <div class="editrix-inputs-item">-->
+<!--          <div class="editrix-inputs-box">-->
+<!--            <select>-->
+<!--              <option>Regular</option>-->
+<!--            </select>-->
+<!--          </div>-->
+<!--        </div>-->
+<!--        <div class="editrix-inputs-item">-->
+<!--          <div class="editrix-inputs-box">-->
+<!--            <select>-->
+<!--              <option>11</option>-->
+<!--              <option>12</option>-->
+<!--            </select>-->
+<!--          </div>-->
+<!--        </div>-->
+<!--      </div>-->
+<!--    </div>-->
 
-    <div class="editrix-control">
-      <div class="editrix-inputs">
-        <div class="editrix-inputs-item">
-          <div class="editrix-inputs-label">Line height</div>
-          <div class="editrix-inputs-box">
-            <i class="ph ph-text-a-underline"></i> <input type="number" value="130" /> %
-          </div>
-        </div>
-        <div class="editrix-inputs-item">
-          <div class="editrix-inputs-label">Letter spacing</div>
-          <div class="editrix-inputs-box">
-            <i class="ph ph-arrows-in-line-horizontal"></i> <input type="number" value="0" /> %
-          </div>
-        </div>
-      </div>
-    </div>
+<!--    <div class="editrix-control">-->
+<!--      <div class="editrix-inputs">-->
+<!--        <div class="editrix-inputs-item">-->
+<!--          <div class="editrix-inputs-label">Line height</div>-->
+<!--          <div class="editrix-inputs-box">-->
+<!--            <i class="ph ph-text-a-underline"></i> <input type="number" value="130" /> %-->
+<!--          </div>-->
+<!--        </div>-->
+<!--        <div class="editrix-inputs-item">-->
+<!--          <div class="editrix-inputs-label">Letter spacing</div>-->
+<!--          <div class="editrix-inputs-box">-->
+<!--            <i class="ph ph-arrows-in-line-horizontal"></i> <input type="number" value="0" /> %-->
+<!--          </div>-->
+<!--        </div>-->
+<!--      </div>-->
+<!--    </div>-->
 
-    <div class="editrix-control">
-      <div class="editrix-control-head">
-        Alignment
-      </div>
-      <div class="editrix-buttons">
-        <div class="editrix-buttons-items">
-          <span class="editrix-buttons-item"><i class="ph ph-text-align-left"></i></span>
-          <span class="editrix-buttons-item"><i class="ph ph-text-align-center"></i></span>
-          <span class="editrix-buttons-item"><i class="ph ph-text-align-right"></i></span>
-        </div>
-        <div class="editrix-buttons-items">
-          <span class="editrix-buttons-item">Ag</span>
-          <span class="editrix-buttons-item">AG</span>
-          <span class="editrix-buttons-item">ag</span>
-        </div>
-        <span class="editrix-buttons-item"><i class="ph ph-dots-three"></i></span>
-      </div>
-    </div>
-  </div>
-</div>
+<!--    <div class="editrix-control">-->
+<!--      <div class="editrix-control-head">-->
+<!--        Alignment-->
+<!--      </div>-->
+<!--      <div class="editrix-buttons">-->
+<!--        <div class="editrix-buttons-items">-->
+<!--          <span class="editrix-buttons-item"><i class="ph ph-text-align-left"></i></span>-->
+<!--          <span class="editrix-buttons-item"><i class="ph ph-text-align-center"></i></span>-->
+<!--          <span class="editrix-buttons-item"><i class="ph ph-text-align-right"></i></span>-->
+<!--        </div>-->
+<!--        <div class="editrix-buttons-items">-->
+<!--          <span class="editrix-buttons-item">Ag</span>-->
+<!--          <span class="editrix-buttons-item">AG</span>-->
+<!--          <span class="editrix-buttons-item">ag</span>-->
+<!--        </div>-->
+<!--        <span class="editrix-buttons-item"><i class="ph ph-dots-three"></i></span>-->
+<!--      </div>-->
+<!--    </div>-->
+<!--  </div>-->
+<!--</div>-->
 
 <div class="editrix-section">
   <div class="editrix-section-head">

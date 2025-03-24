@@ -35,10 +35,9 @@
 	}
 
 	&-items {
-		display: flex;
-		flex-wrap: wrap;
-		width: calc(100% + 0.25rem);
-		margin: 0 -0.125rem;
+		display: grid;
+		gap: 0.25rem;
+		grid-template-columns: repeat(3, 1fr);
 	}
 
 	&-item {
@@ -48,27 +47,16 @@
 		display: flex;
 		transition: all 0.25s;
 		position: relative;
-		margin: 0.125rem;
-		width: calc(33.33333% - 0.25rem);
+		user-select: none;
 
-		&.gu-mirror {
-			position: fixed !important;
-			margin: 0 !important;
-			z-index: 9999 !important;
-			opacity: 0.8;
-		}
-
-		&.gu-hide {
-			display: none !important;
-		}
-
-		&.gu-unselectable {
-			user-select: none !important;
+		&.gu-start {
+			transform: scale(0.85);
+			user-select: none;
+			cursor: grab;
 		}
 
 		&.gu-transit {
-			cursor: grab;
-			opacity: 0.25;
+			opacity: 0.5;
 		}
 	}
 

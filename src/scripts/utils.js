@@ -111,16 +111,6 @@ export function getNextModifier(modifiers, modifierAfter, defaultValue = '') {
 }
 
 /**
- * Checks that the html element is the form input elements
- *
- * @param el
- * @returns {boolean}
- */
-export function isInputField(el) {
-  return ['input', 'select', 'textarea'].includes(el.tagName.toLowerCase());
-}
-
-/**
  * Check that string is in kebabcase format
  *
  * @param str
@@ -133,3 +123,10 @@ export function isKebabCase(str) {
 export function isEmpty(variable) {
   return variable === '' || variable === null || (Array.isArray(variable) && variable.length === 0) || (typeof variable === 'object' && Object.keys(variable).length === 0);
 }
+
+export function nestedObject(array, lastValue = null) {
+  return array.reduceRight((acc, value, index) => {
+    return { [value]: index === array.length - 1 ? lastValue : acc };
+  }, null);
+}
+

@@ -1,116 +1,107 @@
 import { directive } from '../../../scripts/directives';
-import dragula from 'dragula';
 
-let dragElementKey = null;
-directive('sort', (el, expression, attribute, x, component) => {
-  const drake = dragula([el]);
-
-  drake.on('drag', (el, source) => {
-    let index = [...source.children].filter(item => item.offsetParent !== null).indexOf(el);
-    if (index) {
-      [dragElementKey] = Object.entries(expression)[index];
-    }
-  });
-
-  let newObj = Object.defineProperties({}, Object.getOwnPropertyDescriptors(expression));
-  drake.on('drop', (element, target, source, afterElement) => {
-    if (dragElementKey) {
-      console.log('Элемент перемещён:', element);
-      console.log('Источник:', source);
-      console.log('Цель:', target);
-      console.log('Сестринские:', afterElement);
-      console.log(dragElementKey)
-      if (afterElement) {
-        let index = [...source.children].filter(item => item.offsetParent !== null).indexOf(el);
-      } else {
-        // Извлекаем значение по ключу
-        const valueToMove = newObj[dragElementKey];
-
-        // Удаляем элемент
-        delete newObj[dragElementKey];
-
-        // Добавляем его в конец
-        newObj[dragElementKey] = valueToMove;
-
-        console.log(newObj)
-        component.data[attribute.expression] = newObj;
-
-        console.log(component.data[attribute.expression])
-      }
-    }
-  });
+directive('sort', (el, expression, attribute) => {
+  if (!attribute.modifiers.includes('item')) {
+    const drake = new Dragon(el, {
+      dragEnd: (element) => {
+        console.log(el)
+        console.log(element)
+      },
+    });
+  }
 });
 
+class Dragon {
+  constructor(element, options) {
+    if (!element) {
+      return;
+    }
 
-export class Dragon {
-  constructor(querySelector) {
-    this.dragElement = null;
+    this.element = null;
+    this.options = {
+      dragStart: (element) => {},
+      dragOver: (element) => {},
+      dragEnd: (element) => {},
+      startClass: 'gu-start',
+      transitClass: 'gu-transit',
+      ...options
+    };
 
-    // Use forEach directly on the NodeList without spreading into an array
-    document.querySelectorAll(querySelector).forEach(element => {
-      element.setAttribute('draggable', 'true');
-      this.addHandlers(element); // Removed 'this' as it's already captured in closure
+    element.querySelectorAll('[v-sort\\.item]').forEach(item => {
+      const eventMap = {
+        mousedown: this.handleStart.bind(this),
+        mouseup: this.handleEnd.bind(this),
+        dragstart: this.handleDragStart.bind(this),
+        dragover: this.handleDragOver.bind(this),
+        dragend: this.handleDragEnd.bind(this),
+      };
+
+      Object.entries(eventMap).forEach(([event, handler]) => {
+        item.addEventListener(event, handler, false);
+      });
     });
+  }
 
-    return this;
+  handleStart(e) {
+    e.currentTarget.classList.add(this.options.startClass);
+  }
+
+  handleEnd(e) {
+    e.currentTarget.classList.remove(this.options.startClass);
   }
 
   handleDragStart(e) {
-    const instance = e.target;
-    this.dragElement = instance;
-    this.dragElementBounds = instance.getBoundingClientRect();
+    this.element = e.currentTarget;
 
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/html', instance.outerHTML);
+    let {element, options} = this;
 
-    instance.classList.add('sb-dragging-start');
+    if (element) {
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/html', element.outerHTML);
+
+      element.classList.add(options.transitClass);
+      element.setAttribute('draggable', 'true');
+
+      options.dragStart(element);
+    }
   }
 
   handleDragOver(e) {
-    e.preventDefault(); // Allow drop
-    e.target.classList.add('sb-dragging-over');
-    e.dataTransfer.dropEffect = 'move';
-  }
+    e.preventDefault();
 
-  handleDragLeave(e) {
-    e.target.classList.remove('sb-dragging-over');
-  }
+    const target = e.currentTarget;
 
-  handleDrop(e) {
-    e.stopPropagation();
+    let {element, options} = this;
 
-    if (!this.dragElement || this.dragElement === e.target) return; // Avoid moving the same element
+    if (element && target !== element) {
+      const siblings   = Array.from(target.parentNode.children);
+      const dragIndex   = siblings.indexOf(element);
+      const targetIndex = siblings.indexOf(target);
 
-    const target = e.target;
-    target.parentNode.removeChild(this.dragElement);
+      const direction = dragIndex > targetIndex ? 'beforebegin' : 'afterend';
 
-    // Determine the correct position for dropping
-    const targetBounds = target.getBoundingClientRect();
-    if (this.dragElementBounds.top > targetBounds.top) {
-      target.insertAdjacentElement('beforebegin', this.dragElement);
-    } else {
-      target.insertAdjacentElement('afterend', this.dragElement);
+      // Сбрасываем все трансформации после вставки
+      // target.style.transform = direction === 'beforebegin' ? 'translateX(calc(100% + 0.25rem))' : 'translateX(calc(-100% - 0.25rem))';
+      // element.style.transform = direction === 'beforebegin' ? 'translateX(calc(-100% - 0.25rem))' : 'translateX(calc(100% + 0.25rem))';
+      // setTimeout(() => {
+      //   target.style.transform = '';
+      //
+      //   element.style.transform = '';
+      // }, 250);
+
+      target.insertAdjacentElement(direction, element);
+
+      options.dragOver(element);
     }
-
-    this.addHandlers(target.previousSibling); // Add handlers to the moved element
-    target.classList.remove('sb-dragging-start', 'sb-dragging-over');
   }
 
-  handleDragEnd(e) {
-    e.target.classList.remove('sb-dragging-start', 'sb-dragging-over');
-  }
+  handleDragEnd() {
+    let {element, options} = this;
 
-  addHandlers(element) {
-    if (element) {
-      for (let [event, callback] of Object.entries({
-        'dragstart': function(event) {this.handleDragStart(event, this)},
-        'dragover': function(event) {instance.handleDragOver(event, this)},
-        'dragleave': function(event) {instance.handleDragLeave(event, this)},
-        'drop': function(event) {instance.handleDrop(event, this)},
-        'dragend': function(event) {instance.handleDragEnd(event, this)},
-      })) {
-        element.addEventListener(event, callback, false);
-      }
-    }
+    options.dragEnd(element);
+
+    element.classList.remove(options.startClass, options.transitClass);
+    element.removeAttribute('draggable');
+    this.element = null;
   }
 }

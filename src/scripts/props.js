@@ -1,4 +1,4 @@
-import { eventCreate, getAttributes, isInputField, saferEval, isEmpty } from './utils';
+import { eventCreate, getAttributes, nestedObject, saferEval, isEmpty } from "./utils";
 import { domWalk } from './dom';
 
 export function fetchProps(rootElement, data) {
@@ -8,22 +8,31 @@ export function fetchProps(rootElement, data) {
     let {name, directive, expression, modifiers} = attribute;
 
     if (directive === 'v-prop') {
-      // try fetch multiple checkboxes with same prop
-      if (el.type === 'checkbox' && data[expression] === undefined) {
-        data[expression] = (rootElement.querySelectorAll(`[${CSS.escape(name)}]`)).length > 1 ? [] : '';
+      let prop = expression.split('.');
+      if (prop.length) {
+        let key = prop.shift();
+
+        // if (prop.length && expression === 'content.title.color') {
+        //   data[key] = nestedObject(prop, ['red']);
+        //   console.log(nestedObject(prop));
+        //   console.log(data);
+        // }
+
+        // try fetch multiple checkboxes with same prop
+        if (el.type === 'checkbox' && data[key] === undefined) {
+          data[key] = rootElement.querySelectorAll(`[${CSS.escape(name)}]`).length > 1 ? [] : '';
+        }
+
+        // just for form fields
+        if (['input', 'select', 'textarea'].includes(el.tagName.toLowerCase())) {
+          let propExpression = generateExpressionForProp(el, data, key, modifiers);
+          let newValue = saferEval(propExpression, data, {'$el': el});
+
+          data[key] = isEmpty(newValue) ? (data[key] ?? null) : newValue;
+        }
+
+        fetched.push({el, attribute});
       }
-
-      // just for input form fields
-      if (isInputField(el)) {
-        let modelExpression = generateExpressionForProp(el, data, expression, modifiers);
-
-        let oldValue = data[expression] !== undefined ? data[expression] : null,
-          newValue = saferEval(modelExpression, data, {'$el': el});
-
-        data[expression] = oldValue && isEmpty(newValue) ? oldValue : newValue;
-      }
-
-      fetched.push({el, attribute});
     }
   }));
 

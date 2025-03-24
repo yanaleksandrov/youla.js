@@ -1,4 +1,11 @@
-import { eventCreate, getAttributes, nestedObject, saferEval, isEmpty } from "./utils";
+import {
+  eventCreate,
+  getAttributes,
+  createNestedObject,
+  getNestedObjectValue,
+  saferEval,
+  isEmpty
+} from "./utils";
 import { domWalk } from './dom';
 
 export function fetchProps(rootElement, data) {
@@ -9,30 +16,22 @@ export function fetchProps(rootElement, data) {
 
     if (directive === 'v-prop') {
       let prop = expression.split('.');
-      if (prop.length) {
-        let key = prop.shift();
+      let key   = prop.shift();
 
-        // if (prop.length && expression === 'content.title.color') {
-        //   data[key] = nestedObject(prop, ['red']);
-        //   console.log(nestedObject(prop));
-        //   console.log(data);
-        // }
-
-        // try fetch multiple checkboxes with same prop
+      // just for form fields
+      if (['input', 'select', 'textarea'].includes(el.tagName.toLowerCase())) {
+        // fetch multiple checkboxes with same prop
         if (el.type === 'checkbox' && data[key] === undefined) {
-          data[key] = rootElement.querySelectorAll(`[${CSS.escape(name)}]`).length > 1 ? [] : '';
+          data[key] = createNestedObject(prop, rootElement.querySelectorAll(`[${CSS.escape(name)}]`).length > 1 ? [] : '');
         }
 
-        // just for form fields
-        if (['input', 'select', 'textarea'].includes(el.tagName.toLowerCase())) {
-          let propExpression = generateExpressionForProp(el, data, key, modifiers);
-          let newValue = saferEval(propExpression, data, {'$el': el});
+        let propExpression = generateExpressionForProp(el, data, expression, modifiers);
+        let newValue = createNestedObject(prop, saferEval(propExpression, data, {'$el': el}));
 
-          data[key] = isEmpty(newValue) ? (data[key] ?? null) : newValue;
-        }
-
-        fetched.push({el, attribute});
+        data[key] = isEmpty(newValue) ? (data[key] ?? null) : newValue;
       }
+
+      fetched.push({el, attribute});
     }
   }));
 
@@ -44,8 +43,9 @@ export function fetchProps(rootElement, data) {
 export function generateExpressionForProp(el, data, prop, modifiers) {
   let rightSideOfExpression, tag = el.tagName.toLowerCase();
   if (el.type === 'checkbox') {
-    // If the data we are binding to is an array, toggle it's value inside the array.
-    if (Array.isArray(data[prop])) {
+    // If the data we are binding to is an array, toggle its value inside the array.
+    let value = getNestedObjectValue(data, prop);
+    if (Array.isArray(value)) {
       rightSideOfExpression = `$el.checked ? ${prop}.concat([$el.value]) : [...${prop}.splice(0, ${prop}.indexOf($el.value)), ...${prop}.splice(${prop}.indexOf($el.value)+1)]`
     } else {
       rightSideOfExpression = `$el.checked`
@@ -62,10 +62,9 @@ export function generateExpressionForProp(el, data, prop, modifiers) {
       : (modifiers.includes('trim') ? '$el.value.trim()' : '$el.value')
   }
 
-  // People might assume we take care of that for them, because they already set a shared "x.[prop]" attribute.
   if (!el.hasAttribute('name')) {
     el.setAttribute('name', prop)
   }
 
-  return `$data['${prop}'] = ${rightSideOfExpression}`
+  return `$data.${prop} = ${rightSideOfExpression}`
 }

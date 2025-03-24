@@ -124,9 +124,36 @@ export function isEmpty(variable) {
   return variable === '' || variable === null || (Array.isArray(variable) && variable.length === 0) || (typeof variable === 'object' && Object.keys(variable).length === 0);
 }
 
-export function nestedObject(array, lastValue = null) {
-  return array.reduceRight((acc, value, index) => {
-    return { [value]: index === array.length - 1 ? lastValue : acc };
-  }, null);
+/**
+ * Create nested object form array.
+ *
+ * @param array
+ * @param lastValue
+ * @returns {{}|*}
+ */
+export function createNestedObject(array, lastValue) {
+  if (array.length === 0) {
+    return lastValue;
+  }
+
+  // Начнем с пустого объекта
+  let result = {};
+
+  // Указатель на текущий уровень объекта
+  let current = result;
+
+  array.forEach((key, index) => {
+    if (index === array.length - 1) {
+      current[key] = lastValue; // Задаем значение
+    } else {
+      current[key] = {};
+      current = current[key];
+    }
+  });
+
+  return result;
 }
 
+export function getNestedObjectValue(obj, path) {
+  return path.split('.').reduce((acc, key) => acc?.[key], obj);
+}

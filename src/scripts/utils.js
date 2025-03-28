@@ -24,11 +24,7 @@ export function pulsate(func, wait, immediate) {
 }
 
 export function saferEval(expression, dataContext, additionalHelperVariables = {}, noReturn = false) {
-  expression = noReturn ? `with($data){${expression}}` : (
-    isKebabCase(expression) ?
-      `var result;with($data){result=$data['${expression}']};return result` :
-      `var result;with($data){result=${expression}};return result`
-    );
+  expression = noReturn ? `with($data){${expression}}` : `var result; with($data){result=${expression}}; return result`;
 
   return (new Function(['$data', ...Object.keys(additionalHelperVariables)], expression))(
     dataContext, ...Object.values(additionalHelperVariables)
@@ -37,6 +33,7 @@ export function saferEval(expression, dataContext, additionalHelperVariables = {
 
 export function getAttributes(el) {
   const regexp = /^(v-|@|:)/;
+
   return [...el.attributes].filter(({ name }) => regexp.test(name)).map(({ name, value }) => {
     const startsWith = name.match(regexp)[0];
     const root       = name.replace(startsWith, '');
@@ -108,16 +105,6 @@ export function eventCreate(eventName, detail = {}) {
 
 export function getNextModifier(modifiers, modifierAfter, defaultValue = '') {
   return modifiers[modifiers.indexOf(modifierAfter) + 1] || defaultValue;
-}
-
-/**
- * Check that string is in kebabcase format
- *
- * @param str
- * @returns {boolean}
- */
-export function isKebabCase(str) {
-  return /^[a-z][a-z\d]*(-[a-z\d]+)+$/.test(str);
 }
 
 export function isEmpty(variable) {

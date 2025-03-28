@@ -92,6 +92,7 @@ export default class Component {
     const self = this;
 
     // use debounce for .outside modificator work
+    // TODO: check, maybe this problem can solve with other solution
     debounce(() => {
       domWalk(self.root, el => getAttributes(el).forEach(attribute => {
         let {directive, expression} = attribute;

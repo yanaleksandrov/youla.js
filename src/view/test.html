@@ -6,13 +6,14 @@
 <link rel="stylesheet" href="https://expansa.org/dashboard/assets/css/main.css" id="main-css" />
 
 <form class="demo" v-data>
-  <input type="checkbox" value="red" v-prop="contents" checked>
-  <input type="checkbox" value="orange" v-prop="contents" checked>
-  <input type="checkbox" value="yellow" v-prop="contents">
-  Colors: <span v-text="contents"></span>
+  <input type="text" value="red" v-prop="title">
+  Colors: <span v-text="title"></span>
+  <br>
+  <input type="number" value="10" v-prop="size">
+  Size: <span v-text="size"></span>
 </form>
 
-<form class="demo" v-data>
+<form class="demo" v-datas>
   <input type="checkbox" value="red" v-prop="content.title.color" checked>
   <input type="checkbox" value="orange" v-prop="content.title.color" checked>
   <input type="checkbox" value="yellow" v-prop="content.title.color">

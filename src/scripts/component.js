@@ -12,7 +12,6 @@ export default class Component {
 
     let dataProviderContext = {};
     injectDataProviders(dataProviderContext);
-    //console.log(dataProviderContext)
 
     this.root    = el;
     this.rawData = saferEval(el.getAttribute('v-data') || '{}', dataProviderContext);
@@ -27,28 +26,21 @@ export default class Component {
   }
 
   evaluate(expression, additionalHelperVariables) {
-    let affectedDataKeys = []
+    let deps = []
 
     const proxiedData = new Proxy(this.data, {
-      get(object, prop) {
-        affectedDataKeys.push(prop)
+      get: (object, prop) => (deps.push(prop), object[prop])
+    });
 
-        return object[prop]
-      }
-    })
+    const output = saferEval(expression, proxiedData, additionalHelperVariables);
 
-    const result = saferEval(expression, proxiedData, additionalHelperVariables)
-
-    return {
-      output: result,
-      deps: affectedDataKeys
-    }
+    return {output, deps};
   }
 
   wrapDataInObservable(data) {
-    let self = this
+    let self = this;
 
-    self.concernedData = []
+    self.concernedData = [];
     return new Proxy(data, {
       set(obj, property, value) {
         const setWasSuccessful = Reflect.set(obj, property, value);
@@ -82,7 +74,8 @@ export default class Component {
           ? 'change'
           : 'input';
 
-        self.registerListener(el, event, modifiers, generateExpressionForProp(el, data, expression, modifiers));
+        console.log(335535)
+        self.registerListener(el, event, modifiers, generateExpressionForProp(el, data, attribute));
 
         let { output } = self.evaluate(expression, additionalHelperVariables)
         updateAttribute(el, 'value', output)
@@ -107,9 +100,8 @@ export default class Component {
       domWalk(self.root, el => getAttributes(el).forEach(attribute => {
         let {directive, expression} = attribute;
 
+        console.log(expression)
         if (directive === 'v-prop') {
-          console.log(expression)
-          console.log(self.evaluate(expression))
           let { output, deps } = self.evaluate(expression);
           if (self.concernedData.filter(i => deps.includes(i)).length > 0) {
             updateAttribute(el, 'value', output);

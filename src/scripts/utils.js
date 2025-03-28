@@ -131,20 +131,17 @@ export function isEmpty(variable) {
  * @param lastValue
  * @returns {{}|*}
  */
-export function createNestedObject(array, lastValue) {
+export function setNestedObjectValue(array, lastValue) {
   if (array.length === 0) {
     return lastValue;
   }
 
-  // Начнем с пустого объекта
-  let result = {};
-
-  // Указатель на текущий уровень объекта
+  let result  = {};
   let current = result;
 
   array.forEach((key, index) => {
     if (index === array.length - 1) {
-      current[key] = lastValue; // Задаем значение
+      current[key] = lastValue;
     } else {
       current[key] = {};
       current = current[key];

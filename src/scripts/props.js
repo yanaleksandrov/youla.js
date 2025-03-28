@@ -1,38 +1,27 @@
 import {
   eventCreate,
   getAttributes,
-  createNestedObject,
+  setNestedObjectValue,
   getNestedObjectValue,
-  saferEval,
-  isEmpty
-} from "./utils";
+  saferEval
+} from './utils';
 import { domWalk } from './dom';
 
 export function fetchProps(rootElement, data) {
   const fetched = [];
 
-  domWalk(rootElement, el => getAttributes(el).forEach(attribute => {
-    let {name, directive, expression, modifiers} = attribute;
-
-    if (directive === 'v-prop') {
-      let prop = expression.split('.');
-      let key   = prop.shift();
-
-      // just for form fields
-      if (['input', 'select', 'textarea'].includes(el.tagName.toLowerCase())) {
-        // fetch multiple checkboxes with same prop
-        if (el.type === 'checkbox' && data[key] === undefined) {
-          data[key] = createNestedObject(prop, rootElement.querySelectorAll(`[${CSS.escape(name)}]`).length > 1 ? [] : '');
-        }
-
-        let propExpression = generateExpressionForProp(el, data, expression, modifiers);
-        let newValue = createNestedObject(prop, saferEval(propExpression, data, {'$el': el}));
-
-        data[key] = isEmpty(newValue) ? (data[key] ?? null) : newValue;
-      }
-
-      fetched.push({el, attribute});
+  domWalk(rootElement, el => getAttributes(el).filter(({directive}) => directive === 'v-prop').forEach(attribute => {
+    // support directive just for form fields
+    if (!['input', 'select', 'textarea'].includes(el.tagName.toLowerCase())) {
+      return;
     }
+
+    let expression = generateExpressionForProp(el, data, attribute);
+
+    // calc real value based on fields value attributes
+    saferEval(expression, data, {'$el': el});
+
+    fetched.push({el, attribute});
   }));
 
   document.dispatchEvent(eventCreate('x:fetched', {data, fetched}))
@@ -40,18 +29,27 @@ export function fetchProps(rootElement, data) {
   return data;
 }
 
-export function generateExpressionForProp(el, data, prop, modifiers) {
+export function generateExpressionForProp(el, data, attribute) {
+  let {expression, modifiers} = attribute;
+
+  let [key, ...prop] = expression.split('.');
+
+  // set default value if undefined
+  if (data[key] === undefined) {
+    data[key] = setNestedObjectValue(prop, el.closest('[v-data]').querySelectorAll(`[${CSS.escape(attribute.name)}]`).length > 1 ? [] : '');
+  }
+
   let rightSideOfExpression, tag = el.tagName.toLowerCase();
   if (el.type === 'checkbox') {
     // If the data we are binding to is an array, toggle its value inside the array.
-    let value = getNestedObjectValue(data, prop);
+    let value = getNestedObjectValue(data, expression);
     if (Array.isArray(value)) {
-      rightSideOfExpression = `$el.checked ? ${prop}.concat([$el.value]) : [...${prop}.splice(0, ${prop}.indexOf($el.value)), ...${prop}.splice(${prop}.indexOf($el.value)+1)]`
+      rightSideOfExpression = `$el.checked ? ${expression}.concat([$el.value]) : [...${expression}.splice(0, ${expression}.indexOf($el.value)), ...${expression}.splice(${expression}.indexOf($el.value)+1)]`
     } else {
       rightSideOfExpression = `$el.checked`
     }
   } else if (el.type === 'radio') {
-    rightSideOfExpression = `$el.checked ? $el.value : (typeof ${prop} !== 'undefined' ? ${prop} : '')`
+    rightSideOfExpression = `$el.checked ? $el.value : (typeof ${expression} !== 'undefined' ? ${expression} : '')`
   } else if (tag === 'select' && el.multiple) {
     rightSideOfExpression = `Array.from($el.selectedOptions).map(option => ${modifiers.includes('number')
       ? 'parseFloat(option.value || option.text)'
@@ -63,8 +61,8 @@ export function generateExpressionForProp(el, data, prop, modifiers) {
   }
 
   if (!el.hasAttribute('name')) {
-    el.setAttribute('name', prop)
+    el.setAttribute('name', expression.replace(/\.(\w+)/g, '[$1]'))
   }
 
-  return `$data.${prop} = ${rightSideOfExpression}`
+  return `$data.${expression} = ${rightSideOfExpression}`
 }

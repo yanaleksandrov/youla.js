@@ -95,18 +95,6 @@ export default class Component {
       domWalk(self.root, el => getAttributes(el).forEach(attribute => {
         let {directive, expression} = attribute;
 
-        console.log(expression)
-        if (directive === 'v-prop') {
-          let { output, deps } = self.evaluate(expression);
-          if (self.concernedData.filter(i => deps.includes(i)).length > 0) {
-            updateAttribute(el, 'value', output);
-
-            document.dispatchEvent(
-              eventCreate('x:refreshed', {attribute, output})
-            );
-          }
-        }
-
         if (directive in x.directives) {
           let output = expression, deps = [];
           if (directive !== 'v-each') {

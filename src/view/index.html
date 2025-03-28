@@ -3,14 +3,6 @@
 }; %>
 <%= _.template(require('./parts/header.html').default)(data) %>
 
-<div v-data="timer( new Date( new Date().getTime() + ( 110000 * 1000 ) ).toISOString() )">
-  <span @load="init()" v-text="day">01</span>:<span v-text="hour">06</span>:<span v-text="min">33</span>:<span v-text="sec">20</span>
-</div>
-<br>
-<br>
-<br>
-<br>
-
 <div class="accordion">
   <details class="accordion__item" name="accordion">
     <summary class="accordion__title">Title of item 1</summary>
@@ -195,7 +187,7 @@
   <br>
   <br>
 
-  <input v-model="test">
+  <input v-prop="test">
   <button @click="test = 'baz'">Change to baz</button>
   <br>
   <br>

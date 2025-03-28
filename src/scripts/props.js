@@ -7,7 +7,7 @@ import {
 } from './utils';
 import { domWalk } from './dom';
 
-export function fetchProps(rootElement, data) {
+export function fetchProp(rootElement, data) {
   const fetched = [];
 
   domWalk(rootElement, el => getAttributes(el).filter(({directive}) => directive === 'v-prop').forEach(attribute => {

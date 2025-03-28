@@ -1,5 +1,5 @@
 import { debounce, getAttributes, saferEval, updateAttribute, eventCreate, getNextModifier } from './utils';
-import { fetchProps, generateExpressionForProp } from './props';
+import { fetchProp, generateExpressionForProp } from './props';
 import { store } from './store';
 import { domWalk } from './dom';
 import { injectDataProviders } from './data';
@@ -15,7 +15,7 @@ export default class Component {
 
     this.root    = el;
     this.rawData = saferEval(el.getAttribute('v-data') || '{}', dataProviderContext);
-    this.rawData = fetchProps(el, this.rawData);
+    this.rawData = fetchProp(el, this.rawData);
     this.data    = this.wrapDataInObservable(this.rawData);
 
     this.initialize(el, this.data);
@@ -38,22 +38,17 @@ export default class Component {
   }
 
   wrapDataInObservable(data) {
-    let self = this;
+    this.concernedData = [];
 
-    self.concernedData = [];
     return new Proxy(data, {
-      set(obj, property, value) {
-        const setWasSuccessful = Reflect.set(obj, property, value);
-
-        if (self.concernedData.indexOf(property) === -1) {
-          self.concernedData.push(property);
+      set: (obj, prop, value) => {
+        if (Reflect.set(obj, prop, value) && !this.concernedData.includes(prop)) {
+          this.concernedData.push(prop);
+          this.refresh();
         }
-
-        self.refresh();
-
-        return setWasSuccessful;
+        return true;
       }
-    })
+    });
   }
 
   initialize(root, data, additionalHelperVariables) {
@@ -74,11 +69,10 @@ export default class Component {
           ? 'change'
           : 'input';
 
-        console.log(335535)
         self.registerListener(el, event, modifiers, generateExpressionForProp(el, data, attribute));
 
-        let { output } = self.evaluate(expression, additionalHelperVariables)
-        updateAttribute(el, 'value', output)
+        let { output } = self.evaluate(expression, additionalHelperVariables);
+        updateAttribute(el, 'value', output);
       }
 
       // init directives
@@ -96,6 +90,7 @@ export default class Component {
 
   refresh() {
     const self = this;
+
     debounce(() => {
       domWalk(self.root, el => getAttributes(el).forEach(attribute => {
         let {directive, expression} = attribute;
@@ -128,7 +123,7 @@ export default class Component {
         }
       }));
 
-      self.concernedData = []
+      self.concernedData = [];
     }, 0)()
   }
 
@@ -230,15 +225,13 @@ export default class Component {
     }
 
     saferEval(expression, this.data, {
-      ...{
-        '$el': target,
-        '$event': e,
-        '$refs': this.getRefsProxy(),
-        '$root': this.root,
-      },
+      '$el': target,
+      '$event': e,
+      '$refs': this.getRefsProxy(),
+      '$root': this.root,
       ...methods,
       ...data
-    }, true)
+    }, true);
   }
 
   getRefsProxy() {

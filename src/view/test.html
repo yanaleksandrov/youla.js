@@ -6,11 +6,15 @@
 <link rel="stylesheet" href="https://expansa.org/dashboard/assets/css/main.css" id="main-css" />
 
 <form class="demo" v-data>
-  <input type="text" value="red" v-prop="title">
-  Colors: <span v-text="title"></span>
+  <input type="text" value="red" v-prop="title.color">
+  Colors: <span v-text="title.color"></span>
   <br>
-  <input type="number" value="10" v-prop="size">
-  Size: <span v-text="size"></span>
+  <input type="number" value="10" v-prop="title.size">
+  Size: <span v-text="title.size"></span>
+</form>
+
+<form class="demo" v-data="{tata: {mama: {hello: 1234}}}">
+  Click btn: <button type="button" v-text="tata.mama.hello" @click="tata.mama.hello = '5678'"></button>
 </form>
 
 <form class="demo" v-datas>

@@ -26,19 +26,9 @@ method('ajax', (e, el) => (url, options = {}, callback) => {
       break;
   }
 
-  el.classList.add('is-load');
+  let elements = [el, ...el.querySelectorAll('[type="submit"]')];
 
-  let submits = el.querySelectorAll('[type="submit"]');
-  submits.forEach(submit => Object.assign(submit.style, {
-    "background-image":
-      "url(\"data:image/svg+xml;charset=UTF-8,%3csvg width='16' height='16' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3cstyle%3ecircle %7b animation: 4s a infinite linear, 3s o infinite linear;%7d%40keyframes a %7bfrom%7bstroke-dasharray:100 0%7d50%25%7bstroke-dasharray:0 100%7dto%7bstroke-dasharray:100 0%7d%7d%40keyframes o %7bfrom%7bstroke-dashoffset:75%7dto%7bstroke-dashoffset:375%7d%7d%3c/style%3e%3cpath d='M15 8A7 7 0 111 8a7 7 0 0114 0z' stroke='%23fff' stroke-opacity='.2' stroke-width='2'/%3e%3ccircle cx='8' cy='8' r='7' stroke='%23fff' stroke-opacity='.3' stroke-width='2'/%3e%3c/svg%3e\")",
-    "background-repeat": "no-repeat",
-    "background-position": "center center",
-    "background-size": "1.25em",
-    "pointer-events": "none",
-    "color": "transparent",
-    "transition": "none",
-  }));
+  elements.forEach(element => element.classList.add('is-load'));
 
   return new Promise(resolve => {
     xhr.open(method, url);
@@ -57,9 +47,7 @@ method('ajax', (e, el) => (url, options = {}, callback) => {
 
     xhr.send(data);
   }).then(response => {
-    el.classList.remove('is-load');
-
-    submits.forEach(submit => submit.removeAttribute('style'));
+    elements.forEach(element => element.classList.remove('is-load'));
 
     return response();
   });

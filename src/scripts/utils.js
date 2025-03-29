@@ -107,9 +107,9 @@ export function getNextModifier(modifiers, modifierAfter, defaultValue = '') {
   return modifiers[modifiers.indexOf(modifierAfter) + 1] || defaultValue;
 }
 
-export function isEmpty(variable) {
-  return variable === '' || variable === null || (Array.isArray(variable) && variable.length === 0) || (typeof variable === 'object' && Object.keys(variable).length === 0);
-}
+// export function isEmpty(variable) {
+//   return variable === '' || variable === null || (Array.isArray(variable) && variable.length === 0) || (typeof variable === 'object' && Object.keys(variable).length === 0);
+// }
 
 /**
  * Create nested object form array.

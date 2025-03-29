@@ -16,6 +16,10 @@ export function fetchProp(rootElement, data) {
       return;
     }
 
+    if (!el.hasAttribute('name')) {
+      el.setAttribute('name', attribute.expression.replace(/\.(\w+)/g, '[$1]'))
+    }
+
     let expression = generateExpressionForProp(el, data, attribute);
 
     // calc real value based on fields value attributes
@@ -30,13 +34,15 @@ export function fetchProp(rootElement, data) {
 }
 
 export function generateExpressionForProp(el, data, attribute) {
-  let {expression, modifiers} = attribute;
+  let {name, expression, modifiers} = attribute;
 
   let [key, ...prop] = expression.split('.');
 
   // set default value if undefined
   if (data[key] === undefined) {
-    data[key] = setNestedObjectValue(prop, el.closest('[v-data]').querySelectorAll(`[${CSS.escape(attribute.name)}]`).length > 1 ? [] : '');
+    let fields = el.closest('[v-data]').querySelectorAll(`[${CSS.escape(name)}="${expression}"]`);
+
+    data[key] = setNestedObjectValue(prop, fields.length > 1 ? [] : '');
   }
 
   let rightSideOfExpression, tag = el.tagName.toLowerCase();
@@ -58,10 +64,6 @@ export function generateExpressionForProp(el, data, attribute) {
     rightSideOfExpression = modifiers.includes('number')
       ? 'parseFloat($el.value)'
       : (modifiers.includes('trim') ? '$el.value.trim()' : '$el.value')
-  }
-
-  if (!el.hasAttribute('name')) {
-    el.setAttribute('name', expression.replace(/\.(\w+)/g, '[$1]'))
   }
 
   return `$data.${expression} = ${rightSideOfExpression}`

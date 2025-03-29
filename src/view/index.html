@@ -17,27 +17,10 @@
     </div>
   </details>
 </div>
-
-<div class="accordion" v-data="{ i: -1 }">
-  <div class="accordion__item">
-    <div class="accordion__title" @click="i = i !== 1 ? 1 : -1">Title of item 1</div>
-    <div class="accordion__panel" v-collapse="i === 1" v-hide>
-      <p>Description of item 1</p>
-    </div>
-  </div>
-  <div class="accordion__item">
-    <div class="accordion__title" @click="i = i !== 2 ? 2 : -1">Title of item 2</div>
-    <div class="accordion__panel" v-collapse="i === 2" v-hide>
-      <p>Description of item 2</p>
-    </div>
-  </div>
-</div>
-<br>
-<br>
 <br>
 <br>
 
-<div v-data="{'sign-in': 'привет', viewed: false, data: {percent: 0}, items: [], count: 11, lists: [{attributes: {href: 'https://poe.com/chat/2shu93txki2jj53eflg', target: '_blank'}, title: 'Hello World!'}, {attributes: {href: '#', target: '_blank'}, title: 'How are you?'}]}">
+<div v-data="{signIn: 'привет', viewed: false, data: {percent: 0}, items: [], count: 11, lists: [{attributes: {href: 'https://poe.com/chat/2shu93txki2jj53eflg', target: '_blank'}, title: 'Hello World!'}, {attributes: {href: '#', target: '_blank'}, title: 'How are you?'}]}">
   <form @submit.prevent="$ajax('https://jsonplaceholder.typicode.com/posts', {}, response => data = response).then(r => console.log(r))">
     <input type="file" name="testFile" placeholder="Choose file">
     <br>
@@ -78,9 +61,9 @@
     <div>
       Single checkbox with boolean (single)
     </div>
-    <input type="checkbox" v-prop="single" checked>
-    <div v-text="single"></div>
-    <div v-hide="single === 'on'">Checkbox is checked</div>
+    <input type="checkbox" v-prop="singlet" @change="console.log(singlet)" checked>
+    <div v-text="singlet"></div>
+    <div v-hide="singlet !== true">Checkbox is checked</div>
     <br>
 
     <div>

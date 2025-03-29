@@ -26,29 +26,58 @@ export default class Component {
   }
 
   evaluate(expression, additionalHelperVariables) {
-    let deps = []
+    let deps = [];
 
-    const proxiedData = new Proxy(this.data, {
-      get: (object, prop) => (deps.push(prop), object[prop])
+    const makeProxy = (data) => new Proxy(data, {
+      get(target, prop) {
+        deps.push(prop);
+
+        if (typeof target[prop] === 'object' && target[prop] !== null) {
+          return makeProxy(target[prop]);
+        }
+
+        return target[prop];
+      }
     });
+
+    const proxiedData = makeProxy(this.data);
 
     const output = saferEval(expression, proxiedData, additionalHelperVariables);
 
-    return {output, deps};
+    return { output, deps };
   }
 
   wrapDataInObservable(data) {
     this.concernedData = [];
 
-    return new Proxy(data, {
-      set: (obj, prop, value) => {
-        if (Reflect.set(obj, prop, value) && !this.concernedData.includes(prop)) {
-          this.concernedData.push(prop);
-          this.refresh();
-        }
-        return true;
+    const makeObservable = (obj) => {
+      if (obj !== null && typeof obj === 'object') {
+        return new Proxy(obj, {
+          set: (target, prop, value) => {
+            if (typeof value === 'object' && value !== null) {
+              value = makeObservable(value);
+            }
+
+            if (Reflect.set(target, prop, value) && !this.concernedData.includes(prop)) {
+              this.concernedData.push(prop);
+              this.refresh();
+            }
+
+            return true;
+          },
+          get: (target, prop) => {
+            const value = target[prop];
+            if (typeof value === 'object' && value !== null) {
+              return makeObservable(value);
+            }
+            return value;
+          }
+        });
       }
-    });
+      return obj;
+    };
+
+    return makeObservable(data);
   }
 
   initialize(root, data, additionalHelperVariables) {

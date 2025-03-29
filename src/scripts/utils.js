@@ -24,11 +24,7 @@ export function pulsate(func, wait, immediate) {
 }
 
 export function saferEval(expression, dataContext, additionalHelperVariables = {}, noReturn = false) {
-  expression = noReturn ? `with($data){${expression}}` : (
-    isKebabCase(expression) ?
-      `var result;with($data){result=$data['${expression}']};return result` :
-      `var result;with($data){result=${expression}};return result`
-    );
+  expression = noReturn ? `with($data){${expression}}` : `var result; with($data){result=${expression}}; return result`;
 
   return (new Function(['$data', ...Object.keys(additionalHelperVariables)], expression))(
     dataContext, ...Object.values(additionalHelperVariables)
@@ -37,6 +33,7 @@ export function saferEval(expression, dataContext, additionalHelperVariables = {
 
 export function getAttributes(el) {
   const regexp = /^(v-|@|:)/;
+
   return [...el.attributes].filter(({ name }) => regexp.test(name)).map(({ name, value }) => {
     const startsWith = name.match(regexp)[0];
     const root       = name.replace(startsWith, '');
@@ -110,23 +107,37 @@ export function getNextModifier(modifiers, modifierAfter, defaultValue = '') {
   return modifiers[modifiers.indexOf(modifierAfter) + 1] || defaultValue;
 }
 
+// export function isEmpty(variable) {
+//   return variable === '' || variable === null || (Array.isArray(variable) && variable.length === 0) || (typeof variable === 'object' && Object.keys(variable).length === 0);
+// }
+
 /**
- * Check that string is in kebabcase format
+ * Create nested object form array.
  *
- * @param str
- * @returns {boolean}
+ * @param array
+ * @param lastValue
+ * @returns {{}|*}
  */
-export function isKebabCase(str) {
-  return /^[a-z][a-z\d]*(-[a-z\d]+)+$/.test(str);
+export function setNestedObjectValue(array, lastValue) {
+  if (array.length === 0) {
+    return lastValue;
+  }
+
+  let result  = {};
+  let current = result;
+
+  array.forEach((key, index) => {
+    if (index === array.length - 1) {
+      current[key] = lastValue;
+    } else {
+      current[key] = {};
+      current = current[key];
+    }
+  });
+
+  return result;
 }
 
-export function isEmpty(variable) {
-  return variable === '' || variable === null || (Array.isArray(variable) && variable.length === 0) || (typeof variable === 'object' && Object.keys(variable).length === 0);
+export function getNestedObjectValue(obj, path) {
+  return path.split('.').reduce((acc, key) => acc?.[key], obj);
 }
-
-export function nestedObject(array, lastValue = null) {
-  return array.reduceRight((acc, value, index) => {
-    return { [value]: index === array.length - 1 ? lastValue : acc };
-  }, null);
-}
-

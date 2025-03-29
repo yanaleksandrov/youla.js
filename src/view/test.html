@@ -3,17 +3,37 @@
 }; %>
 <%= _.template(require('./parts/header.html').default)(data) %>
 
-<link rel="stylesheet" href="https://cms.codyshop.ru/dashboard/assets/css/main.css" id="main-css" />
+<link rel="stylesheet" href="https://expansa.org/dashboard/assets/css/main.css" id="main-css" />
 
-<div class="notice" v-data="{notices: []}">
-  <button type="button" @click="$notice.add(); notices = [{message: 'New Message', closable: true, type: 'info'}]">Toggle Dark Mode</button>
+<form class="demo" v-data>
+  <input type="text" value="red" v-prop="title.color">
+  Colors: <span v-text="title.color"></span>
+  <br>
+  <input type="number" value="10" v-prop="title.size">
+  Size: <span v-text="title.size"></span>
+</form>
 
-  <div v-each="(notice, id) in notices">
-    <div class="notice__item" :class="notice.type">
-      <div class="notice__msg" v-html="notice.message"></div>
-      <div class="notice__close" v-show="notice.closable" :style="`--anim:${item.anim}`" @click="$notice.remove(id)"></div>
-    </div>
-  </div>
+<form class="demo" v-data>
+  <input type="number" value="10" v-prop="size">
+  Size: <span v-text="size"></span>
+</form>
+
+<form class="demo" v-data>
+  <input type="checkbox" value="red" v-prop="content.title.color" checked>
+  <input type="checkbox" value="orange" v-prop="content.title.color" checked>
+  <input type="checkbox" value="yellow" v-prop="content.title.color">
+  Colors: <span v-text="content.title.color"></span>
+</form>
+
+<!--<div class="notice" v-datas="{notices: []}" v-hide>-->
+<!--  <button type="button" @click="$notice.add(); notices = [{message: 'New Message', closable: true, type: 'info'}]">Toggle Dark Mode</button>-->
+
+<!--  <div v-each="(notice, id) in notices">-->
+<!--    <div class="notice__item" :class="notice.type">-->
+<!--      <div class="notice__msg" v-html="notice.message"></div>-->
+<!--      <div class="notice__close" v-show="notice.closable" :style="`&#45;&#45;anim:${item.anim}`" @click="$notice.remove(id)"></div>-->
+<!--    </div>-->
+<!--  </div>-->
 
 <!--  <div v-each="(notice, id) in $store.notices.items">-->
 <!--    <div class="notice__item" :class="item.classes()">-->
@@ -21,120 +41,120 @@
 <!--      <div class="notice__close" v-show="notice.closable" :style="`&#45;&#45;anim:${item.anim}`" @click="$store.notice.close(id)"></div>-->
 <!--    </div>-->
 <!--  </div>-->
-</div>
+<!--</div>-->
 
-<form class="card card-border" method="post" v-data>
-  <!-- step 1 -->
-  <div v-step="name.trim()">
-    <div class="t-center p-8">
-      <h2>Welcome to Grafema!</h2>
-      <p class="t-muted">This is installation wizard. Before start, you need to set some settings. Please fill the information about your website.</p>
-    </div>
-    <div class="card-hr">Website data</div>
-    <div class="dg g-6 p-8 pb-0">
-      <div class="dg g-1">
-        <label class="dg g-1">
-          <span class="df aic jcsb fw-600">Site name</span>
-          <input type="text" value="Ian Aleksandrov" x.name placeholder="Example: My Blog" v-autocomplete required>
-        </label>
-      </div>
-      <div class="dg g-1">
-        <label class="dg g-1">
-          <span class="df aic jcsb fw-600">Site description</span>
-          <input type="text" x.description placeholder="Example: Just Another Website" v-autocomplete>
-        </label>
-        <div class="fs-13 t-muted"><?php I18n::e( 'Don\'t worry, you can always change these settings later.' ); ?></div>
-      </div>
-    </div>
-  </div>
+<!--<form class="card card-border" method="post" v-datas v-hide>-->
+<!--  &lt;!&ndash; step 1 &ndash;&gt;-->
+<!--  <div v-step="name.trim()">-->
+<!--    <div class="t-center p-8">-->
+<!--      <h2>Welcome to Grafema!</h2>-->
+<!--      <p class="t-muted">This is installation wizard. Before start, you need to set some settings. Please fill the information about your website.</p>-->
+<!--    </div>-->
+<!--    <div class="card-hr">Website data</div>-->
+<!--    <div class="dg g-6 p-8 pb-0">-->
+<!--      <div class="dg g-1">-->
+<!--        <label class="dg g-1">-->
+<!--          <span class="df aic jcsb fw-600">Site name</span>-->
+<!--          <input type="text" value="Ian Aleksandrov" x.name placeholder="Example: My Blog" v-autocomplete required>-->
+<!--        </label>-->
+<!--      </div>-->
+<!--      <div class="dg g-1">-->
+<!--        <label class="dg g-1">-->
+<!--          <span class="df aic jcsb fw-600">Site description</span>-->
+<!--          <input type="text" x.description placeholder="Example: Just Another Website" v-autocomplete>-->
+<!--        </label>-->
+<!--        <div class="fs-13 t-muted"><?php I18n::e( 'Don\'t worry, you can always change these settings later.' ); ?></div>-->
+<!--      </div>-->
+<!--    </div>-->
+<!--  </div>-->
 
-  <!-- step 2 -->
-  <div v-step="dbname.trim() && username.trim() && db_password.trim() && hostname.trim() && prefix.trim()" v-hide>
-    <div class="t-center p-8">
-      <h2>Step 1: Database</h2>
-      <p class="t-muted">Enter information about connecting to the database here. If you are not sure about it, contact your hosting provider.</p>
-    </div>
-    <div class="card-hr">Database credits</div>
-    <div class="dg gtc-2 g-6 p-8 pb-0">
-      <div class="dg g-1 ga-2">
-        <label class="dg g-1">
-          <span class="df aic jcsb fw-600">Database name</span>
-          <input type="text" x.dbname placeholder="database_name" v-autocomplete required>
-        </label>
-      </div>
-      <div class="dg g-1 ga-2">
-        <label class="dg g-1">
-          <span class="df aic jcsb fw-600">Database username</span>
-          <input type="text" x.username placeholder="user_name" v-autocomplete required>
-        </label>
-      </div>
-      <div class="dg g-1 ga-2">
-        <label class="dg g-1">
-          <span class="df aic jcsb fw-600">Database password</span>
-          <input type="text" x.db_password placeholder="Password" v-autocomplete required>
-        </label>
-      </div>
-      <div class="dg g-1 sm:ga-2">
-        <label class="dg g-1">
-          <span class="df aic jcsb fw-600">Hostname</span>
-          <input type="text" x.hostname placeholder="Hostname" v-autocomplete required>
-        </label>
-      </div>
-      <div class="dg g-1 sm:ga-2">
-        <label class="dg g-1">
-          <span class="df aic jcsb fw-600">Prefix</span>
-          <input type="text" x.prefix placeholder="Prefix" v-autocomplete required>
-        </label>
-        <div class="fs-13 t-muted"><?php I18n::e( 'Don\'t worry, you can always change these settings later.' ); ?></div>
-      </div>
-    </div>
-  </div>
+<!--  &lt;!&ndash; step 2 &ndash;&gt;-->
+<!--  <div v-step="dbname.trim() && username.trim() && db_password.trim() && hostname.trim() && prefix.trim()" v-hide>-->
+<!--    <div class="t-center p-8">-->
+<!--      <h2>Step 1: Database</h2>-->
+<!--      <p class="t-muted">Enter information about connecting to the database here. If you are not sure about it, contact your hosting provider.</p>-->
+<!--    </div>-->
+<!--    <div class="card-hr">Database credits</div>-->
+<!--    <div class="dg gtc-2 g-6 p-8 pb-0">-->
+<!--      <div class="dg g-1 ga-2">-->
+<!--        <label class="dg g-1">-->
+<!--          <span class="df aic jcsb fw-600">Database name</span>-->
+<!--          <input type="text" x.dbname placeholder="database_name" v-autocomplete required>-->
+<!--        </label>-->
+<!--      </div>-->
+<!--      <div class="dg g-1 ga-2">-->
+<!--        <label class="dg g-1">-->
+<!--          <span class="df aic jcsb fw-600">Database username</span>-->
+<!--          <input type="text" x.username placeholder="user_name" v-autocomplete required>-->
+<!--        </label>-->
+<!--      </div>-->
+<!--      <div class="dg g-1 ga-2">-->
+<!--        <label class="dg g-1">-->
+<!--          <span class="df aic jcsb fw-600">Database password</span>-->
+<!--          <input type="text" x.db_password placeholder="Password" v-autocomplete required>-->
+<!--        </label>-->
+<!--      </div>-->
+<!--      <div class="dg g-1 sm:ga-2">-->
+<!--        <label class="dg g-1">-->
+<!--          <span class="df aic jcsb fw-600">Hostname</span>-->
+<!--          <input type="text" x.hostname placeholder="Hostname" v-autocomplete required>-->
+<!--        </label>-->
+<!--      </div>-->
+<!--      <div class="dg g-1 sm:ga-2">-->
+<!--        <label class="dg g-1">-->
+<!--          <span class="df aic jcsb fw-600">Prefix</span>-->
+<!--          <input type="text" x.prefix placeholder="Prefix" v-autocomplete required>-->
+<!--        </label>-->
+<!--        <div class="fs-13 t-muted"><?php I18n::e( 'Don\'t worry, you can always change these settings later.' ); ?></div>-->
+<!--      </div>-->
+<!--    </div>-->
+<!--  </div>-->
 
-  <!-- step 3 -->
-  <div v-step="login.trim() && email.trim() && password.trim()" v-hide>
-    <div class="t-center p-8">
-      <h2>Step 2: Create account</h2>
-      <p class="t-muted">The last step. Create a site administrator.</p>
-    </div>
-    <div class="card-hr">User credits</div>
-    <div class="dg g-6 p-8 pb-0">
-      <div class="dg g-1">
-        <label class="dg g-1">
-          <span class="df aic jcsb fw-600">User login</span>
-          <input type="text" x.login placeholder="Enter login" required>
-        </label>
-        <div class="fs-13 t-muted"><?php I18n::e( 'Can use only alphanumeric characters, underscores, hyphens and @ symbol.' ); ?></div>
-      </div>
-      <div class="dg g-1">
-        <label class="dg g-1">
-          <span class="df aic jcsb fw-600">Email address</span>
-          <input type="email" x.email placeholder="Enter email" required>
-        </label>
-        <div class="fs-13 t-muted"><?php I18n::e( 'Double-check your email address before continuing.' ); ?></div>
-      </div>
-      <div class="dg g-1">
-        <label class="dg g-1">
-          <span class="df aic jcsb fw-600">Password</span>
-          <input type="password" x.password placeholder="Password" v-autocomplete required>
-        </label>
-        <div class="fs-13 t-muted"><?php I18n::e( 'You will need this password to sign&nbsp;in. Please store it in a secure location.' ); ?></div>
-      </div>
-    </div>
-  </div>
+<!--  &lt;!&ndash; step 3 &ndash;&gt;-->
+<!--  <div v-step="login.trim() && email.trim() && password.trim()" v-hide>-->
+<!--    <div class="t-center p-8">-->
+<!--      <h2>Step 2: Create account</h2>-->
+<!--      <p class="t-muted">The last step. Create a site administrator.</p>-->
+<!--    </div>-->
+<!--    <div class="card-hr">User credits</div>-->
+<!--    <div class="dg g-6 p-8 pb-0">-->
+<!--      <div class="dg g-1">-->
+<!--        <label class="dg g-1">-->
+<!--          <span class="df aic jcsb fw-600">User login</span>-->
+<!--          <input type="text" x.login placeholder="Enter login" required>-->
+<!--        </label>-->
+<!--        <div class="fs-13 t-muted"><?php I18n::e( 'Can use only alphanumeric characters, underscores, hyphens and @ symbol.' ); ?></div>-->
+<!--      </div>-->
+<!--      <div class="dg g-1">-->
+<!--        <label class="dg g-1">-->
+<!--          <span class="df aic jcsb fw-600">Email address</span>-->
+<!--          <input type="email" x.email placeholder="Enter email" required>-->
+<!--        </label>-->
+<!--        <div class="fs-13 t-muted"><?php I18n::e( 'Double-check your email address before continuing.' ); ?></div>-->
+<!--      </div>-->
+<!--      <div class="dg g-1">-->
+<!--        <label class="dg g-1">-->
+<!--          <span class="df aic jcsb fw-600">Password</span>-->
+<!--          <input type="password" x.password placeholder="Password" v-autocomplete required>-->
+<!--        </label>-->
+<!--        <div class="fs-13 t-muted"><?php I18n::e( 'You will need this password to sign&nbsp;in. Please store it in a secure location.' ); ?></div>-->
+<!--      </div>-->
+<!--    </div>-->
+<!--  </div>-->
 
-  <!-- buttons -->
-  <div class="p-8 df jcsb g-2">
-    <button type="button" class="btn btn--outline" :disableds="$step.cannotGoBack()" @click="$step.goBack()" disableds>
-      Back
-    </button>
-    <button type="button" class="btn btn--primary" :disableds="$step.cannotGoNext()" v-show="$step.isNotLast()" @click="$step.goNext()" disableds>
-      Continue
-    </button>
-    <button type="submit" class="btn btn--primary" :disableds="$step.isUncompleted()" v-show="$step.isLast()" disableds>
-      Install Grafema
-    </button>
-  </div>
-</form>
+<!--  &lt;!&ndash; buttons &ndash;&gt;-->
+<!--  <div class="p-8 df jcsb g-2">-->
+<!--    <button type="button" class="btn btn&#45;&#45;outline" :disableds="$step.cannotGoBack()" @click="$step.goBack()" disableds>-->
+<!--      Back-->
+<!--    </button>-->
+<!--    <button type="button" class="btn btn&#45;&#45;primary" :disableds="$step.cannotGoNext()" v-show="$step.isNotLast()" @click="$step.goNext()" disableds>-->
+<!--      Continue-->
+<!--    </button>-->
+<!--    <button type="submit" class="btn btn&#45;&#45;primary" :disableds="$step.isUncompleted()" v-show="$step.isLast()" disableds>-->
+<!--      Install Grafema-->
+<!--    </button>-->
+<!--  </div>-->
+<!--</form>-->
 
 <!--<div v-data="dropdown">-->
 <!--  <button @click="toggle">Toggle Content</button>-->
@@ -144,64 +164,64 @@
 <!--  </div>-->
 <!--</div>-->
 
-<div class="df aic g-1" v-data="timer( new Date( new Date().getTime() + ( 220000 * 1000 ) ).toISOString() )">
-  <div class="p-2 py-3 ta-center b mw-20x4">
-    <div class="fw-600" v-text="day">00</div>
-    <div class="t-hint t-muted">days</div>
-  </div>
-  :
-  <div class="p-2 py-3 ta-center b mw-20x4">
-    <div class="fw-600" v-text="hour">00</div>
-    <div class="t-hint t-muted">hours</div>
-  </div>
-  :
-  <div class="p-2 py-3 ta-center b mw-20x4">
-    <div class="fw-600" v-text="min">00</div>
-    <div class="t-hint t-muted">minutes</div>
-  </div>
-  :
-  <div class="p-2 py-3 ta-center b mw-20x4">
-    <div class="fw-600" v-text="sec">00</div>
-    <div class="t-hint t-muted">seconds</div>
-  </div>
-</div>
+<!--<div class="df aic g-1" v-datas="timer( new Date( new Date().getTime() + ( 220000 * 1000 ) ).toISOString() )" v-hide>-->
+<!--  <div class="p-2 py-3 ta-center b mw-20x4">-->
+<!--    <div class="fw-600" v-text="day">00</div>-->
+<!--    <div class="t-hint t-muted">days</div>-->
+<!--  </div>-->
+<!--  :-->
+<!--  <div class="p-2 py-3 ta-center b mw-20x4">-->
+<!--    <div class="fw-600" v-text="hour">00</div>-->
+<!--    <div class="t-hint t-muted">hours</div>-->
+<!--  </div>-->
+<!--  :-->
+<!--  <div class="p-2 py-3 ta-center b mw-20x4">-->
+<!--    <div class="fw-600" v-text="min">00</div>-->
+<!--    <div class="t-hint t-muted">minutes</div>-->
+<!--  </div>-->
+<!--  :-->
+<!--  <div class="p-2 py-3 ta-center b mw-20x4">-->
+<!--    <div class="fw-600" v-text="sec">00</div>-->
+<!--    <div class="t-hint t-muted">seconds</div>-->
+<!--  </div>-->
+<!--</div>-->
 
-<form method="POST" class="card card-border g-6 p-8" v-datas="{close: false}" @submit.prevent="$ajax(&quot;user/sign-in&quot;)">
-  <header class="t-center">
-    <h4>Welcome to Grafema</h4>
-    <p class="t-muted">Login to you account and enjoy exclusive features and many more</p>
-  </header>
-  <div class="dg g-1">
-    <label class="dg g-1">
-      <span class="df aic jcsb fw-600">Login or email</span>
-      <span class="field">
-          <input x.login="prop">
-      </span>
-    </label>
-  </div>
-  <div class="dg g-1" v-datas="{show: true, data: {}}">
-    <div class="dg g-1">
-      <div class="df aic jcsb fw-600">
-        Password</div>
-      <div class="field">
-        <input x.password="prop" :type="show ? &#039;password&#039; : &#039;text&#039;" @input.window="data = $password.check(password)">
-        <i class="ph" :class="show ? 'ph-eye-closed' : 'ph-eye'" @click="show = $password.switch(show)"></i>
-      </div>
-    </div>
-    <div class="fs-13 t-muted lh-xs">Forgot your password? You can
-      <a href="/dashboard/reset-password">reset it here</a>
-    </div>
+<!--<form method="POST" class="card card-border g-6 p-8" v-datas="{close: false}" @submit.prevent="$ajax(&quot;user/sign-in&quot;)" v-hide>-->
+<!--  <header class="t-center">-->
+<!--    <h4>Welcome to Grafema</h4>-->
+<!--    <p class="t-muted">Login to you account and enjoy exclusive features and many more</p>-->
+<!--  </header>-->
+<!--  <div class="dg g-1">-->
+<!--    <label class="dg g-1">-->
+<!--      <span class="df aic jcsb fw-600">Login or email</span>-->
+<!--      <span class="field">-->
+<!--          <input x.login="prop">-->
+<!--      </span>-->
+<!--    </label>-->
+<!--  </div>-->
+<!--  <div class="dg g-1" v-datas="{show: true, data: {}}">-->
+<!--    <div class="dg g-1">-->
+<!--      <div class="df aic jcsb fw-600">-->
+<!--        Password</div>-->
+<!--      <div class="field">-->
+<!--        <input x.password="prop" :type="show ? &#039;password&#039; : &#039;text&#039;" @input.window="data = $password.check(password)">-->
+<!--        <i class="ph" :class="show ? 'ph-eye-closed' : 'ph-eye'" @click="show = $password.switch(show)"></i>-->
+<!--      </div>-->
+<!--    </div>-->
+<!--    <div class="fs-13 t-muted lh-xs">Forgot your password? You can-->
+<!--      <a href="/dashboard/reset-password">reset it here</a>-->
+<!--    </div>-->
 
-  </div>
-  <div class="dg g-1" v-datas="{remember: []}">
-    <label class="df aic">
-      <input type="checkbox" x.remember="prop" value="1">
-      <span class="df aic mw">Remember me on this device</span>
-    </label>
-  </div>
-  <div class="dg g-1">
-    <button type="submit" x.sign-in="prop" class="btn btn--primary" @load="console.log(login, password)" :disabled="!login.trim() || !password.trim()">Sign In</button>
-  </div>
-</form>
+<!--  </div>-->
+<!--  <div class="dg g-1" v-datas="{remember: []}">-->
+<!--    <label class="df aic">-->
+<!--      <input type="checkbox" x.remember="prop" value="1">-->
+<!--      <span class="df aic mw">Remember me on this device</span>-->
+<!--    </label>-->
+<!--  </div>-->
+<!--  <div class="dg g-1">-->
+<!--    <button type="submit" x.sign-in="prop" class="btn btn&#45;&#45;primary" @load="console.log(login, password)" :disabled="!login.trim() || !password.trim()">Sign In</button>-->
+<!--  </div>-->
+<!--</form>-->
 
 <%= _.template(require('./parts/footer.html').default)(data) %>

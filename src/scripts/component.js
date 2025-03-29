@@ -1,5 +1,5 @@
 import { debounce, getAttributes, saferEval, updateAttribute, eventCreate, getNextModifier } from './utils';
-import { fetchProps, generateExpressionForProp } from './props';
+import { fetchProp, generateExpressionForProp } from './props';
 import { store } from './store';
 import { domWalk } from './dom';
 import { injectDataProviders } from './data';
@@ -12,11 +12,10 @@ export default class Component {
 
     let dataProviderContext = {};
     injectDataProviders(dataProviderContext);
-    //console.log(dataProviderContext)
 
     this.root    = el;
     this.rawData = saferEval(el.getAttribute('v-data') || '{}', dataProviderContext);
-    this.rawData = fetchProps(el, this.rawData);
+    this.rawData = fetchProp(el, this.rawData);
     this.data    = this.wrapDataInObservable(this.rawData);
 
     this.initialize(el, this.data);
@@ -27,41 +26,58 @@ export default class Component {
   }
 
   evaluate(expression, additionalHelperVariables) {
-    let affectedDataKeys = []
+    let deps = [];
 
-    const proxiedData = new Proxy(this.data, {
-      get(object, prop) {
-        affectedDataKeys.push(prop)
+    const makeProxy = (data) => new Proxy(data, {
+      get(target, prop) {
+        deps.push(prop);
 
-        return object[prop]
+        if (typeof target[prop] === 'object' && target[prop] !== null) {
+          return makeProxy(target[prop]);
+        }
+
+        return target[prop];
       }
-    })
+    });
 
-    const result = saferEval(expression, proxiedData, additionalHelperVariables)
+    const proxiedData = makeProxy(this.data);
 
-    return {
-      output: result,
-      deps: affectedDataKeys
-    }
+    const output = saferEval(expression, proxiedData, additionalHelperVariables);
+
+    return { output, deps };
   }
 
   wrapDataInObservable(data) {
-    let self = this
+    this.concernedData = [];
 
-    self.concernedData = []
-    return new Proxy(data, {
-      set(obj, property, value) {
-        const setWasSuccessful = Reflect.set(obj, property, value);
+    const makeObservable = (obj) => {
+      if (obj !== null && typeof obj === 'object') {
+        return new Proxy(obj, {
+          set: (target, prop, value) => {
+            if (typeof value === 'object' && value !== null) {
+              value = makeObservable(value);
+            }
 
-        if (self.concernedData.indexOf(property) === -1) {
-          self.concernedData.push(property);
-        }
+            if (Reflect.set(target, prop, value) && !this.concernedData.includes(prop)) {
+              this.concernedData.push(prop);
+              this.refresh();
+            }
 
-        self.refresh();
-
-        return setWasSuccessful;
+            return true;
+          },
+          get: (target, prop) => {
+            const value = target[prop];
+            if (typeof value === 'object' && value !== null) {
+              return makeObservable(value);
+            }
+            return value;
+          }
+        });
       }
-    })
+      return obj;
+    };
+
+    return makeObservable(data);
   }
 
   initialize(root, data, additionalHelperVariables) {
@@ -77,19 +93,15 @@ export default class Component {
 
       // init props
       if (directive === 'v-prop') {
-        // If the element we are binding to is a select, a radio, or checkbox
-        // we'll listen for the change event instead of the "input" event.
-        let event = ['select-multiple', 'select', 'checkbox', 'radio'].includes(el.type) || modifiers.includes('lazy') ? 'change' : 'input';
+        // If the element we are binding to is a select, a radio, or checkbox we'll listen for the change event instead of the "input" event.
+        let event = ['select-multiple', 'select', 'checkbox', 'radio'].includes(el.type) || modifiers.includes('lazy')
+          ? 'change'
+          : 'input';
 
-        self.registerListener(
-          el,
-          event,
-          modifiers,
-          generateExpressionForProp(el, data, expression, modifiers)
-        );
+        self.registerListener(el, event, modifiers, generateExpressionForProp(el, data, attribute));
 
-        let { output } = self.evaluate(expression, additionalHelperVariables)
-        updateAttribute(el, 'value', output)
+        let { output } = self.evaluate(expression, additionalHelperVariables);
+        updateAttribute(el, 'value', output);
       }
 
       // init directives
@@ -107,20 +119,12 @@ export default class Component {
 
   refresh() {
     const self = this;
+
+    // use debounce for .outside modificator work
+    // TODO: check, maybe this problem can solve with other solution
     debounce(() => {
       domWalk(self.root, el => getAttributes(el).forEach(attribute => {
         let {directive, expression} = attribute;
-
-        if (directive === 'v-prop') {
-          let { output, deps } = self.evaluate(expression)
-          if (self.concernedData.filter(i => deps.includes(i)).length > 0) {
-            updateAttribute(el, 'value', output);
-
-            document.dispatchEvent(
-              eventCreate('x:refreshed', {attribute, output})
-            );
-          }
-        }
 
         if (directive in x.directives) {
           let output = expression, deps = [];
@@ -138,7 +142,7 @@ export default class Component {
         }
       }));
 
-      self.concernedData = []
+      self.concernedData = [];
     }, 0)()
   }
 
@@ -240,15 +244,13 @@ export default class Component {
     }
 
     saferEval(expression, this.data, {
-      ...{
-        '$el': target,
-        '$event': e,
-        '$refs': this.getRefsProxy(),
-        '$root': this.root,
-      },
+      '$el': target,
+      '$event': e,
+      '$refs': this.getRefsProxy(),
+      '$root': this.root,
       ...methods,
       ...data
-    }, true)
+    }, true);
   }
 
   getRefsProxy() {

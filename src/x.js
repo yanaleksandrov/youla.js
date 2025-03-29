@@ -37,12 +37,12 @@ import './scripts/methods/$store';
 import './scripts/methods/$dispatch';
 
 // experimental directives & methods for grafema project
-import './scripts/directives/v-grafema';
-import './scripts/methods/$grafema';
-
-// plugin editor
-import './plugins/editor/directives/v-editor';
-import './plugins/editor/directives/v-drag';
-import './plugins/editor/directives/v-sort';
+// import './scripts/directives/v-grafema';
+// import './scripts/methods/$grafema';
+//
+// // plugin editor
+// import './plugins/editor/directives/v-editor';
+// import './plugins/editor/directives/v-drag';
+// import './plugins/editor/directives/v-sort';
 
 window.x.start();

@@ -135,7 +135,7 @@
 
 <div class="editrix-section">
   <div class="editrix-section-head">
-    Categories TEST
+    Categories
     <div class="editrix-section-buttons">
       <i class="ph ph-plus"></i>
     </div>
@@ -150,39 +150,39 @@
         </div>
       </div>
 
-      <div v-text="terms"></div>
-      <div v-text="lvl1"></div>
+      <div>Level 1: <span v-text="terms.lvl1"></span></div>
+      <div>Level 2: <span v-text="terms.lvl2"></span></div>
       <ul class="editrix-categories editrix-categories--root">
         <li class="editrix-categories-items">
           <label class="editrix-categories-item">
-            <input type="radio" value="electronic" v-prop="terms" @click="terms = $el.checked ? '' : 'electronic'"> Electronic2
+            <input type="radio" value="electronic" v-prop="terms.lvl1" @click="$el.checked && (terms = {lvl1: '', lvl2: ''})"> Electronic2
           </label>
           <ul class="editrix-categories">
             <li class="editrix-categories-items">
               <label class="editrix-categories-item">
-                <input type="radio" value="phone" v-prop="lvl1" @click="lvl1 = $el.checked ? '' : 'phone', terms = 'electronic'"> Phones
+                <input type="radio" value="phone" v-prop="terms.lvl2" @click="$el.checked && (terms = {lvl1: 'electronic', lvl2: ''})"> Phones
               </label>
             </li>
             <li class="editrix-categories-items">
               <label class="editrix-categories-item">
-                <input type="radio" value="laptops" v-prop="lvl1" @click="lvl1 = $el.checked ? '' : 'laptops', terms = 'electronic'"> Laptops
+                <input type="radio" value="laptops" v-prop="terms.lvl2" @click="$el.checked && (terms = {lvl1: 'electronic', lvl2: ''})"> Laptops
               </label>
             </li>
           </ul>
         </li>
         <li class="editrix-categories-items">
           <label class="editrix-categories-item">
-            <input type="radio" value="books" v-prop="terms" @click="terms = $el.checked ? '' : 'books'"> Books
+            <input type="radio" value="books" v-prop="terms.lvl1" @click="$el.checked && (terms = {lvl1: '', lvl2: ''})"> Books
           </label>
           <ul class="editrix-categories">
             <li class="editrix-categories-items">
               <label class="editrix-categories-item">
-                <input type="radio" value="drama" v-prop="lvl1" @click="lvl1 = $el.checked ? '' : 'drama', terms = 'books'"> Drama
+                <input type="radio" value="drama" v-prop="terms.lvl2" @click="$el.checked && (terms = {lvl1: 'books', lvl2: ''})"> Drama
               </label>
             </li>
             <li class="editrix-categories-items">
               <label class="editrix-categories-item">
-                <input type="radio" value="kids" v-prop="lvl1" @click="lvl1 = $el.checked ? '' : 'kids', terms = 'books'"> For kids
+                <input type="radio" value="kids" v-prop="terms.lvl2" @click="$el.checked && (terms = {lvl1: 'books', lvl2: ''})"> For kids
               </label>
             </li>
           </ul>

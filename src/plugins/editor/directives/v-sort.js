@@ -1,11 +1,21 @@
 import { directive } from '../../../scripts/directives';
 
-directive('sort', (el, expression, attribute) => {
+directive('sort', (el, expression, attribute, x, component) => {
   if (!attribute.modifiers.includes('item')) {
     const drake = new Dragon(el, {
-      dragEnd: (element) => {
-        console.log(el)
-        console.log(element)
+      dragEnd: (obj, element, fromIndex, toIndex) => {
+        expression = obj.moveElement(expression, fromIndex, toIndex);
+        //console.log(obj)
+        console.log(expression)
+
+        //component.data.thumbnails = expression;
+      },
+      remove: (removeIndex, removeNode) => {
+        expression.splice(removeIndex, 1);
+
+        console.log(removeNode)
+        //component.data.thumbnails = expression;
+        //console.log(expression)
       },
     });
   }
@@ -17,17 +27,22 @@ class Dragon {
       return;
     }
 
+    this.wrapper = element;
     this.element = null;
     this.options = {
-      dragStart: (element) => {},
-      dragOver: (element) => {},
-      dragEnd: (element) => {},
+      dragStart: () => {},
+      dragOver: () => {},
+      dragEnd: () => {},
+      remove: () => {},
       startClass: 'gu-start',
       transitClass: 'gu-transit',
       ...options
     };
 
-    element.querySelectorAll('[v-sort\\.item]').forEach(item => {
+    /**
+     * Add handlers for every item of sort wrapper.
+     */
+    Array.from(element.children).forEach(item => {
       const eventMap = {
         mousedown: this.handleStart.bind(this),
         mouseup: this.handleEnd.bind(this),
@@ -40,6 +55,25 @@ class Dragon {
         item.addEventListener(event, handler, false);
       });
     });
+
+    this.updateIndexes();
+
+    /**
+     * Watch removing items.
+     *
+     * @type {MutationObserver}
+     */
+    const observer = new MutationObserver(mutations => {
+      mutations.forEach(mutation => mutation.removedNodes.forEach(removeNode => {
+        const removeIndex = parseInt(removeNode.dataset.index, 10);
+
+        this.options.remove(removeIndex, removeNode);
+
+        this.updateIndexes();
+      }));
+    });
+
+    observer.observe(element, { childList: true, subtree: true });
   }
 
   handleStart(e) {
@@ -62,7 +96,9 @@ class Dragon {
       element.classList.add(options.transitClass);
       element.setAttribute('draggable', 'true');
 
-      options.dragStart(element);
+      element.dataset.fromIndex = String(Array.prototype.indexOf.call(element.parentNode.children, element));
+
+      options.dragStart(this, element);
     }
   }
 
@@ -74,6 +110,7 @@ class Dragon {
     let {element, options} = this;
 
     if (element && target !== element) {
+      const fromIndex   = parseInt(element.dataset.fromIndex, 10);
       const siblings   = Array.from(target.parentNode.children);
       const dragIndex   = siblings.indexOf(element);
       const targetIndex = siblings.indexOf(target);
@@ -91,17 +128,40 @@ class Dragon {
 
       target.insertAdjacentElement(direction, element);
 
-      options.dragOver(element);
+      options.dragOver(this, element, fromIndex);
     }
   }
 
   handleDragEnd() {
     let {element, options} = this;
 
-    options.dragEnd(element);
+    const fromIndex = parseInt(element.dataset.fromIndex, 10);
+    const toIndex   = Array.prototype.indexOf.call(element.parentNode.children, element);
+
+    options.dragEnd(this, element, fromIndex, toIndex);
 
     element.classList.remove(options.startClass, options.transitClass);
     element.removeAttribute('draggable');
+
     this.element = null;
+
+    this.updateIndexes();
+  }
+
+  moveElement(arr, fromIndex, toIndex) {
+    // return the array unchanged if the indexes are incorrect
+    if (fromIndex < 0 || fromIndex >= arr.length || toIndex < 0 || toIndex >= arr.length) {
+      return arr;
+    }
+
+    const [movedItem] = arr.splice(fromIndex, 1);
+
+    arr.splice(toIndex, 0, movedItem);
+
+    return arr;
+  }
+
+  updateIndexes() {
+    Array.from(this.wrapper.children).forEach((item, i) => item.dataset.index = String(i));
   }
 }

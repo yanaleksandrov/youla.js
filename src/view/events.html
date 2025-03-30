@@ -57,6 +57,10 @@
 &lt;/form&gt;
 </pre>
 
+<form class="demo" v-data @submit.prevent="console.log('submitted')" action="/foo">
+  <button>Submit</button>
+</form>
+
 <h4><code>.stop</code></h4>
 
 <p>
@@ -66,10 +70,14 @@
 </p>
 
 <pre>
-&lt;div @click=&quot;console.log(&#039;I will not get logged&#039;)&quot;&gt;
+&lt;div v-data @click=&quot;console.log(&#039;I will not get logged&#039;)&quot;&gt;
   &lt;button @click.stop&gt;Click Me&lt;/button&gt;
 &lt;/div&gt;
 </pre>
+
+<div class="demo" v-data @click="console.log('I will not get logged')">
+  <button @click.stop>Click Me</button>
+</div>
 
 <h4><code>.outside</code></h4>
 

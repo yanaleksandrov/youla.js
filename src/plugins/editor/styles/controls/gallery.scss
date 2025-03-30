@@ -74,6 +74,7 @@
 		color: rgba(0, 0, 0, 0.5);
 		cursor: pointer;
 		transition: all 0.25s;
+		position: relative;
 
 		&:hover {
 			background-color: #f4f4f4;

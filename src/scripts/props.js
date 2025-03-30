@@ -20,6 +20,18 @@ export function fetchProp(rootElement, data) {
       el.setAttribute('name', attribute.expression.replace(/\.(\w+)/g, '[$1]'))
     }
 
+    let [key, ...prop] = attribute.expression.split('.');
+
+    // set default value if undefined
+    if (data[key] === undefined) {
+      let fields = [];
+      if (el.type === 'checkbox') {
+        fields = el.closest('[v-data]').querySelectorAll(`[${CSS.escape(attribute.name)}="${attribute.expression}"]`);
+      }
+
+      data[key] = setNestedObjectValue(prop, fields.length > 1 ? [] : '');
+    }
+
     let expression = generateExpressionForProp(el, data, attribute);
 
     // calc real value based on fields value attributes
@@ -34,16 +46,7 @@ export function fetchProp(rootElement, data) {
 }
 
 export function generateExpressionForProp(el, data, attribute) {
-  let {name, expression, modifiers} = attribute;
-
-  let [key, ...prop] = expression.split('.');
-
-  // set default value if undefined
-  if (data[key] === undefined) {
-    let fields = el.closest('[v-data]').querySelectorAll(`[${CSS.escape(name)}="${expression}"]`);
-
-    data[key] = setNestedObjectValue(prop, fields.length > 1 ? [] : '');
-  }
+  let {expression, modifiers} = attribute;
 
   let rightSideOfExpression, tag = el.tagName.toLowerCase();
   if (el.type === 'checkbox') {

@@ -178,11 +178,59 @@ title: "To Do List"
 
 <p>X.js поддерживает работу свойств в "dot" нотации любой вложенности, например <code>content.title.color</code>.</p>
 
+<p>
+  Вот пример использования dot нотации для выбора вложенных категорий товара, которые используются при формировании ЧПУ.
+
+  Наша задача — гарантировать, что порядок категорий всегда остается одинаковым, чтобы URL для одного и того же товара всегда был единственным и предсказуемым.
+</p>
+
+<pre>
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;label&gt;&lt;input type=&quot;radio&quot; value=&quot;electronic&quot; v-prop=&quot;terms.lvl1&quot; @click=&quot;$el.checked &amp;&amp; (terms = {lvl1: &#039;&#039;, lvl2: &#039;&#039;})&quot;&gt; Electronic2&lt;/label&gt;
+    &lt;ul&gt;
+      &lt;li&gt;
+        &lt;label&gt;&lt;input type=&quot;radio&quot; value=&quot;phone&quot; v-prop=&quot;terms.lvl2&quot; @click=&quot;$el.checked &amp;&amp; (terms = {lvl1: &#039;electronic&#039;, lvl2: &#039;&#039;})&quot;&gt; Phones&lt;/label&gt;
+      &lt;/li&gt;
+      &lt;li&gt;
+        &lt;label&gt;&lt;input type=&quot;radio&quot; value=&quot;laptops&quot; v-prop=&quot;terms.lvl2&quot; @click=&quot;$el.checked &amp;&amp; (terms = {lvl1: &#039;electronic&#039;, lvl2: &#039;&#039;})&quot;&gt; Laptops&lt;/label&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;label&gt;&lt;input type=&quot;radio&quot; value=&quot;books&quot; v-prop=&quot;terms.lvl1&quot; @click=&quot;$el.checked &amp;&amp; (terms = {lvl1: &#039;&#039;, lvl2: &#039;&#039;})&quot;&gt; Books&lt;/label&gt;
+    &lt;ul&gt;
+      &lt;li&gt;
+        &lt;label&gt;&lt;input type=&quot;radio&quot; value=&quot;drama&quot; v-prop=&quot;terms.lvl2&quot; @click=&quot;$el.checked &amp;&amp; (terms = {lvl1: &#039;books&#039;, lvl2: &#039;&#039;})&quot;&gt; Drama&lt;/label&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+</pre>
+
 <form class="demo" v-data>
-  <input type="checkbox" value="red" v-prop="content.title.color">
-  <input type="checkbox" value="orange" v-prop="content.title.color">
-  <input type="checkbox" value="yellow" v-prop="content.title.color">
-  Colors: <span v-text="content.title.color"></span>
+  <code>https://site.com/<span v-text="`${terms.lvl1 && terms.lvl1 + '/'}`"></span><span v-text="`${terms.lvl2 && terms.lvl2 + '/'}`"></span>product-slug</code>
+  <ul>
+    <li>
+      <label><input type="radio" value="electronic" v-prop="terms.lvl1" @click="$el.checked && (terms = {lvl1: '', lvl2: ''})"> Electronic2</label>
+      <ul>
+        <li>
+          <label><input type="radio" value="phone" v-prop="terms.lvl2" @click="$el.checked && (terms = {lvl1: 'electronic', lvl2: ''})"> Phones</label>
+        </li>
+        <li>
+          <label><input type="radio" value="laptops" v-prop="terms.lvl2" @click="$el.checked && (terms = {lvl1: 'electronic', lvl2: ''})"> Laptops</label>
+        </li>
+      </ul>
+    </li>
+    <li>
+      <label><input type="radio" value="books" v-prop="terms.lvl1" @click="$el.checked && (terms = {lvl1: '', lvl2: ''})"> Books</label>
+      <ul>
+        <li>
+          <label><input type="radio" value="drama" v-prop="terms.lvl2" @click="$el.checked && (terms = {lvl1: 'books', lvl2: ''})"> Drama</label>
+        </li>
+      </ul>
+    </li>
+  </ul>
 </form>
 
 <h2>Модификаторы</h2>
@@ -199,7 +247,22 @@ title: "To Do List"
 <p>
   Используется для автоматического удаления начальных и конечных пробелов из вводимого значения.
   Это полезно при работе с текстовыми полями, чтобы избежать лишних пробелов в пользовательском вводе.
+  В примере ниже модификатор trim исключает ввод любого пробела.
 </p>
+
+<form class="demo" v-data>
+  <input type="text" v-prop.trim="name">
+  <div v-text="name"></div>
+</form>
+
+<p>
+  Если требуется удаление пробелов после завершения ввода, используй модификатор <code>.lazy</code>.
+</p>
+
+<form class="demo" v-data>
+  <input type="text" v-prop.lazy.trim="name">
+  <div v-text="name"></div>
+</form>
 
 <p><code>.local</code> и <code>.cookie</code></p>
 

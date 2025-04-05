@@ -1,11 +1,10 @@
-import { debounce, getAttributes, saferEval, updateAttribute, eventCreate, getNextModifier } from './utils';
+import { domWalk, debounce, getAttributes, saferEval, updateAttribute, eventCreate, getNextModifier } from './helpers';
 import { fetchProp, generateExpressionForProp } from './props';
-import { store } from './store';
-import { domWalk } from './dom';
-import { injectDataProviders } from './data';
+import { data, injectDataProviders } from './data';
 
 export default class Component {
   constructor(el) {
+    console.log(42354523)
     document.dispatchEvent(
       eventCreate('x:init', {x: this})
     );
@@ -13,16 +12,18 @@ export default class Component {
     let dataProviderContext = {};
     injectDataProviders(dataProviderContext);
 
+    console.log(dataProviderContext)
     this.root    = el;
     this.rawData = saferEval(el.getAttribute('v-data') || '{}', dataProviderContext);
+    console.log(this.rawData)
     this.rawData = fetchProp(el, this.rawData);
     this.data    = this.wrapDataInObservable(this.rawData);
 
     this.initialize(el, this.data);
   }
 
-  store(name, value) {
-    return store(name, value);
+  data(name, callback) {
+    data(name, callback);
   }
 
   evaluate(expression, additionalHelperVariables) {

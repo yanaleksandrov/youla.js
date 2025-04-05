@@ -5,43 +5,23 @@
 
 <link rel="stylesheet" href="https://expansa.org/dashboard/assets/css/main.css" id="main-css" />
 
-<form class="demo" v-data>
-  <input type="text" value="red" v-prop="title.color">
-  Colors: <span v-text="title.color"></span>
-  <br>
-  <input type="number" value="10" v-prop="title.size">
-  Size: <span v-text="title.size"></span>
-</form>
+<div class="notice" v-datas="{notices: []}">
+  <button type="button" @click="$notice.add(); notices = [{message: 'New Message', closable: true, type: 'info'}]">Toggle Dark Mode</button>
 
-<form class="demo" v-data>
-  <input type="number" value="10" v-prop="size">
-  Size: <span v-text="size"></span>
-</form>
+  <div v-each="(notice, id) in notices">
+    <div class="notice__item" :class="notice.type">
+      <div class="notice__msg" v-html="notice.message"></div>
+      <div class="notice__close" v-show="notice.closable" :style="`--anim:${item.anim}`" @click="$notice.remove(id)"></div>
+    </div>
+  </div>
 
-<form class="demo" v-data>
-  <input type="checkbox" value="red" v-prop="content.title.color" checked>
-  <input type="checkbox" value="orange" v-prop="content.title.color" checked>
-  <input type="checkbox" value="yellow" v-prop="content.title.color">
-  Colors: <span v-text="content.title.color"></span>
-</form>
-
-<!--<div class="notice" v-datas="{notices: []}" v-hide>-->
-<!--  <button type="button" @click="$notice.add(); notices = [{message: 'New Message', closable: true, type: 'info'}]">Toggle Dark Mode</button>-->
-
-<!--  <div v-each="(notice, id) in notices">-->
-<!--    <div class="notice__item" :class="notice.type">-->
-<!--      <div class="notice__msg" v-html="notice.message"></div>-->
-<!--      <div class="notice__close" v-show="notice.closable" :style="`&#45;&#45;anim:${item.anim}`" @click="$notice.remove(id)"></div>-->
-<!--    </div>-->
-<!--  </div>-->
-
-<!--  <div v-each="(notice, id) in $store.notices.items">-->
-<!--    <div class="notice__item" :class="item.classes()">-->
-<!--      <div class="notice__msg" v-html="notice.message"></div>-->
-<!--      <div class="notice__close" v-show="notice.closable" :style="`&#45;&#45;anim:${item.anim}`" @click="$store.notice.close(id)"></div>-->
-<!--    </div>-->
-<!--  </div>-->
-<!--</div>-->
+  <div v-each="(notice, id) in $store.notices.items">
+    <div class="notice__item" :class="item.classes()">
+      <div class="notice__msg" v-html="notice.message"></div>
+      <div class="notice__close" v-show="notice.closable" :style="`--anim:${item.anim}`" @click="$store.notice.close(id)"></div>
+    </div>
+  </div>
+</div>
 
 <!--<form class="card card-border" method="post" v-datas v-hide>-->
 <!--  &lt;!&ndash; step 1 &ndash;&gt;-->

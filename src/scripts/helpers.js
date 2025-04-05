@@ -1,5 +1,31 @@
 import { setClasses, setStyles } from './classes';
 
+export function domReady() {
+  return new Promise(resolve => {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', resolve)
+    } else {
+      resolve()
+    }
+  })
+}
+
+export function domWalk(el, callback) {
+  callback(el);
+
+  let node = el.firstElementChild;
+
+  while (node) {
+    if (node.hasAttribute('v-data')) {
+      return;
+    }
+
+    domWalk(node, callback);
+
+    node = node.nextElementSibling;
+  }
+}
+
 /**
  * Creates a debounced function that delays the invocation of the provided function using a specified wait time.
  *
@@ -17,6 +43,15 @@ export function debounce(func, wait) {
   }
 }
 
+/**
+ * Repeatedly invokes the given function at the specified interval.
+ * Optionally invokes the function immediately on the first call.
+ *
+ * @param {Function} func - The function to be executed repeatedly.
+ * @param {number} wait - The time interval in milliseconds between each call.
+ * @param {boolean} [immediate=false] - If true, the function is called immediately once before the interval starts.
+ * @returns {number} A timer ID that can be used with clearInterval to stop the execution.
+ */
 export function pulsate(func, wait, immediate) {
   immediate && func();
 

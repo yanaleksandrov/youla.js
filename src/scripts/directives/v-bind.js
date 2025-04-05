@@ -1,5 +1,5 @@
 import { directive } from '../directives';
-import { updateAttribute } from '../utils';
+import { updateAttribute } from '../helpers';
 
 directive('bind', (el, expression, {name}, x, component) => {
   if (name === ':attributes' && typeof expression === 'object') {

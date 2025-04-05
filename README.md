@@ -1,41 +1,31 @@
-# Starter WebPack
+# Project Name
 
-Here is a simple and easy starter web project.
+TODO: Write a project description
 
-The site is a simple set of HTML pages with its own CSS styles and a JavaScript file. It is necessary to write a project that would assemble our site from source:
+## Installation
 
-- one CSS file is formed from SASS (more precisely SCSS) files;
-- a single JavaScript file is generated from various JavaScript libraries and user code;
-- HTML pages are assembled using a template, where the contents of the header and footer can be separated into separate files.
+TODO: Describe the installation process
 
-## How to start
+## Usage
 
-Run `npm install`
+TODO: Write usage instructions
 
-Run `npm run start` for a dev server. Navigate to `http://localhost:3000/`. The app will automatically reload if you change any of the source files.
+## Contributing
 
-Run `npm run build` to build the project. We are assembling the project and the assembled static site will appear in the `dist` folder.
+1. Fork it!
+2. Create your feature branch: `git checkout -b my-new-feature`
+3. Commit your changes: `git commit -am 'Add some feature'`
+4. Push to the branch: `git push origin my-new-feature`
+5. Submit a pull request :D
 
-## Project structure
+## History
 
-The general structure of the project is presented below:
+TODO: Write history
 
-```
-├── dist
-├─┬ src
-│ ├─┬ fonts
-│ │ └── Roboto-Regular.ttf
-│ ├─┬ view
-│ │ ├─┬ parts
-│ │ │ ├── footer.html
-│ │ │ └── header.html
-│ │ └── index.html
-│ ├─┬ images
-│ │ └── favicon.ico
-│ ├── scripts
-│ ├── styles
-│ ├── index.js
-│ └── styles.scss
-├── package.json
-└── webpack.config.js
-```
+## Credits
+
+TODO: Write credits
+
+## License
+
+TODO: Write license

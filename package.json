@@ -2,13 +2,13 @@
   "name": "x",
   "version": "1.0.0",
   "description": "A tiny and powerful JS library for creating interactive UI. It offers a Vue-like API for markup-driven development with automatic reactions, updates, and real-time rendering.",
-  "homepage": "https://github.com/yanaleksandrov/x.js",
+  "homepage": "https://github.com/yanaleksandrov/youla",
   "bugs": {
-    "url": "https://github.com/yanaleksandrov/x.js/issues"
+    "url": "https://github.com/yanaleksandrov/youla/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yanaleksandrov/x.js.git"
+    "url": "git+https://github.com/yanaleksandrov/youla.git"
   },
   "author": "Yan Aleksandrov",
   "license": "MIT",

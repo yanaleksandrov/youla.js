@@ -51,7 +51,7 @@
           <summary class="editrix-details-summary" v-text="status">Published</summary>
           <div class="editrix-details-content">
             <div class="editrix-list">
-              <label v-each="stat in statuses" class="editrix-list-item" @click="$el.closest('details').open = false" :class="status === stat.value && 'active'">
+              <label v-for="stat in statuses" class="editrix-list-item" @click="$el.closest('details').open = false" :class="status === stat.value && 'active'">
                 <input type="radio" v-prop="status" :value="stat.value">
                 <i :class="stat.icon"></i> <span v-text="stat.label"></span>
                 <span class="editrix-list-caption" v-text="stat.caption"></span>
@@ -74,7 +74,7 @@
               </div>
             </div>
             <div class="editrix-list">
-              <label v-each="vision in visibilities" class="editrix-list-item" :class="vision.value && 'checked'">
+              <label v-for="vision in visibilities" class="editrix-list-item" :class="vision.value && 'checked'">
                 <input type="checkbox" v-prop="visibility" :class="vision.icon"> <span v-text="vision.label"></span>
                 <span class="editrix-list-caption" v-text="vision.caption"></span>
               </label>
@@ -132,7 +132,7 @@
           <summary class="editrix-details-summary" v-text="status">John Smith</summary>
           <div class="editrix-details-content">
             <div class="editrix-list">
-              <label v-each="discussion in discussions" class="editrix-list-item" @click="$el.closest('details').open = false" :class="status === stat.value && 'active'">
+              <label v-for="discussion in discussions" class="editrix-list-item" @click="$el.closest('details').open = false" :class="status === stat.value && 'active'">
                 <input type="radio" v-prop="status" :value="discussion.value">
                 <i :class="discussion.icon"></i> <span v-text="discussion.label"></span>
                 <span class="editrix-list-caption" v-text="discussion.caption"></span>
@@ -248,10 +248,10 @@
       </div>
     </div>
 
-    <div v-data="dropdown">
-      <button v-bind="trigger">trigger</button>
+    <div v-datas="dropdown">
+      <button v-binds="trigger">trigger</button>
 
-      <div v-bind="dialogue">dialogue</div>
+      <div v-binds="dialogue">dialogue</div>
     </div>
 
     <div class="editrix-control">

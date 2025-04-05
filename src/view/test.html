@@ -8,14 +8,14 @@
 <div class="notice" v-datas="{notices: []}">
   <button type="button" @click="$notice.add(); notices = [{message: 'New Message', closable: true, type: 'info'}]">Toggle Dark Mode</button>
 
-  <div v-each="(notice, id) in notices">
+  <div v-for="(notice, id) in notices">
     <div class="notice__item" :class="notice.type">
       <div class="notice__msg" v-html="notice.message"></div>
       <div class="notice__close" v-show="notice.closable" :style="`--anim:${item.anim}`" @click="$notice.remove(id)"></div>
     </div>
   </div>
 
-  <div v-each="(notice, id) in $store.notices.items">
+  <div v-for="(notice, id) in $store.notices.items">
     <div class="notice__item" :class="item.classes()">
       <div class="notice__msg" v-html="notice.message"></div>
       <div class="notice__close" v-show="notice.closable" :style="`--anim:${item.anim}`" @click="$store.notice.close(id)"></div>

@@ -12,7 +12,7 @@ window.x = x;
  * Now that the core is all set up, we can register X directives like v-text or
  * v-html that form the basis of how X adds behavior to an app's static markup.
  */
-import './scripts/directives/v-each';
+import './scripts/directives/v-for';
 import './scripts/directives/v-bind';
 import './scripts/directives/v-html';
 import './scripts/directives/v-text';

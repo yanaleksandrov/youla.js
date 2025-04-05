@@ -4,7 +4,6 @@ import { data, injectDataProviders } from './data';
 
 export default class Component {
   constructor(el) {
-    console.log(42354523)
     document.dispatchEvent(
       eventCreate('x:init', {x: this})
     );
@@ -12,10 +11,8 @@ export default class Component {
     let dataProviderContext = {};
     injectDataProviders(dataProviderContext);
 
-    console.log(dataProviderContext)
     this.root    = el;
     this.rawData = saferEval(el.getAttribute('v-data') || '{}', dataProviderContext);
-    console.log(this.rawData)
     this.rawData = fetchProp(el, this.rawData);
     this.data    = this.wrapDataInObservable(this.rawData);
 
@@ -108,7 +105,7 @@ export default class Component {
       // init directives
       if (directive in x.directives) {
         let output = expression;
-        if (directive !== 'v-each') {
+        if (directive !== 'v-for') {
           try {
             ({ output } = self.evaluate(expression, additionalHelperVariables));
           } catch (error) {}
@@ -129,7 +126,7 @@ export default class Component {
 
         if (directive in x.directives) {
           let output = expression, deps = [];
-          if (directive !== 'v-each') {
+          if (directive !== 'v-for') {
             try {
               ({ output, deps } = self.evaluate(expression));
             } catch (error) {}

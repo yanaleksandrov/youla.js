@@ -1,10 +1,8 @@
 import { directive } from './scripts/directives';
 import { method } from './scripts/methods';
 import { data } from './scripts/data';
-import { store } from './scripts/store';
-import { pulsate } from './scripts/utils';
+import { pulsate } from './scripts/helpers';
 import { extend } from './scripts/extensions';
-import { reactive, effect } from './scripts/reactivity';
 
 document.addEventListener('x:init', e=> {
   const x = e.detail.x;
@@ -451,11 +449,8 @@ document.addEventListener('x:init', e=> {
       if (step) {
         [step.isComplete, step.errors] = evaluateCheck();
 
-        effect(() => {
-          //console.log(step)
-          console.log('Current Index:', wizard.currentIndex);
-          component.refresh();
-        }, Object.keys(wizard));
+        console.log('Current Index:', wizard.currentIndex);
+        component.refresh();
 
         // if (step.isComplete) {
         //   wizard.currentIndex++
@@ -469,7 +464,7 @@ document.addEventListener('x:init', e=> {
   let wizards   = new WeakMap();
   let getWizard = (el, {root}) => {
     if (!wizards.has(root)) {
-      wizards.set(root, reactive({
+      wizards.set(root, {
         steps: [],
         currentIndex: 0,
         progress() {
@@ -579,7 +574,7 @@ document.addEventListener('x:init', e=> {
           }
           return step;
         }
-      }));
+      });
     }
     return wizards.get(root);
   };
@@ -1001,7 +996,7 @@ document.addEventListener('x:init', e=> {
       },
     }
   })
-  store('notice', {
+  data('notice', {
     items: {},
     duration: 4000,
     info( message ) {

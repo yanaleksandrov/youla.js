@@ -1,11 +1,11 @@
 import {
-  eventCreate,
+  domWalk,
   getAttributes,
   setNestedObjectValue,
   getNestedObjectValue,
   saferEval
-} from './utils';
-import { domWalk } from './dom';
+} from './helpers';
+import { storage, isStorageModifier, getStorageType, castToType } from './storage';
 
 export function fetchProp(rootElement, data) {
   const fetched = [];
@@ -40,7 +40,18 @@ export function fetchProp(rootElement, data) {
     fetched.push({el, attribute});
   }));
 
-  document.dispatchEvent(eventCreate('x:fetched', {data, fetched}))
+  //document.dispatchEvent(eventCreate('x:fetched', {data, fetched}))
+  console.log(fetched)
+  fetched.forEach(item => {
+    const { attribute: { modifiers, directive, expression } } = item;
+
+    if (directive === 'v-prop' && isStorageModifier(modifiers)) {
+      const type  = getStorageType(modifiers);
+      const value = storage.get(expression, type);
+
+      data[expression] = castToType(data[expression], value || data[expression]);
+    }
+  })
 
   return data;
 }

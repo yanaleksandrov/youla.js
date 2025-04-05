@@ -1,5 +1,5 @@
 import Component from './component';
-import { domReady } from './dom';
+import { domReady } from './helpers';
 import { extend } from './extensions';
 
 export const x = {

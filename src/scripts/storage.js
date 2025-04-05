@@ -1,7 +1,5 @@
-import { getNextModifier } from './utils';
-
-const storage = {
-  get: (name, type) => {
+export const storage = {
+  get: (name, type = 'local') => {
     if (!name) return;
 
     if (type === 'cookie') {
@@ -23,7 +21,7 @@ const storage = {
       return localStorage.getItem(name);
     }
   },
-  set: (name, value, type, options = {path: '/'}) => {
+  set: (name, value, type = 'local', options = {path: '/'}) => {
     if (!name) return;
 
     if (value instanceof Object) {
@@ -74,9 +72,9 @@ const storage = {
   }
 }
 
-function computeExpires(str) {
+export function computeExpires(str) {
   let lastCh = str.charAt(str.length - 1),
-      value  = parseInt(str, 10);
+    value  = parseInt(str, 10);
 
   const methods = {
     y: 'FullYear',
@@ -98,15 +96,15 @@ function computeExpires(str) {
   return null;
 }
 
-function isStorageModifier(modifiers) {
+export function isStorageModifier(modifiers) {
   return ['cookie', 'local'].some(modifier => modifiers.includes(modifier))
 }
 
-function getStorageType(modifiers) {
+export function getStorageType(modifiers) {
   return modifiers.includes('cookie') ? 'cookie' : 'local'
 }
 
-function castToType(a, value) {
+export function castToType(a, value) {
   const type = typeof a;
   switch (type) {
     case 'string':
@@ -132,35 +130,3 @@ function castToType(a, value) {
       return value;
   }
 }
-
-document.addEventListener('x:refreshed', ({detail}) => {
-  const { modifiers, directive, expression } = detail.attribute;
-
-  if (directive === 'v-prop' && isStorageModifier(modifiers)) {
-    const type   = getStorageType(modifiers);
-    const expire = getNextModifier(modifiers, type);
-    if (detail.output) {
-      storage.set(expression, detail.output, type,{
-        expires: computeExpires(expire),
-        secure: true,
-      });
-    } else {
-      storage.set(expression, null, type, {expires: new Date(), path: '/' })
-    }
-  }
-});
-
-document.addEventListener('x:fetched', ({detail}) => {
-  const { data, fetched } = detail;
-
-  fetched.forEach(item => {
-    const { attribute: { modifiers, directive, expression } } = item;
-
-    if (directive === 'v-prop' && isStorageModifier(modifiers)) {
-      const type  = getStorageType(modifiers);
-      const value = storage.get(expression, type);
-
-      data[expression] = castToType(data[expression], value || data[expression]);
-    }
-  })
-});

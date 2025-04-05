@@ -1,11 +1,10 @@
-import { debounce, getAttributes, saferEval, updateAttribute, eventCreate, getNextModifier } from './utils';
+import { domWalk, debounce, getAttributes, saferEval, updateAttribute, eventCreate, getNextModifier } from './helpers';
 import { fetchProp, generateExpressionForProp } from './props';
-import { store } from './store';
-import { domWalk } from './dom';
 import { data, injectDataProviders } from './data';
 
 export default class Component {
   constructor(el) {
+    console.log(42354523)
     document.dispatchEvent(
       eventCreate('x:init', {x: this})
     );
@@ -25,10 +24,6 @@ export default class Component {
 
   data(name, callback) {
     data(name, callback);
-  }
-
-  store(name, value) {
-    return store(name, value);
   }
 
   evaluate(expression, additionalHelperVariables) {

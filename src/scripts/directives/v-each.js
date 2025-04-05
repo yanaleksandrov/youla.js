@@ -1,5 +1,5 @@
 import { directive } from '../directives';
-import { saferEval } from '../utils';
+import { saferEval } from '../helpers';
 
 let contextStack = [];
 

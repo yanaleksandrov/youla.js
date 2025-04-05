@@ -7,12 +7,6 @@ import { x } from './scripts/index';
 window.x = x;
 
 /**
- * A client-side properties storage system.
- * X.js watch property changes and overwrites them to the repositories.
- */
-import './scripts/storage';
-
-/**
  * The Directives
  *
  * Now that the core is all set up, we can register X directives like v-text or
@@ -33,7 +27,6 @@ import './scripts/directives/v-prop';
  * These are the methods that are magically available to all the X.js expressions, within your web app.
  */
 import './scripts/methods/$ajax';
-import './scripts/methods/$store';
 import './scripts/methods/$dispatch';
 
 window.x.start();

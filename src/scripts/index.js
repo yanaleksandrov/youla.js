@@ -1,6 +1,5 @@
 import Component from './component';
 import { domReady } from './helpers';
-import { extend } from './extensions';
 
 export const x = {
   directives: {},
@@ -11,10 +10,6 @@ export const x = {
 
     this.discoverComponents(el => this.initializeElement(el))
     this.listenUninitializedComponentsAtRunTime(el => this.initializeElement(el))
-  },
-
-  extend(...args) {
-    extend(args);
   },
 
   discoverComponents: callback => {

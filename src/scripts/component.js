@@ -1,6 +1,7 @@
 import { domWalk, debounce, getAttributes, saferEval, updateAttribute, eventCreate, getNextModifier } from './helpers';
 import { fetchProp, generateExpressionForProp } from './props';
 import { data, injectDataProviders } from './data';
+import { extend } from './extensions';
 
 export default class Component {
   constructor(el) {
@@ -21,6 +22,10 @@ export default class Component {
 
   data(name, callback) {
     data(name, callback);
+  }
+
+  extend(...args) {
+    extend(args);
   }
 
   evaluate(expression, additionalHelperVariables) {

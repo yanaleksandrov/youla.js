@@ -5,23 +5,29 @@
 
 <link rel="stylesheet" href="https://expansa.org/dashboard/assets/css/main.css" id="main-css" />
 
-<div class="notice" v-datas="{notices: []}">
-  <button type="button" @click="$notice.add(); notices = [{message: 'New Message', closable: true, type: 'info'}]">Toggle Dark Mode</button>
+<div v-data="dropdown">
+  <button v-bind="trigger">trigger</button>
 
-  <div v-for="(notice, id) in notices">
-    <div class="notice__item" :class="notice.type">
-      <div class="notice__msg" v-html="notice.message"></div>
-      <div class="notice__close" v-show="notice.closable" :style="`--anim:${item.anim}`" @click="$notice.remove(id)"></div>
-    </div>
-  </div>
-
-  <div v-for="(notice, id) in $store.notices.items">
-    <div class="notice__item" :class="item.classes()">
-      <div class="notice__msg" v-html="notice.message"></div>
-      <div class="notice__close" v-show="notice.closable" :style="`--anim:${item.anim}`" @click="$store.notice.close(id)"></div>
-    </div>
-  </div>
+  <div v-bind="dialogue">dialogue</div>
 </div>
+
+<!--<div class="notice" v-datas="{notices: []}">-->
+<!--  <button type="button" @click="$notice.add(); notices = [{message: 'New Message', closable: true, type: 'info'}]">Toggle Dark Mode</button>-->
+
+<!--  <div v-for="(notice, id) in notices">-->
+<!--    <div class="notice__item" :class="notice.type">-->
+<!--      <div class="notice__msg" v-html="notice.message"></div>-->
+<!--      <div class="notice__close" v-show="notice.closable" :style="`&#45;&#45;anim:${item.anim}`" @click="$notice.remove(id)"></div>-->
+<!--    </div>-->
+<!--  </div>-->
+
+<!--  <div v-for="(notice, id) in $store.notices.items">-->
+<!--    <div class="notice__item" :class="item.classes()">-->
+<!--      <div class="notice__msg" v-html="notice.message"></div>-->
+<!--      <div class="notice__close" v-show="notice.closable" :style="`&#45;&#45;anim:${item.anim}`" @click="$store.notice.close(id)"></div>-->
+<!--    </div>-->
+<!--  </div>-->
+<!--</div>-->
 
 <!--<form class="card card-border" method="post" v-datas v-hide>-->
 <!--  &lt;!&ndash; step 1 &ndash;&gt;-->

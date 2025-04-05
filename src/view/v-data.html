@@ -62,7 +62,8 @@ title: "To Do List"
     and, when the page is reloaded, it will prompt you to start viewing from the point of departure.
   </p>
   <div>
-    <video v-prop.cookie="time" v-ref="video" @play="$el.ontimeupdate = () => time = $el.currentTime" width="640px" height="267px" controls muted>
+    <input type="hidden" v-prop.cookie="time">
+    <video v-ref="video" @play="$el.ontimeupdate = () => time = $el.currentTime" width="640px" height="267px" controls muted>
       <source src="https://vjs.zencdn.net/v/oceans.mp4" type='video/mp4' />
     </video>
     <div v-show="time > 0">

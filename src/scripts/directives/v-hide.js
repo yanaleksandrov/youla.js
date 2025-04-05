@@ -1,5 +1,5 @@
 import { directive } from '../directives';
 
-directive('hide', (el, expression, attribute, x, component) => {
-  el.style.display = expression ? 'block' : 'none'
+directive('hide', (el, output, attribute, component) => {
+  el.style.display = output ? 'block' : 'none'
 });

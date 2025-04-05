@@ -51,7 +51,7 @@
           <summary class="editrix-details-summary" v-text="status">Published</summary>
           <div class="editrix-details-content">
             <div class="editrix-list">
-              <label v-for="stat in statuses" class="editrix-list-item" @click="$el.closest('details').open = false" :class="status === stat.value && 'active'">
+              <label v-each="stat in statuses" class="editrix-list-item" @click="$el.closest('details').open = false" :class="status === stat.value && 'active'">
                 <input type="radio" v-prop="status" :value="stat.value">
                 <i :class="stat.icon"></i> <span v-text="stat.label"></span>
                 <span class="editrix-list-caption" v-text="stat.caption"></span>
@@ -74,7 +74,7 @@
               </div>
             </div>
             <div class="editrix-list">
-              <label v-for="vision in visibilities" class="editrix-list-item" :class="vision.value && 'checked'">
+              <label v-each="vision in visibilities" class="editrix-list-item" :class="vision.value && 'checked'">
                 <input type="checkbox" v-prop="visibility" :class="vision.icon"> <span v-text="vision.label"></span>
                 <span class="editrix-list-caption" v-text="vision.caption"></span>
               </label>
@@ -132,7 +132,7 @@
           <summary class="editrix-details-summary" v-text="status">John Smith</summary>
           <div class="editrix-details-content">
             <div class="editrix-list">
-              <label v-for="discussion in discussions" class="editrix-list-item" @click="$el.closest('details').open = false" :class="status === stat.value && 'active'">
+              <label v-each="discussion in discussions" class="editrix-list-item" @click="$el.closest('details').open = false" :class="status === stat.value && 'active'">
                 <input type="radio" v-prop="status" :value="discussion.value">
                 <i :class="discussion.icon"></i> <span v-text="discussion.label"></span>
                 <span class="editrix-list-caption" v-text="discussion.caption"></span>
@@ -291,10 +291,10 @@
     <div class="editrix-control">
       <div class="editrix-borders">
         <div class="editrix-borders-values" data-title="Borders">
-          <input type="number" value="0" x.margin-top />
-          <input type="number" value="0" x.margin-right />
-          <input type="number" value="0" x.margin-bottom />
-          <input type="number" value="0" x.margin-left />
+          <input type="number" value="0" v-prop="marginTop" />
+          <input type="number" value="0" v-prop="marginEnd" />
+          <input type="number" value="0" v-prop="marginBottom" />
+          <input type="number" value="0" v-prop="marginStart" />
         </div>
 
         <details class="editrix-buttons-item" @click.outside="$el.removeAttribute('open')">

@@ -29,17 +29,17 @@ export function domWalk(el, callback) {
 /**
  * Creates a debounced function that delays the invocation of the provided function using a specified wait time.
  *
- * @param {Function} func - The function to be debounced.
+ * @param {Function} callback - The function to be debounced.
  * @param {number} wait - The delay in milliseconds.
  * @returns {Function} - The debounced function.
  */
-export function debounce(func, wait) {
+export function debounce(callback, wait) {
   let timeout;
 
   return function (...args) {
     clearTimeout(timeout);
 
-    timeout = setTimeout(() => func.apply(this, args), wait);
+    timeout = setTimeout(() => callback.apply(this, args), wait);
   }
 }
 
@@ -47,15 +47,15 @@ export function debounce(func, wait) {
  * Repeatedly invokes the given function at the specified interval.
  * Optionally invokes the function immediately on the first call.
  *
- * @param {Function} func - The function to be executed repeatedly.
+ * @param {Function} callback - The function to be executed repeatedly.
  * @param {number} wait - The time interval in milliseconds between each call.
- * @param {boolean} [immediate=false] - If true, the function is called immediately once before the interval starts.
+ * @param {boolean} immediate - If true, the function is called immediately once before the interval starts.
  * @returns {number} A timer ID that can be used with clearInterval to stop the execution.
  */
-export function pulsate(func, wait, immediate) {
-  immediate && func();
+export function pulsate(callback, wait, immediate = false) {
+  immediate && callback();
 
-  return setInterval(func, wait);
+  return setInterval(callback, wait);
 }
 
 export function saferEval(expression, dataContext, additionalHelperVariables = {}, noReturn = false) {

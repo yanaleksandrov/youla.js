@@ -1,14 +1,9 @@
 import { domWalk, debounce, getAttributes, saferEval, updateAttribute, eventCreate, getNextModifier } from './helpers';
 import { fetchProp, generateExpressionForProp } from './props';
-import { data, injectDataProviders } from './data';
-import { extend } from './extensions';
+import { injectDataProviders } from './data';
 
 export default class Component {
   constructor(el) {
-    document.dispatchEvent(
-      eventCreate('x:init', {x: this})
-    );
-
     let dataProviderContext = {};
     injectDataProviders(dataProviderContext);
 
@@ -18,14 +13,6 @@ export default class Component {
     this.data    = this.wrapDataInObservable(this.rawData);
 
     this.initialize(el, this.data);
-  }
-
-  data(name, callback) {
-    data(name, callback);
-  }
-
-  extend(...args) {
-    extend(args);
   }
 
   evaluate(expression, additionalHelperVariables) {
@@ -108,14 +95,14 @@ export default class Component {
       }
 
       // init directives
-      if (directive in x.directives) {
+      if (directive in Youla.directives) {
         let output = expression;
-        if (directive !== 'v-for') {
+        if (directive !== 'v-each') {
           try {
             ({ output } = self.evaluate(expression, additionalHelperVariables));
           } catch (error) {}
         }
-        x.directives[directive](el, output, attribute, x, self);
+        Youla.directives[directive](el, output, attribute, self);
       }
     }));
   }
@@ -129,9 +116,9 @@ export default class Component {
       domWalk(self.root, el => getAttributes(el).forEach(attribute => {
         let {directive, expression} = attribute;
 
-        if (directive in x.directives) {
+        if (directive in Youla.directives) {
           let output = expression, deps = [];
-          if (directive !== 'v-for') {
+          if (directive !== 'v-each') {
             try {
               ({ output, deps } = self.evaluate(expression));
             } catch (error) {}
@@ -140,7 +127,7 @@ export default class Component {
           }
 
           if (self.concernedData.filter(i => deps.includes(i)).length > 0) {
-            x.directives[directive](el, output, attribute, x, self);
+            Youla.directives[directive](el, output, attribute, self);
           }
         }
       }));
@@ -237,8 +224,8 @@ export default class Component {
 
   runListenerHandler(expression, e, target) {
     const methods = {};
-    Object.keys(x.methods).forEach(key => {
-      methods[key] = x.methods[key](e, target, this);
+    Object.keys(Youla.methods).forEach(key => {
+      methods[key] = Youla.methods[key](e, target, this);
     });
 
     let data = {}, el = target;

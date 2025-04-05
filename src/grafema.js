@@ -1,18 +1,12 @@
-import { directive } from './scripts/directives';
-import { method } from './scripts/methods';
-import { data } from './scripts/data';
 import { pulsate } from './scripts/helpers';
-import { extend } from './scripts/extensions';
 
-document.addEventListener('x:init', e=> {
-  const x = e.detail.x;
-
+document.addEventListener('youla:init', ()=> {
   /**
    * Sticky sidebar
    *
    * @since 1.0
    */
-  directive('sticky', (el, expression, attribute, x, component) => {
+  Youla.directive('sticky', (el, output, attribute, component) => {
     let style = el.parentElement.currentStyle || window.getComputedStyle(el.parentElement);
     if (style.position !== 'relative') {
       return false;
@@ -60,7 +54,7 @@ document.addEventListener('x:init', e=> {
    *
    * @since 1.0
    */
-  directive('autocomplete', (el, expression, attribute, x, component) => {
+  Youla.directive('autocomplete', (el, output, attribute, component) => {
     el.setAttribute('readonly', true);
     el.onfocus = () => setTimeout(() => el.removeAttribute('readonly'), 10);
     el.onblur  = () => el.setAttribute('readonly', true);
@@ -71,7 +65,9 @@ document.addEventListener('x:init', e=> {
    *
    * @since 1.0
    */
-  directive('highlight', (el, expression, {modifiers}, x, component) => {
+  Youla.directive('highlight', (el, output, attribute, component) => {
+    const {modifiers} = attribute;
+
     let lang    = modifiers[0] || 'html',
       wrapper = document.createElement('code');
 
@@ -89,7 +85,7 @@ document.addEventListener('x:init', e=> {
    *
    * @since 1.0
    */
-  directive('collapse', (el, expression, attribute, x, component) => {
+  Youla.directive('collapse', (el, output, attribute, component) => {
     function slide(el, isDown, duration) {
 
       if (typeof duration === 'undefined') duration = 200;
@@ -145,16 +141,16 @@ document.addEventListener('x:init', e=> {
       window.requestAnimationFrame(step);
     }
 
-    slide(el, expression);
+    slide(el, output);
   });
 
   /**
    * Smooth scrolling to the anchor
-   * TODO: придостижении верха страницы, удалять анкор, то же при загрузке старницы
+   * TODO: при достижении верха страницы, удалять анкор, то же при загрузке страницы
    *
    * @since 1.0
    */
-  directive('anchor', (el, expression, attribute, x, component) => {
+  Youla.directive('anchor', (el, output, attribute, component) => {
     let hash   = window.location.hash.replace( '#', '' ),
       anchor = el.innerText.toLowerCase().replaceAll( ' ', '-' );
 
@@ -193,8 +189,8 @@ document.addEventListener('x:init', e=> {
    *
    * @since 1.0
    */
-  directive('listen', (el, expression, attribute, x, component) => {
-    if ( ! expression ) {
+  Youla.directive('listen', (el, output, attribute, component) => {
+    if (!output) {
       return false;
     }
 
@@ -279,12 +275,12 @@ document.addEventListener('x:init', e=> {
    *
    * @since 1.0
    */
-  directive('textarea', (el, expression, attribute, x, component) => {
+  Youla.directive('textarea', (el, output, attribute, component) => {
     if ( 'TEXTAREA' !== el.tagName.toUpperCase() ) {
       return false;
     }
     el.addEventListener('input', () => {
-      let max  = parseInt(expression) || 99,
+      let max  = parseInt(output) || 99,
         rows = parseInt( el.value.split( /\r|\r\n|\n/ ).length );
       if ( rows > max ) {
         return false;
@@ -303,7 +299,9 @@ document.addEventListener('x:init', e=> {
    *
    * @since 1.0
    */
-  directive('tooltip', (el, expression, { modifiers }, x, component) => {
+  Youla.directive('tooltip', (el, output, attribute, component) => {
+    const {modifiers} = attribute;
+
     let position, trigger;
     if (modifiers) {
       modifiers.forEach( modifier => {
@@ -335,7 +333,9 @@ document.addEventListener('x:init', e=> {
    *
    * @since 1.0
    */
-  directive('progress', (el, expression, { modifiers }, x, component) => {
+  Youla.directive('progress', (el, output, attribute, component) => {
+    const {modifiers} = attribute;
+
     new IntersectionObserver((entries, observer) => {
       entries.forEach(entry => {
         if(entry.isIntersecting) {
@@ -367,7 +367,7 @@ document.addEventListener('x:init', e=> {
    * @see   https://github.com/brianvoe/slim-select
    * @since 1.0
    */
-  directive('select', (el, expression, attribute, x, component) => {
+  Youla.directive('select', (el, output, attribute, component) => {
     const settings = {
       showSearch: false,
       hideSelected: false,
@@ -379,7 +379,7 @@ document.addEventListener('x:init', e=> {
       settings.closeOnSelect = false;
     }
 
-    const custom = JSON.parse(expression || '{}');
+    const custom = JSON.parse(output || '{}');
     if (typeof custom === 'object') {
       Object.assign(settings, custom);
     }
@@ -440,27 +440,26 @@ document.addEventListener('x:init', e=> {
    * @since 1.0
    * @see based on https://github.com/glhd/alpine-wizard
    */
-  extend(
-    () => directive('step', (el, expression, attribute, x, component) => {
-      const wizard = getWizard(el, component);
-      const step   = wizard.getStep(el);
+  Youla.directive('step', (el, output, attribute, component) => {
+    const wizard = getWizard(el, component);
+    const step   = wizard.getStep(el);
 
-      const evaluateCheck = () => [!!expression, {}];
-      if (step) {
-        [step.isComplete, step.errors] = evaluateCheck();
+    const evaluateCheck = () => [!!output, {}];
+    if (step) {
+      [step.isComplete, step.errors] = evaluateCheck();
 
-        console.log('Current Index:', wizard.currentIndex);
-        component.refresh();
+      console.log('Current Index:', wizard.currentIndex);
+      component.refresh();
 
-        // if (step.isComplete) {
-        //   wizard.currentIndex++
-        // } else {
-        //   wizard.currentIndex--
-        // }
-      }
-    }),
-    () => method('step', (e, el, component) => getWizard(el, component)),
-  );
+      // if (step.isComplete) {
+      //   wizard.currentIndex++
+      // } else {
+      //   wizard.currentIndex--
+      // }
+    }
+  });
+  Youla.method('step', (e, el, component) => getWizard(el, component))
+
   let wizards   = new WeakMap();
   let getWizard = (el, {root}) => {
     if (!wizards.has(root)) {
@@ -593,7 +592,7 @@ document.addEventListener('x:init', e=> {
    * @see     https://github.com/wwilsman/Datepicker.js
    * @since   1.0
    */
-  method('pickadate', (e, el) => options => {
+  Youla.method('pickadate', (e, el) => options => {
     try {
       options = Object.assign( {}, {
         inline: true,
@@ -611,7 +610,7 @@ document.addEventListener('x:init', e=> {
 
       new Datepicker(el,options);
     } catch (e) {
-      console.error( 'X.js: "Datepicker" is not defined. Details: https:://github.com/text-mask/text-mask' );
+      console.error( 'Youla.js: "Datepicker" is not defined. Details: https:://github.com/text-mask/text-mask' );
     }
   });
 
@@ -622,7 +621,7 @@ document.addEventListener('x:init', e=> {
    *
    * @since 1.0
    */
-  method('copy', (e, el) => (subject, classes) => {
+  Youla.method('copy', (e, el) => (subject, classes) => {
     window.navigator.clipboard.writeText(subject).then(() => {
       const classes       = classes || ['ph-copy', 'ph-check'];
       const classesToggle = () => classes.forEach(s => el.classList.toggle(s));
@@ -638,7 +637,7 @@ document.addEventListener('x:init', e=> {
    * @since 1.0
    */
   let seconds = 0, isCountingDown = false;
-  method('countdown', () => {
+  Youla.method('countdown', () => {
     return {
       start: (initialSeconds, processCallback, endCallback) => {
         if (isCountingDown) {
@@ -668,7 +667,7 @@ document.addEventListener('x:init', e=> {
    * @since 1.0
    */
   let stream = null;
-  method('stream', () => {
+  Youla.method('stream', () => {
     return {
       check(refs) {
         let canvas = refs.canvas,
@@ -768,7 +767,7 @@ document.addEventListener('x:init', e=> {
    *
    * @since 1.0
    */
-  method('password', () => {
+  Youla.method('password', () => {
     return {
       min: {
         lowercase: 2,
@@ -865,7 +864,7 @@ document.addEventListener('x:init', e=> {
     }
   });
 
-  method('mask', (e, el) => mask =>  {
+  Youla.method('mask', (e, el) => mask =>  {
     if( typeof mask === 'undefined' ) {
       let type = el.getAttribute( 'type' );
       if( type ) {
@@ -947,7 +946,7 @@ document.addEventListener('x:init', e=> {
           mask: maskArr,
         });
       } catch( e ) {
-        console.error( 'X.js: "vanillaTextMask" is not defined. Details: https:://github.com/text-mask/text-mask' );
+        console.error( 'Youla.js: "vanillaTextMask" is not defined. Details: https:://github.com/text-mask/text-mask' );
       }
     }
   });
@@ -957,7 +956,7 @@ document.addEventListener('x:init', e=> {
    *
    * @since 1.0
    */
-  method('modal', (e, el) => {
+  Youla.method('modal', (e, el) => {
     return {
       open: (id, animation) => {
         setTimeout( () => {
@@ -983,7 +982,7 @@ document.addEventListener('x:init', e=> {
    *
    * @since 1.0
    */
-  method( 'notice', (e, el) => {
+  Youla.method( 'notice', (e, el) => {
     return {
       items: [],
       add(message) {
@@ -996,7 +995,7 @@ document.addEventListener('x:init', e=> {
       },
     }
   })
-  data('notice', {
+  Youla.data('notice', {
     items: {},
     duration: 4000,
     info( message ) {
@@ -1053,7 +1052,7 @@ document.addEventListener('x:init', e=> {
    *
    * @since 1.0
    */
-  data( 'timer', ( endDate, startDate ) => ({
+  Youla.data( 'timer', ( endDate, startDate ) => ({
     timer: null,
     end: endDate, // format: '2021-31-12T14:58:31+00:00'
     day:  '01',
@@ -1084,7 +1083,7 @@ document.addEventListener('x:init', e=> {
     },
   }));
 
-  data('dropdown', () => ({
+  Youla.data('dropdown', () => ({
     open: false,
     toggle() {
       console.log(this)
@@ -1097,7 +1096,7 @@ document.addEventListener('x:init', e=> {
    *
    * @since 1.0
    */
-  data('avatar', () => ({
+  Youla.data('avatar', () => ({
     content: '',
     image: '',
     add(event, callback) {
@@ -1136,7 +1135,7 @@ document.addEventListener('x:init', e=> {
    *
    * @since 1.0
    */
-  data('builder', () => ({
+  Youla.data('builder', () => ({
     default: {
       location: 'post',
       operator: '===',
@@ -1180,7 +1179,7 @@ document.addEventListener('x:init', e=> {
    *
    * @since 1.0
    */
-  data('table', () => ({
+  Youla.data('table', () => ({
     init() {
       document.addEventListener( 'keydown', e => {
         let key = window.event ? event : e;

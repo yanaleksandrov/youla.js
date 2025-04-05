@@ -1,9 +1,5 @@
-document.addEventListener('x:init', e=> {
-  const x = e.detail.x;
-
-  console.log(x)
-
-  x.data('dropdown', () => ({
+document.addEventListener('youla:init', ()=> {
+  Youla.data('dropdown', () => ({
     open: false,
     trigger: {
       ['@click']() {
@@ -16,5 +12,4 @@ document.addEventListener('x:init', e=> {
       },
     },
   }));
-
 })

@@ -1,22 +1,33 @@
 import Component from './component';
-import { domReady } from './helpers';
+import { debounce, domReady, eventCreate, pulsate } from './helpers';
+import { directive } from './directives';
+import { method } from './methods';
+import { data } from './data';
 
-export const x = {
+export const Youla = {
+  data,
+  debounce,
+  directive,
   directives: {},
+  method,
   methods: {},
+  pulsate,
 
   start: async function () {
-    await domReady()
+    document.dispatchEvent(eventCreate('youla:init'));
 
-    this.discoverComponents(el => this.initializeElement(el))
-    this.listenUninitializedComponentsAtRunTime(el => this.initializeElement(el))
+    await domReady();
+
+    this.componentDiscover(el => this.componentInitialize(el));
+
+    this.componentListenUninitializedAtRunTime(el => this.componentInitialize(el));
   },
 
-  discoverComponents: callback => {
+  componentDiscover: callback => {
     Array.from(document.querySelectorAll('[v-data]')).forEach(callback)
   },
 
-  listenUninitializedComponentsAtRunTime: callback => {
+  componentListenUninitializedAtRunTime: callback => {
     let observer = new MutationObserver(mutations =>
       mutations.forEach(mutation =>
         Array.from(mutation.addedNodes)
@@ -35,7 +46,7 @@ export const x = {
     )
   },
 
-  initializeElement: el => {
+  componentInitialize: el => {
     el.__x = new Component(el)
   }
 }

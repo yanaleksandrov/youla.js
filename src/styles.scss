@@ -90,8 +90,8 @@ table {
 }
 
 .hidden,
-[v-for],
-[v-for\2elazy],
+[v-each],
+[v-each\2elazy],
 [v-hide] {
 	display: none;
 }

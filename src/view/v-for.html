@@ -3,45 +3,45 @@
 }; %>
 <%= _.template(require('./parts/header.html').default)(data) %>
 
-<h1>v-for</h1>
+<h1>v-each</h1>
 
 <p>
-  Директива <code>v-for</code> позволяет создавать элементы DOM путем перебора списка.
+  Директива <code>v-each</code> позволяет создавать элементы DOM путем перебора списка.
   Вот простой пример создания списка цветов на основе массива.
 </p>
 
 <pre>
 &lt;div v-data=&quot;{ colors: ['Red', 'Orange', 'Yellow'] }&quot;&gt;
   &lt;ul&gt;
-    &lt;li v-for=&quot;color in colors&quot; v-text=&quot;color&quot;&gt;&lt;/li&gt;
+    &lt;li v-each=&quot;color in colors&quot; v-text=&quot;color&quot;&gt;&lt;/li&gt;
   &lt;/ul&gt;
 &lt;/div&gt;
 </pre>
 
 <div v-data="{ colors: ['Red', 'Orange', 'Yellow'] }">
   <ul>
-    <li v-for="color in colors" v-text="color"></li>
+    <li v-each="color in colors" v-text="color"></li>
   </ul>
 </div>
 
 <p>
-  Есть правило, на которое стоит обратить внимание: <code>v-for</code> должен быть объявлен
+  Есть правило, на которое стоит обратить внимание: <code>v-each</code> должен быть объявлен
   на том элементе-шаблоне, который повторяется для каждой итерации цикла. Чтобы скрыть сам шаблон,
-  добавьте css правило <code>display: none</code> для селектора <code> [v-for]</code>.
+  добавьте css правило <code>display: none</code> для селектора <code> [v-each]</code>.
 </p>
 
 <p>Вы также можете передавать объекты и разбирать их следующим синтаксисом:</p>
 
 <pre>
   &lt;ul v-data=&quot;{ cars: { make: 'Jeep', model: 'Grand Cherokee', color: 'Black' } }&quot;&gt;
-    &lt;li v-for=&quot;(car, key) in cars&quot;&gt;
+    &lt;li v-each=&quot;(car, key) in cars&quot;&gt;
       &lt;span v-text=&quot;key&quot;&gt;&lt;/span&gt;: &lt;span v-text=&quot;car&quot;&gt;&lt;/span&gt;
     &lt;/li&gt;
   &lt;/ul&gt;
 </pre>
 
 <ul v-data="{ cars: { make: 'Jeep', model: 'Grand Cherokee', color: 'Black' } }">
-  <li v-for="(car, key) in cars">
+  <li v-each="(car, key) in cars">
     <span v-text="key"></span>: <span v-text="car"></span>
   </li>
 </ul>
@@ -68,13 +68,13 @@
     }
   ]
 }&quot;&gt;
-  &lt;div v-for=&quot;(category, index) in categories&quot;&gt;
+  &lt;div v-each=&quot;(category, index) in categories&quot;&gt;
     &lt;h3 v-text=&quot;category.name&quot;&gt;&lt;/h3&gt;
     &lt;ul&gt;
-      &lt;li v-for=&quot;product in category.products&quot;&gt;
+      &lt;li v-each=&quot;product in category.products&quot;&gt;
         &lt;strong v-text=&quot;product.name&quot;&gt;&lt;/strong&gt;
         Attributes:
-        &lt;em v-for=&quot;attribute in product.attributes join &#039;, &#039;&quot; v-text=&quot;attribute&quot;&gt;&lt;/em&gt;
+        &lt;em v-each=&quot;attribute in product.attributes join &#039;, &#039;&quot; v-text=&quot;attribute&quot;&gt;&lt;/em&gt;
       &lt;/li&gt;
     &lt;/ul&gt;
   &lt;/div&gt;
@@ -100,13 +100,13 @@
     }
   ]
 }">
-  <div v-for="(category, index) in categories">
+  <div v-each="(category, index) in categories">
     <h3 v-text="category.name"></h3>
     <ul>
-      <li v-for="product in category.products">
+      <li v-each="product in category.products">
         <strong v-text="product.name"></strong>
         Attributes:
-        <em v-for="attribute in product.attributes join ', '" v-text="attribute"></em>
+        <em v-each="attribute in product.attributes join ', '" v-text="attribute"></em>
       </li>
     </ul>
   </div>
@@ -121,12 +121,12 @@
 
 <pre>
 &lt;p v-data=&quot;{ attributes: [&#039;White&#039;, &#039;20x30mm&#039;, &#039;Google LLC&#039;] }&quot;&gt;
-  Характеристики: &lt;i v-for=&quot;attribute in attributes join &#039;, &#039;&quot; v-text=&quot;attribute&quot;&gt;&lt;/i&gt;
+  Характеристики: &lt;i v-each=&quot;attribute in attributes join &#039;, &#039;&quot; v-text=&quot;attribute&quot;&gt;&lt;/i&gt;
 &lt;/p&gt;
 </pre>
 
 <p v-data="{ attributes: ['White', '20x30mm', 'Google LLC'] }">
-  Характеристики: <i v-for="attribute in attributes join ', '" v-text="attribute"></i>
+  Характеристики: <i v-each="attribute in attributes join ', '" v-text="attribute"></i>
 </p>
 
 <h2>Доступ к индексам</h2>
@@ -138,32 +138,32 @@
 
 <pre>
 &lt;ul v-data=&quot;{ names: ['Ivan', 'Yulia', 'Evgeny'] }&quot;&gt;
-  &lt;li v-for=&quot;(name, index) in names&quot;&gt;
+  &lt;li v-each=&quot;(name, index) in names&quot;&gt;
     &lt;span v-text=&quot;&#x60;${++index}: ${name}&#x60;&quot;&gt;&lt;/span&gt;
   &lt;/li&gt;
 &lt;/ul&gt;
 </pre>
 
 <ul v-data="{ names: ['Ivan', 'Yulia', 'Evgeny'] }">
-  <li v-for="(name, index) in names">
+  <li v-each="(name, index) in names">
     <span v-text="`${++index}: ${name}`"></span>
   </li>
 </ul>
 
 <h2>Итерация по диапазону</h2>
 
-<p>Если вам нужно просто зациклить несколько раз, а не перебирать массив, X.js предлагает короткий синтаксис с указанием целого числа вместо свойства:</p>
+<p>Если вам нужно просто зациклить несколько раз, а не перебирать массив, Youla.js предлагает короткий синтаксис с указанием целого числа вместо свойства:</p>
 
 <pre>
 &lt;div v-data&gt;
   Рейтинг:
-  &lt;span v-for=&quot;i in 5&quot;&gt;⭐&lt;/span&gt;
+  &lt;span v-each=&quot;i in 5&quot;&gt;⭐&lt;/span&gt;
 &lt;/div&gt;
 </pre>
 
 <div v-data>
   Рейтинг:
-  <span v-for="i in 5">⭐</span>
+  <span v-each="i in 5">⭐</span>
 </div>
 
 <p>Обратите внимание, что в таком случае значения <code>i</code> начинаются с 1, а не с 0.</p>
@@ -181,7 +181,7 @@
   <p>Как это работает</p>
   <p>
     Первичный рендеринг реализуется через серверную часть: браузер сразу отображает контент, не дожидаясь
-    загрузки JS или данных. После загрузки JS, происходит гидратация: X.js "привязывает" данные к уже
+    загрузки JS или данных. После загрузки JS, происходит гидратация: Youla.js "привязывает" данные к уже
     отрендеренному HTML, обеспечивая интерактивность и возможность динамического обновления.
   </p>
 </blockquote>
@@ -190,7 +190,7 @@
 &lt;div v-data=&quot;{devices: []}&quot;&gt;
   &lt;button type=&quot;button&quot; @click=&quot;devices = [&#039;Headphones&#039;, &#039;VR Glasses&#039;]&quot;&gt;Обновить список&lt;/button&gt;
   &lt;ul&gt;
-    &lt;li v-for.lazy=&quot;device in devices&quot; v-text=&quot;device&quot;&gt;&lt;/li&gt;
+    &lt;li v-each.lazy=&quot;device in devices&quot; v-text=&quot;device&quot;&gt;&lt;/li&gt;
     &lt;li&gt;Phones&lt;/li&gt;
     &lt;li&gt;Laptops&lt;/li&gt;
   &lt;/ul&gt;
@@ -200,7 +200,7 @@
 <div v-data="{devices: []}">
   <button type="button" @click="devices = ['Headphones', 'VR Glasses']">Обновить список</button>
   <ul>
-    <li v-for.lazy="device in devices" v-text="device"></li>
+    <li v-each.lazy="device in devices" v-text="device"></li>
     <li>Phones</li>
     <li>Laptops</li>
   </ul>

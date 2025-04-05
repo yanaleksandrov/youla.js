@@ -2,7 +2,7 @@ import { debounce, getAttributes, saferEval, updateAttribute, eventCreate, getNe
 import { fetchProp, generateExpressionForProp } from './props';
 import { store } from './store';
 import { domWalk } from './dom';
-import { injectDataProviders } from './data';
+import { data, injectDataProviders } from './data';
 
 export default class Component {
   constructor(el) {
@@ -13,12 +13,18 @@ export default class Component {
     let dataProviderContext = {};
     injectDataProviders(dataProviderContext);
 
+    console.log(dataProviderContext)
     this.root    = el;
     this.rawData = saferEval(el.getAttribute('v-data') || '{}', dataProviderContext);
+    console.log(this.rawData)
     this.rawData = fetchProp(el, this.rawData);
     this.data    = this.wrapDataInObservable(this.rawData);
 
     this.initialize(el, this.data);
+  }
+
+  data(name, callback) {
+    data(name, callback);
   }
 
   store(name, value) {

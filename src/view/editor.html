@@ -99,7 +99,7 @@
       class="editrix-preview"
       @wheel="if ($event.ctrlKey) {
         $event.preventDefault();
-        zoom = Math.max(50, Math.min(200, zoom + ($event.deltaY > 0 ? -5 : 5)));
+        zoom = Math.max(50, Math.min(150, zoom + ($event.deltaY > 0 ? -10 : 10)));
       }"
       :style="`zoom: ${zoom}%`"
       @keydown.window.ctrl="event.key === '0' && (zoom = 100)"

@@ -1,13 +1,22 @@
 {
-  "name": "webpack-starter",
+  "name": "x",
   "version": "1.0.0",
-  "description": "starter boilerplate",
+  "description": "A tiny and powerful JS library for creating interactive user interfaces. It offers a Vue-like API for markup-driven development with automatic reactions, updates, and real-time rendering.",
+  "homepage": "https://github.com/yanaleksandrov/x.js",
+  "bugs": {
+    "url": "https://github.com/yanaleksandrov/x.js/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yanaleksandrov/x.js.git"
+  },
+  "author": "Yan Aleksandrov",
+  "license": "MIT",
   "scripts": {
     "watch": "webpack --mode development --watch",
     "start": "webpack serve --mode development --no-client-overlay-warnings",
     "build": "webpack --config webpack.config.js webpack.config.min.js --mode production && prettier --parser html --write dist/*.html"
   },
-  "license": "MIT",
   "dependencies": {
     "dragula": "^3.7.3",
     "normalize.css": "^8.0.1",

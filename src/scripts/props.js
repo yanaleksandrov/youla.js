@@ -8,50 +8,45 @@ import {
 import { storage, isStorageModifier, getStorageType, castToType } from './storage';
 
 export function fetchProp(rootElement, data) {
-  const fetched = [];
-
   domWalk(rootElement, el => getAttributes(el).filter(({directive}) => directive === 'v-prop').forEach(attribute => {
+    let {expression, modifiers} = attribute;
+
     // support directive just for form fields
     if (!['input', 'select', 'textarea'].includes(el.tagName.toLowerCase())) {
       return;
     }
 
     if (!el.hasAttribute('name')) {
-      el.setAttribute('name', attribute.expression.replace(/\.(\w+)/g, '[$1]'))
+      el.setAttribute('name', expression.replace(/\.(\w+)/g, '[$1]'))
     }
 
-    let [key, ...prop] = attribute.expression.split('.');
+    let [key, ...prop] = expression.split('.');
 
     // set default value if undefined
     if (data[key] === undefined) {
       let fields = [];
       if (el.type === 'checkbox') {
-        fields = el.closest('[v-data]').querySelectorAll(`[${CSS.escape(attribute.name)}="${attribute.expression}"]`);
+        fields = el.closest('[v-data]').querySelectorAll(`[${CSS.escape(attribute.name)}="${expression}"]`);
       }
 
       data[key] = setNestedObjectValue(prop, fields.length > 1 ? [] : '');
     }
 
-    let expression = generateExpressionForProp(el, data, attribute);
+    let value = generateExpressionForProp(el, data, attribute);
 
     // calc real value based on fields value attributes
-    saferEval(expression, data, {'$el': el});
+    saferEval(value, data, {'$el': el});
 
-    fetched.push({el, attribute});
-  }));
-
-  //document.dispatchEvent(eventCreate('x:fetched', {data, fetched}))
-  console.log(fetched)
-  fetched.forEach(item => {
-    const { attribute: { modifiers, directive, expression } } = item;
-
-    if (directive === 'v-prop' && isStorageModifier(modifiers)) {
+    // get data from localStorage or cookie
+    if (isStorageModifier(modifiers)) {
       const type  = getStorageType(modifiers);
       const value = storage.get(expression, type);
 
-      data[expression] = castToType(data[expression], value || data[expression]);
+      if (value) {
+        data[expression] = castToType(data[expression], value);
+      }
     }
-  })
+  }));
 
   return data;
 }

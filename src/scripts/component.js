@@ -76,21 +76,18 @@ export default class Component {
       let {directive, event, expression, modifiers} = attribute;
 
       // init events
-      if (event) {
-        self.registerListener(el, event, modifiers, expression);
-      }
-
-      // init props
+      let propExpression;
       if (directive === 'v-prop') {
+        propExpression = generateExpressionForProp(el, data, attribute);
+
         // If the element we are binding to is a select, a radio, or checkbox we'll listen for the change event instead of the "input" event.
-        let event = ['select-multiple', 'select', 'checkbox', 'radio'].includes(el.type) || modifiers.includes('lazy')
+        event = ['select-multiple', 'select', 'checkbox', 'radio'].includes(el.type) || modifiers.includes('lazy')
           ? 'change'
           : 'input';
+      }
 
-        self.registerListener(el, event, modifiers, generateExpressionForProp(el, data, attribute));
-
-        let { output } = self.evaluate(expression, additionalHelperVariables);
-        updateAttribute(el, 'value', output);
+      if (event) {
+        self.registerListener(el, event, modifiers, propExpression || expression);
       }
 
       // init directives

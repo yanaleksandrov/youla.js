@@ -995,7 +995,7 @@ document.addEventListener('youla:init', ()=> {
       },
     }
   })
-  Youla.data('notice', {
+  Youla.data('notice', () => ({
     items: {},
     duration: 4000,
     info( message ) {
@@ -1036,7 +1036,7 @@ document.addEventListener('youla:init', ()=> {
         setTimeout( () => this.close(timestamp), this.duration );
       }
     },
-  });
+  }));
 
 
 
@@ -1052,7 +1052,7 @@ document.addEventListener('youla:init', ()=> {
    *
    * @since 1.0
    */
-  Youla.data( 'timer', ( endDate, startDate ) => ({
+  Youla.data( 'timer', (endDate, startDate) => ({
     timer: null,
     end: endDate, // format: '2021-31-12T14:58:31+00:00'
     day:  '01',
@@ -1082,14 +1082,6 @@ document.addEventListener('youla:init', ()=> {
       }
     },
   }));
-
-  Youla.data('dropdown', () => ({
-    open: false,
-    toggle() {
-      console.log(this)
-      this.open = ! this.open
-    },
-  }))
 
   /**
    * Avatar

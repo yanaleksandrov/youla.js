@@ -6,7 +6,6 @@
  */
 import './scripts/directives/v-bind';
 import './scripts/directives/v-each';
-import './scripts/directives/v-hide';
 import './scripts/directives/v-html';
 import './scripts/directives/v-prop';
 import './scripts/directives/v-show';

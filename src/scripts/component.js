@@ -4,8 +4,7 @@ import { injectDataProviders } from './data';
 
 export default class Component {
   constructor(el) {
-    let dataProviderContext = {};
-    injectDataProviders(dataProviderContext);
+    let dataProviderContext = injectDataProviders();
 
     this.root    = el;
     this.rawData = saferEval(el.getAttribute('v-data') || '{}', dataProviderContext);

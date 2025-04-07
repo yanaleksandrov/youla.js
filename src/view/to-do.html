@@ -9,7 +9,7 @@
   <button type="button" @click="tasks = [...tasks, {title: value, checked: false}]; value = ''" :disabled="!value.trim()">Add</button>
   <br>
 
-  <div v-hide="tasks.length">
+  <div v-show="tasks.length">
     <p>Tasks list:</p>
     <ul>
       <li v-each="(task, index) in tasks">

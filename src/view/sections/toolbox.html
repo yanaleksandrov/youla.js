@@ -57,7 +57,7 @@
                 <span class="editrix-list-caption" v-text="stat.caption"></span>
               </label>
             </div>
-            <div class="editrix-section" v-hide="stat.value !== 'scheduled'">
+            <div class="editrix-section" v-show="stat.value !== 'scheduled'">
               <div class="editrix-inputs">
                 <div class="editrix-inputs-item">
                   <div class="editrix-inputs-label">Time</div>
@@ -79,7 +79,7 @@
                 <span class="editrix-list-caption" v-text="vision.caption"></span>
               </label>
             </div>
-            <div class="editrix-section" v-hide="vision.value">
+            <div class="editrix-section" v-show="vision.value">
               <div class="editrix-inputs">
                 <div class="editrix-inputs-item">
                   <div class="editrix-inputs-label">Password</div>
@@ -415,7 +415,7 @@
     </div>
   </div>
 
-  <div class="editrix-section-body" v-hide="advanced">
+  <div class="editrix-section-body" v-show="advanced">
     <div class="editrix-control">
       <div class="editrix-inputs">
         <div class="editrix-inputs-item">

@@ -29,7 +29,7 @@
 <!--  </div>-->
 <!--</div>-->
 
-<!--<form class="card card-border" method="post" v-datas v-hide>-->
+<!--<form class="card card-border" method="post" v-datas v-show>-->
 <!--  &lt;!&ndash; step 1 &ndash;&gt;-->
 <!--  <div v-step="name.trim()">-->
 <!--    <div class="t-center p-8">-->
@@ -55,7 +55,7 @@
 <!--  </div>-->
 
 <!--  &lt;!&ndash; step 2 &ndash;&gt;-->
-<!--  <div v-step="dbname.trim() && username.trim() && db_password.trim() && hostname.trim() && prefix.trim()" v-hide>-->
+<!--  <div v-step="dbname.trim() && username.trim() && db_password.trim() && hostname.trim() && prefix.trim()" v-show>-->
 <!--    <div class="t-center p-8">-->
 <!--      <h2>Step 1: Database</h2>-->
 <!--      <p class="t-muted">Enter information about connecting to the database here. If you are not sure about it, contact your hosting provider.</p>-->
@@ -97,7 +97,7 @@
 <!--  </div>-->
 
 <!--  &lt;!&ndash; step 3 &ndash;&gt;-->
-<!--  <div v-step="login.trim() && email.trim() && password.trim()" v-hide>-->
+<!--  <div v-step="login.trim() && email.trim() && password.trim()" v-show>-->
 <!--    <div class="t-center p-8">-->
 <!--      <h2>Step 2: Create account</h2>-->
 <!--      <p class="t-muted">The last step. Create a site administrator.</p>-->
@@ -150,7 +150,7 @@
 <!--  </div>-->
 <!--</div>-->
 
-<!--<div class="df aic g-1" v-datas="timer( new Date( new Date().getTime() + ( 220000 * 1000 ) ).toISOString() )" v-hide>-->
+<!--<div class="df aic g-1" v-datas="timer( new Date( new Date().getTime() + ( 220000 * 1000 ) ).toISOString() )" v-show>-->
 <!--  <div class="p-2 py-3 ta-center b mw-20x4">-->
 <!--    <div class="fw-600" v-text="day">00</div>-->
 <!--    <div class="t-hint t-muted">days</div>-->

@@ -1,6 +1,7 @@
 # Project Name
 
-TODO: Write a project description
+Youla.js - is a tiny and powerful JS library for creating interactive UI. It offers a Vue-like
+API for markup-driven development with automatic reactions, updates, and real-time rendering.
 
 ## Installation
 

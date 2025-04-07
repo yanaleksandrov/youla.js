@@ -6,6 +6,7 @@
 <link rel="stylesheet" href="https://expansa.org/dashboard/assets/css/main.css" id="main-css" />
 
 <div v-data="dropdown">
+  <button @click="open = !open">manual trigger</button>
   <button v-bind="trigger">trigger</button>
 
   <div v-bind="dialogue">dialogue</div>

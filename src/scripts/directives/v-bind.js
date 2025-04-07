@@ -2,14 +2,19 @@ import { directive } from '../directives';
 import { updateAttribute } from '../helpers';
 
 directive('bind', (el, output, attribute, component) => {
-  const {name} = attribute;
+  const { name, modifiers } = attribute;
 
-  console.log(el)
-  console.log(output)
-  console.log(component.data)
+  if (name === 'v-bind') {
+    Object.entries(output).forEach(([key, value]) => {
+      if (key.startsWith('@')) {
+        console.log(el)
+        console.log(key.replace('@', ''))
+        console.log(value)
+        console.log(value())
 
-  if (name === ':attributes' && typeof output === 'object') {
-    Object.entries(output).forEach(([key, value]) => updateAttribute(el, key, value));
+        component.registerListener(el, key.replace('@', ''), modifiers, value);
+      }
+    });
   } else {
     updateAttribute(el, name.replace(':', ''), output);
   }

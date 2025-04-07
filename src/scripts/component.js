@@ -140,6 +140,8 @@ export default class Component {
     let options = {};
     let handler = e => this.runListenerHandler(expression, e, el);
 
+    console.log(expression)
+    console.log(handler)
     if (modifiers.includes('window')) {
       target = window;
     }

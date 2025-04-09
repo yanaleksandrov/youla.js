@@ -1,0 +1,36 @@
+<% var data = {
+  title: "Атрибуты"
+}; %>
+<%= _.template(require('./parts/header.html').default)(data) %>
+
+<h1>Атрибуты</h1>
+
+<p>
+  Youla.js предоставляет простой способ динамически управлять атрибутами HTML-элементов на основе текущего состояния данных.
+  Синтаксис реализуется через добавление двоеточия перед названием атрибута.
+</p>
+
+<pre>
+&lt;tag :атрибут=&quot;выражение&quot;&gt;&lt;/tag&gt;
+</pre>
+
+<p>
+  Вот простой пример реализации смены цвета кнопки:
+</p>
+
+<pre>
+&lt;div class=&quot;demo&quot; v-data=&quot;{isRed: false}&quot;&gt;
+  &lt;button @click=&quot;isRed = !isRed&quot; :style=&quot;isRed &amp;&amp; {color: &#039;red&#039;}&quot;&gt;Toggle Color&lt;/button&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data="{isRed: false}">
+  <button @click="isRed = !isRed" :style="isRed && {color: 'red'}">Toggle Color</button>
+</div>
+
+<p>
+  Синтаксис <code>:</code> может применяться ко всем стандартным HTML-атрибутам, включая текстовые (href, src, title, placeholder),
+  булевые (disabled, checked, readonly, required), объектные (class, style) и пользовательские (data-*, aria-*).
+</p>
+
+<%= _.template(require('./parts/footer.html').default)(data) %>

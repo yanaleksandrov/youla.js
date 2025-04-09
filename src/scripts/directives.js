@@ -1,12 +1,12 @@
-import { x } from '../scripts/index';
+import { Youla } from '../scripts/index';
 
 const prefix = 'v-';
 
 export function directive(name, callback) {
   name = `${prefix}${name}`;
-  if (!x.directives[name]) {
-    x.directives[name] = callback;
+  if (!Youla.directives[name]) {
+    Youla.directives[name] = callback;
   } else {
-    console.warn(`X.js: directive '${name}' is already exists.`);
+    console.warn(`Youla.js: directive '${name}' is already exists.`);
   }
 }

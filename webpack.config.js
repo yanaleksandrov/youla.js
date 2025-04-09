@@ -153,7 +153,6 @@ module.exports = {
             comments: false,
             beautify: true,
             quote_style: 0,
-            preamble: '/* X.js MIT license */',
           },
           keep_classnames: true, // save classes names
           keep_fnames: true, // save functions names

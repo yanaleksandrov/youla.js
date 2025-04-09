@@ -9,10 +9,10 @@
   <button type="button" @click="tasks = [...tasks, {title: value, checked: false}]; value = ''" :disabled="!value.trim()">Add</button>
   <br>
 
-  <div v-hide="tasks.length">
+  <div v-show="tasks.length">
     <p>Tasks list:</p>
     <ul>
-      <li v-for="(task, index) in tasks">
+      <li v-each="(task, index) in tasks">
         <label>
           <input type="checkbox" @change="task.checked = !task.checked; console.log(tasks)" :checked="task.checked">
           <span v-text="task.title" :class="task.checked && 'strike'"></span>

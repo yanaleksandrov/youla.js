@@ -5,7 +5,7 @@
 
 <h1>События</h1>
 
-<p>X.js упрощает прослушивание событий браузера и реагирование на них.</p>
+<p>Youla.js упрощает прослушивание событий браузера и реагирование на них.</p>
 
 <h2>Отслеживание простых событий</h2>
 
@@ -41,7 +41,7 @@
 <h2>Модификаторы</h2>
 
 <p>
-  X.js предлагает ряд модификаторов для настройки поведения слушателей событий.
+  Youla.js предлагает ряд модификаторов для настройки поведения слушателей событий.
 </p>
 
 <h4><code>.prevent</code></h4>
@@ -90,7 +90,7 @@
 <pre>
 &lt;div v-data=&quot;{ open: false }&quot;&gt;
   &lt;button @click=&quot;open = ! open&quot;&gt;Открыть&lt;/button&gt;
-  &lt;div v-hide=&quot;open&quot; @click.outside=&quot;open = false&quot;&gt;
+  &lt;div v-show=&quot;open&quot; @click.outside=&quot;open = false&quot;&gt;
     Контент...
   &lt;/div&gt;
 &lt;/div&gt;
@@ -98,7 +98,7 @@
 
 <div class="demo" v-data="{ open: false }">
   <button @click="open = ! open">Открыть</button>
-  <div v-hide="open" @click.outside="open = false">
+  <div v-show="open" @click.outside="open = false">
     Контент...
   </div>
 </div>

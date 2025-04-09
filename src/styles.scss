@@ -89,10 +89,9 @@ table {
 	cursor: pointer;
 }
 
-.hidden,
-[v-for],
-[v-for\2elazy],
-[v-hide] {
+[hidden],
+[v-each],
+[v-each\2elazy] {
 	display: none;
 }
 

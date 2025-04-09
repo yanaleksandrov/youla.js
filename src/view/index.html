@@ -34,7 +34,7 @@
 
     <button type="button" @click.delay.1000ms.once="$ajax('https://jsonplaceholder.typicode.com/posts', {}, response => items = response.json)">Test Fetch</button>
     <ul>
-      <li v-for="item in items">
+      <li v-each="item in items">
         <span v-text="item.id"></span>
         <a v-text="item.title"></a>
       </li>
@@ -63,7 +63,7 @@
     </div>
     <input type="checkbox" v-prop="singlet" @change="console.log(singlet)" checked>
     <div v-text="singlet"></div>
-    <div v-hide="singlet !== true">Checkbox is checked</div>
+    <div v-show="singlet !== true">Checkbox is checked</div>
     <br>
 
     <div>

@@ -1,0 +1,22 @@
+.ico {
+	display: inline-block;
+	background-position: center;
+	background-size: 10px;
+	background-repeat: no-repeat;
+	width: 0.75rem;
+	min-width: 0.75rem;
+	height: 0.75rem;
+	transition: all 0.25s;
+
+	&-variable {
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' class='svg' viewBox='0 0 12 12'%3E%3Cpath fill-rule='evenodd' d='m2 3.7 4-2.32 4 2.31v4.62l-4 2.31-4-2.3zM6 .22l5 2.89v5.77l-5 2.89-5-2.89V3.12zM7 6a1 1 0 1 1-2 0 1 1 0 0 1 2 0'/%3E%3C/svg%3E");
+	}
+
+	&-horizontal {
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' viewBox='0 0 12 12'%3E%3Cpath fill='%23000' fill-rule='evenodd' d='M2 1.5a.5.5 0 1 0-1 0v9a.5.5 0 0 0 1 0v-9Zm8.5-.5a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-1 0v-9a.5.5 0 0 1 .5-.5ZM7 7V5H5v2h2Zm1-2a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1V5Z' clip-rule='evenodd'/%3E%3C/svg%3E");
+	}
+
+	&-vertical {
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' viewBox='0 0 12 12'%3E%3Cpath fill='%23000' fill-rule='evenodd' d='M1.5 10a.5.5 0 0 0 0 1h9a.5.5 0 0 0 0-1h-9ZM1 1.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5ZM7 5H5v2h2V5ZM5 4a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1H5Z' clip-rule='evenodd'/%3E%3C/svg%3E");
+	}
+}

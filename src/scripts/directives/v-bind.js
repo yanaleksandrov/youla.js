@@ -7,10 +7,6 @@ directive('bind', (el, output, attribute, component) => {
   if (name === 'v-bind') {
     Object.entries(output).forEach(([key, value]) => {
       if (key.startsWith('@')) {
-        console.log(el)
-        console.log(key.replace('@', ''))
-        console.log(value)
-        console.log(value())
 
         component.registerListener(el, key.replace('@', ''), modifiers, value);
       }

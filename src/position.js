@@ -3,7 +3,6 @@ document.addEventListener('youla:init', ()=> {
     open: false,
     trigger: {
       '@click': () => {
-        console.log(423435235)
         this.open = ! this.open
       },
     },

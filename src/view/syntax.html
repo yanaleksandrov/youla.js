@@ -1,0 +1,182 @@
+<% var data = {
+  title: "Полный синтаксис"
+}; %>
+<%= _.template(require('./parts/header.html').default)(data) %>
+
+<h1>Полный синтаксис</h1>
+
+<p>
+  Эта страница — краткая сводка всего синтаксиса Youla.js в одном месте: типы атрибутов,
+  директивы и их модификаторы, специальные переменные в выражениях. За подробностями и
+  живыми примерами каждой директивы переходите по ссылке в соответствующей таблице.
+</p>
+
+<h2>Типы атрибутов</h2>
+
+<table>
+  <tbody>
+    <tr>
+      <th>Синтаксис</th>
+      <th>Назначение</th>
+      <th>Пример</th>
+    </tr>
+    <tr>
+      <td><code>v-data</code></td>
+      <td>Отмечает элемент как корень компонента и задаёт его реактивные данные</td>
+      <td><code>&lt;div v-data=&quot;{ count: 0 }&quot;&gt;</code></td>
+    </tr>
+    <tr>
+      <td><code>v-*</code></td>
+      <td>Директива — привязывает поведение или содержимое элемента к данным</td>
+      <td><code>&lt;div v-show=&quot;open&quot;&gt;</code></td>
+    </tr>
+    <tr>
+      <td><code>:атрибут</code></td>
+      <td>Сокращение для <code>v-bind</code> — динамическое значение обычного HTML-атрибута</td>
+      <td><code>&lt;img :src=&quot;url&quot;&gt;</code></td>
+    </tr>
+    <tr>
+      <td><code>@событие</code></td>
+      <td>Слушатель события браузера, с поддержкой модификаторов</td>
+      <td><code>&lt;button @click=&quot;open = true&quot;&gt;</code></td>
+    </tr>
+    <tr>
+      <td><code>v-ref</code></td>
+      <td>Именует элемент для доступа через <code>$refs</code> внутри выражений</td>
+      <td><code>&lt;video v-ref=&quot;player&quot;&gt;</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Директивы</h2>
+
+<table>
+  <tbody>
+    <tr>
+      <th>Директива</th>
+      <th>Модификаторы</th>
+      <th>Описание</th>
+    </tr>
+    <tr>
+      <td><a href="/v-data"><code>v-data</code></a></td>
+      <td><code>.local</code>, <code>.cookie</code></td>
+      <td>Определяет компонент и его начальные данные</td>
+    </tr>
+    <tr>
+      <td><a href="/v-text"><code>v-text</code></a></td>
+      <td>—</td>
+      <td>Текстовое содержимое элемента, HTML-теги экранируются</td>
+    </tr>
+    <tr>
+      <td><a href="/v-html"><code>v-html</code></a></td>
+      <td>—</td>
+      <td>HTML-содержимое элемента без экранирования (только для доверенного контента)</td>
+    </tr>
+    <tr>
+      <td><a href="/v-show"><code>v-show</code></a></td>
+      <td><code>.lazy</code></td>
+      <td>Переключает видимость элемента через <code>display</code>, не удаляя его из DOM</td>
+    </tr>
+    <tr>
+      <td><a href="/v-each"><code>v-each</code></a></td>
+      <td><code>.lazy</code></td>
+      <td>Клонирует элемент-шаблон для каждого элемента массива, объекта или диапазона чисел</td>
+    </tr>
+    <tr>
+      <td><a href="/v-prop"><code>v-prop</code></a></td>
+      <td><code>.number</code>, <code>.trim</code>, <code>.lazy</code>, <code>.local</code>, <code>.cookie</code></td>
+      <td>Двусторонняя привязка значения поля формы (<code>input</code>, <code>select</code>, <code>textarea</code>) к данным</td>
+    </tr>
+    <tr>
+      <td><code>v-bind</code> / <code>:атрибут</code></td>
+      <td>—</td>
+      <td>Динамическое значение HTML-атрибута (<code>class</code>, <code>style</code>, <code>disabled</code>, <code>href</code> и т.д.)</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Синтаксис v-each</h2>
+
+<pre>
+item in items                  — перебор массива
+(item, index) in items         — перебор массива с доступом к индексу
+(item, key) in object          — перебор пар "ключ: значение" объекта
+item in 5                      — диапазон чисел (здесь: от 1 до 5)
+item in items join ', '        — со вставкой текстового разделителя между элементами
+</pre>
+
+<p>Подробности и живые примеры — на странице <a href="/v-each">v-each</a>.</p>
+
+<h2>Модификаторы событий</h2>
+
+<table>
+  <tbody>
+    <tr>
+      <th>Модификатор</th>
+      <th>Описание</th>
+    </tr>
+    <tr><td><code>.prevent</code></td><td>Вызывает <code>event.preventDefault()</code></td></tr>
+    <tr><td><code>.stop</code></td><td>Вызывает <code>event.stopPropagation()</code></td></tr>
+    <tr><td><code>.outside</code></td><td>Срабатывает при клике за пределами элемента</td></tr>
+    <tr><td><code>.window</code></td><td>Слушает событие на <code>window</code> вместо самого элемента</td></tr>
+    <tr><td><code>.document</code></td><td>Слушает событие на <code>document</code> вместо самого элемента</td></tr>
+    <tr><td><code>.passive</code></td><td>Регистрирует слушатель с <code>{ passive: true }</code></td></tr>
+    <tr><td><code>.capture</code></td><td>Регистрирует слушатель с <code>{ capture: true }</code></td></tr>
+    <tr><td><code>.once</code></td><td>Обработчик срабатывает только один раз</td></tr>
+    <tr><td><code>.delay.250ms</code></td><td>Откладывает вызов обработчика на указанное время</td></tr>
+  </tbody>
+</table>
+
+<p>
+  Помимо стандартных событий браузера поддерживаются два особых: <code>@load</code> — срабатывает
+  сразу при инициализации элемента, и <code>@intersect</code> — когда элемент появляется в области
+  видимости. Подробности — на странице <a href="/events">События</a>.
+</p>
+
+<h2>Специальные переменные в выражениях</h2>
+
+<table>
+  <tbody>
+    <tr>
+      <th>Переменная</th>
+      <th>Доступна в</th>
+      <th>Значение</th>
+    </tr>
+    <tr>
+      <td><code>$el</code></td>
+      <td>обработчиках событий, <code>v-prop</code></td>
+      <td>DOM-элемент, на котором объявлено выражение</td>
+    </tr>
+    <tr>
+      <td><code>$event</code></td>
+      <td>обработчиках событий</td>
+      <td>объект события браузера</td>
+    </tr>
+    <tr>
+      <td><code>$refs</code></td>
+      <td>обработчиках событий</td>
+      <td>доступ к элементам, помеченным атрибутом <code>v-ref</code></td>
+    </tr>
+    <tr>
+      <td><code>$root</code></td>
+      <td>обработчиках событий</td>
+      <td>корневой элемент компонента (тот, на котором объявлен <code>v-data</code>)</td>
+    </tr>
+    <tr>
+      <td><code>$имяМетода</code></td>
+      <td>любых выражениях</td>
+      <td>метод, зарегистрированный через <code>Youla.method()</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Выражения</h2>
+
+<p>
+  В значение любой директивы или события можно передать произвольное JavaScript-выражение:
+  сравнения (<code>count &gt; 0</code>), тернарные операторы, шаблонные строки, вызовы методов,
+  доступ к вложенным свойствам через точечную нотацию (<code>user.profile.name</code>) — всё,
+  что вычисляется в одну строку.
+</p>
+
+<%= _.template(require('./parts/footer.html').default)(data) %>

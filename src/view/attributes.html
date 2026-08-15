@@ -51,19 +51,19 @@
 </p>
 
 <pre>
-&lt;div v-data=&quot;{ agree: false }&quot;&gt;
+&lt;div v-data&gt;
   &lt;label&gt;
     &lt;input type=&quot;checkbox&quot; v-prop=&quot;agree&quot;&gt; Я согласен с условиями
   &lt;/label&gt;
-  &lt;button :disabled=&quot;!agree&quot;&gt;Продолжить&lt;/button&gt;
+  &lt;button :disabled=&quot;!agree&quot; disabled&gt;Продолжить&lt;/button&gt;
 &lt;/div&gt;
 </pre>
 
-<div class="demo" v-data="{ agree: false }">
+<div class="demo" v-data>
   <label>
     <input type="checkbox" v-prop="agree"> Я согласен с условиями
   </label>
-  <button :disabled="!agree">Продолжить</button>
+  <button :disabled="!agree" disabled>Продолжить</button>
 </div>
 
 <h2>Классы (:class)</h2>
@@ -161,7 +161,7 @@
     :class=&quot;{ 'is-loading': saving }&quot;
     :title=&quot;saving ? 'Идёт сохранение…' : 'Сохранить изменения'&quot;
     v-text=&quot;saving ? 'Сохранение…' : 'Сохранить'&quot;
-  &gt;&lt;/button&gt;
+  &gt;Сохранить&lt;/button&gt;
 &lt;/div&gt;
 </pre>
 
@@ -172,7 +172,7 @@
     :class="{ 'is-loading': saving }"
     :title="saving ? 'Идёт сохранение…' : 'Сохранить изменения'"
     v-text="saving ? 'Сохранение…' : 'Сохранить'"
-  ></button>
+  >Сохранить</button>
 </div>
 
 <h2>Внутри v-each</h2>

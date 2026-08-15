@@ -44,7 +44,7 @@
   Youla.js предлагает ряд модификаторов для настройки поведения слушателей событий.
 </p>
 
-<h4><code>.prevent</code></h4>
+<h3><code>.prevent</code></h3>
 
 <p>
   Это эквивалент вызова <code>.preventDefault()</code>. В примере ниже с параметром .prevent нажатие кнопки не приведет к отправке
@@ -61,7 +61,7 @@
   <button>Submit</button>
 </form>
 
-<h4><code>.stop</code></h4>
+<h3><code>.stop</code></h3>
 
 <p>
   Это эквивалент вызова <code>.stopPropagation()</code>. В примере ниже, при клике на кнопку, сообщение
@@ -79,7 +79,7 @@
   <button @click.stop>Click Me</button>
 </div>
 
-<h4><code>.outside</code></h4>
+<h3><code>.outside</code></h3>
 
 <p>
   Это удобный помощник для прослушивания щелчка за пределами элемента, к которому он прикреплен.
@@ -103,7 +103,7 @@
   </div>
 </div>
 
-<h4><code>.window</code></h4>
+<h3><code>.window</code></h3>
 
 <p>
   Регистрирует слушатель событий на корневом объекте window вместо самого элемента. Это полезно в случаях,
@@ -115,7 +115,7 @@
 &lt;div v-data @keyup.prevent.ctrl.s.window=&quot;alert(&#039;No need save&#039;)&quot;&gt;...&lt;/div&gt;
 </pre>
 
-<h4><code>.once</code></h4>
+<h3><code>.once</code></h3>
 
 <p>Гарантирует, что обработчик будет вызван только один раз.</p>
 

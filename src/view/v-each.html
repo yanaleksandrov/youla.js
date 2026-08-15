@@ -6,8 +6,10 @@
 <h1>v-each</h1>
 
 <p>
-  Директива <code>v-each</code> позволяет создавать элементы DOM путем перебора списка.
-  Вот простой пример создания списка цветов на основе массива.
+  Директива <code>v-each</code> позволяет создавать элементы DOM, перебирая массив, объект
+  или диапазон чисел. Для каждого элемента исходных данных клонируется тот DOM-узел,
+  на котором указана директива, поэтому итоговая разметка всегда отражает актуальное
+  состояние данных. Вот простой пример создания списка цветов на основе массива.
 </p>
 
 <pre>
@@ -25,9 +27,11 @@
 </div>
 
 <p>
-  Есть правило, на которое стоит обратить внимание: <code>v-each</code> должен быть объявлен
-  на том элементе-шаблоне, который повторяется для каждой итерации цикла. Чтобы скрыть сам шаблон,
-  добавьте css правило <code>display: none</code> для селектора <code> [v-each]</code>.
+  Обратите внимание на важное правило: атрибут <code>v-each</code> должен находиться именно
+  на том элементе-шаблоне, который нужно повторить для каждой итерации цикла, а не на его
+  родителе или потомке. Сам элемент-шаблон остаётся в разметке (он используется как образец
+  для клонирования), поэтому его стоит скрыть, добавив css правило <code>display: none</code>
+  для селектора <code>[v-each]</code>.
 </p>
 
 <p>Вы также можете передавать объекты и разбирать их следующим синтаксисом:</p>
@@ -43,6 +47,39 @@
 <ul v-data="{ cars: { make: 'Jeep', model: 'Grand Cherokee', color: 'Black' } }">
   <li v-each="(car, key) in cars">
     <span v-text="key"></span>: <span v-text="car"></span>
+  </li>
+</ul>
+
+<h2>Массив объектов</h2>
+
+<p>
+  Самый частый случай на практике — перебор массива объектов. Внутри шаблона доступны
+  любые поля текущего элемента через точечную нотацию.
+</p>
+
+<pre>
+&lt;ul v-data=&quot;{
+  users: [
+    { name: &#039;Ian&#039;, role: &#039;Admin&#039; },
+    { name: &#039;Olga&#039;, role: &#039;Editor&#039; },
+    { name: &#039;Denis&#039;, role: &#039;Viewer&#039; },
+  ]
+}&quot;&gt;
+  &lt;li v-each=&quot;user in users&quot;&gt;
+    &lt;strong v-text=&quot;user.name&quot;&gt;&lt;/strong&gt; — &lt;span v-text=&quot;user.role&quot;&gt;&lt;/span&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+</pre>
+
+<ul v-data="{
+  users: [
+    { name: 'Ian', role: 'Admin' },
+    { name: 'Olga', role: 'Editor' },
+    { name: 'Denis', role: 'Viewer' },
+  ]
+}">
+  <li v-each="user in users">
+    <strong v-text="user.name"></strong> — <span v-text="user.role"></span>
   </li>
 </ul>
 
@@ -112,6 +149,33 @@
   </div>
 </div>
 
+<h2>Независимость списков друг от друга</h2>
+
+<p>
+  Каждый блок <code>v-data</code> — самостоятельный компонент со своими данными. Это значит,
+  что можно свободно располагать на одной странице сколько угодно независимых
+  <code>v-each</code>, в том числе вложенных, и даже использовать в них одинаковые имена
+  переменных — области видимости соседних компонентов друг с другом не пересекаются.
+</p>
+
+<pre>
+&lt;ul v-data=&quot;{ fruits: ['Apple', 'Banana'] }&quot;&gt;
+  &lt;li v-each=&quot;item in fruits&quot; v-text=&quot;item&quot;&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;ul v-data=&quot;{ tools: ['Hammer', 'Wrench'] }&quot;&gt;
+  &lt;li v-each=&quot;item in tools&quot; v-text=&quot;item&quot;&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</pre>
+
+<ul v-data="{ fruits: ['Apple', 'Banana'] }">
+  <li v-each="item in fruits" v-text="item"></li>
+</ul>
+
+<ul v-data="{ tools: ['Hammer', 'Wrench'] }">
+  <li v-each="item in tools" v-text="item"></li>
+</ul>
+
 <h2>Добавление разделителя</h2>
 
 <p>
@@ -149,6 +213,34 @@
     <span v-text="`${++index}: ${name}`"></span>
   </li>
 </ul>
+
+<h2>Динамическое обновление списка</h2>
+
+<p>
+  Список реактивен: как только массив, на основе которого он построен, получает новое
+  значение, <code>v-each</code> перерисовывает разметку автоматически. Обратите внимание,
+  что изменять список нужно присваиванием нового значения (например, через spread-синтаксис
+  или <code>.slice()</code>), а не мутирующими методами вроде <code>.push()</code> — именно
+  присваивание отслеживается системой реактивности.
+</p>
+
+<pre>
+&lt;div v-data=&quot;{ fruits: ['Apple', 'Banana'] }&quot;&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;fruits = [...fruits, 'Cherry']&quot;&gt;Добавить&lt;/button&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;fruits = fruits.slice(0, -1)&quot;&gt;Удалить последний&lt;/button&gt;
+  &lt;ul&gt;
+    &lt;li v-each=&quot;fruit in fruits&quot; v-text=&quot;fruit&quot;&gt;&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/div&gt;
+</pre>
+
+<div v-data="{ fruits: ['Apple', 'Banana'] }">
+  <button type="button" @click="fruits = [...fruits, 'Cherry']">Добавить</button>
+  <button type="button" @click="fruits = fruits.slice(0, -1)">Удалить последний</button>
+  <ul>
+    <li v-each="fruit in fruits" v-text="fruit"></li>
+  </ul>
+</div>
 
 <h2>Итерация по диапазону</h2>
 

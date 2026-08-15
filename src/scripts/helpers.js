@@ -1,5 +1,3 @@
-import { setClasses, setStyles } from './classes';
-
 export function domReady() {
   return new Promise(resolve => {
     if (document.readyState === 'loading') {
@@ -20,7 +18,14 @@ export function domWalk(el, callback) {
       return;
     }
 
-    domWalk(node, callback);
+    // "v-each" elements are templates: the directive itself clones and walks
+    // each rendered item, so descending into the raw template here would
+    // evaluate its children (and any nested "v-each") without loop scope.
+    if (node.hasAttribute('v-each')) {
+      callback(node);
+    } else {
+      domWalk(node, callback);
+    }
 
     node = node.nextElementSibling;
   }
@@ -76,56 +81,15 @@ export function getAttributes(el) {
 
     return {
       name,
-      directive: startsWith === 'v-' ? name.split('.')[0] : (startsWith === ':' ? 'v-bind' : ''),
+      // Attribute binding (":attr") is core syntax, not a pluggable directive,
+      // so it gets its own flag rather than being reported as a directive. See ./attributes.
+      bind: startsWith === ':',
+      directive: startsWith === 'v-' ? name.split('.')[0] : '',
       event: startsWith === '@' ? parts[0] : '',
       expression: value,
       modifiers: root.split('.').slice(1)
     }
   });
-}
-
-export function updateAttribute(el, name, value) {
-  if (name === 'value') {
-    if (el.type === 'radio') {
-      el.checked = el.value === value
-    } else if (el.type === 'checkbox') {
-      el.checked = Array.isArray(value) ? value.some(val => val === el.value) : !!value
-    } else if (el.tagName === 'SELECT') {
-      updateSelect(el, value)
-    } else {
-      el.value = value
-    }
-  } else if (name === 'class') {
-    bindClasses(el, value)
-  } else if (name === 'style') {
-    bindStyles(el, value)
-  } else if (['disabled', 'readonly', 'required', 'checked', 'autofocus', 'autoplay', 'hidden'].includes(name)) {
-    !!value ? el.setAttribute(name, '') : el.removeAttribute(name);
-  } else {
-    el.setAttribute(name, value)
-  }
-}
-
-function bindClasses(el, value) {
-  if (el._x_undoAddedClasses) {
-    el._x_undoAddedClasses()
-  }
-  el._x_undoAddedClasses = setClasses(el, value)
-}
-
-function bindStyles(el, value) {
-  if (el._x_undoAddedStyles) {
-    el._x_undoAddedStyles()
-  }
-  el._x_undoAddedStyles = setStyles(el, value)
-}
-
-export function updateSelect(el, value) {
-  const arrayWrappedValue = [].concat(value).map(value => value + '')
-
-  Array.from(el.options).forEach(option => {
-    option.selected = arrayWrappedValue.includes(option.value || option.text)
-  })
 }
 
 export function eventCreate(eventName, detail = {}) {

@@ -6,8 +6,9 @@
 <h1>v-text</h1>
 
 <p>
-  Директива <code>v-text</code> устанавливает текстовое содержимое элемента,
-  экранируя HTML-теги. Это аналог свойства innerText в JavaScript.
+  Директива <code>v-text</code> устанавливает текстовое содержимое элемента, экранируя HTML-теги —
+  то есть содержимое всегда выводится как обычный текст, даже если внутри строки есть символы
+  <code>&lt;</code> и <code>&gt;</code>. Это аналог свойства <code>textContent</code> в JavaScript.
 </p>
 
 <pre>
@@ -19,5 +20,72 @@
 <div class="demo" v-data="{username: 'Yan Aleksandrov'}">
   Имя: <strong v-text="username"></strong>
 </div>
+
+<h2>Реактивное обновление</h2>
+
+<p>
+  Как и любая другая директива, <code>v-text</code> реагирует на изменение данных —
+  разметку обновлять вручную не нужно.
+</p>
+
+<pre>
+&lt;div v-data=&quot;{ count: 0 }&quot;&gt;
+  &lt;button @click=&quot;count++&quot;&gt;Плюс&lt;/button&gt;
+  &lt;button @click=&quot;count--&quot;&gt;Минус&lt;/button&gt;
+  Значение: &lt;strong v-text=&quot;count&quot;&gt;&lt;/strong&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data="{ count: 0 }">
+  <button @click="count++">Плюс</button>
+  <button @click="count--">Минус</button>
+  Значение: <strong v-text="count"></strong>
+</div>
+
+<h2>Безопасный вывод HTML-тегов как текста</h2>
+
+<p>
+  В отличие от <code>v-html</code>, директива <code>v-text</code> никогда не выполняет вставленную
+  разметку — она безопасна для отображения непроверенного, пользовательского контента, поскольку
+  теги показываются как обычный текст, а не превращаются в реальные DOM-элементы.
+</p>
+
+<pre>
+&lt;div v-data=&quot;{ comment: '&lt;img src=x onerror=alert(1)&gt; Отличная статья!' }&quot;&gt;
+  &lt;div v-text=&quot;comment&quot;&gt;&lt;/div&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data="{ comment: '<img src=x onerror=alert(1)> Отличная статья!' }">
+  <div v-text="comment"></div>
+</div>
+
+<h2>Любое выражение вместо простой переменной</h2>
+
+<p>
+  В <code>v-text</code>, как и в другие директивы, можно передать произвольное выражение,
+  а не только имя переменной — например, отформатировать число или собрать строку из нескольких полей.
+</p>
+
+<pre>
+&lt;div v-data=&quot;{ price: 4990 }&quot;&gt;
+  Цена: &lt;strong v-text=&quot;&#x60;${price.toLocaleString('ru-RU')} ₽&#x60;&quot;&gt;&lt;/strong&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data="{ price: 4990 }">
+  Цена: <strong v-text="`${price.toLocaleString('ru-RU')} ₽`"></strong>
+</div>
+
+<blockquote>
+  <p>Переносы строк и пробелы</p>
+  <p>
+    <code>v-text</code> вставляет содержимое как обычный текстовый узел, поэтому символы перевода
+    строки в связанной строке не превращаются в <code>&lt;br&gt;</code> и никак не влияют на внешний
+    вид без дополнительных css-правил. Чтобы переносы строк отображались, добавьте элементу
+    правило <code>white-space: pre-line</code> (или <code>pre-wrap</code>, если нужно сохранить
+    и пробелы).
+  </p>
+</blockquote>
 
 <%= _.template(require('./parts/footer.html').default)(data) %>

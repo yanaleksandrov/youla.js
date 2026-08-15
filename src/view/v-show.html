@@ -7,7 +7,9 @@
 
 <p>
   Директива <code>v-show</code> управляет видимостью элемента с помощью свойства <code>display</code>.
-  Она не удаляет элемент из DOM, а лишь скрывает его, устанавливая <code>display: none</code>.
+  В отличие от условных директив, которые добавляют и удаляют элемент из DOM, <code>v-show</code>
+  оставляет его в разметке всегда, лишь переключая <code>display: none</code>. Это делает
+  переключение мгновенным — элемент не нужно создавать заново и повторно инициализировать.
 </p>
 
 <pre>
@@ -21,7 +23,7 @@
 </pre>
 
 <p>
-  При нажатии кнопки "Переключить" выпадающий список будет отображаться и скрываться соответствующим образом.
+  При нажатии кнопки "Переключить" блок будет отображаться и скрываться соответствующим образом.
 </p>
 
 <div class="demo" v-data="{ open: false }">
@@ -29,6 +31,86 @@
 
   <div v-show="open">
     Контент...
+  </div>
+</div>
+
+<h2>Любое выражение вместо простого флага</h2>
+
+<p>
+  В <code>v-show</code> можно передать любое выражение, а не только имя булевой переменной —
+  оно будет вычислено и приведено к <code>true</code>/<code>false</code> при каждом обновлении данных.
+</p>
+
+<pre>
+&lt;div v-data=&quot;{ cart: ['Book', 'Pen'] }&quot;&gt;
+  &lt;button @click=&quot;cart = [...cart, 'Book']&quot;&gt;Добавить в корзину&lt;/button&gt;
+  &lt;button @click=&quot;cart = []&quot;&gt;Очистить корзину&lt;/button&gt;
+
+  &lt;p v-show=&quot;cart.length &gt; 0&quot;&gt;Товаров в корзине: &lt;strong v-text=&quot;cart.length&quot;&gt;&lt;/strong&gt;&lt;/p&gt;
+  &lt;p v-show=&quot;cart.length === 0&quot;&gt;Корзина пуста&lt;/p&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data="{ cart: ['Book', 'Pen'] }">
+  <button @click="cart = [...cart, 'Book']">Добавить в корзину</button>
+  <button @click="cart = []">Очистить корзину</button>
+
+  <p v-show="cart.length > 0">Товаров в корзине: <strong v-text="cart.length"></strong></p>
+  <p v-show="cart.length === 0">Корзина пуста</p>
+</div>
+
+<h2>Переключение вкладок</h2>
+
+<p>
+  Одна переменная может управлять сразу несколькими блоками <code>v-show</code>, что удобно
+  для реализации вкладок, аккордеонов и похожих интерфейсов.
+</p>
+
+<pre>
+&lt;div v-data=&quot;{ tab: 'profile' }&quot;&gt;
+  &lt;button @click=&quot;tab = 'profile'&quot;&gt;Профиль&lt;/button&gt;
+  &lt;button @click=&quot;tab = 'settings'&quot;&gt;Настройки&lt;/button&gt;
+
+  &lt;div v-show=&quot;tab === 'profile'&quot;&gt;Здесь данные профиля.&lt;/div&gt;
+  &lt;div v-show=&quot;tab === 'settings'&quot;&gt;Здесь настройки аккаунта.&lt;/div&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data="{ tab: 'profile' }">
+  <button @click="tab = 'profile'">Профиль</button>
+  <button @click="tab = 'settings'">Настройки</button>
+
+  <div v-show="tab === 'profile'">Здесь данные профиля.</div>
+  <div v-show="tab === 'settings'">Здесь настройки аккаунта.</div>
+</div>
+
+<h2>Совместимость с flex, grid и другими значениями display</h2>
+
+<p>
+  При первом обращении к элементу <code>v-show</code> запоминает его исходное инлайн-значение
+  <code>display</code> (или пустую строку, если оно не задано) и в дальнейшем восстанавливает
+  именно его при показе, вместо того чтобы принудительно проставлять <code>display: block</code>.
+  Поэтому элементы с <code>display: flex</code>, <code>grid</code>, <code>inline-flex</code> и т.д.
+  корректно возвращаются к своему виду без дополнительных css-правил и <code>!important</code>.
+</p>
+
+<pre>
+&lt;div v-data=&quot;{ open: true }&quot;&gt;
+  &lt;button @click=&quot;open = ! open&quot;&gt;Переключить&lt;/button&gt;
+
+  &lt;div v-show=&quot;open&quot; style=&quot;display: flex; gap: 8px;&quot;&gt;
+    &lt;span&gt;Элемент 1&lt;/span&gt;
+    &lt;span&gt;Элемент 2&lt;/span&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data="{ open: true }">
+  <button @click="open = ! open">Переключить</button>
+
+  <div v-show="open" style="display: flex; gap: 8px;">
+    <span>Элемент 1</span>
+    <span>Элемент 2</span>
   </div>
 </div>
 
@@ -42,6 +124,41 @@
   <pre>
     [hidden] { display: none !important; }
   </pre>
+  <p>
+    Атрибут <code>hidden</code> дальше поддерживается директивой автоматически: как только элемент
+    должен быть показан, <code>v-show</code> сам снимает <code>hidden</code>, а не только меняет
+    инлайн-<code>display</code> — иначе правило выше с <code>!important</code> продолжало бы
+    скрывать элемент навсегда.
+  </p>
 </blockquote>
+
+<h2>Модификаторы</h2>
+
+<p><code>.lazy</code></p>
+
+<p>
+  Предотвращает вмешательство <code>v-show</code> в состояние элемента при инициализации компонента
+  и начинает переключать его только после изменения привязанных данных. Используйте, когда исходная
+  видимость уже корректно выставлена на сервере (инлайн-стилем или атрибутом <code>hidden</code>) —
+  так удаётся полностью избежать мерцания, не трогая разметку до первого реального изменения данных.
+</p>
+
+<pre>
+&lt;div v-data=&quot;{ open: false }&quot;&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;open = true&quot;&gt;Показать&lt;/button&gt;
+
+  &lt;div v-show.lazy=&quot;open&quot; hidden&gt;
+    Этот блок сервер уже скрыл — Youla.js не тронет его до изменения &quot;open&quot;.
+  &lt;/div&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data="{ open: false }">
+  <button type="button" @click="open = true">Показать</button>
+
+  <div v-show.lazy="open" hidden>
+    Этот блок сервер уже скрыл — Youla.js не тронет его до изменения "open".
+  </div>
+</div>
 
 <%= _.template(require('./parts/footer.html').default)(data) %>

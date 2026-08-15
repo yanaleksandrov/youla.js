@@ -1,5 +1,5 @@
 <% var data = {
-  title: "To Do List"
+  title: "v-show"
 }; %>
 <%= _.template(require('./parts/header.html').default)(data) %>
 
@@ -160,5 +160,12 @@
     Этот блок сервер уже скрыл — Youla.js не тронет его до изменения "open".
   </div>
 </div>
+
+<p>
+  У <a href="/v-each"><code>v-each</code></a> есть точно такой же модификатор <code>.lazy</code>
+  для той же цели — не трогать список, отрисованный сервером, до первого реального изменения
+  данных. А если <code>v-show</code> нужно переключать вместе с другими директивами и событиями
+  как единый набор, посмотрите <a href="/v-bind"><code>v-bind</code></a>.
+</p>
 
 <%= _.template(require('./parts/footer.html').default)(data) %>

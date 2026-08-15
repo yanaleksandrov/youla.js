@@ -1,0 +1,314 @@
+<% var data = {
+  title: "v-bind"
+}; %>
+<%= _.template(require('./parts/header.html').default)(data) %>
+
+<h1>v-bind</h1>
+
+<p>
+  Смысл директивы — убрать из разметки нагромождение из <code>v-*</code>, <code>@</code> и
+  <code>:</code> атрибутов и вынести поведение элемента в JS. Никакого отдельного механизма для
+  этого не требуется: набор биндингов — это обычное свойство внутри <a href="/v-data"><code>v-data</code></a>, объект,
+  ключи которого — имена атрибутов (<code>'@click'</code>, <code>':aria-expanded'</code>,
+  <code>'v-show'</code>, <code>'v-ref'</code> или просто <code>'type'</code>), а значения — то же,
+  что вы написали бы в HTML напрямую: строка-выражение, метод с <code>this</code> в роли данных
+  компонента, или обычное статическое значение. Разметка получает одну короткую ссылку —
+  <code>v-bind="имя"</code>, а определение остаётся переиспользуемым для любого числа элементов.
+</p>
+
+<h2>Определение через v-data</h2>
+
+<p>
+  Опишите компонент через <code>Youla.data(имя, callback)</code> — как обычно, но добавьте в
+  возвращаемый объект свойства с наборами биндингов. Каждый метод внутри такого набора получает
+  <code>this</code>, указывающий на реактивные данные компонента, — точно так же, как методы
+  <code>Youla.data</code> уже работают.
+</p>
+
+<pre>
+Youla.data(&#039;dropdown&#039;, () =&gt; ({
+  open: false,
+  trigger: {
+    &#039;@click&#039;() {
+      this.open = true
+    },
+  },
+  dialogue: {
+    &#039;v-show&#039;() {
+      return this.open
+    },
+    &#039;@click.outside&#039;() {
+      this.open = false
+    },
+  },
+}))
+</pre>
+
+<p>В разметке остаётся только ссылка на нужное свойство — <code>trigger</code> и <code>dialogue</code> объявлять в <code>v-data</code> отдельно не нужно, они уже часть данных компонента:</p>
+
+<pre>
+&lt;div v-data=&quot;dropdown&quot;&gt;
+  &lt;button v-bind=&quot;trigger&quot;&gt;Открыть меню&lt;/button&gt;
+
+  &lt;span v-bind=&quot;dialogue&quot;&gt;Содержимое меню&lt;/span&gt;
+&lt;/div&gt;
+</pre>
+
+<script>
+  document.addEventListener('youla:init', () => {
+    Youla.data('dropdown', () => ({
+      open: false,
+      trigger: {
+        '@click'() {
+          this.open = true
+        },
+      },
+      dialogue: {
+        'v-show'() {
+          return this.open
+        },
+        '@click.outside'() {
+          this.open = false
+        },
+      },
+    }));
+  });
+</script>
+
+<div class="demo" v-data="dropdown">
+  <button v-bind="trigger">Открыть меню</button>
+
+  <span v-bind="dialogue">Содержимое меню</span>
+</div>
+
+<p>
+  Каждый ключ в наборе биндингов обрабатывается так же, как если бы он был написан в разметке
+  напрямую: <code>@click</code> регистрирует обработчик, <a href="/v-show"><code>v-show</code></a>
+  вызывается заново при каждом изменении данных и переключает видимость.
+</p>
+
+<p>
+  От того, к какому типу относится ключ, зависит, чего Youla.js ждёт от метода — возврата значения
+  через <code>return</code> или нет.
+</p>
+
+<table>
+  <tbody>
+    <tr>
+      <th>Тип ключа</th>
+      <th>Нужен <code>return</code>?</th>
+      <th>Поведение</th>
+    </tr>
+    <tr>
+      <td><code>@событие</code> (<code>@click</code>, <code>@click.outside</code> и т.п.)</td>
+      <td>Нет</td>
+      <td>
+        Метод — обработчик. Вызывается один раз при срабатывании события ради побочного эффекта
+        (обычно изменения <code>this</code>). Возвращаемое значение полностью игнорируется —
+        писать <code>return</code> незачем.
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <code>v-директива</code>, <code>:атрибут</code> и обычный атрибут
+        (<code>v-show</code>, <a href="/v-text"><code>v-text</code></a>,
+        <a href="/attributes"><code>:class</code></a>, <code>type</code> и т.п.)
+      </td>
+      <td>Да</td>
+      <td>
+        Метод — вычисляемое значение. Вызывается заново при каждом изменении связанных данных, и
+        то, что он вернёт через <code>return</code>, становится значением, которое применяется к
+        элементу. Без <code>return</code> метод вернёт <code>undefined</code>, и директива получит
+        именно его — например, <code>v-show</code> скроет элемент (<code>undefined</code> ложно),
+        а <code>v-text</code> очистит его содержимое.
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  Внутри метода-обработчика (<code>@событие</code>) <code>this</code> указывает на реактивные
+  данные напрямую — запись в него сразу вызывает обновление. Внутри метода-вычисления
+  (<code>v-директива</code>, <code>:атрибут</code> и т.п.) <code>this</code> дополнительно
+  отслеживает, какие свойства вы читаете, чтобы знать, когда пересчитывать значение заново;
+  такой метод предназначен для чтения и <code>return</code>, а не для записи в данные.
+</p>
+
+<h2>Строки-выражения вместо методов</h2>
+
+<p>
+  Для простых случаев метод необязателен — значением может быть обычная строка-выражение, как в
+  атрибуте <code>:атрибут="выражение"</code>. Она пересчитывается при каждом изменении связанных
+  данных ровно так же, как и метод.
+</p>
+
+<pre>
+Youla.data(&#39;saveButton&#39;, () =&gt; ({
+  saving: false,
+
+  action: {
+    &#39;:disabled&#39;: &#39;saving&#39;,
+    &#39;@click&#39;: &#39;saving = true&#39;,
+    &#39;v-text&#39;: &quot;saving ? &#39;Сохраняем...&#39; : &#39;Сохранить&#39;&quot;,
+  },
+}))
+</pre>
+
+<pre>
+&lt;div v-data=&quot;saveButton&quot;&gt;
+  &lt;button v-bind=&quot;action&quot;&gt;Сохранить&lt;/button&gt;
+&lt;/div&gt;
+</pre>
+
+<script>
+  document.addEventListener('youla:init', () => {
+    Youla.data('saveButton', () => ({
+      saving: false,
+
+      action: {
+        ':disabled': 'saving',
+        '@click': 'saving = true',
+        'v-text': "saving ? 'Сохраняем...' : 'Сохранить'",
+      },
+    }));
+  });
+</script>
+
+<div class="demo" v-data="saveButton">
+  <button type="button" v-bind="action">Сохранить</button>
+</div>
+
+<p>
+  Значение-строка на ключе с префиксом <code>v-</code>/<code>@</code>/<code>:</code> — всегда
+  выражение. Ключ без префикса (здесь <code>type</code>) — всегда обычный статический HTML-атрибут,
+  применённый один раз, без вычисления, точно как если бы вы написали его в разметке напрямую.
+</p>
+
+<h2>Параметризованные определения</h2>
+
+<p>
+  Выражение в <code>v-bind</code> необязательно должно быть просто именем свойства — это обычное
+  JS-выражение, поэтому им может быть и вызов метода с аргументом. Так одно определение
+  превращается в фабрику наборов биндингов, различающихся только переданным значением.
+</p>
+
+<pre>
+Youla.data(&#39;tabs&#39;, () =&gt; ({
+  tab: &#39;profile&#39;,
+
+  tabButton(name) {
+    return {
+      &#39;:class&#39;: `{ active: tab === &#39;${name}&#39; }`,
+      &#39;@click&#39;: `tab = &#39;${name}&#39;`,
+    }
+  },
+}))
+</pre>
+
+<pre>
+&lt;ul v-data=&quot;tabs&quot;&gt;
+  &lt;li v-bind=&quot;tabButton(&#039;profile&#039;)&quot;&gt;Профиль&lt;/li&gt;
+  &lt;li v-bind=&quot;tabButton(&#039;settings&#039;)&quot;&gt;Настройки&lt;/li&gt;
+&lt;/ul&gt;
+</pre>
+
+<style>
+  .attr-tabs { display: flex; gap: 0.5rem; list-style: none; padding: 0; }
+  .attr-tabs li { cursor: pointer; padding: 0.3rem 0.8rem; border-radius: 0.4rem; border: 1px solid var(--line); }
+  .attr-tabs li.active { background: var(--teal); color: var(--surface); border-color: var(--teal); }
+</style>
+
+<script>
+  document.addEventListener('youla:init', () => {
+    Youla.data('tabs', () => ({
+      tab: 'profile',
+
+      tabButton(name) {
+        return {
+          ':class': `{ active: tab === '${name}' }`,
+          '@click': `tab = '${name}'`,
+        }
+      },
+    }));
+  });
+</script>
+
+<div class="demo">
+  <ul class="attr-tabs" v-data="tabs">
+    <li v-bind="tabButton('profile')">Профиль</li>
+    <li v-bind="tabButton('settings')">Настройки</li>
+  </ul>
+</div>
+
+<p>
+  <code>tabButton</code> подставляет <code>name</code> в строки выражений через шаблонную
+  строку — это происходит один раз, при вызове метода. А вот <code>tab</code> внутри самих
+  строк остаётся именем свойства и вычисляется отдельно, заново при каждом изменении
+  <code>tab</code> — поэтому активная вкладка переключается реактивно.
+</p>
+
+<h2>v-bind внутри v-each</h2>
+
+<p>
+  Одно определение можно применить к каждому элементу списка, обращаясь внутри него к текущему
+  элементу итерации — например, чтобы раскрасить бейджи приоритета задач, как в примере на
+  странице <a href="/v-each">v-each</a>.
+</p>
+
+<pre>
+Youla.data(&#39;priorityList&#39;, () =&gt; ({
+  tasks: [
+    { title: &#39;Написать отчёт&#39;, priority: &#39;high&#39; },
+    { title: &#39;Проверить почту&#39;, priority: &#39;low&#39; },
+    { title: &#39;Согласовать бюджет&#39;, priority: &#39;medium&#39; },
+  ],
+
+  badge: {
+    &#39;:style&#39;: &quot;{ color: task.priority === &#39;high&#39; ? &#39;crimson&#39; : (task.priority === &#39;medium&#39; ? &#39;darkorange&#39; : &#39;seagreen&#39;) }&quot;,
+    &#39;v-text&#39;: &#39;task.priority&#39;,
+  },
+}))
+</pre>
+
+<pre>
+&lt;ul v-data=&quot;priorityList&quot;&gt;
+  &lt;li v-each=&quot;task in tasks&quot;&gt;
+    &lt;span v-bind=&quot;badge&quot;&gt;&lt;/span&gt;
+    &lt;span v-text=&quot;task.title&quot;&gt;&lt;/span&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+</pre>
+
+<script>
+  document.addEventListener('youla:init', () => {
+    Youla.data('priorityList', () => ({
+      tasks: [
+        { title: 'Написать отчёт', priority: 'high' },
+        { title: 'Проверить почту', priority: 'low' },
+        { title: 'Согласовать бюджет', priority: 'medium' },
+      ],
+
+      badge: {
+        ':style': "{ color: task.priority === 'high' ? 'crimson' : (task.priority === 'medium' ? 'darkorange' : 'seagreen') }",
+        'v-text': 'task.priority',
+      },
+    }));
+  });
+</script>
+
+<ul class="demo" v-data="priorityList">
+  <li v-each="task in tasks">
+    <span v-bind="badge"></span>
+    <span v-text="task.title"></span>
+  </li>
+</ul>
+
+<p>
+  Ключ <code>badge</code> — обычное свойство <code>v-data</code>, а не метод, поэтому у него нет
+  доступа к <code>this</code> с текущим <code>task</code> — а вот строки-выражения внутри него
+  получают <code>task</code> точно так же, как получил бы его любой обычный атрибут внутри
+  <code>v-each</code>. Если бы вместо строк использовались методы, они бы не увидели <code>task</code>:
+  методы получают только <code>this</code> с данными компонента, без переменных цикла.
+</p>
+
+<%= _.template(require('./parts/footer.html').default)(data) %>

@@ -1,5 +1,5 @@
 <% var data = {
-title: "To Do List"
+title: "v-prop"
 }; %>
 <%= _.template(require('./parts/header.html').default)(data) %>
 
@@ -7,7 +7,7 @@ title: "To Do List"
 
 <p>
   Директива связывает значения полей <code>input</code>, <code>select</code> и <code>textarea</code>
-  с <code>v-data</code> без явного объявления их в директиве. За этой лаконичностью стоит решение
+  с <a href="/v-data"><code>v-data</code></a> без явного объявления их в директиве. За этой лаконичностью стоит решение
   сразу нескольких практических проблем.
 </p>
 
@@ -324,5 +324,11 @@ title: "To Do List"
   <input type="text" v-prop.cookie="lastName">
   <div v-text="lastName"></div>
 </form>
+
+<p>
+  Значение поля обычно выводится через <a href="/v-text"><code>v-text</code></a>, как в примерах
+  выше. Полный практический пример со связкой <code>v-prop</code>, <code>v-each</code> и
+  <code>v-show</code> — на странице <a href="/to-do">Список задач</a>.
+</p>
 
 <%= _.template(require('./parts/footer.html').default)(data) %>

@@ -1,7 +1,9 @@
+import { register } from './registry';
+
 let datas = {}
 
 export function data(name, callback) {
-  datas[name] = callback
+  register('data', datas, name, callback);
 }
 
 // export function injectDataProviders(obj = {}, context) {

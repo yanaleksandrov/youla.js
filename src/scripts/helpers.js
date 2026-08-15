@@ -71,25 +71,37 @@ export function saferEval(expression, dataContext, additionalHelperVariables = {
   )
 }
 
+const ATTRIBUTE_PREFIX = /^(v-|@|:)/;
+
+// Classifies a single name/value pair into the shape Component dispatches on.
+// Shared by getAttributes() (real DOM attributes, value is always a string)
+// and v-bind's runtime expansion (see Component.resolveAttributes), where a
+// JS object's entries are classified the exact same way so neither path has
+// to reimplement directive/event/bind detection on its own.
+export function parseAttribute(name, value) {
+  const startsWith = (name.match(ATTRIBUTE_PREFIX) || [''])[0];
+  const root       = name.replace(startsWith, '');
+  const parts      = root.split('.');
+
+  return {
+    name,
+    // Attribute binding (":attr") is core syntax, not a pluggable directive,
+    // so it gets its own flag rather than being reported as a directive. See ./attributes.
+    bind: startsWith === ':',
+    directive: startsWith === 'v-' ? name.split('.')[0] : '',
+    event: startsWith === '@' ? parts[0] : '',
+    expression: value,
+    modifiers: root.split('.').slice(1),
+    // A v-bind entry whose value isn't a string (e.g. `disabled: true`) is
+    // already a final value, not an expression to run through saferEval.
+    literal: typeof value !== 'string'
+  }
+}
+
 export function getAttributes(el) {
-  const regexp = /^(v-|@|:)/;
-
-  return [...el.attributes].filter(({ name }) => regexp.test(name)).map(({ name, value }) => {
-    const startsWith = name.match(regexp)[0];
-    const root       = name.replace(startsWith, '');
-    const parts      = root.split('.');
-
-    return {
-      name,
-      // Attribute binding (":attr") is core syntax, not a pluggable directive,
-      // so it gets its own flag rather than being reported as a directive. See ./attributes.
-      bind: startsWith === ':',
-      directive: startsWith === 'v-' ? name.split('.')[0] : '',
-      event: startsWith === '@' ? parts[0] : '',
-      expression: value,
-      modifiers: root.split('.').slice(1)
-    }
-  });
+  return [...el.attributes]
+    .filter(({ name }) => ATTRIBUTE_PREFIX.test(name))
+    .map(({ name, value }) => parseAttribute(name, value));
 }
 
 export function eventCreate(eventName, detail = {}) {

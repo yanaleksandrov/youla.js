@@ -1,7 +1,24 @@
-import { domWalk, debounce, getAttributes, saferEval, eventCreate, getNextModifier } from './helpers';
+import { domWalk, debounce, getAttributes, parseAttribute, saferEval, eventCreate, getNextModifier } from './helpers';
 import { updateAttribute } from './attributes';
 import { fetchProp, generateExpressionForProp } from './props';
 import { injectDataProviders } from './data';
+
+// Arrow functions and method shorthand both lack a "prototype", so that can't
+// distinguish them — their source text can. An arrow's "=>" sits before its
+// body's opening "{" (or there's no "{" at all, for a concise body); a
+// function/method declaration never has "=>" in that position.
+function isArrowFunction(fn) {
+  const source = Function.prototype.toString.call(fn);
+
+  if (/^\s*(async\s+)?function/.test(source)) {
+    return false;
+  }
+
+  const braceIndex = source.indexOf('{');
+  const arrowIndex = source.indexOf('=>');
+
+  return arrowIndex !== -1 && (braceIndex === -1 || arrowIndex < braceIndex);
+}
 
 export default class Component {
   constructor(el) {
@@ -15,7 +32,7 @@ export default class Component {
     this.initialize(el, this.data);
   }
 
-  evaluate(expression, additionalHelperVariables) {
+  evaluate(expressionOrFn, additionalHelperVariables) {
     let deps = [];
 
     const makeProxy = (data) => new Proxy(data, {
@@ -32,9 +49,85 @@ export default class Component {
 
     const proxiedData = makeProxy(this.data);
 
-    const output = saferEval(expression, proxiedData, additionalHelperVariables);
+    // A v-bind entry may hand back a method instead of an expression string
+    // (e.g. "v-show"() { return this.open }) — call it with the same
+    // dependency-tracking proxy as "this", so property access is tracked
+    // exactly like accessing $data inside a plain expression string.
+    const output = typeof expressionOrFn === 'function'
+      ? expressionOrFn.call(proxiedData)
+      : saferEval(expressionOrFn, proxiedData, additionalHelperVariables);
 
     return { output, deps };
+  }
+
+  // Expands "v-bind" into the individual directive/event/bind entries its
+  // expression resolves to, so both initialize() and refresh() dispatch them
+  // through the exact same logic as if they'd been written directly in HTML.
+  // The expression is just a normal v-data property (e.g. v-bind="trigger"
+  // referencing "trigger" from Youla.data('dropdown', () => ({ trigger: {...} }))),
+  // resolved the same way any other expression reads from the component's data —
+  // no separate registry involved.
+  resolveAttributes(el, additionalHelperVariables) {
+    const self = this;
+
+    return getAttributes(el).flatMap(attribute => {
+      if (attribute.directive !== 'v-bind') {
+        return [attribute];
+      }
+
+      let bindings;
+      try {
+        ({ output: bindings } = self.evaluate(attribute.expression, additionalHelperVariables));
+      } catch (error) {
+        return [];
+      }
+
+      if (!bindings || typeof bindings !== 'object') {
+        return [];
+      }
+
+      return Object.entries(bindings).flatMap(([name, value]) => {
+        const isFn    = typeof value === 'function';
+        const parsed  = parseAttribute(name, value);
+
+        // Arrow functions ignore .call()/.apply() — "this" stays whatever it
+        // was lexically where the arrow was written, never the component's
+        // data. That fails silently (a thrown TypeError inside a try/catch
+        // elsewhere, or a truthy "output" from the unset function). Regular
+        // functions and method shorthand ("key"() {...}) both lack a
+        // "prototype" too, so that can't tell them apart. Their source text
+        // can: an arrow's "=>" appears before its body's opening "{" (or
+        // there's no "{" at all, for a concise body); a function/method
+        // never has "=>" in that position.
+        if (isFn && isArrowFunction(value)) {
+          console.warn(`Youla.js: v-bind key "${name}" is an arrow function — arrow functions don't bind "this" to the component's data. Use a regular function or method shorthand instead: "${name}"() { ... }.`);
+        }
+
+        // A key with no v-/@/: prefix (e.g. "type") is a plain HTML attribute,
+        // exactly like writing it directly in markup.
+        const isPlainAttribute = !parsed.directive && !parsed.event && !parsed.bind;
+
+        // A "v-*" key that isn't a registered directive (e.g. "v-ref") is
+        // never dispatched by initialize()/refresh() either — it's read
+        // straight off the element instead (see getRefsProxy). Since there's
+        // no real DOM attribute to read here, write one so it still works.
+        if (parsed.directive && !(parsed.directive in Youla.directives)) {
+          el.setAttribute(name, isFn ? value.call(self.data) : value);
+          return [];
+        }
+
+        return [{
+          ...parsed,
+          expression: value,
+          bind: parsed.bind || isPlainAttribute,
+          // Strings on a "v-*"/"@"/":" key are expressions (evaluated, reactive).
+          // Functions are always computed (called, reactive). Anything else —
+          // including a plain string on a bare key like "type": "button" — is a
+          // one-time static value, applied as-is without ever reaching saferEval.
+          literal: !isFn && (isPlainAttribute || typeof value !== 'string')
+        }];
+      });
+    });
   }
 
   wrapDataInObservable(data) {
@@ -73,8 +166,8 @@ export default class Component {
   initialize(root, data, additionalHelperVariables) {
     const self = this;
 
-    domWalk(root, el => getAttributes(el).forEach(attribute => {
-      let {directive, event, expression, modifiers, bind} = attribute;
+    domWalk(root, el => self.resolveAttributes(el, additionalHelperVariables).forEach(attribute => {
+      let {directive, event, expression, modifiers, bind, literal} = attribute;
 
       // init events
       let propExpression;
@@ -96,7 +189,7 @@ export default class Component {
       // up in Youla.directives; see ./attributes
       if (bind || directive in Youla.directives) {
         let output = expression;
-        if (directive !== 'v-each') {
+        if (!literal && directive !== 'v-each') {
           try {
             ({ output } = self.evaluate(expression, additionalHelperVariables));
           } catch (error) {}
@@ -117,17 +210,17 @@ export default class Component {
     // use debounce for .outside modificator work
     // TODO: check, maybe this problem can solve with other solution
     debounce(() => {
-      domWalk(self.root, el => getAttributes(el).forEach(attribute => {
-        let {directive, expression, bind} = attribute;
+      domWalk(self.root, el => self.resolveAttributes(el).forEach(attribute => {
+        let {directive, expression, bind, literal} = attribute;
 
         if (bind || directive in Youla.directives) {
           let output = expression, deps = [];
-          if (directive !== 'v-each') {
+          if (directive === 'v-each') {
+            [, deps] = expression.split(' in ');
+          } else if (!literal) {
             try {
               ({ output, deps } = self.evaluate(expression));
             } catch (error) {}
-          } else {
-            [, deps] = expression.split(' in ');
           }
 
           if (self.concernedData.filter(i => deps.includes(i)).length > 0) {
@@ -230,7 +323,17 @@ export default class Component {
     target.addEventListener(event, handler, options);
   }
 
-  runListenerHandler(expression, e, target) {
+  runListenerHandler(expressionOrFn, e, target) {
+    // A v-bind entry may hand back a method instead of an expression string
+    // (e.g. "@click"() { this.open = true }) — call it directly, with "this"
+    // as the component's reactive data, so writes to it trigger refresh() the
+    // same way "this.open = true" inside a saferEval'd expression would.
+    if (typeof expressionOrFn === 'function') {
+      expressionOrFn.call(this.data, e);
+      return;
+    }
+
+    const expression = expressionOrFn;
     const methods = {};
     Object.keys(Youla.methods).forEach(key => {
       methods[key] = Youla.methods[key](e, target, this);

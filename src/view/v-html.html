@@ -1,5 +1,5 @@
 <% var data = {
-  title: "To Do List"
+  title: "v-html"
 }; %>
 <%= _.template(require('./parts/header.html').default)(data) %>
 
@@ -86,7 +86,7 @@
 <p>
   <code>v-html</code> лишь вставляет строку через <code>innerHTML</code> — он не запускает повторную
   инициализацию компонента для нового содержимого. Если вставленная строка содержит атрибуты вроде
-  <code>v-text</code> или <code>v-each</code>, они останутся в разметке как есть, никак не
+  <a href="/v-text"><code>v-text</code></a> или <a href="/v-each"><code>v-each</code></a>, они останутся в разметке как есть, никак не
   вычисляясь: ниже вы увидите буквальный текст <code>{{ user.name }}</code>, а не имя пользователя.
 </p>
 

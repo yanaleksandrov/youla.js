@@ -1,5 +1,5 @@
 import { domWalk, debounce, getAttributes, saferEval, eventCreate, getNextModifier } from './helpers';
-import { bindAttribute } from './attributes';
+import { updateAttribute } from './attributes';
 import { fetchProp, generateExpressionForProp } from './props';
 import { injectDataProviders } from './data';
 
@@ -103,7 +103,7 @@ export default class Component {
         }
 
         if (bind) {
-          bindAttribute(el, output, attribute);
+          updateAttribute(el, attribute.name.replace(':', ''), output);
         } else {
           Youla.directives[directive](el, output, attribute, self, additionalHelperVariables);
         }
@@ -132,7 +132,7 @@ export default class Component {
 
           if (self.concernedData.filter(i => deps.includes(i)).length > 0) {
             if (bind) {
-              bindAttribute(el, output, attribute);
+              updateAttribute(el, attribute.name.replace(':', ''), output);
             } else {
               Youla.directives[directive](el, output, attribute, self);
             }

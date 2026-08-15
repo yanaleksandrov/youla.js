@@ -84,16 +84,35 @@
   <div v-show="tab === 'settings'">Здесь настройки аккаунта.</div>
 </div>
 
-<blockquote>
-  <p>Значение <code>display</code> после показа элемента</p>
-  <p>
-    <code>v-show</code> всегда возвращает видимому элементу <code>display: block</code>, потому что
-    задаёт его напрямую через <code>el.style.display</code>. Если элемент должен становиться
-    <code>inline</code>, <code>flex</code> или <code>grid</code>, обычное css-правило по классу
-    его не переопределит — инлайн-стиль всегда имеет приоритет. Добавьте <code>!important</code>
-    к нужному правилу, чтобы вернуть желаемое значение <code>display</code>.
-  </p>
-</blockquote>
+<h2>Совместимость с flex, grid и другими значениями display</h2>
+
+<p>
+  При первом обращении к элементу <code>v-show</code> запоминает его исходное инлайн-значение
+  <code>display</code> (или пустую строку, если оно не задано) и в дальнейшем восстанавливает
+  именно его при показе, вместо того чтобы принудительно проставлять <code>display: block</code>.
+  Поэтому элементы с <code>display: flex</code>, <code>grid</code>, <code>inline-flex</code> и т.д.
+  корректно возвращаются к своему виду без дополнительных css-правил и <code>!important</code>.
+</p>
+
+<pre>
+&lt;div v-data=&quot;{ open: true }&quot;&gt;
+  &lt;button @click=&quot;open = ! open&quot;&gt;Переключить&lt;/button&gt;
+
+  &lt;div v-show=&quot;open&quot; style=&quot;display: flex; gap: 8px;&quot;&gt;
+    &lt;span&gt;Элемент 1&lt;/span&gt;
+    &lt;span&gt;Элемент 2&lt;/span&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data="{ open: true }">
+  <button @click="open = ! open">Переключить</button>
+
+  <div v-show="open" style="display: flex; gap: 8px;">
+    <span>Элемент 1</span>
+    <span>Элемент 2</span>
+  </div>
+</div>
 
 <blockquote>
   <p>
@@ -105,6 +124,41 @@
   <pre>
     [hidden] { display: none !important; }
   </pre>
+  <p>
+    Атрибут <code>hidden</code> дальше поддерживается директивой автоматически: как только элемент
+    должен быть показан, <code>v-show</code> сам снимает <code>hidden</code>, а не только меняет
+    инлайн-<code>display</code> — иначе правило выше с <code>!important</code> продолжало бы
+    скрывать элемент навсегда.
+  </p>
 </blockquote>
+
+<h2>Модификаторы</h2>
+
+<p><code>.lazy</code></p>
+
+<p>
+  Предотвращает вмешательство <code>v-show</code> в состояние элемента при инициализации компонента
+  и начинает переключать его только после изменения привязанных данных. Используйте, когда исходная
+  видимость уже корректно выставлена на сервере (инлайн-стилем или атрибутом <code>hidden</code>) —
+  так удаётся полностью избежать мерцания, не трогая разметку до первого реального изменения данных.
+</p>
+
+<pre>
+&lt;div v-data=&quot;{ open: false }&quot;&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;open = true&quot;&gt;Показать&lt;/button&gt;
+
+  &lt;div v-show.lazy=&quot;open&quot; hidden&gt;
+    Этот блок сервер уже скрыл — Youla.js не тронет его до изменения &quot;open&quot;.
+  &lt;/div&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data="{ open: false }">
+  <button type="button" @click="open = true">Показать</button>
+
+  <div v-show.lazy="open" hidden>
+    Этот блок сервер уже скрыл — Youla.js не тронет его до изменения "open".
+  </div>
+</div>
 
 <%= _.template(require('./parts/footer.html').default)(data) %>

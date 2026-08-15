@@ -3,194 +3,41 @@
 }; %>
 <%= _.template(require('./parts/header.html').default)(data) %>
 
-<div class="accordion">
-  <details class="accordion__item" name="accordion">
-    <summary class="accordion__title">Title of item 1</summary>
-    <div class="accordion__panel">
-      <p>Description of item 1</p>
-    </div>
-  </details>
-  <details class="accordion__item" name="accordion">
-    <summary class="accordion__title">Title of item 2</summary>
-    <div class="accordion__panel">
-      <p>Description of item 2</p>
-    </div>
-  </details>
-</div>
-<br>
-<br>
+<h1>Установка</h1>
 
-<div v-data="{signIn: 'привет', viewed: false, data: {percent: 0}, items: [], count: 11, lists: [{attributes: {href: 'https://poe.com/chat/2shu93txki2jj53eflg', target: '_blank'}, title: 'Hello World!'}, {attributes: {href: '#', target: '_blank'}, title: 'How are you?'}]}">
-  <form @submit.prevent="$ajax('https://jsonplaceholder.typicode.com/posts', {}, response => data = response).then(r => console.log(r))">
-    <input type="file" name="testFile" placeholder="Choose file">
-    <br>
-    <button type="submit">Submit</button>
-    <br>
-    <label for="progress">Загрузка файла:</label>
-    <br>
-    <progress id="progress" :value="data.percent" max="100"></progress>
-    <br>
-    <br>
+<p>
+  Youla.js пока не распространяется в виде готовой сборки — библиотеку нужно собрать
+  самостоятельно из исходников репозитория.
+</p>
 
-    <button type="button" @click.delay.1000ms.once="$ajax('https://jsonplaceholder.typicode.com/posts', {}, response => items = response.json)">Test Fetch</button>
-    <ul>
-      <li v-each="item in items">
-        <span v-text="item.id"></span>
-        <a v-text="item.title"></a>
-      </li>
-    </ul>
-    <br>
-    <br>
+<h2>1. Клонируйте репозиторий</h2>
 
-    <br>
-    <div>
-      sign-in prop
-    </div>
-    <input v-prop="signIn" type="text">
-    <div v-text="signIn"></div>
-    <br>
-    <br>
-    <div>
-      inputo
-    </div>
-    <input value="10" v-prop="inputo" :min="8" :max="12" :type="'number'">
-    <div v-text="inputo"></div>
-    <div v-text="count"></div>
-    <br>
+<pre>
+git clone https://github.com/yanaleksandrov/Youla.js.git
+cd Youla.js
+</pre>
 
-    <div>
-      Single checkbox with boolean (single)
-    </div>
-    <input type="checkbox" v-prop="singlet" @change="console.log(singlet)" checked>
-    <div v-text="singlet"></div>
-    <div v-show="singlet !== true">Checkbox is checked</div>
-    <br>
+<h2>2. Установите зависимости и соберите проект</h2>
 
-    <div>
-      Multiple checkboxes bound to array (colors)
-    </div>
-    <input type="checkbox" value="Red color!" v-prop="colors" checked>
-    <input type="checkbox" value="Orange color!" v-prop="colors" checked>
-    <input type="checkbox" value="Yellow color!" v-prop="colors" checked>
-    <br>
-    Colors: <span v-text="colors"></span>
-    <br>
-    <br>
+<pre>
+npm install
+npm run build
+</pre>
 
-    <div>
-      Select
-    </div>
-    <select v-prop="select">
-      <option value="">Select A Color</option>
-      <option value="Value 1">Value 1</option>
-      <option value="Value 2">Value 2</option>
-      <option value="Value 3">Value 3</option>
-    </select>
-    <br>
-    Value of select: <span v-text="select"></span>
-    <br>
-    <br>
+<p>
+  После сборки в папке <code>dist</code> появятся файлы <code>youla.js</code> и минифицированный
+  <code>youla.min.js</code>.
+</p>
 
-    <div>
-      Multiple select
-    </div>
-    <select multiple v-prop="multiple">
-      <option value="">Select A Color</option>
-      <option value="Value 1">Value 1</option>
-      <option value="Value 2">Value 2</option>
-      <option value="Value 3">Value 3</option>
-    </select>
-    <br>
-    Value of select: <span v-text="multiple"></span>
-    <br>
-    <br>
+<h2>3. Подключите библиотеку на странице</h2>
 
-    <div>
-      Radio inputs (answer)
-    </div>
-    <input type="radio" value="yes" v-prop="answer">
-    <input type="radio" value="no" v-prop="answer">
-    <br>
-    Answer: <span v-text="answer"></span>
-    <br>
-    <br>
+<pre>
+&lt;script src=&quot;dist/youla.min.js&quot;&gt;&lt;/script&gt;
+</pre>
 
-    <div>
-      Textarea
-    </div>
-    <textarea @keyup="content" v-prop="content">Hello World!</textarea>
-    <div v-text="content"></div>
-  </form>
-
-  <br><br><br><br><br><br><br><br><br><br>
-  <br><br><br><br><br><br><br><br><br><br>
-  <br><br><br><br><br><br><br><br><br><br>
-  <br><br><br><br><br><br><br><br><br><br>
-  <div @load="console.log('I\'m loaded!')"></div>
-  <div @intersect="console.log('Infinity observer: I\'m being showed!')">Infinity observer</div>
-  <div @intersect.once="console.log('Once observer: I\'m being showed!')">Once observer</div>
-
-  <div @click.capture="console.log('I will log first')">
-    <button @click="console.log('I will log second')">Click Me!</button>
-  </div>
-</div>
-
-<div v-data="{ foo: 'bar', count: '2', hel: '<strong>v-html directive</strong>', test: 'X-text directive', open: false, tab: 'foo' }">
-  <div v-text="test"></div>
-  <div v-html="hel"></div>
-  <br>
-  <br>
-  <br>
-
-  <span v-text="foo" v-ref="lob"></span>
-  <br>
-  <br>
-  <br>
-
-  <button @click="console.log($refs.lob)">console.log</button>
-  <br>
-  <br>
-  <br>
-
-  Model input:
-  <div v-text="friends"></div>
-  <input value="Hello, my friend!" v-prop="friends">
-  <button @click="friends = 'Hello world!'">Change text</button>
-  <br>
-  <br>
-  <br>
-
-  <div>
-    <button @click="count--">-</button>
-    <span v-text="count"></span>
-    <button @click="count++">+</button>
-  </div>
-  <div v-show="count > 2" style="font-size: 20px;">This is shown because count is more than 2</div>
-  <br>
-  <br>
-  <br>
-
-  <input v-prop="test">
-  <button @click="test = 'baz'">Change to baz</button>
-  <br>
-  <br>
-  <br>
-
-  <button @click="open = true">Open Dropdown</button>
-  <ul class="hidden" :class="{ 'hidden': ! open }" @click.outside="open = false">
-    Dropdown Body
-  </ul>
-  <br>
-  <br>
-  <br>
-
-  <div>
-    <button :class="{ 'active': tab === 'foo' }" @click="tab = 'foo'">Foo</button>
-    <button :class="{ 'active': tab === 'bar' }" @click="tab = 'bar'">Bar</button>
-
-    <div :class="{ 'hidden': tab !== 'foo' }">Tab Foo</div>
-    <div class="hidden" :class="{ 'hidden': tab !== 'bar' }">Tab Bar</div>
-  </div>
-</div>
+<p>
+  Youla.js сама найдёт на странице все элементы с атрибутом <code>v-data</code> и инициализирует их —
+  вызывать что-либо вручную не требуется.
+</p>
 
 <%= _.template(require('./parts/footer.html').default)(data) %>

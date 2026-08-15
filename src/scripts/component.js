@@ -1,4 +1,5 @@
-import { domWalk, debounce, getAttributes, saferEval, updateAttribute, eventCreate, getNextModifier } from './helpers';
+import { domWalk, debounce, getAttributes, saferEval, eventCreate, getNextModifier } from './helpers';
+import { bindAttribute } from './attributes';
 import { fetchProp, generateExpressionForProp } from './props';
 import { injectDataProviders } from './data';
 
@@ -73,7 +74,7 @@ export default class Component {
     const self = this;
 
     domWalk(root, el => getAttributes(el).forEach(attribute => {
-      let {directive, event, expression, modifiers} = attribute;
+      let {directive, event, expression, modifiers, bind} = attribute;
 
       // init events
       let propExpression;
@@ -90,15 +91,22 @@ export default class Component {
         self.registerListener(el, event, modifiers, propExpression || expression);
       }
 
-      // init directives
-      if (directive in Youla.directives) {
+      // init directives — attribute binding ("bind") is a distinct mechanism from
+      // directives, so it's resolved and dispatched the same way but never looked
+      // up in Youla.directives; see ./attributes
+      if (bind || directive in Youla.directives) {
         let output = expression;
         if (directive !== 'v-each') {
           try {
             ({ output } = self.evaluate(expression, additionalHelperVariables));
           } catch (error) {}
         }
-        Youla.directives[directive](el, output, attribute, self, additionalHelperVariables);
+
+        if (bind) {
+          bindAttribute(el, output, attribute);
+        } else {
+          Youla.directives[directive](el, output, attribute, self, additionalHelperVariables);
+        }
       }
     }));
   }
@@ -110,9 +118,9 @@ export default class Component {
     // TODO: check, maybe this problem can solve with other solution
     debounce(() => {
       domWalk(self.root, el => getAttributes(el).forEach(attribute => {
-        let {directive, expression} = attribute;
+        let {directive, expression, bind} = attribute;
 
-        if (directive in Youla.directives) {
+        if (bind || directive in Youla.directives) {
           let output = expression, deps = [];
           if (directive !== 'v-each') {
             try {
@@ -123,7 +131,11 @@ export default class Component {
           }
 
           if (self.concernedData.filter(i => deps.includes(i)).length > 0) {
-            Youla.directives[directive](el, output, attribute, self);
+            if (bind) {
+              bindAttribute(el, output, attribute);
+            } else {
+              Youla.directives[directive](el, output, attribute, self);
+            }
           }
         }
       }));

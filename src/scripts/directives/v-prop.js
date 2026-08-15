@@ -1,5 +1,6 @@
 import { directive } from '../directives';
-import { updateAttribute, getNextModifier } from '../helpers';
+import { getNextModifier } from '../helpers';
+import { updateAttribute } from '../attributes';
 import { storage, isStorageModifier, getStorageType, computeExpires } from '../storage';
 
 directive('prop', (el, output, attribute, component) => {

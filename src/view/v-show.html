@@ -7,7 +7,9 @@
 
 <p>
   Директива <code>v-show</code> управляет видимостью элемента с помощью свойства <code>display</code>.
-  Она не удаляет элемент из DOM, а лишь скрывает его, устанавливая <code>display: none</code>.
+  В отличие от условных директив, которые добавляют и удаляют элемент из DOM, <code>v-show</code>
+  оставляет его в разметке всегда, лишь переключая <code>display: none</code>. Это делает
+  переключение мгновенным — элемент не нужно создавать заново и повторно инициализировать.
 </p>
 
 <pre>
@@ -21,7 +23,7 @@
 </pre>
 
 <p>
-  При нажатии кнопки "Переключить" выпадающий список будет отображаться и скрываться соответствующим образом.
+  При нажатии кнопки "Переключить" блок будет отображаться и скрываться соответствующим образом.
 </p>
 
 <div class="demo" v-data="{ open: false }">
@@ -31,6 +33,67 @@
     Контент...
   </div>
 </div>
+
+<h2>Любое выражение вместо простого флага</h2>
+
+<p>
+  В <code>v-show</code> можно передать любое выражение, а не только имя булевой переменной —
+  оно будет вычислено и приведено к <code>true</code>/<code>false</code> при каждом обновлении данных.
+</p>
+
+<pre>
+&lt;div v-data=&quot;{ cart: ['Book', 'Pen'] }&quot;&gt;
+  &lt;button @click=&quot;cart = [...cart, 'Book']&quot;&gt;Добавить в корзину&lt;/button&gt;
+  &lt;button @click=&quot;cart = []&quot;&gt;Очистить корзину&lt;/button&gt;
+
+  &lt;p v-show=&quot;cart.length &gt; 0&quot;&gt;Товаров в корзине: &lt;strong v-text=&quot;cart.length&quot;&gt;&lt;/strong&gt;&lt;/p&gt;
+  &lt;p v-show=&quot;cart.length === 0&quot;&gt;Корзина пуста&lt;/p&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data="{ cart: ['Book', 'Pen'] }">
+  <button @click="cart = [...cart, 'Book']">Добавить в корзину</button>
+  <button @click="cart = []">Очистить корзину</button>
+
+  <p v-show="cart.length > 0">Товаров в корзине: <strong v-text="cart.length"></strong></p>
+  <p v-show="cart.length === 0">Корзина пуста</p>
+</div>
+
+<h2>Переключение вкладок</h2>
+
+<p>
+  Одна переменная может управлять сразу несколькими блоками <code>v-show</code>, что удобно
+  для реализации вкладок, аккордеонов и похожих интерфейсов.
+</p>
+
+<pre>
+&lt;div v-data=&quot;{ tab: 'profile' }&quot;&gt;
+  &lt;button @click=&quot;tab = 'profile'&quot;&gt;Профиль&lt;/button&gt;
+  &lt;button @click=&quot;tab = 'settings'&quot;&gt;Настройки&lt;/button&gt;
+
+  &lt;div v-show=&quot;tab === 'profile'&quot;&gt;Здесь данные профиля.&lt;/div&gt;
+  &lt;div v-show=&quot;tab === 'settings'&quot;&gt;Здесь настройки аккаунта.&lt;/div&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data="{ tab: 'profile' }">
+  <button @click="tab = 'profile'">Профиль</button>
+  <button @click="tab = 'settings'">Настройки</button>
+
+  <div v-show="tab === 'profile'">Здесь данные профиля.</div>
+  <div v-show="tab === 'settings'">Здесь настройки аккаунта.</div>
+</div>
+
+<blockquote>
+  <p>Значение <code>display</code> после показа элемента</p>
+  <p>
+    <code>v-show</code> всегда возвращает видимому элементу <code>display: block</code>, потому что
+    задаёт его напрямую через <code>el.style.display</code>. Если элемент должен становиться
+    <code>inline</code>, <code>flex</code> или <code>grid</code>, обычное css-правило по классу
+    его не переопределит — инлайн-стиль всегда имеет приоритет. Добавьте <code>!important</code>
+    к нужному правилу, чтобы вернуть желаемое значение <code>display</code>.
+  </p>
+</blockquote>
 
 <blockquote>
   <p>

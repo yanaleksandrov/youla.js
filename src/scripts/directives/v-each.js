@@ -1,9 +1,7 @@
 import { directive } from '../directives';
 import { saferEval } from '../helpers';
 
-let contextStack = [];
-
-directive('each', (el, output, attribute, component) => {
+directive('each', (el, output, attribute, component, additionalHelperVariables = {}) => {
   const {expression} = attribute;
   if (typeof expression !== 'string') {
     return;
@@ -18,18 +16,22 @@ directive('each', (el, output, attribute, component) => {
   let [, item, index = 'key', items, join] = expression.match(/^\(?([\w]+)(?:,\s*(\w+))?\)?\s+in\s+(.*?)(?:\s+join\s+'([^']+)')?$/) || [];
 
   /**
-   * Step 2: extracting the data, based on the expression & nested context
+   * Step 2: extracting the data, based on the expression.
+   *
+   * For a nested "v-each" (e.g. "product in category.products"), the parent
+   * loop's current item ("category") is passed down via additionalHelperVariables,
+   * so it's resolved here the same way loop variables are resolved in v-text/v-bind/etc.
    */
   let dataItems;
 
-  let hasChildEach = el.querySelector('[v-each]');
   if (Number.isInteger(+items)) {
     dataItems = Array.from({length: +items}, (_, i) => i + 1);
   } else {
-    if (contextStack.length) {
-      items = items.replace(/^[^.]+/, `${contextStack[contextStack.length - 1]}`);
+    try {
+      dataItems = saferEval(`${items}`, component.data, additionalHelperVariables);
+    } catch (error) {
+      return;
     }
-    dataItems = saferEval(`${items}`, component.data);
   }
 
   /**
@@ -57,17 +59,9 @@ directive('each', (el, output, attribute, component) => {
     clone.removeAttribute('v-each');
 
     (async () => {
-      clone.__x_for_data = {[item]: dataItem, [index]: +key || key};
-
-      if (hasChildEach) {
-        contextStack.push(`${items}[${key}]`);
-      }
+      clone.__x_for_data = {...additionalHelperVariables, [item]: dataItem, [index]: +key || key};
 
       await component.initialize(clone, component.data, clone.__x_for_data);
-
-      if (hasChildEach) {
-        contextStack.pop();
-      }
 
       el.parentNode.appendChild(clone);
       if (array[idx + 1] && join) {

@@ -20,7 +20,14 @@ export function domWalk(el, callback) {
       return;
     }
 
-    domWalk(node, callback);
+    // "v-each" elements are templates: the directive itself clones and walks
+    // each rendered item, so descending into the raw template here would
+    // evaluate its children (and any nested "v-each") without loop scope.
+    if (node.hasAttribute('v-each')) {
+      callback(node);
+    } else {
+      domWalk(node, callback);
+    }
 
     node = node.nextElementSibling;
   }

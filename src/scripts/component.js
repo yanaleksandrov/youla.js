@@ -98,7 +98,7 @@ export default class Component {
             ({ output } = self.evaluate(expression, additionalHelperVariables));
           } catch (error) {}
         }
-        Youla.directives[directive](el, output, attribute, self);
+        Youla.directives[directive](el, output, attribute, self, additionalHelperVariables);
       }
     }));
   }

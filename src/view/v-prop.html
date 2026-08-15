@@ -279,6 +279,13 @@ title: "v-prop"
   В примере ниже модификатор trim исключает ввод любого пробела.
 </p>
 
+<pre>
+&lt;form v-data&gt;
+  &lt;input type=&quot;text&quot; v-prop.trim=&quot;name&quot;&gt;
+  &lt;div v-text=&quot;name&quot;&gt;&lt;/div&gt;
+&lt;/form&gt;
+</pre>
+
 <form class="demo" v-data>
   <input type="text" v-prop.trim="name">
   <div v-text="name"></div>
@@ -287,6 +294,13 @@ title: "v-prop"
 <p>
   Если требуется удаление пробелов после завершения ввода, используй модификатор <code>.lazy</code>.
 </p>
+
+<pre>
+&lt;form v-data&gt;
+  &lt;input type=&quot;text&quot; v-prop.lazy.trim=&quot;name&quot;&gt;
+  &lt;div v-text=&quot;name&quot;&gt;&lt;/div&gt;
+&lt;/form&gt;
+</pre>
 
 <form class="demo" v-data>
   <input type="text" v-prop.lazy.trim="name">

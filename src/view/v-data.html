@@ -29,7 +29,19 @@ title: "v-data"
   после нажатия кнопки "Ок, принято" Youla.js запомнит выбор пользователя и не будет отображать его.
 </p>
 
-<div v-data="{popup: false}">
+<pre>
+&lt;div v-data=&quot;{popup: false}&quot;&gt;
+  &lt;div v-prop.cookie=&quot;popup&quot; v-show=&quot;!popup&quot; hidden&gt;
+    &lt;span&gt;We use cookie!&lt;/span&gt;
+    &lt;button type=&quot;button&quot; @click=&quot;popup = !popup&quot;&gt;Ок, принято&lt;/button&gt;
+  &lt;/div&gt;
+  &lt;p v-show=&quot;popup&quot;&gt;
+    Модальное окно уже было показано
+  &lt;/p&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data="{popup: false}">
   <div v-prop.cookie="popup" v-show="!popup" hidden>
     <span>We use cookie!</span>
     <button type="button" @click="popup = !popup">Ок, принято</button>
@@ -39,7 +51,26 @@ title: "v-data"
   </p>
 </div>
 
-<div v-data="{voices: 1000, voted: false}">
+<pre>
+&lt;div v-data=&quot;{voices: 1000, voted: false}&quot;&gt;
+  &lt;h3&gt;Restriction of repeated voting&lt;/h3&gt;
+  &lt;p&gt;
+    The page saves data to localStorage with information that the user has already voted to prevent a repeat vote.
+  &lt;/p&gt;
+  &lt;div v-prop.local=&quot;voices&quot; v-prop.local=&quot;voted&quot;&gt;
+    &lt;button type=&quot;button&quot; @click=&quot;--voices; voted = true&quot; :disabled=&quot;voted&quot;&gt;
+      &lt;i class=&quot;ph ph-thumbs-down&quot;&gt;&lt;/i&gt;
+    &lt;/button&gt;
+    &lt;span v-text=&quot;voices&quot;&gt;&lt;/span&gt;
+    &lt;button type=&quot;button&quot; @click=&quot;++voices; voted = true&quot; :disabled=&quot;voted&quot;&gt;
+      &lt;i class=&quot;ph ph-thumbs-up&quot;&gt;&lt;/i&gt;
+    &lt;/button&gt;
+    &lt;span class=&quot;hidden&quot; @click=&quot;voices = 1000; voted = false&quot; v-show=&quot;voted&quot;&gt;Reset&lt;/span&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data="{voices: 1000, voted: false}">
   <h3>Restriction of repeated voting</h3>
   <p>
     The page saves data to localStorage with information that the user has already voted to prevent a repeat vote.
@@ -56,7 +87,28 @@ title: "v-data"
   </div>
 </div>
 
-<div v-data>
+<pre>
+&lt;div v-data&gt;
+  &lt;h3&gt;Saving video playback time&lt;/h3&gt;
+  &lt;p&gt;
+    TODO:
+    After starting the video Youla.js will remember the time from the beginning that has already been viewed
+    and, when the page is reloaded, it will prompt you to start viewing from the point of departure.
+  &lt;/p&gt;
+  &lt;div&gt;
+    &lt;input type=&quot;hidden&quot; v-prop.cookie=&quot;time&quot;&gt;
+    &lt;video v-ref=&quot;video&quot; @play=&quot;$el.ontimeupdate = () =&gt; time = $el.currentTime&quot; width=&quot;640px&quot; height=&quot;267px&quot; controls muted&gt;
+      &lt;source src=&quot;https://vjs.zencdn.net/v/oceans.mp4&quot; type=&#039;video/mp4&#039; /&gt;
+    &lt;/video&gt;
+    &lt;div v-show=&quot;time &gt; 0&quot;&gt;
+      Start playback from &lt;span v-text=&quot;parseInt(time, 10)&quot;&gt;&lt;/span&gt; seconds?
+      &lt;button type=&quot;button&quot; @click=&quot;$refs.video.currentTime = time; $refs.video.play()&quot;&gt;Yes&lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data>
   <h3>Saving video playback time</h3>
   <p>
     TODO:
@@ -75,7 +127,35 @@ title: "v-data"
   </div>
 </div>
 
-<div v-data class="test test--content" :class="dark && 'dark'">
+<pre>
+&lt;div v-data class=&quot;test test--content&quot; :class=&quot;dark &amp;&amp; 'dark'&quot;&gt;
+  &lt;h3&gt;Dark &amp; Light theme switcher&lt;/h3&gt;
+  &lt;p&gt;
+    The &quot;We use cookies!&quot; window will pop up whenever the page is reloaded. However, after clicking
+    on the &quot;Ok, accepted&quot; button, Youla.js will remember the user's choice and will not display it.
+  &lt;/p&gt;
+  &lt;button type=&quot;button&quot; v-prop.local=&quot;dark&quot; @click=&quot;dark = !dark&quot;&gt;
+    &lt;i class=&quot;ph ph-sun&quot; :class=&quot;{ 'ph-sun': !dark, 'ph-moon': dark }&quot;&gt;&lt;/i&gt;
+  &lt;/button&gt;
+  &lt;style&gt;
+    :root {
+      --text-color: #000000;
+    }
+
+    .dark {
+      --background-color: #000000;
+      --text-color: #ffffff;
+    }
+
+    div {
+      background-color: var(--background-color);
+      color: var(--text-color);
+    }
+  &lt;/style&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo test test--content" v-data :class="dark && 'dark'">
   <h3>Dark & Light theme switcher</h3>
   <p>
     The "We use cookies!" window will pop up whenever the page is reloaded. However, after clicking

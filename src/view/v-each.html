@@ -20,7 +20,7 @@
 &lt;/div&gt;
 </pre>
 
-<div v-data="{ colors: ['Red', 'Orange', 'Yellow'] }">
+<div class="demo" v-data="{ colors: ['Red', 'Orange', 'Yellow'] }">
   <ul>
     <li v-each="color in colors" v-text="color"></li>
   </ul>
@@ -44,7 +44,7 @@
   &lt;/ul&gt;
 </pre>
 
-<ul v-data="{ cars: { make: 'Jeep', model: 'Grand Cherokee', color: 'Black' } }">
+<ul class="demo" v-data="{ cars: { make: 'Jeep', model: 'Grand Cherokee', color: 'Black' } }">
   <li v-each="(car, key) in cars">
     <span v-text="key"></span>: <span v-text="car"></span>
   </li>
@@ -71,7 +71,7 @@
 &lt;/ul&gt;
 </pre>
 
-<ul v-data="{
+<ul class="demo" v-data="{
   users: [
     { name: 'Ian', role: 'Admin' },
     { name: 'Olga', role: 'Editor' },
@@ -118,7 +118,7 @@
 &lt;/div&gt;
 </pre>
 
-<div v-data="{
+<div class="demo" v-data="{
   categories: [
     {
       name: 'Category 1',
@@ -168,11 +168,11 @@
 &lt;/ul&gt;
 </pre>
 
-<ul v-data="{ fruits: ['Apple', 'Banana'] }">
+<ul class="demo" v-data="{ fruits: ['Apple', 'Banana'] }">
   <li v-each="item in fruits" v-text="item"></li>
 </ul>
 
-<ul v-data="{ tools: ['Hammer', 'Wrench'] }">
+<ul class="demo" v-data="{ tools: ['Hammer', 'Wrench'] }">
   <li v-each="item in tools" v-text="item"></li>
 </ul>
 
@@ -189,7 +189,7 @@
 &lt;/p&gt;
 </pre>
 
-<p v-data="{ attributes: ['White', '20x30mm', 'Google LLC'] }">
+<p class="demo" v-data="{ attributes: ['White', '20x30mm', 'Google LLC'] }">
   Характеристики: <i v-each="attribute in attributes join ', '" v-text="attribute"></i>
 </p>
 
@@ -208,7 +208,7 @@
 &lt;/ul&gt;
 </pre>
 
-<ul v-data="{ names: ['Ivan', 'Yulia', 'Evgeny'] }">
+<ul class="demo" v-data="{ names: ['Ivan', 'Yulia', 'Evgeny'] }">
   <li v-each="(name, index) in names">
     <span v-text="`${++index}: ${name}`"></span>
   </li>
@@ -234,7 +234,7 @@
 &lt;/div&gt;
 </pre>
 
-<div v-data="{ fruits: ['Apple', 'Banana'] }">
+<div class="demo" v-data="{ fruits: ['Apple', 'Banana'] }">
   <button type="button" @click="fruits = [...fruits, 'Cherry']">Добавить</button>
   <button type="button" @click="fruits = fruits.slice(0, -1)">Удалить последний</button>
   <ul>
@@ -253,7 +253,7 @@
 &lt;/div&gt;
 </pre>
 
-<div v-data>
+<div class="demo" v-data>
   Рейтинг:
   <span v-each="i in 5">⭐</span>
 </div>
@@ -289,7 +289,7 @@
 &lt;/div&gt;
 </pre>
 
-<div v-data="{devices: []}">
+<div class="demo" v-data="{devices: []}">
   <button type="button" @click="devices = ['Headphones', 'VR Glasses']">Обновить список</button>
   <ul>
     <li v-each.lazy="device in devices" v-text="device"></li>

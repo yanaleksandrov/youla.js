@@ -46,7 +46,7 @@ title: "To Do List"
     <button type="button" @click="--voices; voted = true" :disabled="voted">
       <i class="ph ph-thumbs-down"></i>
     </button>
-    <span v-text="voices"></span>
+    <span v-prop="voices"></span>
     <button type="button" @click="++voices; voted = true" :disabled="voted">
       <i class="ph ph-thumbs-up"></i>
     </button>
@@ -67,7 +67,7 @@ title: "To Do List"
       <source src="https://vjs.zencdn.net/v/oceans.mp4" type='video/mp4' />
     </video>
     <div v-show="time > 0">
-      Start playback from <span v-text="parseInt(time, 10)"></span> seconds?
+      Start playback from <span v-prop="parseInt(time, 10)"></span> seconds?
       <button type="button" @click="$refs.video.currentTime = time; $refs.video.play()">Yes</button>
     </div>
   </div>

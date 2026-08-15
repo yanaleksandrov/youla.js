@@ -20,7 +20,7 @@ directive('each', (el, output, attribute, component, additionalHelperVariables =
    *
    * For a nested "v-each" (e.g. "product in category.products"), the parent
    * loop's current item ("category") is passed down via additionalHelperVariables,
-   * so it's resolved here the same way loop variables are resolved elsewhere (e.g. v-text).
+   * so it's resolved here the same way loop variables are resolved elsewhere (e.g. v-prop).
    */
   let dataItems;
 

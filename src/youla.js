@@ -1,14 +1,12 @@
 /**
  * The Directives
  *
- * Now that the core is all set up, we can register X directives like v-text or
- * v-html that form the basis of how X adds behavior to an app's static markup.
+ * Now that the core is all set up, we can register X directives like v-prop or
+ * v-show that form the basis of how X adds behavior to an app's static markup.
  */
 import './scripts/directives/v-each';
-import './scripts/directives/v-html';
 import './scripts/directives/v-prop';
 import './scripts/directives/v-show';
-import './scripts/directives/v-text';
 
 /**
  * The Methods

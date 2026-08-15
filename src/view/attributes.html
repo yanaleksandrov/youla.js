@@ -90,14 +90,14 @@
 
 <pre>
 &lt;div v-data=&quot;{ size: 'card--small' }&quot;&gt;
-  &lt;div :class=&quot;['card', size]&quot; v-text=&quot;'Массив'&quot;&gt;&lt;/div&gt;
-  &lt;div :class=&quot;'card ' + size&quot; v-text=&quot;'Строка'&quot;&gt;&lt;/div&gt;
+  &lt;div :class=&quot;['card', size]&quot; v-prop=&quot;'Массив'&quot;&gt;&lt;/div&gt;
+  &lt;div :class=&quot;'card ' + size&quot; v-prop=&quot;'Строка'&quot;&gt;&lt;/div&gt;
 &lt;/div&gt;
 </pre>
 
 <div class="demo" v-data="{ size: 'card--small' }">
-  <div :class="['card', size]" v-text="'Массив'"></div>
-  <div :class="'card ' + size" v-text="'Строка'"></div>
+  <div :class="['card', size]" v-prop="'Массив'"></div>
+  <div :class="'card ' + size" v-prop="'Строка'"></div>
 </div>
 
 <h2>Стили (:style)</h2>
@@ -160,7 +160,7 @@
     :disabled=&quot;saving&quot;
     :class=&quot;{ 'is-loading': saving }&quot;
     :title=&quot;saving ? 'Идёт сохранение…' : 'Сохранить изменения'&quot;
-    v-text=&quot;saving ? 'Сохранение…' : 'Сохранить'&quot;
+    v-prop=&quot;saving ? 'Сохранение…' : 'Сохранить'&quot;
   &gt;&lt;/button&gt;
 &lt;/div&gt;
 </pre>
@@ -171,7 +171,7 @@
     :disabled="saving"
     :class="{ 'is-loading': saving }"
     :title="saving ? 'Идёт сохранение…' : 'Сохранить изменения'"
-    v-text="saving ? 'Сохранение…' : 'Сохранить'"
+    v-prop="saving ? 'Сохранение…' : 'Сохранить'"
   ></button>
 </div>
 
@@ -193,8 +193,8 @@
   &lt;li v-each=&quot;task in tasks&quot;&gt;
     &lt;span :style=&quot;{
       color: task.priority === 'high' ? 'crimson' : (task.priority === 'medium' ? 'darkorange' : 'seagreen')
-    }&quot; v-text=&quot;task.priority&quot;&gt;&lt;/span&gt;
-    &lt;span v-text=&quot;task.title&quot;&gt;&lt;/span&gt;
+    }&quot; v-prop=&quot;task.priority&quot;&gt;&lt;/span&gt;
+    &lt;span v-prop=&quot;task.title&quot;&gt;&lt;/span&gt;
   &lt;/li&gt;
 &lt;/ul&gt;
 </pre>
@@ -209,8 +209,8 @@
   <li v-each="task in tasks">
     <span :style="{
       color: task.priority === 'high' ? 'crimson' : (task.priority === 'medium' ? 'darkorange' : 'seagreen')
-    }" v-text="task.priority"></span>
-    <span v-text="task.title"></span>
+    }" v-prop="task.priority"></span>
+    <span v-prop="task.title"></span>
   </li>
 </ul>
 

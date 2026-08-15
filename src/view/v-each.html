@@ -15,14 +15,14 @@
 <pre>
 &lt;div v-data=&quot;{ colors: ['Red', 'Orange', 'Yellow'] }&quot;&gt;
   &lt;ul&gt;
-    &lt;li v-each=&quot;color in colors&quot; v-text=&quot;color&quot;&gt;&lt;/li&gt;
+    &lt;li v-each=&quot;color in colors&quot; v-prop=&quot;color&quot;&gt;&lt;/li&gt;
   &lt;/ul&gt;
 &lt;/div&gt;
 </pre>
 
 <div v-data="{ colors: ['Red', 'Orange', 'Yellow'] }">
   <ul>
-    <li v-each="color in colors" v-text="color"></li>
+    <li v-each="color in colors" v-prop="color"></li>
   </ul>
 </div>
 
@@ -39,14 +39,14 @@
 <pre>
   &lt;ul v-data=&quot;{ cars: { make: 'Jeep', model: 'Grand Cherokee', color: 'Black' } }&quot;&gt;
     &lt;li v-each=&quot;(car, key) in cars&quot;&gt;
-      &lt;span v-text=&quot;key&quot;&gt;&lt;/span&gt;: &lt;span v-text=&quot;car&quot;&gt;&lt;/span&gt;
+      &lt;span v-prop=&quot;key&quot;&gt;&lt;/span&gt;: &lt;span v-prop=&quot;car&quot;&gt;&lt;/span&gt;
     &lt;/li&gt;
   &lt;/ul&gt;
 </pre>
 
 <ul v-data="{ cars: { make: 'Jeep', model: 'Grand Cherokee', color: 'Black' } }">
   <li v-each="(car, key) in cars">
-    <span v-text="key"></span>: <span v-text="car"></span>
+    <span v-prop="key"></span>: <span v-prop="car"></span>
   </li>
 </ul>
 
@@ -66,7 +66,7 @@
   ]
 }&quot;&gt;
   &lt;li v-each=&quot;user in users&quot;&gt;
-    &lt;strong v-text=&quot;user.name&quot;&gt;&lt;/strong&gt; — &lt;span v-text=&quot;user.role&quot;&gt;&lt;/span&gt;
+    &lt;strong v-prop=&quot;user.name&quot;&gt;&lt;/strong&gt; — &lt;span v-prop=&quot;user.role&quot;&gt;&lt;/span&gt;
   &lt;/li&gt;
 &lt;/ul&gt;
 </pre>
@@ -79,7 +79,7 @@
   ]
 }">
   <li v-each="user in users">
-    <strong v-text="user.name"></strong> — <span v-text="user.role"></span>
+    <strong v-prop="user.name"></strong> — <span v-prop="user.role"></span>
   </li>
 </ul>
 
@@ -106,12 +106,12 @@
   ]
 }&quot;&gt;
   &lt;div v-each=&quot;(category, index) in categories&quot;&gt;
-    &lt;h3 v-text=&quot;category.name&quot;&gt;&lt;/h3&gt;
+    &lt;h3 v-prop=&quot;category.name&quot;&gt;&lt;/h3&gt;
     &lt;ul&gt;
       &lt;li v-each=&quot;product in category.products&quot;&gt;
-        &lt;strong v-text=&quot;product.name&quot;&gt;&lt;/strong&gt;
+        &lt;strong v-prop=&quot;product.name&quot;&gt;&lt;/strong&gt;
         Attributes:
-        &lt;em v-each=&quot;attribute in product.attributes join &#039;, &#039;&quot; v-text=&quot;attribute&quot;&gt;&lt;/em&gt;
+        &lt;em v-each=&quot;attribute in product.attributes join &#039;, &#039;&quot; v-prop=&quot;attribute&quot;&gt;&lt;/em&gt;
       &lt;/li&gt;
     &lt;/ul&gt;
   &lt;/div&gt;
@@ -138,12 +138,12 @@
   ]
 }">
   <div v-each="(category, index) in categories">
-    <h3 v-text="category.name"></h3>
+    <h3 v-prop="category.name"></h3>
     <ul>
       <li v-each="product in category.products">
-        <strong v-text="product.name"></strong>
+        <strong v-prop="product.name"></strong>
         Attributes:
-        <em v-each="attribute in product.attributes join ', '" v-text="attribute"></em>
+        <em v-each="attribute in product.attributes join ', '" v-prop="attribute"></em>
       </li>
     </ul>
   </div>
@@ -160,20 +160,20 @@
 
 <pre>
 &lt;ul v-data=&quot;{ fruits: ['Apple', 'Banana'] }&quot;&gt;
-  &lt;li v-each=&quot;item in fruits&quot; v-text=&quot;item&quot;&gt;&lt;/li&gt;
+  &lt;li v-each=&quot;item in fruits&quot; v-prop=&quot;item&quot;&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;ul v-data=&quot;{ tools: ['Hammer', 'Wrench'] }&quot;&gt;
-  &lt;li v-each=&quot;item in tools&quot; v-text=&quot;item&quot;&gt;&lt;/li&gt;
+  &lt;li v-each=&quot;item in tools&quot; v-prop=&quot;item&quot;&gt;&lt;/li&gt;
 &lt;/ul&gt;
 </pre>
 
 <ul v-data="{ fruits: ['Apple', 'Banana'] }">
-  <li v-each="item in fruits" v-text="item"></li>
+  <li v-each="item in fruits" v-prop="item"></li>
 </ul>
 
 <ul v-data="{ tools: ['Hammer', 'Wrench'] }">
-  <li v-each="item in tools" v-text="item"></li>
+  <li v-each="item in tools" v-prop="item"></li>
 </ul>
 
 <h2>Добавление разделителя</h2>
@@ -185,12 +185,12 @@
 
 <pre>
 &lt;p v-data=&quot;{ attributes: [&#039;White&#039;, &#039;20x30mm&#039;, &#039;Google LLC&#039;] }&quot;&gt;
-  Характеристики: &lt;i v-each=&quot;attribute in attributes join &#039;, &#039;&quot; v-text=&quot;attribute&quot;&gt;&lt;/i&gt;
+  Характеристики: &lt;i v-each=&quot;attribute in attributes join &#039;, &#039;&quot; v-prop=&quot;attribute&quot;&gt;&lt;/i&gt;
 &lt;/p&gt;
 </pre>
 
 <p v-data="{ attributes: ['White', '20x30mm', 'Google LLC'] }">
-  Характеристики: <i v-each="attribute in attributes join ', '" v-text="attribute"></i>
+  Характеристики: <i v-each="attribute in attributes join ', '" v-prop="attribute"></i>
 </p>
 
 <h2>Доступ к индексам</h2>
@@ -203,14 +203,14 @@
 <pre>
 &lt;ul v-data=&quot;{ names: ['Ivan', 'Yulia', 'Evgeny'] }&quot;&gt;
   &lt;li v-each=&quot;(name, index) in names&quot;&gt;
-    &lt;span v-text=&quot;&#x60;${++index}: ${name}&#x60;&quot;&gt;&lt;/span&gt;
+    &lt;span v-prop=&quot;&#x60;${++index}: ${name}&#x60;&quot;&gt;&lt;/span&gt;
   &lt;/li&gt;
 &lt;/ul&gt;
 </pre>
 
 <ul v-data="{ names: ['Ivan', 'Yulia', 'Evgeny'] }">
   <li v-each="(name, index) in names">
-    <span v-text="`${++index}: ${name}`"></span>
+    <span v-prop="`${++index}: ${name}`"></span>
   </li>
 </ul>
 
@@ -229,7 +229,7 @@
   &lt;button type=&quot;button&quot; @click=&quot;fruits = [...fruits, 'Cherry']&quot;&gt;Добавить&lt;/button&gt;
   &lt;button type=&quot;button&quot; @click=&quot;fruits = fruits.slice(0, -1)&quot;&gt;Удалить последний&lt;/button&gt;
   &lt;ul&gt;
-    &lt;li v-each=&quot;fruit in fruits&quot; v-text=&quot;fruit&quot;&gt;&lt;/li&gt;
+    &lt;li v-each=&quot;fruit in fruits&quot; v-prop=&quot;fruit&quot;&gt;&lt;/li&gt;
   &lt;/ul&gt;
 &lt;/div&gt;
 </pre>
@@ -238,7 +238,7 @@
   <button type="button" @click="fruits = [...fruits, 'Cherry']">Добавить</button>
   <button type="button" @click="fruits = fruits.slice(0, -1)">Удалить последний</button>
   <ul>
-    <li v-each="fruit in fruits" v-text="fruit"></li>
+    <li v-each="fruit in fruits" v-prop="fruit"></li>
   </ul>
 </div>
 
@@ -282,7 +282,7 @@
 &lt;div v-data=&quot;{devices: []}&quot;&gt;
   &lt;button type=&quot;button&quot; @click=&quot;devices = [&#039;Headphones&#039;, &#039;VR Glasses&#039;]&quot;&gt;Обновить список&lt;/button&gt;
   &lt;ul&gt;
-    &lt;li v-each.lazy=&quot;device in devices&quot; v-text=&quot;device&quot;&gt;&lt;/li&gt;
+    &lt;li v-each.lazy=&quot;device in devices&quot; v-prop=&quot;device&quot;&gt;&lt;/li&gt;
     &lt;li&gt;Phones&lt;/li&gt;
     &lt;li&gt;Laptops&lt;/li&gt;
   &lt;/ul&gt;
@@ -292,7 +292,7 @@
 <div v-data="{devices: []}">
   <button type="button" @click="devices = ['Headphones', 'VR Glasses']">Обновить список</button>
   <ul>
-    <li v-each.lazy="device in devices" v-text="device"></li>
+    <li v-each.lazy="device in devices" v-prop="device"></li>
     <li>Phones</li>
     <li>Laptops</li>
   </ul>

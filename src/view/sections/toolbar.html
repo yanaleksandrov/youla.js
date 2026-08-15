@@ -16,7 +16,7 @@
     Page
 
     <details class="editrix-details" @click.outside="$el.open = false">
-      <summary class="editrix-details-summary" v-text="zoom + '%'">100%</summary>
+      <summary class="editrix-details-summary" v-prop="zoom + '%'">100%</summary>
       <div class="editrix-details-items">
         <div class="editrix-details-item" @click="zoom = 75 , $el.closest('details').open = false" :class="zoom === 75 && 'active'">
           Zoom to 75%

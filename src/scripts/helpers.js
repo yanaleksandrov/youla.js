@@ -1,3 +1,7 @@
+export function isFormField(el) {
+  return ['input', 'select', 'textarea'].includes(el.tagName.toLowerCase());
+}
+
 export function domReady() {
   return new Promise(resolve => {
     if (document.readyState === 'loading') {

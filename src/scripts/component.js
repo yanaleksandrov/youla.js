@@ -1,4 +1,4 @@
-import { domWalk, debounce, getAttributes, saferEval, eventCreate, getNextModifier } from './helpers';
+import { domWalk, debounce, getAttributes, isFormField, saferEval, eventCreate, getNextModifier } from './helpers';
 import { updateAttribute } from './attributes';
 import { fetchProp, generateExpressionForProp } from './props';
 import { injectDataProviders } from './data';
@@ -76,9 +76,11 @@ export default class Component {
     domWalk(root, el => getAttributes(el).forEach(attribute => {
       let {directive, event, expression, modifiers, bind} = attribute;
 
-      // init events
+      // init events — two-way binding only applies to form fields; on other
+      // elements v-prop just writes textContent/innerHTML, so there's no
+      // input/change listener to register.
       let propExpression;
-      if (directive === 'v-prop') {
+      if (directive === 'v-prop' && isFormField(el)) {
         propExpression = generateExpressionForProp(el, data, attribute);
 
         // If the element we are binding to is a select, a radio, or checkbox we'll listen for the change event instead of the "input" event.

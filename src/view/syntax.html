@@ -63,16 +63,6 @@
       <td>Определяет компонент и его начальные данные</td>
     </tr>
     <tr>
-      <td><a href="/v-text"><code>v-text</code></a></td>
-      <td>—</td>
-      <td>Текстовое содержимое элемента, HTML-теги экранируются</td>
-    </tr>
-    <tr>
-      <td><a href="/v-html"><code>v-html</code></a></td>
-      <td>—</td>
-      <td>HTML-содержимое элемента без экранирования (только для доверенного контента)</td>
-    </tr>
-    <tr>
       <td><a href="/v-show"><code>v-show</code></a></td>
       <td><code>.lazy</code></td>
       <td>Переключает видимость элемента через <code>display</code>, не удаляя его из DOM</td>
@@ -84,8 +74,12 @@
     </tr>
     <tr>
       <td><a href="/v-prop"><code>v-prop</code></a></td>
-      <td><code>.number</code>, <code>.trim</code>, <code>.lazy</code>, <code>.local</code>, <code>.cookie</code></td>
-      <td>Двусторонняя привязка значения поля формы (<code>input</code>, <code>select</code>, <code>textarea</code>) к данным</td>
+      <td><code>.number</code>, <code>.trim</code>, <code>.lazy</code>, <code>.local</code>, <code>.cookie</code>, <code>.html</code></td>
+      <td>
+        Двусторонняя привязка к данным. На поле формы (<code>input</code>, <code>select</code>, <code>textarea</code>) —
+        через значение поля. На любом другом элементе — через содержимое: <code>textContent</code>
+        (или <code>innerHTML</code> с модификатором <code>.html</code>)
+      </td>
     </tr>
   </tbody>
 </table>

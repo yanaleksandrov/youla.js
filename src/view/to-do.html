@@ -15,7 +15,7 @@
       <li v-each="(task, index) in tasks">
         <label>
           <input type="checkbox" @change="task.checked = !task.checked; console.log(tasks)" :checked="task.checked">
-          <span v-text="task.title" :class="task.checked && 'strike'"></span>
+          <span v-prop="task.title" :class="task.checked && 'strike'"></span>
         </label>
         <button @click="tasks = tasks.filter((_, i) => i != index)">Remove</button>
       </li>

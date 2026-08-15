@@ -123,6 +123,10 @@
 &lt;button v-data @click.once=&quot;alert(&#039;Я появлюсь только один раз&#039;)&quot;&gt;Кликни&lt;/button&gt;
 </pre>
 
+<div class="demo">
+  <button v-data @click.once="alert('Я появлюсь только один раз')">Кликни</button>
+</div>
+
 <h3><code>.delay[.250ms]</code></h3>
 
 <p>
@@ -135,5 +139,9 @@
 <pre>
 &lt;input v-data @input.delay.500ms=&quot;alert(&#039;Я вызван&#039;)&quot;&gt;
 </pre>
+
+<div class="demo">
+  <input v-data @input.delay.500ms="alert('Я вызван')">
+</div>
 
 <%= _.template(require('./parts/footer.html').default)(data) %>

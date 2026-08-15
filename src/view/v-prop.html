@@ -6,9 +6,24 @@ title: "To Do List"
 <h1>v-prop</h1>
 
 <p>
-  Директива позволяет связать значения полей ввода <code>input</code>, <code>select</code>
-  и <code>textarea</code> к <code>v-data</code> без объявления их в директиве.
-  Такой подход позволяет не повторяться и сделать html представление более лаконичным. Сравните 2 по смыслу идентичных подхода:
+  Поведение директивы <code>v-prop</code> зависит от того, на каком элементе она объявлена:
+</p>
+
+<ul>
+  <li>
+    на поле формы (<code>input</code>, <code>select</code>, <code>textarea</code>) — это двусторонняя привязка:
+    значение поля попадает в данные компонента, а изменение данных обновляет поле;
+  </li>
+  <li>
+    на любом другом элементе — это тоже двусторонняя привязка, только вместо значения поля используется
+    содержимое: обычный текст через <code>textContent</code>, либо, с модификатором <code>.html</code>,
+    разметка через <code>innerHTML</code>.
+  </li>
+</ul>
+
+<p>
+  Такой подход позволяет не повторяться и сделать html представление более лаконичным — не нужно отдельной директивы,
+  чтобы просто показать значение поля рядом с ним. Сравните 2 по смыслу идентичных подхода:
 </p>
 
 <table>
@@ -17,13 +32,13 @@ title: "To Do List"
       <td>
         <pre>&lt;form v-data&gt;
   &lt;input type=&quot;text&quot; value=&quot;Hello&quot; v-prop=&quot;test&quot;&gt;
-  &lt;span v-text=&quot;test&quot;&gt;&lt;/span&gt;
+  &lt;span v-prop=&quot;test&quot;&gt;&lt;/span&gt;
 &lt;/form&gt;</pre>
       </td>
       <td>
         <pre>&lt;form v-data=&quot;{test: 'Hello'}&quot;&gt;
   &lt;input type=&quot;text&quot; value=&quot;Hello&quot; @keydown.delay.1ms=&quot;test = $el.value&quot;&gt;
-  &lt;span v-text=&quot;test&quot;&gt;&lt;/span&gt;
+  &lt;span v-prop=&quot;test&quot;&gt;&lt;/span&gt;
 &lt;/form&gt;</pre>
       </td>
     </tr>
@@ -32,58 +47,258 @@ title: "To Do List"
 
 <p>Во втором случае не требуется объявления в директиве <code>v-data</code> и события ввода.</p>
 
-<h2>Text inputs</h2>
+<h2>Вывод содержимого</h2>
+
+<p>
+  Если <code>v-prop</code> указан на элементе, который не является полем формы, значение связанной переменной
+  выводится как содержимое элемента, а не как атрибут <code>value</code>. Привязка при этом остаётся
+  двусторонней: начальное значение переменной (если она ещё не объявлена) читается из уже отрендеренного
+  содержимого элемента, а дальнейшие изменения переменной обновляют это содержимое.
+</p>
+
+<h3>Текст (по умолчанию)</h3>
+
+<p>
+  По умолчанию содержимое устанавливается через <code>textContent</code> — то есть HTML-теги внутри строки
+  экранируются и всегда отображаются как обычный текст, даже если в строке есть символы <code>&lt;</code> и
+  <code>&gt;</code>.
+</p>
+
+<p>
+  Привязка при этом работает в обе стороны: если переменная ещё не объявлена в <code>v-data</code>, Youla.js
+  не затирает уже отрендеренное содержимое элемента пустой строкой, а, наоборот, забирает его как начальное
+  значение переменной — точно так же, как для полей формы начальным значением служит атрибут <code>value</code>.
+  Дальше элемент уже реагирует на изменения этой переменной как обычно.
+</p>
+
+<pre>
+&lt;div v-data&gt;
+  &lt;button @click=&quot;username = 'Name'&quot;&gt;Изменить имя&lt;/button&gt;
+  Имя: &lt;strong v-prop=&quot;username&quot;&gt;Yan Aleksandrov&lt;/strong&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data>
+  <button @click="username = 'Name'">Изменить имя</button>
+  Имя: <strong v-prop="username">Yan Aleksandrov</strong>
+</div>
+
+<p>
+  Как и любая другая директива, <code>v-prop</code> реагирует на изменение данных — разметку обновлять вручную не нужно.
+</p>
+
+<pre>
+&lt;div v-data&gt;
+  &lt;button @click=&quot;count++&quot;&gt;Плюс&lt;/button&gt;
+  &lt;button @click=&quot;count--&quot;&gt;Минус&lt;/button&gt;
+  Значение: &lt;strong v-prop=&quot;count&quot;&gt;0&lt;/strong&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data>
+  <button @click="count++">Плюс</button>
+  <button @click="count--">Минус</button>
+  Значение: <strong v-prop="count">0</strong>
+</div>
+
+<p>
+  Поскольку теги экранируются, а не превращаются в реальные DOM-элементы, текстовый вывод безопасен для
+  отображения непроверенного, пользовательского контента.
+</p>
+
+<pre>
+&lt;div v-data=&quot;{ comment: '&lt;img src=x onerror=alert(1)&gt; Отличная статья!' }&quot;&gt;
+  &lt;div v-prop=&quot;comment&quot;&gt;&lt;/div&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data="{ comment: '<img src=x onerror=alert(1)> Отличная статья!' }">
+  <div v-prop="comment"></div>
+</div>
+
+<p>
+  Как и в любую другую директиву, в <code>v-prop</code> можно передать произвольное выражение, а не только имя
+  переменной — например, отформатировать число или собрать строку из нескольких полей.
+</p>
+
+<pre>
+&lt;div v-data=&quot;{ price: 4990 }&quot;&gt;
+  Цена: &lt;strong v-prop=&quot;&#x60;${price.toLocaleString('ru-RU')} ₽&#x60;&quot;&gt;&lt;/strong&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data="{ price: 4990 }">
+  Цена: <strong v-prop="`${price.toLocaleString('ru-RU')} ₽`"></strong>
+</div>
+
+<blockquote>
+  <p>Переносы строк и пробелы</p>
+  <p>
+    Текстовый вывод вставляет содержимое как обычный текстовый узел, поэтому символы перевода строки в связанной
+    строке не превращаются в <code>&lt;br&gt;</code> и никак не влияют на внешний вид без дополнительных css-правил.
+    Чтобы переносы строк отображались, добавьте элементу правило <code>white-space: pre-line</code> (или
+    <code>pre-wrap</code>, если нужно сохранить и пробелы).
+  </p>
+</blockquote>
+
+<h3>HTML (модификатор .html)</h3>
+
+<p>
+  Модификатор <code>.html</code> заставляет <code>v-prop</code> вставлять значение как HTML-код через
+  <code>innerHTML</code>, заменяя текущее содержимое элемента, вместо экранированного текста. Начальное значение
+  переменной при этом (если она ещё не объявлена в <code>v-data</code>) забирается из уже отрендеренного
+  <code>innerHTML</code> элемента — так же, как это описано для текстового вывода выше.
+</p>
+
+<blockquote>
+  <p>⚠️ Опасность XSS</p>
+  <p>
+    Используйте <code>.html</code> только для доверенного контента и никогда — для контента, предоставленного
+    пользователем. Динамический рендеринг HTML третьими лицами может легко привести к уязвимостям XSS.
+  </p>
+</blockquote>
+
+<pre>
+&lt;div v-data=&quot;{ username: &#039;&lt;strong&gt;Yan Aleksandrov&lt;/strong&gt;&#039; }&quot;&gt;
+  Имя: &lt;span v-prop.html=&quot;username&quot;&gt;&lt;/span&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data="{ username: '<strong>Yan Aleksandrov</strong>' }">
+  Имя: <span v-prop.html="username"></span>
+</div>
+
+<p>
+  Вывод реактивен, как и любая другая директива: содержимое элемента перерисовывается при каждом изменении
+  связанных данных. Это удобно, например, для предпросмотра форматированного текста прямо во время ввода —
+  в паре с двусторонней привязкой того же поля.
+</p>
+
+<pre>
+&lt;div v-data=&quot;{ markup: '&lt;strong&gt;Привет!&lt;/strong&gt; Это &lt;em&gt;живой&lt;/em&gt; предпросмотр.' }&quot;&gt;
+  &lt;textarea v-prop=&quot;markup&quot;&gt;&lt;/textarea&gt;
+  &lt;div v-prop.html=&quot;markup&quot;&gt;&lt;/div&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data="{ markup: '<strong>Привет!</strong> Это <em>живой</em> предпросмотр.' }">
+  <textarea v-prop="markup"></textarea>
+  <div v-prop.html="markup"></div>
+</div>
+
+<p>
+  Как и в любую другую директиву, в <code>v-prop.html</code> можно передать произвольное выражение — например,
+  собрать разметку из нескольких полей объекта прямо на месте.
+</p>
+
+<pre>
+&lt;div v-data=&quot;{
+  product: { name: 'Наушники', price: 4990, inStock: true }
+}&quot;&gt;
+  &lt;div v-prop.html=&quot;&#x60;
+    &lt;strong&gt;${product.name}&lt;/strong&gt;
+    &lt;span style=&#039;color:${product.inStock ? 'green' : 'crimson'}&#039;&gt;
+      ${product.inStock ? 'В наличии' : 'Нет в наличии'}
+    &lt;/span&gt; — ${product.price} ₽
+  &#x60;&quot;&gt;&lt;/div&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data="{
+  product: { name: 'Наушники', price: 4990, inStock: true }
+}">
+  <div v-prop.html="`
+    <strong>${product.name}</strong>
+    <span style='color:${product.inStock ? 'green' : 'crimson'}'>
+      ${product.inStock ? 'В наличии' : 'Нет в наличии'}
+    </span> — ${product.price} ₽
+  `"></div>
+</div>
+
+<h4>Вложенные директивы Youla.js не обрабатываются</h4>
+
+<p>
+  <code>v-prop.html</code> лишь вставляет строку через <code>innerHTML</code> — он не запускает повторную
+  инициализацию компонента для нового содержимого. Если вставленная строка содержит атрибуты вроде
+  <code>v-prop</code> или <code>v-each</code>, они останутся в разметке как есть, никак не вычисляясь: ниже вы
+  увидите буквальный текст <code>{{ user.name }}</code>, а не имя пользователя.
+</p>
+
+<pre>
+&lt;div v-data=&quot;{ user: { name: 'Ian' } }&quot;&gt;
+  &lt;div v-prop.html=&quot;&#x60;&lt;span v-prop=&#039;user.name&#039;&gt;{{ user.name }}&lt;/span&gt;&#x60;&quot;&gt;&lt;/div&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data="{ user: { name: 'Ian' } }">
+  <div v-prop.html="`<span v-prop='user.name'>{{ user.name }}</span>`"></div>
+</div>
+
+<p>
+  Если вставленный фрагмент должен быть по-настоящему интерактивным, оберните его в собственный элемент с
+  атрибутом <code>v-data</code> — Youla.js подхватит его отдельно и проинициализирует как самостоятельный
+  компонент, как только он появится в DOM.
+</p>
+
+<h2>Привязка полей форм</h2>
+
+<p>
+  На полях ввода <code>input</code>, <code>select</code> и <code>textarea</code> <code>v-prop</code> работает
+  как двусторонняя привязка: значение поля попадает в данные компонента при вводе, а изменение данных обновляет поле.
+</p>
+
+<h3>Text inputs</h3>
 
 <pre>
 &lt;form v-data&gt;
   &lt;input v-prop=&quot;message&quot; type=&quot;text&quot;&gt;
-  &lt;span v-text=&quot;message&quot;&gt;&lt;/span&gt;
+  &lt;span v-prop=&quot;message&quot;&gt;&lt;/span&gt;
 &lt;/form&gt;
 </pre>
 
 <form class="demo" v-data>
   <input v-prop="message" type="text">
-  <span v-text="message"></span>
+  <span v-prop="message"></span>
 </form>
 
-<h2>Textarea inputs</h2>
+<h3>Textarea inputs</h3>
 
 <pre>
 &lt;form v-data&gt;
   &lt;textarea v-prop=&quot;message&quot;&gt;&lt;/textarea&gt;
-  &lt;span v-text=&quot;message&quot;&gt;&lt;/span&gt;
+  &lt;span v-prop=&quot;message&quot;&gt;&lt;/span&gt;
 &lt;/form&gt;
 </pre>
 
 <form class="demo" v-data>
   <textarea v-prop="message"></textarea>
-  <span v-text="message"></span>
+  <span v-prop="message"></span>
 </form>
 
-<h2>Checkbox inputs</h2>
+<h3>Checkbox inputs</h3>
 
-<h3>Одиночный checkbox с логическим значением</h3>
+<h4>Одиночный checkbox с логическим значением</h4>
 
 <pre>
 &lt;form v-data&gt;
   &lt;input type=&quot;checkbox&quot; id=&quot;checkbox&quot; v-prop=&quot;show&quot;&gt;
-  &lt;label for=&quot;checkbox&quot; v-text=&quot;show&quot;&gt;&lt;/label&gt;
+  &lt;label for=&quot;checkbox&quot; v-prop=&quot;show&quot;&gt;&lt;/label&gt;
 &lt;/form&gt;
 </pre>
 
 <form class="demo" v-data>
   <input type="checkbox" id="checkbox" v-prop="show">
-  <label for="checkbox" v-text="show"></label>
+  <label for="checkbox" v-prop="show"></label>
 </form>
 
-<h3>Несколько checkbox, привязанных к массиву</h3>
+<h4>Несколько checkbox, привязанных к массиву</h4>
 
 <pre>
 &lt;form v-data&gt;
   &lt;input type=&quot;checkbox&quot; value=&quot;red&quot; v-prop=&quot;colors&quot;&gt;
   &lt;input type=&quot;checkbox&quot; value=&quot;orange&quot; v-prop=&quot;colors&quot;&gt;
   &lt;input type=&quot;checkbox&quot; value=&quot;yellow&quot; v-prop=&quot;colors&quot;&gt;
-  Colors: &lt;span v-text=&quot;colors&quot;&gt;&lt;/span&gt;
+  Colors: &lt;span v-prop=&quot;colors&quot;&gt;&lt;/span&gt;
 &lt;/form&gt;
 </pre>
 
@@ -91,28 +306,28 @@ title: "To Do List"
   <input type="checkbox" value="red" v-prop="colors">
   <input type="checkbox" value="orange" v-prop="colors">
   <input type="checkbox" value="yellow" v-prop="colors">
-  Colors: <span v-text="colors"></span>
+  Colors: <span v-prop="colors"></span>
 </form>
 
-<h2>Radio кнопки</h2>
+<h3>Radio кнопки</h3>
 
 <pre>
 &lt;form v-data&gt;
   &lt;input type=&quot;radio&quot; value=&quot;yes&quot; v-prop=&quot;answer&quot;&gt;
   &lt;input type=&quot;radio&quot; value=&quot;no&quot; v-prop=&quot;answer&quot;&gt;
-  Answer: &lt;span v-text=&quot;answer&quot;&gt;&lt;/span&gt;
+  Answer: &lt;span v-prop=&quot;answer&quot;&gt;&lt;/span&gt;
 &lt;/form&gt;
 </pre>
 
 <form class="demo" v-data>
   <input type="radio" value="yes" v-prop="answer">
   <input type="radio" value="no" v-prop="answer">
-  Answer: <span v-text="answer"></span>
+  Answer: <span v-prop="answer"></span>
 </form>
 
-<h2>Выпадающий список select</h2>
+<h3>Выпадающий список select</h3>
 
-<h3>Одиночный выбор</h3>
+<h4>Одиночный выбор</h4>
 
 <pre>
 &lt;form v-data&gt;
@@ -122,7 +337,7 @@ title: "To Do List"
     &lt;option&gt;Yellow&lt;/option&gt;
   &lt;/select&gt;
 
-  Color: &lt;span v-text=&quot;color&quot;&gt;&lt;/span&gt;
+  Color: &lt;span v-prop=&quot;color&quot;&gt;&lt;/span&gt;
 &lt;/form&gt;
 </pre>
 
@@ -133,10 +348,10 @@ title: "To Do List"
     <option>Yellow</option>
   </select>
 
-  Color: <span v-text="color"></span>
+  Color: <span v-prop="color"></span>
 </form>
 
-<h3>Множественный выбор</h3>
+<h4>Множественный выбор</h4>
 
 <pre>
 &lt;form v-data&gt;
@@ -146,7 +361,7 @@ title: "To Do List"
     &lt;option&gt;Yellow&lt;/option&gt;
   &lt;/select&gt;
 
-  Colors: &lt;span v-text=&quot;color&quot;&gt;&lt;/span&gt;
+  Colors: &lt;span v-prop=&quot;color&quot;&gt;&lt;/span&gt;
 &lt;/form&gt;
 </pre>
 
@@ -157,24 +372,24 @@ title: "To Do List"
     <option>Yellow</option>
   </select>
 
-  Colors: <span v-text="color"></span>
+  Colors: <span v-prop="color"></span>
 </form>
 
-<h2>Диапазон inputs</h2>
+<h3>Диапазон inputs</h3>
 
 <pre>
 &lt;form v-data&gt;
   &lt;input type=&quot;range&quot; v-prop=&quot;range&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.1&quot;&gt;
-  &lt;span v-text=&quot;range&quot;&gt;&lt;/span&gt;
+  &lt;span v-prop=&quot;range&quot;&gt;&lt;/span&gt;
 &lt;/form&gt;
 </pre>
 
 <form class="demo" v-data>
   <input type="range" v-prop="range" min="0" max="1" step="0.1">
-  <span v-text="range"></span>
+  <span v-prop="range"></span>
 </form>
 
-<h2>Вложенные свойства</h2>
+<h3>Вложенные свойства</h3>
 
 <p>Youla.js поддерживает работу свойств в "dot" нотации любой вложенности, например <code>content.title.color</code>.</p>
 
@@ -209,7 +424,7 @@ title: "To Do List"
 </pre>
 
 <form class="demo" v-data>
-  <code>https://site.com/<span v-text="`${terms.lvl1 && terms.lvl1 + '/'}`"></span><span v-text="`${terms.lvl2 && terms.lvl2 + '/'}`"></span>product-slug</code>
+  <code>https://site.com/<span v-prop="`${terms.lvl1 && terms.lvl1 + '/'}`"></span><span v-prop="`${terms.lvl2 && terms.lvl2 + '/'}`"></span>product-slug</code>
   <ul>
     <li>
       <label><input type="radio" value="electronic" v-prop="terms.lvl1" @click="$el.checked && (terms = {lvl1: '', lvl2: ''})"> Electronic2</label>
@@ -235,6 +450,14 @@ title: "To Do List"
 
 <h2>Модификаторы</h2>
 
+<p><code>.html</code></p>
+
+<p>
+  Действует только на элементах, не являющихся полями формы: заставляет <code>v-prop</code> выводить значение
+  как разметку через <code>innerHTML</code> вместо экранированного текста. Подробнее — в разделе
+  «Вывод содержимого» выше.
+</p>
+
 <p><code>.number</code></p>
 
 <p>
@@ -252,7 +475,7 @@ title: "To Do List"
 
 <form class="demo" v-data>
   <input type="text" v-prop.trim="name">
-  <div v-text="name"></div>
+  <div v-prop="name"></div>
 </form>
 
 <p>
@@ -261,7 +484,7 @@ title: "To Do List"
 
 <form class="demo" v-data>
   <input type="text" v-prop.lazy.trim="name">
-  <div v-text="name"></div>
+  <div v-prop="name"></div>
 </form>
 
 <p><code>.local</code> и <code>.cookie</code></p>
@@ -278,22 +501,22 @@ title: "To Do List"
 &lt;form v-data&gt;
   &lt;div&gt;Сохранение в local storage&lt;/div&gt;
   &lt;input type=&quot;text&quot; v-prop.local=&quot;local&quot;&gt;
-  &lt;div v-text=&quot;local&quot;&gt;&lt;/div&gt;
+  &lt;div v-prop=&quot;local&quot;&gt;&lt;/div&gt;
   &lt;br&gt;
   &lt;div&gt;Сохранение в куках&lt;/div&gt;
   &lt;input type=&quot;text&quot; v-prop.cookie=&quot;cookie&quot;&gt;
-  &lt;div v-text=&quot;cookie&quot;&gt;&lt;/div&gt;
+  &lt;div v-prop=&quot;cookie&quot;&gt;&lt;/div&gt;
 &lt;/form&gt;
 </pre>
 
 <form class="demo" v-data>
   <div>Сохранение в local storage</div>
   <input type="text" v-prop.local="firstName">
-  <div v-text="firstName"></div>
+  <div v-prop="firstName"></div>
   <br>
   <div>Сохранение в куках</div>
   <input type="text" v-prop.cookie="lastName">
-  <div v-text="lastName"></div>
+  <div v-prop="lastName"></div>
 </form>
 
 <%= _.template(require('./parts/footer.html').default)(data) %>

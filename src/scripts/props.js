@@ -1,18 +1,37 @@
 import {
   domWalk,
   getAttributes,
+  isFormField,
   setNestedObjectValue,
   getNestedObjectValue,
   saferEval
 } from './helpers';
 import { storage, isStorageModifier, getStorageType, castToType } from './storage';
 
+// only a plain variable/dot-path can be hydrated back into data — anything
+// else (template literals, string/array literals, method calls...) is a
+// read-only display expression, so hydrating it would just pollute data
+// with a garbage key built from its first "." split.
+const isBindablePath = expression => /^[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*$/.test(expression.trim());
+
 export function fetchProp(rootElement, data) {
   domWalk(rootElement, el => getAttributes(el).filter(({directive}) => directive === 'v-prop').forEach(attribute => {
     let {expression, modifiers} = attribute;
 
-    // support directive just for form fields
-    if (!['input', 'select', 'textarea'].includes(el.tagName.toLowerCase())) {
+    // on anything other than a form field there's no user input to read, so
+    // just seed data from the element's pre-rendered content when it's
+    // missing — the same "DOM is the source of truth until data says
+    // otherwise" idea used below for form fields — so reactive updates can
+    // take over from there.
+    if (!isFormField(el)) {
+      if (isBindablePath(expression)) {
+        let [key, ...prop] = expression.split('.');
+
+        if (data[key] === undefined) {
+          data[key] = setNestedObjectValue(prop, modifiers.includes('html') ? el.innerHTML : el.textContent);
+        }
+      }
+
       return;
     }
 

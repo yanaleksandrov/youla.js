@@ -137,45 +137,8 @@
   </p>
 </blockquote>
 
-<h2>Модификаторы</h2>
-
-<p><code>.lazy</code></p>
-
 <p>
-  Не трогает состояние элемента при инициализации компонента — <code>v-show</code> начинает
-  переключать его только после изменения привязанных данных.
-</p>
-
-<p>
-  Используйте, если исходная видимость уже корректно выставлена на сервере (инлайн-стилем или
-  атрибутом <code>hidden</code>) — так вы полностью избежите мерцания.
-</p>
-
-<pre>
-&lt;div v-data=&quot;{ open: false }&quot;&gt;
-  &lt;button type=&quot;button&quot; @click=&quot;open = true&quot;&gt;Показать&lt;/button&gt;
-
-  &lt;div v-show.lazy=&quot;open&quot; hidden&gt;
-    Этот блок сервер уже скрыл — Youla.js не тронет его до изменения &quot;open&quot;.
-  &lt;/div&gt;
-&lt;/div&gt;
-</pre>
-
-<div class="demo" v-data="{ open: false }">
-  <button type="button" @click="open = true">Показать</button>
-
-  <div v-show.lazy="open" hidden>
-    Этот блок сервер уже скрыл — Youla.js не тронет его до изменения "open".
-  </div>
-</div>
-
-<p>
-  У <a href="/v-each"><code>v-each</code></a> есть такой же модификатор <code>.lazy</code> — для
-  списков, отрисованных сервером.
-</p>
-
-<p>
-  А если <code>v-show</code> нужно переключать вместе с другими директивами и событиями как
+  Если <code>v-show</code> нужно переключать вместе с другими директивами и событиями как
   единый набор, посмотрите <a href="/v-bind"><code>v-bind</code></a>.
 </p>
 

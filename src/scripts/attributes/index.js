@@ -13,8 +13,19 @@ import { setStyles } from './styles';
  * Youla.directives/Youla.methods.
  */
 
-// Resolves what "value" means for a given attribute/element pair, so callers
-// (attribute binding, v-prop) never need to special-case el.type themselves.
+/**
+ * Writes a value onto an element for a given attribute/property name, resolving
+ * what "value" actually means for that pair so callers (attribute binding,
+ * v-prop) never need to special-case el.type themselves. Handles form control
+ * values (radio, checkbox, select, plain inputs), "class" and "style"
+ * (delegated to setClasses/setStyles, undoing their previous call first),
+ * boolean HTML attributes (removed when falsy), and falls back to a plain
+ * setAttribute for anything else.
+ *
+ * @param {HTMLElement} el - The element to update.
+ * @param {string} name - The attribute/property name ("value", "class", "style", or any other HTML attribute).
+ * @param {*} value - The value to apply; its shape depends on "name" (e.g. array/object for "class"/"style").
+ */
 export function updateAttribute(el, name, value) {
   if (name === 'value') {
     if (el.type === 'radio') {

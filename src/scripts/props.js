@@ -8,6 +8,18 @@ import {
 } from './helpers';
 import { storage, isStorageModifier, getStorageType, castToType } from './storage';
 
+/**
+ * Prepares every `v-prop`-bound form field under `rootElement` before the
+ * component's data is wrapped in reactivity: ensures each field has a `name`,
+ * seeds a default value into `data` for any property that doesn't exist yet,
+ * evaluates the field's current DOM value into `data`, and — if `.local` or
+ * `.cookie` is present — overwrites that value with whatever was persisted
+ * from a previous visit.
+ *
+ * @param {HTMLElement} rootElement - The component's root element.
+ * @param {Object} data - The component's raw data object, mutated in place.
+ * @returns {Object} `data`, for convenience (it's also mutated directly).
+ */
 export function fetchProp(rootElement, data) {
   domWalk(rootElement, el => getAttributes(el).filter(({directive}) => directive === 'v-prop').forEach(attribute => {
     let {expression, modifiers} = attribute;
@@ -52,6 +64,17 @@ export function fetchProp(rootElement, data) {
   return data;
 }
 
+/**
+ * Builds the assignment expression used to write a `v-prop`-bound field's
+ * current DOM value onto `$data.<expression>`, accounting for the element's
+ * type (checkbox array-toggle vs. plain boolean, radio, multi-select) and
+ * the `.number`/`.trim` modifiers.
+ *
+ * @param {HTMLElement} el - The bound form field (input, select, or textarea).
+ * @param {Object} data - The component's data object, read to resolve the current bound value.
+ * @param {Object} attribute - The parsed `v-prop` attribute descriptor (expression, modifiers).
+ * @returns {string} An expression string, e.g. `"$data.count = $el.value"`, ready for saferEval.
+ */
 export function generateExpressionForProp(el, data, attribute) {
   let {expression, modifiers} = attribute;
 

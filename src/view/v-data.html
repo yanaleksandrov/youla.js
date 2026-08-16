@@ -55,7 +55,7 @@ title: "v-data"
     </tr>
     <tr>
       <td>Время жизни</td>
-      <td>Пока пользователь сам не очистит хранилище</td>
+      <td>Управляется явно; без указания срока хранится, пока пользователь не очистит хранилище</td>
       <td>Управляется явно; без указания срока пропадает вместе с закрытием вкладки</td>
     </tr>
     <tr>
@@ -79,6 +79,75 @@ title: "v-data"
 <p>
   Cookie уезжают с каждым запросом, поэтому не храните в них ничего объёмного вроде
   списка задач — оставьте место для короткого флага или идентификатора.
+</p>
+
+<h3>Срок хранения</h3>
+
+<p>
+  Оба модификатора принимают необязательную длительность сразу за собой:
+  <code>.cookie.30d</code> или <code>.local.1y</code>. Она определяет, сколько времени
+  хранить данные перед автоматическим удалением.
+</p>
+
+<p>
+  Число и буква идут слитно: <code>y</code> — годы, <code>m</code> — месяцы,
+  <code>d</code> — дни, <code>h</code> — часы, <code>i</code> — минуты, <code>s</code> — секунды.
+  Например, <code>90d</code> — девяносто дней, <code>12h</code> — двенадцать часов.
+</p>
+
+<p>
+  Без указания длительности cookie ведёт себя как сессионная — исчезает при закрытии
+  вкладки. <code>localStorage</code> без длительности хранится, пока пользователь не
+  очистит его сам — как и раньше.
+</p>
+
+<pre>
+&lt;div v-data.local.30d=&quot;{ theme: 'light' }&quot;&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;theme = theme === 'light' ? 'dark' : 'light'&quot;&gt;
+    Переключить тему
+  &lt;/button&gt;
+  &lt;p&gt;Тема: &lt;span v-text=&quot;theme&quot;&gt;&lt;/span&gt; — хранится в localStorage 30 дней.&lt;/p&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data.local.30d="{ theme: 'light' }">
+  <button type="button" @click="theme = theme === 'light' ? 'dark' : 'light'">
+    Переключить тему
+  </button>
+  <p>Тема: <span v-text="theme"></span> — хранится в localStorage 30 дней.</p>
+</div>
+
+<pre>
+&lt;div v-data.cookie.1y=&quot;{ locale: 'ru' }&quot;&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;locale = locale === 'ru' ? 'en' : 'ru'&quot;&gt;
+    Сменить язык
+  &lt;/button&gt;
+  &lt;p&gt;Язык: &lt;span v-text=&quot;locale&quot;&gt;&lt;/span&gt; — хранится в cookie год, сервер тоже его увидит.&lt;/p&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data.cookie.1y="{ locale: 'ru' }">
+  <button type="button" @click="locale = locale === 'ru' ? 'en' : 'ru'">
+    Сменить язык
+  </button>
+  <p>Язык: <span v-text="locale"></span> — хранится в cookie год, сервер тоже его увидит.</p>
+</div>
+
+<blockquote>
+  <p>Как это устроено для localStorage</p>
+  <p>
+    У <code>localStorage</code> нет собственного механизма истечения срока — в отличие
+    от cookie, браузер не удаляет записи сам.
+  </p>
+  <p>
+    Поэтому при указании длительности Youla.js хранит рядом со значением отметку времени
+    и проверяет её при каждом чтении, удаляя запись, если срок уже прошёл.
+  </p>
+</blockquote>
+
+<p>
+  Та же длительность работает и у <a href="/v-prop"><code>v-prop</code></a> — например,
+  <code>v-prop.cookie.30d="name"</code> сохранит значение поля на тридцать дней.
 </p>
 
 <h3>Принять всплывающее окно с файлами cookie</h3>

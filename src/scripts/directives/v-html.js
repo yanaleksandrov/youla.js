@@ -1,5 +1,15 @@
 import { directive } from '../directives';
 
+/**
+ * Sets the element's HTML content from the bound expression, without
+ * escaping — unlike v-text, markup in the value is parsed into real DOM
+ * nodes. Only use this with trusted content.
+ *
+ * @param {HTMLElement} el
+ * @param {*} output - the directive attribute's expression, evaluated against the component's data.
+ * @param {object} attribute - the parsed attribute descriptor (directive name, modifiers, raw expression, etc. — see parseAttribute in ../helpers).
+ * @param {Component} component - the owning component instance.
+ */
 directive('html', (el, output, attribute, component) => {
   output = output ?? '';
 

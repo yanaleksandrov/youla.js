@@ -1,14 +1,16 @@
 import { directive } from '../directives';
 
+/**
+ * Toggles the element's visibility via its inline `display` style, without
+ * removing it from the DOM. Also keeps the `hidden` attribute in sync so the
+ * "author `hidden` up front" flicker-prevention pattern keeps working.
+ *
+ * @param {HTMLElement} el
+ * @param {*} output - the directive attribute's expression, evaluated against the component's data; truthy shows the element.
+ * @param {object} attribute - the parsed attribute descriptor (directive name, modifiers, raw expression, etc. — see parseAttribute in ../helpers).
+ * @param {Component} component - the owning component instance.
+ */
 directive('show', (el, output, attribute, component) => {
-  // Trust whatever the server already rendered on first paint (no flicker) and
-  // only start actively toggling once bound data actually changes.
-  if (attribute.modifiers.includes('lazy')) {
-    el.setAttribute(attribute.directive, attribute.expression);
-    el.removeAttribute(attribute.name);
-    return;
-  }
-
   // Cache the element's original inline "display" once, before we ever touch it,
   // so showing it back doesn't force "block" over an inline flex/grid/etc value.
   if (el._x_originalDisplay === undefined) {

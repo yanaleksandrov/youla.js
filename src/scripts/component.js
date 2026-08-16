@@ -4,10 +4,16 @@ import { fetchProp, generateExpressionForProp } from './props';
 import { injectDataProviders } from './data';
 import { storage, isStorageModifier, getStorageType, computeExpires } from './storage';
 
-// Arrow functions and method shorthand both lack a "prototype", so that can't
-// distinguish them — their source text can. An arrow's "=>" sits before its
-// body's opening "{" (or there's no "{" at all, for a concise body); a
-// function/method declaration never has "=>" in that position.
+/**
+ * Determines whether a function is an arrow function, by inspecting its source
+ * text rather than its shape — arrow functions and method shorthand both lack a
+ * "prototype", so that alone can't tell them apart. An arrow's "=>" sits before
+ * its body's opening "{" (or there's no "{" at all, for a concise body); a
+ * function/method declaration never has "=>" in that position.
+ *
+ * @param {Function} fn - The function to inspect.
+ * @returns {boolean} True if "fn" is an arrow function.
+ */
 function isArrowFunction(fn) {
   const source = Function.prototype.toString.call(fn);
 
@@ -22,6 +28,15 @@ function isArrowFunction(fn) {
 }
 
 export default class Component {
+  /**
+   * Builds a component rooted at "el": reads its "v-data" expression and
+   * modifiers, evaluates the initial reactive data (merging in registered data
+   * providers and current form field values), rehydrates it from storage if
+   * ".local"/".cookie" was used, wraps it in an observable proxy, and performs
+   * the first render.
+   *
+   * @param {HTMLElement} el - The element carrying the "v-data" attribute.
+   */
   constructor(el) {
     let dataProviderContext = injectDataProviders();
 
@@ -30,9 +45,13 @@ export default class Component {
     // root rather than assuming the attribute is literally named "v-data".
     const { expression, modifiers } = getAttributes(el).find(({ directive }) => directive === 'v-data') || { expression: '{}', modifiers: [] };
 
-    this.root        = el;
-    this.name        = expression.trim();
-    this.storageType = isStorageModifier(modifiers) ? getStorageType(modifiers) : null;
+    this.root          = el;
+    this.name          = expression.trim();
+    this.storageType   = isStorageModifier(modifiers) ? getStorageType(modifiers) : null;
+    // A duration modifier (e.g. "v-data.cookie.30d") sits right after "cookie"/"local" in the
+    // modifier list — same convention as "v-prop". Omitting it means a session cookie (or, for
+    // localStorage, no expiration at all), same as writing no duration on "v-prop".
+    this.storageExpire = this.storageType ? getNextModifier(modifiers, this.storageType) : null;
 
     this.rawData = saferEval(expression || '{}', dataProviderContext);
     this.rawData = fetchProp(el, this.rawData);
@@ -56,12 +75,32 @@ export default class Component {
     this.initialize(el);
   }
 
+  /**
+   * Writes the component's raw data back to storage, if "v-data" carries a
+   * ".local"/".cookie" modifier — a no-op otherwise. Called after every
+   * reactive write, so persisted state always matches what's currently rendered.
+   */
   persist() {
     if (this.storageType) {
-      storage.set(`v-data:${this.name}`, this.rawData, this.storageType, { path: '/', secure: true, expires: computeExpires('365d') });
+      storage.set(`v-data:${this.name}`, this.rawData, this.storageType, { path: '/', secure: true, expires: computeExpires(this.storageExpire) });
     }
   }
 
+  /**
+   * Evaluates an expression (or calls a function) against the component's
+   * data, tracking which top-level data properties were actually read along
+   * the way via a dependency-tracking proxy — so refresh() can later tell
+   * whether this exact binding needs to re-run after a given property changes.
+   *
+   * @param {string|Function} expressionOrFn - A JS expression string, or a
+   *   function (e.g. a "v-bind" entry given as a method) to call with the
+   *   proxy as "this".
+   * @param {Object} [additionalHelperVariables] - Extra variables available to
+   *   the expression (e.g. "v-each" loop variables) alongside the component's
+   *   data.
+   * @returns {{output: *, deps: string[]}} The evaluated result and the list
+   *   of property names it read.
+   */
   evaluate(expressionOrFn, additionalHelperVariables) {
     let deps = [];
 
@@ -102,17 +141,22 @@ export default class Component {
     return { output, deps };
   }
 
-  // Expands "v-bind" into the individual directive/event/bind entries its
-  // expression resolves to, so both initialize() and refresh() dispatch them
-  // through the exact same logic as if they'd been written directly in HTML.
-  // The expression is just a normal v-data property (e.g. v-bind="trigger"
-  // referencing "trigger" from Youla.data('dropdown', () => ({ trigger: {...} }))),
-  // resolved the same way any other expression reads from the component's data —
-  // no separate registry involved.
-  // "additionalHelperVariables" is never threaded in from the caller — it's
-  // derived here from the element itself (see getForData), so every caller
-  // automatically gets the right "v-each" loop scope without having to
-  // remember to pass it along.
+  /**
+   * Reads every directive/event/bind attribute off "el", expanding any
+   * "v-bind" entry into the individual directive/event/bind entries its
+   * expression resolves to — so initialize() and refresh() dispatch a
+   * "v-bind" exactly as if its entries had been written directly in the
+   * markup, through the same logic. The expression is just a normal v-data
+   * property (e.g. v-bind="trigger" referencing "trigger" from
+   * Youla.data('dropdown', () => ({ trigger: {...} }))), resolved the same
+   * way any other expression reads from the component's data — no separate
+   * registry involved. "additionalHelperVariables" is derived here from the
+   * element itself (see getForData) rather than threaded in from the caller,
+   * so every caller automatically gets the right "v-each" loop scope.
+   *
+   * @param {HTMLElement} el - The element to read attributes from.
+   * @returns {Array<Object>} The resolved list of attribute descriptors.
+   */
   resolveAttributes(el) {
     const self = this;
     const additionalHelperVariables = getForData(el);
@@ -177,6 +221,16 @@ export default class Component {
     });
   }
 
+  /**
+   * Wraps a plain data object (and, recursively, any nested object it
+   * contains) in a Proxy that tracks writes: each successful "set" queues the
+   * changed property in "concernedData" and triggers a refresh (plus a
+   * persist, if storage is enabled) — turning plain property assignment into
+   * reactivity.
+   *
+   * @param {Object} data - The raw data object to make observable.
+   * @returns {Object} The observable (proxied) version of "data".
+   */
   wrapDataInObservable(data) {
     this.concernedData = [];
 
@@ -211,6 +265,13 @@ export default class Component {
     return makeObservable(data);
   }
 
+  /**
+   * Performs the component's first render: walks the DOM from "root", and for
+   * every element registers its event listeners and runs its directives (or
+   * updates its bound attribute) against the freshly evaluated data.
+   *
+   * @param {HTMLElement} root - The root element to walk and initialize.
+   */
   initialize(root) {
     const self = this;
 
@@ -261,11 +322,17 @@ export default class Component {
     });
   }
 
+  /**
+   * Re-evaluates every element's bindings and re-runs only those whose
+   * dependencies actually changed since the last flush — everything else is
+   * left untouched. Clears "concernedData" once the pass completes.
+   */
   refresh() {
     const self = this;
 
-    // use debounce for .outside modificator work
-    // TODO: check, maybe this problem can solve with other solution
+    // Debounced (and deferred with a 0ms delay) so several data writes in the
+    // same tick collapse into a single re-render, instead of walking the DOM
+    // once per write.
     debounce(() => {
       domWalk(self.root, el => {
         // An element rendered inside a "v-each" clone only carries its loop
@@ -303,8 +370,21 @@ export default class Component {
     }, 0)()
   }
 
+  /**
+   * Builds and attaches a DOM event listener for "@event" (or the synthetic
+   * event behind "v-prop"), wiring up whichever modifiers were used:
+   * retargeting to "window"/"document", "passive"/"capture" options, "delay",
+   * "prevent", "stop", "outside", key/system-key filters, "once", and the
+   * special "load"/"intersect" events.
+   *
+   * @param {HTMLElement} el - The element the listener conceptually belongs to.
+   * @param {string} event - The event name to listen for (e.g. "click", "load", "intersect").
+   * @param {string[]} modifiers - The attribute's modifiers, driving the behavior above.
+   * @param {string|Function} expression - The expression or function to run when the event fires.
+   */
   registerListener(el, event, modifiers, expression) {
-    // helper allows to add functionality to the listener's handler more flexibly in a "middleware" style.
+    // Lets each modifier below wrap the handler in its own middleware, in any
+    // combination, without the branches needing to know about each other.
     const wrapHandler = (callback, wrapper) => e => wrapper(callback, e);
 
     let target  = el;
@@ -396,6 +476,17 @@ export default class Component {
     target.addEventListener(event, handler, options);
   }
 
+  /**
+   * Runs an event handler: a function is called directly with the
+   * component's data as "this" (so writes to it trigger reactivity the same
+   * way a plain expression's writes would); a string expression is evaluated
+   * with the usual "$el"/"$event"/"$refs"/"$root", every registered method,
+   * and any enclosing "v-each" loop variables available to it.
+   *
+   * @param {string|Function} expressionOrFn - The handler to run.
+   * @param {Event} e - The DOM event that triggered the handler.
+   * @param {HTMLElement} target - The element the listener is attached to.
+   */
   runListenerHandler(expressionOrFn, e, target) {
     // A v-bind entry may hand back a method instead of an expression string
     // (e.g. "@click"() { this.open = true }) — call it directly, with "this"
@@ -424,18 +515,23 @@ export default class Component {
     }, true);
   }
 
+  /**
+   * Returns a Proxy standing in for "$refs": rather than caching elements up
+   * front, each property access walks the DOM on demand to find the element
+   * carrying a matching "v-ref" attribute, so it stays correct even if the
+   * DOM changes from outside the framework.
+   *
+   * @returns {Proxy} An object whose properties resolve to "v-ref" elements.
+   */
   getRefsProxy() {
     let self = this
 
-    // One of the goals of this project is to not hold elements in memory, but rather re-evaluate
-    // the DOM when the system needs something from it. This way, the framework is flexible and
-    // friendly to outside DOM changes from libraries like Vue.
-    // For this reason, I'm using an "on-demand" proxy to fake a "$refs" object.
     return new Proxy({}, {
       get(object, property) {
         let ref
 
-        // We can't just query the DOM because it's hard to filter out refs in nested components.
+        // domWalk instead of querySelector, since querySelector can't easily
+        // exclude "v-ref" elements belonging to a nested component.
         domWalk(self.root, el => (el.getAttribute('v-ref') === property ? (ref = el) : null));
 
         return ref

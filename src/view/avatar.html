@@ -6,10 +6,9 @@
 <h1>Загрузчик аватарки</h1>
 
 <p>
-  Форме профиля обычно нужен загрузчик фото: показать превью сразу после выбора файла, до всякой
+  Форме профиля обычно нужен загрузчик фото: показать превью сразу после выбора файла, до
   отправки на сервер, и чем-то заменить пустое место, пока файл не выбран — обычно инициалами
-  пользователя. Написанное вручную, это каждый раз одна и та же связка <code>FileReader</code>,
-  запасного состояния и очистки <code>input[type="file"]</code> по кнопке «Удалить».
+  пользователя.
 </p>
 
 <pre>
@@ -20,6 +19,7 @@ Youla.data('avatar', () =&gt; ({
     'v-prop': 'name',
   },
   picture: {
+    ':title': 'name',
     ':style': &quot;image &amp;&amp; `background-image:url(${image})`&quot;,
   },
   initials: {
@@ -70,7 +70,12 @@ Youla.data('avatar', () =&gt; ({
 </pre>
 
 <style>
-  .example-avatar { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; }
+  .example-avatar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+		column-gap: 1rem;
+  }
   .example-avatar .avatar-circle {
     display: flex;
     align-items: center;

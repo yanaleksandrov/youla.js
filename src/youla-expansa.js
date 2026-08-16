@@ -11,6 +11,7 @@ document.addEventListener('youla:init', ()=> {
       'v-prop': 'name',
     },
     picture: {
+      ':title': 'name',
       ':style': "image && `background-image:url(${image})`",
     },
     initials: {

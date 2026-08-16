@@ -6,19 +6,20 @@ title: "v-prop"
 <h1>v-prop</h1>
 
 <p>
-  Директива связывает значения полей <code>input</code>, <code>select</code> и <code>textarea</code>
-  с <a href="/v-data"><code>v-data</code></a> без явного объявления их в корневой директиве компонента. За этой лаконичностью стоит решение
-  сразу нескольких практических проблем.
+  Директива <code>v-prop</code> связывает поле формы — <code>input</code>, <code>select</code> или
+  <code>textarea</code> — с данными компонента <a href="/v-data"><code>v-data</code></a> одним
+  атрибутом, без ручного объявления значения и обработчика ввода.
 </p>
 
 <p>
-  <strong>Многословность.</strong> Без <code>v-prop</code> начальное значение поля пришлось бы объявлять
-  дважды — один раз атрибутом <code>value</code>/<code>checked</code> в самой разметке и ещё раз ключом
-  в <code>v-data</code>, — а затем вручную вешать слушатель <code>@input</code>/<code>@change</code>,
-  который читает <code>$el.value</code> (или <code>$el.checked</code>, выбранные <code>&lt;option&gt;</code>
-  и так далее — по-своему для каждого типа поля) и записывает это обратно в данные. <code>v-prop</code>
-  делает то же самое одним атрибутом, одинаково для текстовых полей, textarea, чекбоксов, радиокнопок
-  и select. Сравните 2 по смыслу идентичных подхода:
+  <strong>Меньше кода.</strong> Без <code>v-prop</code> значение пришлось бы объявлять дважды —
+  атрибутом <code>value</code>/<code>checked</code> в разметке и ключом в <code>v-data</code>.
+</p>
+
+<p>
+  А затем вручную вешать <code>@input</code>/<code>@change</code>, который читает
+  <code>$el.value</code> (или <code>$el.checked</code>, выбранные <code>&lt;option&gt;</code> —
+  по-своему для каждого типа поля) и пишет это в данные. Сравните два одинаковых по смыслу подхода:
 </p>
 
 <table>
@@ -43,22 +44,25 @@ title: "v-prop"
 <p>Во втором случае не требуется объявления в директиве <code>v-data</code> и события ввода.</p>
 
 <p>
-  <strong>Мерцание при загрузке.</strong> <code>v-prop</code> считывает текущее значение поля прямо из
-  уже отрисованной разметки в момент инициализации компонента — до того, как данные становятся
-  реактивными. Поэтому состояние в <code>v-data</code> с самого начала совпадает с тем, что видно на
-  экране, и корректировать нечего. При ручном подходе (второй столбец таблицы выше) значение объявлено
-  отдельно от атрибута <code>value</code> — стоит им разойтись, и всё, что ссылается на это свойство
-  (например, <code>&lt;span v-text=&quot;test&quot;&gt;</code>), на первом кадре покажет не то значение
-  и «дёрнется» на правильное только после первого события ввода.
+  <strong>Мерцание при загрузке.</strong> <code>v-prop</code> считывает значение поля прямо из уже
+  отрисованной разметки при инициализации компонента — до того, как данные становятся реактивными.
 </p>
 
 <p>
-  <strong>Различия между типами полей.</strong> Чекбоксы, радиокнопки, обычный и множественный
-  <code>select</code> по-разному хранят и меняют своё значение в DOM. <code>v-prop</code> сам определяет
-  тип поля и обрабатывает его соответствующим образом, поэтому не нужно писать отдельную логику
-  синхронизации для каждого вида поля. Модификаторы <code>.number</code> и <code>.trim</code> заодно
-  берут на себя приведение типов и очистку пробелов, а <code>.local</code>/<code>.cookie</code> —
-  сохранение и восстановление значения между перезагрузками страницы.
+  Поэтому состояние в <code>v-data</code> сразу совпадает с тем, что видно на экране. При ручном
+  подходе значение и атрибут <code>value</code> объявлены отдельно: стоит им разойтись — и зависящая
+  от них разметка на первом кадре покажет неверное значение.
+</p>
+
+<p>
+  <strong>Разные типы полей.</strong> Чекбоксы, радиокнопки и <code>select</code> по-разному хранят
+  своё значение в DOM. <code>v-prop</code> сам определяет тип поля и обрабатывает его — писать
+  отдельную логику синхронизации для каждого вида не нужно.
+</p>
+
+<p>
+  Модификаторы <code>.number</code> и <code>.trim</code> берут на себя приведение типов и очистку
+  пробелов, а <code>.local</code>/<code>.cookie</code> — сохранение значения между перезагрузками страницы.
 </p>
 
 <h2>Text inputs</h2>
@@ -205,18 +209,17 @@ title: "v-prop"
 
 <h2>Вложенные свойства</h2>
 
-<p>Youla.js поддерживает работу свойств в "dot" нотации любой вложенности, например <code>content.title.color</code>.</p>
+<p>Youla.js поддерживает свойства в dot-нотации любой вложенности, например <code>content.title.color</code>.</p>
 
 <p>
-  Вот пример использования dot нотации для выбора вложенных категорий товара, которые используются при формировании ЧПУ.
-
-  Наша задача — гарантировать, что порядок категорий всегда остается одинаковым, чтобы URL для одного и того же товара всегда был единственным и предсказуемым.
+  Ниже — выбор категории и подкатегории товара через dot-нотацию: сначала раздел, затем подраздел.
+  Так формируется предсказуемый URL страницы товара.
 </p>
 
 <pre>
 &lt;ul&gt;
   &lt;li&gt;
-    &lt;label&gt;&lt;input type=&quot;radio&quot; value=&quot;electronic&quot; v-prop=&quot;terms.lvl1&quot; @click=&quot;$el.checked &amp;&amp; (terms = {lvl1: &#039;&#039;, lvl2: &#039;&#039;})&quot;&gt; Electronic2&lt;/label&gt;
+    &lt;label&gt;&lt;input type=&quot;radio&quot; value=&quot;electronic&quot; v-prop=&quot;terms.lvl1&quot; @click=&quot;$el.checked &amp;&amp; (terms = {lvl1: &#039;&#039;, lvl2: &#039;&#039;})&quot;&gt; Electronics&lt;/label&gt;
     &lt;ul&gt;
       &lt;li&gt;
         &lt;label&gt;&lt;input type=&quot;radio&quot; value=&quot;phone&quot; v-prop=&quot;terms.lvl2&quot; @click=&quot;$el.checked &amp;&amp; (terms = {lvl1: &#039;electronic&#039;, lvl2: &#039;&#039;})&quot;&gt; Phones&lt;/label&gt;
@@ -241,7 +244,7 @@ title: "v-prop"
   <code>https://site.com/<span v-text="`${terms.lvl1 && terms.lvl1 + '/'}`"></span><span v-text="`${terms.lvl2 && terms.lvl2 + '/'}`"></span>product-slug</code>
   <ul>
     <li>
-      <label><input type="radio" value="electronic" v-prop="terms.lvl1" @click="$el.checked && (terms = {lvl1: '', lvl2: ''})"> Electronic2</label>
+      <label><input type="radio" value="electronic" v-prop="terms.lvl1" @click="$el.checked && (terms = {lvl1: '', lvl2: ''})"> Electronics</label>
       <ul>
         <li>
           <label><input type="radio" value="phone" v-prop="terms.lvl2" @click="$el.checked && (terms = {lvl1: 'electronic', lvl2: ''})"> Phones</label>
@@ -267,8 +270,8 @@ title: "v-prop"
 <p><code>.number</code></p>
 
 <p>
-  По умолчанию любые данные, хранящиеся в свойстве через v-prop, сохраняются в виде строки.
-  Чтобы заставить Youla.js хранить значение как число в JavaScript, добавьте модификатор <code>.number</code>.
+  По умолчанию <code>v-prop</code> хранит значение поля как строку. Добавьте модификатор
+  <code>.number</code>, чтобы Youla.js приводила его к числу.
 </p>
 
 <pre>
@@ -286,9 +289,8 @@ title: "v-prop"
 <p><code>.trim</code></p>
 
 <p>
-  Используется для автоматического удаления начальных и конечных пробелов из вводимого значения.
-  Это полезно при работе с текстовыми полями, чтобы избежать лишних пробелов в пользовательском вводе.
-  В примере ниже модификатор trim исключает ввод любого пробела.
+  Убирает пробелы в начале и конце введённого значения — полезно для полей вроде email или логина,
+  где лишние пробелы мешают. В примере ниже пробел обрезается при каждом нажатии клавиши.
 </p>
 
 <pre>
@@ -304,7 +306,7 @@ title: "v-prop"
 </form>
 
 <p>
-  Если требуется удаление пробелов после завершения ввода, используй модификатор <code>.lazy</code>.
+  Если пробелы нужно убирать только после завершения ввода, добавьте модификатор <code>.lazy</code>.
 </p>
 
 <pre>
@@ -322,24 +324,24 @@ title: "v-prop"
 <p><code>.local</code> и <code>.cookie</code></p>
 
 <p>
-  Позволяют автоматически сохранять значение привязанного свойства в куках или локальном
-  хранилище и восстанавливать его при последующих загрузках страницы. Это удобно для хранения
-  пользовательских предпочтений, например, темы оформления, заполненных полей формы или других параметров.
-  Чем эти два хранилища отличаются по объёму и назначению и как выбрать между ними — на странице
-  <a href="/v-data">v-data</a>.
+  Сохраняют значение поля в localStorage или куках и восстанавливают его при следующей загрузке
+  страницы — удобно для пользовательских настроек, например темы оформления.
 </p>
 
-<p>В этом примере пользовательские данные будут сохранены в хранилище куки и localstorage.</p>
+<p>
+  Чем local storage и куки отличаются по объёму и назначению и как выбрать между ними —
+  на странице <a href="/v-data">v-data</a>.
+</p>
 
 <pre>
 &lt;form v-data&gt;
   &lt;div&gt;Сохранение в local storage&lt;/div&gt;
-  &lt;input type=&quot;text&quot; v-prop.local=&quot;local&quot;&gt;
-  &lt;div v-text=&quot;local&quot;&gt;&lt;/div&gt;
+  &lt;input type=&quot;text&quot; v-prop.local=&quot;firstName&quot;&gt;
+  &lt;div v-text=&quot;firstName&quot;&gt;&lt;/div&gt;
   &lt;br&gt;
   &lt;div&gt;Сохранение в куках&lt;/div&gt;
-  &lt;input type=&quot;text&quot; v-prop.cookie=&quot;cookie&quot;&gt;
-  &lt;div v-text=&quot;cookie&quot;&gt;&lt;/div&gt;
+  &lt;input type=&quot;text&quot; v-prop.cookie=&quot;lastName&quot;&gt;
+  &lt;div v-text=&quot;lastName&quot;&gt;&lt;/div&gt;
 &lt;/form&gt;
 </pre>
 

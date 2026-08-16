@@ -8,13 +8,29 @@ export function domReady() {
   })
 }
 
+// A directive's modifiers can live in its own attribute name ("v-data.local",
+// "v-data.cookie", ...) rather than in its value, so a plain hasAttribute(name)
+// check only ever matches the bare, unmodified form. Matching by directive
+// root instead means a new modifier never needs its own attribute check added
+// at every place that cares whether an element carries that directive at all.
+export function hasDirective(el, name) {
+  return [...el.attributes].some(({ name: attrName }) => attrName === name || attrName.startsWith(`${name}.`));
+}
+
+export function closestDirective(el, name) {
+  while (el && !hasDirective(el, name)) {
+    el = el.parentElement;
+  }
+  return el;
+}
+
 export function domWalk(el, callback) {
   callback(el);
 
   let node = el.firstElementChild;
 
   while (node) {
-    if (node.hasAttribute('v-data')) {
+    if (hasDirective(node, 'v-data')) {
       return;
     }
 
@@ -131,9 +147,43 @@ export function getNextModifier(modifiers, modifierAfter, defaultValue = '') {
   return modifiers[modifiers.indexOf(modifierAfter) + 1] || defaultValue;
 }
 
-// export function isEmpty(variable) {
-//   return variable === '' || variable === null || (Array.isArray(variable) && variable.length === 0) || (typeof variable === 'object' && Object.keys(variable).length === 0);
-// }
+// Common key names/combos, so "@keydown.enter" or "@keyup.ctrl.s" don't
+// require filtering "$event.key" by hand inside the expression (the only
+// option before this — see the ".escape" note on the modal example page).
+const KEY_ALIASES = {
+  enter: 'Enter', esc: 'Escape', escape: 'Escape', tab: 'Tab', space: ' ',
+  up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight',
+  delete: 'Delete', backspace: 'Backspace',
+};
+
+const SYSTEM_MODIFIER_KEYS = { ctrl: 'ctrlKey', alt: 'altKey', shift: 'shiftKey', meta: 'metaKey' };
+
+// Every other modifier Component#registerListener already gives dedicated
+// behavior to — whatever's left on a "@keydown.enter"-style attribute is a
+// key filter instead. Kept as a set here so a new behavior modifier only
+// needs to be added in one place to stay excluded from key matching.
+const BEHAVIOR_MODIFIERS = new Set(['window', 'document', 'passive', 'capture', 'delay', 'prevent', 'stop', 'outside', 'once']);
+
+export function isKeyModifier(modifier) {
+  return !BEHAVIOR_MODIFIERS.has(modifier) && !/^\d+m?s$/.test(modifier);
+}
+
+// True when the element has no key filter at all, or the fired event matches
+// every one of them — system keys (".ctrl") check the matching *Key flag,
+// named keys (".enter") and literal characters (".s") check "event.key".
+export function matchesKeyModifiers(e, modifiers) {
+  const keyModifiers = modifiers.filter(isKeyModifier);
+
+  return keyModifiers.every(modifier => {
+    if (modifier in SYSTEM_MODIFIER_KEYS) {
+      return e[SYSTEM_MODIFIER_KEYS[modifier]] === true;
+    }
+
+    const expected = KEY_ALIASES[modifier] || modifier;
+
+    return typeof e.key === 'string' && e.key.toLowerCase() === expected.toLowerCase();
+  });
+}
 
 /**
  * Create nested object form array.

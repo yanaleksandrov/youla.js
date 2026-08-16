@@ -1,7 +1,8 @@
-import { domWalk, debounce, getAttributes, getForData, parseAttribute, saferEval, eventCreate, getNextModifier } from './helpers';
+import { domWalk, debounce, getAttributes, getForData, parseAttribute, saferEval, eventCreate, getNextModifier, isKeyModifier, matchesKeyModifiers } from './helpers';
 import { updateAttribute } from './attributes';
 import { fetchProp, generateExpressionForProp } from './props';
 import { injectDataProviders } from './data';
+import { storage, isStorageModifier, getStorageType, computeExpires } from './storage';
 
 // Arrow functions and method shorthand both lack a "prototype", so that can't
 // distinguish them — their source text can. An arrow's "=>" sits before its
@@ -24,12 +25,41 @@ export default class Component {
   constructor(el) {
     let dataProviderContext = injectDataProviders();
 
-    this.root    = el;
-    this.rawData = saferEval(el.getAttribute('v-data') || '{}', dataProviderContext);
+    // Modifiers can only live in the attribute's own name ("v-data.local",
+    // "v-data.cookie"), never in its value, so find the entry by directive
+    // root rather than assuming the attribute is literally named "v-data".
+    const { expression, modifiers } = getAttributes(el).find(({ directive }) => directive === 'v-data') || { expression: '{}', modifiers: [] };
+
+    this.root        = el;
+    this.name        = expression.trim();
+    this.storageType = isStorageModifier(modifiers) ? getStorageType(modifiers) : null;
+
+    this.rawData = saferEval(expression || '{}', dataProviderContext);
     this.rawData = fetchProp(el, this.rawData);
-    this.data    = this.wrapDataInObservable(this.rawData);
+
+    // Rehydrate from whatever was persisted last time, on top of the fresh
+    // defaults the factory just produced — so new keys added to the factory
+    // later still show up for visitors with stale storage, and methods
+    // (which never survive JSON) are left alone by Object.assign since they
+    // simply aren't present on the parsed side.
+    if (this.storageType) {
+      const saved = storage.get(`v-data:${this.name}`, this.storageType);
+      if (saved) {
+        try {
+          Object.assign(this.rawData, typeof saved === 'string' ? JSON.parse(saved) : saved);
+        } catch (error) {}
+      }
+    }
+
+    this.data = this.wrapDataInObservable(this.rawData);
 
     this.initialize(el);
+  }
+
+  persist() {
+    if (this.storageType) {
+      storage.set(`v-data:${this.name}`, this.rawData, this.storageType, { path: '/', secure: true, expires: computeExpires('365d') });
+    }
   }
 
   evaluate(expressionOrFn, additionalHelperVariables) {
@@ -161,6 +191,7 @@ export default class Component {
             if (Reflect.set(target, prop, value) && !this.concernedData.includes(prop)) {
               this.concernedData.push(prop);
               this.refresh();
+              this.persist();
             }
 
             return true;
@@ -201,7 +232,12 @@ export default class Component {
         }
 
         if (event) {
-          self.registerListener(el, event, modifiers, propExpression || expression);
+          // "v-prop"'s own modifiers (.number, .trim, .local, .cookie, .lazy)
+          // shape the bound value, not the event — they mean nothing to
+          // registerListener (and matching them as key filters would block
+          // "input"/"change", which never carry an "event.key" at all), so
+          // only forward modifiers for a real "@event" attribute.
+          self.registerListener(el, event, directive === 'v-prop' ? [] : modifiers, propExpression || expression);
         }
 
         // init directives — attribute binding ("bind") is a distinct mechanism from
@@ -326,6 +362,13 @@ export default class Component {
 
         next(e);
       });
+    }
+
+    // key/system-modifier filter — e.g. "@keydown.enter" or "@keyup.ctrl.s"
+    // only runs the handler when the fired event actually matches. Must be
+    // the outermost wrap so a mismatched key skips prevent/stop/delay too.
+    if (modifiers.some(isKeyModifier)) {
+      handler = wrapHandler(handler, (next, e) => matchesKeyModifiers(e, modifiers) && next(e));
     }
 
     // one time run event

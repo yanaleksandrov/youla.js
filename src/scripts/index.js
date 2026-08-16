@@ -1,5 +1,5 @@
 import Component from './component';
-import { debounce, domReady, eventCreate, pulsate } from './helpers';
+import { debounce, domReady, eventCreate, hasDirective, pulsate } from './helpers';
 import { directive } from './directives';
 import { method } from './methods';
 import { data } from './data';
@@ -24,14 +24,14 @@ export const Youla = {
   },
 
   componentDiscover: callback => {
-    Array.from(document.querySelectorAll('[v-data]')).forEach(callback)
+    Array.from(document.querySelectorAll('*')).filter(el => hasDirective(el, 'v-data')).forEach(callback)
   },
 
   componentListenUninitializedAtRunTime: callback => {
     let observer = new MutationObserver(mutations =>
       mutations.forEach(mutation =>
         Array.from(mutation.addedNodes)
-          .filter(node => node.nodeType === 1 && node.matches('[v-data]'))
+          .filter(node => node.nodeType === 1 && hasDirective(node, 'v-data'))
           .forEach(callback)
       )
     );

@@ -1,4 +1,5 @@
 import {
+  closestDirective,
   domWalk,
   getAttributes,
   setNestedObjectValue,
@@ -26,7 +27,7 @@ export function fetchProp(rootElement, data) {
     if (data[key] === undefined) {
       let fields = [];
       if (el.type === 'checkbox') {
-        fields = el.closest('[v-data]').querySelectorAll(`[${CSS.escape(attribute.name)}="${expression}"]`);
+        fields = closestDirective(el, 'v-data').querySelectorAll(`[${CSS.escape(attribute.name)}="${expression}"]`);
       }
 
       data[key] = setNestedObjectValue(prop, fields.length > 1 ? [] : '');

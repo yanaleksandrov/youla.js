@@ -115,6 +115,26 @@
 &lt;div v-data @keyup.prevent.ctrl.s.window=&quot;alert(&#039;No need save&#039;)&quot;&gt;...&lt;/div&gt;
 </pre>
 
+<h3><code>.enter</code>, <code>.esc</code>, <code>.ctrl</code> и другие клавиши</h3>
+
+<p>
+  Любой модификатор, не входящий в список выше, воспринимается как фильтр по нажатой клавише:
+  обработчик сработает только если сработавшее событие ему соответствует. Для частых клавиш есть
+  готовые псевдонимы — <code>.enter</code>, <code>.esc</code>/<code>.escape</code>, <code>.tab</code>,
+  <code>.space</code>, <code>.up</code>/<code>.down</code>/<code>.left</code>/<code>.right</code>,
+  <code>.delete</code>/<code>.backspace</code>, — а для остальных клавиш используйте их название
+  напрямую, как <code>.s</code> в примере с <code>ctrl + s</code> выше. Системные клавиши
+  <code>.ctrl</code>, <code>.alt</code>, <code>.shift</code> и <code>.meta</code> требуют, чтобы
+  клавиша была зажата в момент события, и свободно сочетаются с любым другим модификатором клавиши —
+  именно так в примере выше собран <code>ctrl + s</code>.
+</p>
+
+<pre>
+&lt;input v-data @keydown.enter=&quot;alert(&#039;Отправлено&#039;)&quot;&gt;
+</pre>
+
+<input class="demo" v-data @keydown.enter="alert('Отправлено')" placeholder="Нажмите Enter">
+
 <h3><code>.once</code></h3>
 
 <p>Гарантирует, что обработчик будет вызван только один раз.</p>

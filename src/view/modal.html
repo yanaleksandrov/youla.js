@@ -43,7 +43,7 @@ document.addEventListener('youla:init', () =&gt; {
 </pre>
 
 <pre>
-&lt;div v-data=&quot;modal&quot; @keydown.window=&quot;$event.key === 'Escape' &amp;&amp; hide()&quot;&gt;
+&lt;div v-data=&quot;modal&quot; @keydown.esc.window=&quot;hide()&quot;&gt;
   &lt;button type=&quot;button&quot; @click=&quot;show()&quot;&gt;Открыть модальное окно&lt;/button&gt;
 
   &lt;div class=&quot;modal-backdrop&quot; v-bind=&quot;backdrop&quot;&gt;
@@ -57,13 +57,11 @@ document.addEventListener('youla:init', () =&gt; {
 </pre>
 
 <p>
-  Обратите внимание: специального модификатора вроде <code>.escape</code> у событий нет — библиотека
-  поддерживает только универсальные модификаторы (<code>.window</code>, <code>.prevent</code>,
-  <code>.stop</code>, <code>.outside</code>, <code>.once</code>, <code>.delay</code>, <code>.passive</code>,
-  <code>.capture</code>), поэтому конкретную клавишу проверяют прямо в выражении через
-  <code>$event.key</code>. А открывающая кнопка и Escape-обработчик остались обычными атрибутами
-  напрямую в разметке — на элементе всего одна динамическая привязка, оборачивать её в
-  <code>v-bind</code> смысла нет.
+  Модификатор <code>.esc</code> сам фильтрует нажатую клавишу — сочетается с <code>.window</code> в
+  любом порядке, поэтому один атрибут одновременно слушает нажатие на всей странице и реагирует
+  только на Escape. Подробнее о модификаторах клавиш — на странице <a href="/events">События</a>.
+  А открывающая кнопка и Escape-обработчик остались обычными атрибутами напрямую в разметке — на
+  элементе всего одна динамическая привязка, оборачивать её в <code>v-bind</code> смысла нет.
 </p>
 
 <style>
@@ -113,7 +111,7 @@ document.addEventListener('youla:init', () =&gt; {
   });
 </script>
 
-<div class="demo example-modal" v-data="modal" @keydown.window="$event.key === 'Escape' && hide()">
+<div class="demo example-modal" v-data="modal" @keydown.esc.window="hide()">
   <button type="button" @click="show()">Открыть модальное окно</button>
 
   <div class="modal-backdrop" v-bind="backdrop">

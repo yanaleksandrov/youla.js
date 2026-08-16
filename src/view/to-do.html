@@ -6,11 +6,8 @@
 <h1>Список задач</h1>
 
 <p>
-  Список задач — типовой сценарий, который нужен в любом трекере с отметками: ввести текст, добавить
-  задачу, отметить её выполненной, удалить одну задачу или очистить список целиком. Кнопка «Добавить»
-  отключена, пока поле пустое, отмеченная задача зачёркивается, а сам список вместе с кнопкой
-  «Очистить всё» появляется только тогда, когда в нём есть хотя бы одна задача. Ниже — весь код,
-  который для этого нужен.
+  Список TODO - типовой сценарий, который нужен в любом трекере задач. Список также переживает перезагрузку страницы — задачи сохраняются в браузере автоматически. Ниже —
+  весь код, который для этого нужен.
 </p>
 
 <pre>
@@ -21,6 +18,9 @@ document.addEventListener('youla:init', () =&gt; {
     adder: {
       '@click': &quot;tasks = [...tasks, {title: value, checked: false}]; value = ''&quot;,
       ':disabled': '!value.trim()',
+    },
+    field: {
+      '@keydown.enter': &quot;value.trim() &amp;&amp; (tasks = [...tasks, {title: value, checked: false}], value = '')&quot;,
     },
     checkbox: {
       '@change': 'task.checked = !task.checked',
@@ -41,9 +41,9 @@ document.addEventListener('youla:init', () =&gt; {
 </pre>
 
 <pre>
-&lt;div v-data=&quot;todo&quot;&gt;
+&lt;div v-data.local=&quot;todo&quot;&gt;
   &lt;p&gt;Добавить задачу:&lt;/p&gt;
-  &lt;input placeholder=&quot;Введите новую задачу...&quot; v-prop=&quot;value&quot; /&gt;
+  &lt;input placeholder=&quot;Введите новую задачу...&quot; v-prop=&quot;value&quot; v-bind=&quot;field&quot; /&gt;
   &lt;button type=&quot;button&quot; v-bind=&quot;adder&quot;&gt;Добавить&lt;/button&gt;
 
   &lt;div v-show=&quot;tasks.length&quot; hidden&gt;
@@ -62,13 +62,12 @@ document.addEventListener('youla:init', () =&gt; {
 </pre>
 
 <p>
-  Чтобы использовать этот пример в своём проекте, достаточно поменять форму данных: вместо
-  <code>title</code> и <code>checked</code> — свои поля задачи, вместо <code>tasks</code> — свой
-  список. Если задаче нужно больше действий — например, редактирование, приоритет или срок — добавьте
-  ключ в существующий набор (<code>status</code>, <code>remover</code>) или заведите новый по той же
-  схеме: разметка внутри <a href="/v-each"><code>v-each</code></a> при этом не меняется, новое
-  поведение появляется через <code>v-bind</code> на нужном элементе. Так список остаётся расширяемым
-  без правок HTML — меняется только объект данных.
+  За сохранение списка между перезагрузками отвечает модификатор <code>.local</code> в
+  <code>v-data.local="todo"</code>: он пишет данные компонента в <code>localStorage</code> при каждом
+  изменении и подставляет их обратно при следующей загрузке страницы поверх начальных значений из
+  <code>Youla.data</code>. Если вместо этого нужны куки — например, чтобы список был доступен серверу
+  — замените модификатор на <code>.cookie</code>; если персистентность не нужна вовсе, просто уберите
+  модификатор и оставьте обычный <code>v-data="todo"</code>.
 </p>
 
 <script>
@@ -79,6 +78,9 @@ document.addEventListener('youla:init', () =&gt; {
       adder: {
         '@click': "tasks = [...tasks, {title: value, checked: false}]; value = ''",
         ':disabled': '!value.trim()',
+      },
+      field: {
+        '@keydown.enter': "value.trim() && (tasks = [...tasks, {title: value, checked: false}], value = '')",
       },
       checkbox: {
         '@change': 'task.checked = !task.checked',
@@ -98,9 +100,9 @@ document.addEventListener('youla:init', () =&gt; {
   });
 </script>
 
-<div class="demo" v-data="todo">
+<div class="demo" v-data.local="todo">
   <p>Добавить задачу:</p>
-  <input placeholder="Введите новую задачу..." v-prop="value" />
+  <input placeholder="Введите новую задачу..." v-prop="value" v-bind="field" />
   <button type="button" v-bind="adder">Добавить</button>
 
   <div v-show="tasks.length" hidden>

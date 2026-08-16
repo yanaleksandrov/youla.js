@@ -89,10 +89,14 @@ a {
 	color: var(--teal);
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1, h2, h3 {
 	font-weight: 700;
 	text-wrap: balance;
 	letter-spacing: -0.01em;
+}
+
+h1:first-child, h2:first-child, h3:first-child {
+	margin-top: 0;
 }
 
 h1 {
@@ -197,6 +201,13 @@ p:first-child {
 
 p:last-child {
 	margin-bottom: 0;
+}
+
+video,
+iframe {
+	max-width: 100%;
+	height: auto;
+	display: block;
 }
 
 table {

@@ -1,26 +1,128 @@
 <% var data = {
-  title: "To Do List"
+  title: "Список задач"
 }; %>
 <%= _.template(require('./parts/header.html').default)(data) %>
 
-<div v-data="{tasks: []}">
-  <div>Add task:</div>
-  <input placeholder="Add new task..." v-prop="value" />
-  <button type="button" @click="tasks = [...tasks, {title: value, checked: false}]; value = ''" :disabled="!value.trim()">Add</button>
-  <br>
+<h1>Список задач</h1>
 
-  <div v-show="tasks.length">
-    <p>Tasks list:</p>
+<p>
+  Список To-Do — типовой сценарий для трекера задач. Он переживает перезагрузку страницы: список
+  сохраняется в браузере автоматически. Ниже — весь код, который для этого нужен.
+</p>
+
+<pre>
+document.addEventListener('youla:init', () =&gt; {
+  Youla.data('todo', () =&gt; ({
+    value: '',
+    tasks: [],
+    adder: {
+      '@click': &quot;tasks = [...tasks, {title: value, checked: false}]; value = ''&quot;,
+      ':disabled': '!value.trim()',
+    },
+    field: {
+      '@keydown.enter': &quot;value.trim() &amp;&amp; (tasks = [...tasks, {title: value, checked: false}], value = '')&quot;,
+    },
+    checkbox: {
+      '@change': 'task.checked = !task.checked',
+      ':checked': 'task.checked',
+    },
+    status: {
+      'v-text': 'task.title',
+      ':class': &quot;task.checked &amp;&amp; 'strike'&quot;,
+    },
+    remover: {
+      '@click': 'tasks = tasks.filter((_, i) =&gt; i != index)',
+    },
+    clearer: {
+      '@click': 'tasks = []',
+    },
+  }));
+});
+</pre>
+
+<pre>
+&lt;div v-data.local=&quot;todo&quot;&gt;
+  &lt;p&gt;Добавить задачу:&lt;/p&gt;
+  &lt;input placeholder=&quot;Введите новую задачу...&quot; v-prop=&quot;value&quot; v-bind=&quot;field&quot; /&gt;
+  &lt;button type=&quot;button&quot; v-bind=&quot;adder&quot;&gt;Добавить&lt;/button&gt;
+
+  &lt;div v-show=&quot;tasks.length&quot; hidden&gt;
+    &lt;p&gt;Список задач:&lt;/p&gt;
+    &lt;ul&gt;
+      &lt;li v-each=&quot;(task, index) in tasks&quot;&gt;
+        &lt;label&gt;
+          &lt;input type=&quot;checkbox&quot; v-bind=&quot;checkbox&quot;&gt; &lt;span v-bind=&quot;status&quot;&gt;&lt;/span&gt;
+        &lt;/label&gt;
+        &lt;button v-bind=&quot;remover&quot;&gt;Удалить&lt;/button&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+    &lt;button v-bind=&quot;clearer&quot;&gt;Очистить всё&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+</pre>
+
+<p>
+  За сохранение списка отвечает модификатор <code>.local</code> в <code>v-data.local="todo"</code>:
+  он пишет данные в <code>localStorage</code> при каждом изменении и подставляет их обратно при
+  следующей загрузке страницы.
+</p>
+
+<p>
+  Сохранённые данные накладываются поверх начальных значений из <code>Youla.data</code> — так новые
+  поля, добавленные в фабрику позже, появятся даже у посетителей со старым <code>localStorage</code>.
+</p>
+
+<p>
+  Если данные должны быть доступны серверу, замените модификатор на <code>.cookie</code>. Если
+  персистентность не нужна, уберите модификатор — оставьте обычный <code>v-data="todo"</code>.
+</p>
+
+<script>
+  document.addEventListener('youla:init', () => {
+    Youla.data('todo', () => ({
+      value: '',
+      tasks: [],
+      adder: {
+        '@click': "tasks = [...tasks, {title: value, checked: false}]; value = ''",
+        ':disabled': '!value.trim()',
+      },
+      field: {
+        '@keydown.enter': "value.trim() && (tasks = [...tasks, {title: value, checked: false}], value = '')",
+      },
+      checkbox: {
+        '@change': 'task.checked = !task.checked',
+        ':checked': 'task.checked',
+      },
+      status: {
+        'v-text': 'task.title',
+        ':class': "task.checked && 'strike'",
+      },
+      remover: {
+        '@click': 'tasks = tasks.filter((_, i) => i != index)',
+      },
+      clearer: {
+        '@click': 'tasks = []',
+      },
+    }));
+  });
+</script>
+
+<div class="demo" v-data.local="todo">
+  <p>Добавить задачу:</p>
+  <input placeholder="Введите новую задачу..." v-prop="value" v-bind="field" />
+  <button type="button" v-bind="adder">Добавить</button>
+
+  <div v-show="tasks.length" hidden>
+    <p>Список задач:</p>
     <ul>
       <li v-each="(task, index) in tasks">
         <label>
-          <input type="checkbox" @change="task.checked = !task.checked; console.log(tasks)" :checked="task.checked">
-          <span v-text="task.title" :class="task.checked && 'strike'"></span>
+          <input type="checkbox" v-bind="checkbox"> <span v-bind="status"></span>
         </label>
-        <button @click="tasks = tasks.filter((_, i) => i != index)">Remove</button>
+        <button v-bind="remover">Удалить</button>
       </li>
     </ul>
-    <button v-show="tasks.length" @click="tasks = []" hidden>Clear all</button>
+    <button v-bind="clearer">Очистить всё</button>
   </div>
 </div>
 

@@ -1,5 +1,12 @@
 
     </div>
   </div>
+  <script>
+    document.querySelectorAll('.document__menu-link').forEach(function (link) {
+      if (link.getAttribute('href') === window.location.pathname) {
+        link.classList.add('document__menu-link--active');
+      }
+    });
+  </script>
 </body>
 </html>

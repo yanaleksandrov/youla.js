@@ -2,6 +2,20 @@ import { method } from '../methods';
 
 const BYTES_IN_MB = 1048576;
 
+/**
+ * Registers `$ajax(url, options, callback)`, callable from any expression
+ * (e.g. `@click="$ajax('/api/cart', {}, res => ...)"`). Submits the bound
+ * element as form data — the whole form (including any file inputs) if it's
+ * a `<form>`, or just that one field's value otherwise — toggles an
+ * `is-load` class on the element and any `[type="submit"]` descendants
+ * while the request is in flight, and invokes `callback` with a normalized
+ * progress/response object (see onProgress) during upload and again once
+ * the request completes.
+ *
+ * @param {Event} e - The triggering event (unused directly; part of every method's call signature).
+ * @param {HTMLElement} el - The element `$ajax` was called on.
+ * @returns {Function} `(url: string, options?: {headers?, credentials?}, callback?: Function) => Promise`
+ */
 method('ajax', (e, el) => (url, options = {}, callback) => {
   let tagName = el.tagName.toLowerCase(),
       method  = tagName === 'form' ? 'post' : 'get',
@@ -53,6 +67,14 @@ method('ajax', (e, el) => (url, options = {}, callback) => {
   });
 });
 
+/**
+ * Normalizes an XHR upload/load event plus its XHR instance into the plain
+ * object passed to `$ajax`'s callback.
+ *
+ * @param {ProgressEvent} event - The upload/load event ("loadstart", "progress", or "loadend").
+ * @param {XMLHttpRequest} xhr - The request the event belongs to.
+ * @returns {Object} `{ blob, json, raw, status, url, loaded, total, percent, start, progress, end }`.
+ */
 function onProgress(event, xhr) {
   const { loaded = 0, total = 0, type } = event;
   const { response = '', responseText = '', status = '', responseURL = '' } = xhr;
@@ -72,6 +94,12 @@ function onProgress(event, xhr) {
   }
 }
 
+/**
+ * Converts a byte count to megabytes, rounded to 2 decimal places.
+ *
+ * @param {number} number - A size in bytes.
+ * @returns {number} The equivalent size in megabytes.
+ */
 function convertTo(number) {
   return Math.round(number / BYTES_IN_MB * 100) / 100;
 }

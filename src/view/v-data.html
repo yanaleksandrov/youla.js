@@ -1,13 +1,13 @@
 <% var data = {
-title: "To Do List"
+title: "v-data"
 }; %>
 <%= _.template(require('./parts/header.html').default)(data) %>
 
 <h1>v-data</h1>
 
 <p>
-  В Youla.js всё начинается с директивы v-data. <code>v-data</code> определяет фрагмент HTML
-  как новый компонент и предоставляет реактивные данные для ссылки на этот компонент.
+  Директива <code>v-data</code> — стартовая точка в Youla.js. Она превращает элемент HTML
+  в компонент и задаёт его реактивные данные, доступные во всех дочерних выражениях.
 </p>
 
 <h2>Модификаторы</h2>
@@ -15,9 +15,140 @@ title: "To Do List"
 <p><code>.local</code> и <code>.cookie</code></p>
 
 <p>
-  Позволяют автоматически сохранять значение привязанного свойства в куках или локальном
-  хранилище и восстанавливать его при последующих загрузках страницы. Это удобно для хранения
-  пользовательских предпочтений, например, темы оформления, имени пользователя или других параметров.
+  Автоматически сохраняют значение свойства в <code>localStorage</code> или cookie и
+  восстанавливают его при следующей загрузке страницы — без ручного чтения и записи хранилища.
+</p>
+
+<p>
+  Это удобно для пользовательских настроек: темы оформления, языка интерфейса или
+  свёрнутых панелей — того, что должно сохраняться между визитами на сайт.
+</p>
+
+<p>
+  Те же модификаторы поддерживает и <a href="/v-prop"><code>v-prop</code></a> — используйте их
+  там, если нужно сохранять между визитами значение конкретного поля формы, а не всего компонента.
+</p>
+
+<h3>Что выбрать: <code>.local</code> или <code>.cookie</code>?</h3>
+
+<p>
+  Оба модификатора решают одну задачу — данные переживают перезагрузку страницы, — но
+  хранят их в разных местах. От этого и зависит, какой стоит выбрать.
+</p>
+
+<table>
+  <tbody>
+    <tr>
+      <th>Критерий</th>
+      <th><code>.local</code> (localStorage)</th>
+      <th><code>.cookie</code></th>
+    </tr>
+    <tr>
+      <td>Лимит объёма</td>
+      <td>~5–10 МБ на домен (зависит от браузера)</td>
+      <td>~4 КБ на одну cookie, обычно не больше 50 cookie на домен</td>
+    </tr>
+    <tr>
+      <td>Кто видит данные</td>
+      <td>Только браузер, через JavaScript</td>
+      <td>Браузер и сервер — cookie уезжают с каждым HTTP-запросом на этот домен</td>
+    </tr>
+    <tr>
+      <td>Время жизни</td>
+      <td>Управляется явно; без указания срока хранится, пока пользователь не очистит хранилище</td>
+      <td>Управляется явно; без указания срока пропадает вместе с закрытием вкладки</td>
+    </tr>
+    <tr>
+      <td>Типичное применение</td>
+      <td>Черновик формы, тема оформления, список задач — то, что нужно только интерфейсу</td>
+      <td>Значение, которое должен прочитать сервер: согласие на использование cookie, персонализация при первой отрисовке страницы</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  Простое правило: по умолчанию берите <code>.local</code> — он вмещает намного больше данных и
+  не увеличивает вес каждого запроса к серверу, в отличие от cookie при выборе.
+</p>
+
+<p>
+  Переключайтесь на <code>.cookie</code> только тогда, когда значение нужно именно
+  серверу — например, чтобы отрисовать нужную версию страницы ещё до загрузки JavaScript.
+</p>
+
+<p>
+  Cookie уезжают с каждым запросом, поэтому не храните в них ничего объёмного вроде
+  списка задач — оставьте место для короткого флага или идентификатора.
+</p>
+
+<h3>Срок хранения</h3>
+
+<p>
+  Оба модификатора принимают необязательную длительность сразу за собой:
+  <code>.cookie.30d</code> или <code>.local.1y</code>. Она определяет, сколько времени
+  хранить данные перед автоматическим удалением.
+</p>
+
+<p>
+  Число и буква идут слитно: <code>y</code> — годы, <code>m</code> — месяцы,
+  <code>d</code> — дни, <code>h</code> — часы, <code>i</code> — минуты, <code>s</code> — секунды.
+  Например, <code>90d</code> — девяносто дней, а <code>12h</code> — двенадцать часов.
+</p>
+
+<p>
+  Без указания длительности cookie ведёт себя как сессионная — исчезает при закрытии
+  вкладки. <code>localStorage</code> без длительности хранится, пока пользователь не
+  очистит его сам — как и раньше.
+</p>
+
+<pre>
+&lt;div v-data.local.30d=&quot;{ theme: 'light' }&quot;&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;theme = theme === 'light' ? 'dark' : 'light'&quot;&gt;
+    Переключить тему
+  &lt;/button&gt;
+  &lt;p&gt;Тема: &lt;span v-text=&quot;theme&quot;&gt;&lt;/span&gt; — хранится в localStorage 30 дней.&lt;/p&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data.local.30d="{ theme: 'light' }">
+  <button type="button" @click="theme = theme === 'light' ? 'dark' : 'light'">
+    Переключить тему
+  </button>
+  <p>Тема: <span v-text="theme"></span> — хранится в localStorage 30 дней.</p>
+</div>
+
+<pre>
+&lt;div v-data.cookie.1y=&quot;{ locale: 'ru' }&quot;&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;locale = locale === 'ru' ? 'en' : 'ru'&quot;&gt;
+    Сменить язык
+  &lt;/button&gt;
+  &lt;p&gt;Язык: &lt;span v-text=&quot;locale&quot;&gt;&lt;/span&gt; — хранится в cookie год, сервер тоже его увидит.&lt;/p&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data.cookie.1y="{ locale: 'ru' }">
+  <button type="button" @click="locale = locale === 'ru' ? 'en' : 'ru'">
+    Сменить язык
+  </button>
+  <p>Язык: <span v-text="locale"></span> — хранится в cookie год, сервер тоже его увидит.</p>
+</div>
+
+<blockquote>
+  <p>Как это устроено для localStorage</p>
+  <p>
+    У <code>localStorage</code> нет собственного механизма истечения срока — в отличие от cookie,
+    браузер не удаляет устаревшие записи сам, без вмешательства библиотеки.
+  </p>
+  <p>
+    Поэтому при указании длительности Youla.js хранит рядом со значением отметку времени
+    и проверяет её при каждом чтении, удаляя запись, если срок уже прошёл.
+  </p>
+</blockquote>
+
+<p>
+  Та же длительность работает и у <a href="/v-prop"><code>v-prop</code></a> — например,
+  <code>v-prop.cookie.30d="name"</code> сохранит значение поля на тридцать дней, точно как в
+  примере с <code>v-data</code> выше.
 </p>
 
 <h3>Принять всплывающее окно с файлами cookie</h3>
@@ -27,7 +158,19 @@ title: "To Do List"
   после нажатия кнопки "Ок, принято" Youla.js запомнит выбор пользователя и не будет отображать его.
 </p>
 
-<div v-data="{popup: false}">
+<pre>
+&lt;div v-data=&quot;{popup: false}&quot;&gt;
+  &lt;div v-prop.cookie=&quot;popup&quot; v-show=&quot;!popup&quot; hidden&gt;
+    &lt;span&gt;We use cookie!&lt;/span&gt;
+    &lt;button type=&quot;button&quot; @click=&quot;popup = !popup&quot;&gt;Ок, принято&lt;/button&gt;
+  &lt;/div&gt;
+  &lt;p v-show=&quot;popup&quot;&gt;
+    Модальное окно уже было показано
+  &lt;/p&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data="{popup: false}">
   <div v-prop.cookie="popup" v-show="!popup" hidden>
     <span>We use cookie!</span>
     <button type="button" @click="popup = !popup">Ок, принято</button>
@@ -37,10 +180,29 @@ title: "To Do List"
   </p>
 </div>
 
-<div v-data="{voices: 1000, voted: false}">
-  <h3>Restriction of repeated voting</h3>
+<pre>
+&lt;div v-data=&quot;{voices: 1000, voted: false}&quot;&gt;
+  &lt;h3&gt;Голосование без повторов&lt;/h3&gt;
+  &lt;p&gt;
+    Youla.js сохраняет отметку о голосе в localStorage, поэтому перезагрузка страницы не позволит проголосовать ещё раз.
+  &lt;/p&gt;
+  &lt;div v-prop.local=&quot;voices&quot; v-prop.local=&quot;voted&quot;&gt;
+    &lt;button type=&quot;button&quot; @click=&quot;--voices; voted = true&quot; :disabled=&quot;voted&quot;&gt;
+      &lt;i class=&quot;ph ph-thumbs-down&quot;&gt;&lt;/i&gt;
+    &lt;/button&gt;
+    &lt;span v-text=&quot;voices&quot;&gt;&lt;/span&gt;
+    &lt;button type=&quot;button&quot; @click=&quot;++voices; voted = true&quot; :disabled=&quot;voted&quot;&gt;
+      &lt;i class=&quot;ph ph-thumbs-up&quot;&gt;&lt;/i&gt;
+    &lt;/button&gt;
+    &lt;span class=&quot;hidden&quot; @click=&quot;voices = 1000; voted = false&quot; v-show=&quot;voted&quot;&gt;Reset&lt;/span&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data="{voices: 1000, voted: false}">
+  <h3>Голосование без повторов</h3>
   <p>
-    The page saves data to localStorage with information that the user has already voted to prevent a repeat vote.
+    Youla.js сохраняет отметку о голосе в localStorage, поэтому перезагрузка страницы не позволит проголосовать ещё раз.
   </p>
   <div v-prop.local="voices" v-prop.local="voted">
     <button type="button" @click="--voices; voted = true" :disabled="voted">
@@ -54,12 +216,29 @@ title: "To Do List"
   </div>
 </div>
 
-<div v-data>
-  <h3>Saving video playback time</h3>
+<pre>
+&lt;div v-data&gt;
+  &lt;h3&gt;Запоминание момента просмотра&lt;/h3&gt;
+  &lt;p&gt;
+    Youla.js сохраняет время просмотра в cookie, и при следующей загрузке страницы предложит продолжить с того же места.
+  &lt;/p&gt;
+  &lt;div&gt;
+    &lt;input type=&quot;hidden&quot; v-prop.cookie=&quot;time&quot;&gt;
+    &lt;video v-ref=&quot;video&quot; @play=&quot;$el.ontimeupdate = () =&gt; time = $el.currentTime&quot; width=&quot;640px&quot; height=&quot;267px&quot; controls muted&gt;
+      &lt;source src=&quot;https://vjs.zencdn.net/v/oceans.mp4&quot; type=&#039;video/mp4&#039; /&gt;
+    &lt;/video&gt;
+    &lt;div v-show=&quot;time &gt; 0&quot;&gt;
+      Start playback from &lt;span v-text=&quot;parseInt(time, 10)&quot;&gt;&lt;/span&gt; seconds?
+      &lt;button type=&quot;button&quot; @click=&quot;$refs.video.currentTime = time; $refs.video.play()&quot;&gt;Yes&lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data>
+  <h3>Запоминание момента просмотра</h3>
   <p>
-    TODO:
-    After starting the video Youla.js will remember the time from the beginning that has already been viewed
-    and, when the page is reloaded, it will prompt you to start viewing from the point of departure.
+    Youla.js сохраняет время просмотра в cookie, и при следующей загрузке страницы предложит продолжить с того же места.
   </p>
   <div>
     <input type="hidden" v-prop.cookie="time">
@@ -73,18 +252,43 @@ title: "To Do List"
   </div>
 </div>
 
-<div v-data class="test test--content" :class="dark && 'dark'">
-  <h3>Dark & Light theme switcher</h3>
+<pre>
+&lt;div v-data class=&quot;test test--content&quot; :class=&quot;dark &amp;&amp; 'dark'&quot;&gt;
+  &lt;h3&gt;Переключатель тёмной темы&lt;/h3&gt;
+  &lt;p&gt;
+    Кнопка переключает тему и сохраняет выбор в localStorage — он останется в силе после перезагрузки страницы.
+  &lt;/p&gt;
+  &lt;button type=&quot;button&quot; v-prop.local=&quot;dark&quot; @click=&quot;dark = !dark&quot;&gt;
+    &lt;i class=&quot;ph ph-sun&quot; :class=&quot;{ 'ph-sun': !dark, 'ph-moon': dark }&quot;&gt;&lt;/i&gt;
+  &lt;/button&gt;
+  &lt;style&gt;
+    :root {
+      --text-color: #000000;
+    }
+
+    .dark {
+      --background-color: #000000;
+      --text-color: #ffffff;
+    }
+
+    div {
+      background-color: var(--background-color);
+      color: var(--text-color);
+    }
+  &lt;/style&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo test test--content" v-data :class="dark && 'dark'">
+  <h3>Переключатель тёмной темы</h3>
   <p>
-    The "We use cookies!" window will pop up whenever the page is reloaded. However, after clicking
-    on the "Ok, accepted" button, Youla.js will remember the user's choice and will not display it.
+    Кнопка переключает тему и сохраняет выбор в localStorage — он останется в силе после перезагрузки страницы.
   </p>
   <button type="button" v-prop.local="dark" @click="dark = !dark">
     <i class="ph ph-sun" :class="{ 'ph-sun': !dark, 'ph-moon': dark }"></i>
   </button>
   <style>
 		:root {
-			--background-color: #ffffff;
 			--text-color: #000000;
 		}
 

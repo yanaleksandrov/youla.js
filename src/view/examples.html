@@ -1,0 +1,386 @@
+<% var data = {
+  title: "Примеры"
+}; %>
+<%= _.template(require('./parts/header.html').default)(data) %>
+
+<h1>Примеры</h1>
+
+<p>
+  На этой странице — примеры, где несколько директив Youla.js работают вместе: <a href="/v-data"><code>v-data</code></a>,
+  <a href="/v-text"><code>v-text</code></a>, <a href="/v-html"><code>v-html</code></a>, <a href="/v-show"><code>v-show</code></a>,
+  <a href="/v-prop"><code>v-prop</code></a>, <a href="/v-each"><code>v-each</code></a> и <a href="/v-bind"><code>v-bind</code></a>,
+  а также события и атрибуты. Каждый пример решает конкретную практическую задачу.
+</p>
+
+<h2>Форма с разными типами полей</h2>
+
+<p>
+  Один и тот же атрибут <code>v-prop</code> связывает данные с любым типом поля — текстовым,
+  числовым, чекбоксом, select или textarea. Ниже собраны все варианты в одной форме.
+</p>
+
+<pre>
+&lt;div v-data=&quot;{
+  signIn: '', inputo: 10, singlet: true, colors: ['Красный', 'Жёлтый'],
+  select: '', multiple: [], answer: '', content: 'Всё работает!'
+}&quot;&gt;
+  &lt;label&gt;Логин&lt;/label&gt;
+  &lt;input v-prop=&quot;signIn&quot; type=&quot;text&quot;&gt;
+  &lt;div v-text=&quot;signIn&quot;&gt;&lt;/div&gt;
+
+  &lt;label&gt;Количество (от 8 до 12)&lt;/label&gt;
+  &lt;input v-prop=&quot;inputo&quot; :type=&quot;'number'&quot; :min=&quot;8&quot; :max=&quot;12&quot;&gt;
+  &lt;div v-text=&quot;inputo&quot;&gt;&lt;/div&gt;
+
+  &lt;label&gt;
+    &lt;input type=&quot;checkbox&quot; v-prop=&quot;singlet&quot;&gt; Согласен получать рассылку
+  &lt;/label&gt;
+  &lt;div v-text=&quot;singlet&quot;&gt;&lt;/div&gt;
+
+  &lt;label&gt;Любимые цвета&lt;/label&gt;
+  &lt;label&gt;&lt;input type=&quot;checkbox&quot; value=&quot;Красный&quot; v-prop=&quot;colors&quot;&gt; Красный&lt;/label&gt;
+  &lt;label&gt;&lt;input type=&quot;checkbox&quot; value=&quot;Оранжевый&quot; v-prop=&quot;colors&quot;&gt; Оранжевый&lt;/label&gt;
+  &lt;label&gt;&lt;input type=&quot;checkbox&quot; value=&quot;Жёлтый&quot; v-prop=&quot;colors&quot;&gt; Жёлтый&lt;/label&gt;
+  &lt;div v-text=&quot;colors&quot;&gt;&lt;/div&gt;
+
+  &lt;label&gt;Размер&lt;/label&gt;
+  &lt;select v-prop=&quot;select&quot;&gt;
+    &lt;option value=&quot;&quot;&gt;Выберите размер&lt;/option&gt;
+    &lt;option value=&quot;Маленький&quot;&gt;Маленький&lt;/option&gt;
+    &lt;option value=&quot;Средний&quot;&gt;Средний&lt;/option&gt;
+    &lt;option value=&quot;Большой&quot;&gt;Большой&lt;/option&gt;
+  &lt;/select&gt;
+  &lt;div v-text=&quot;select&quot;&gt;&lt;/div&gt;
+
+  &lt;label&gt;Категории (можно несколько)&lt;/label&gt;
+  &lt;select multiple v-prop=&quot;multiple&quot;&gt;
+    &lt;option value=&quot;Электроника&quot;&gt;Электроника&lt;/option&gt;
+    &lt;option value=&quot;Одежда&quot;&gt;Одежда&lt;/option&gt;
+    &lt;option value=&quot;Книги&quot;&gt;Книги&lt;/option&gt;
+  &lt;/select&gt;
+  &lt;div v-text=&quot;multiple&quot;&gt;&lt;/div&gt;
+
+  &lt;label&gt;Вам всё понравилось?&lt;/label&gt;
+  &lt;label&gt;&lt;input type=&quot;radio&quot; value=&quot;yes&quot; v-prop=&quot;answer&quot;&gt; Да&lt;/label&gt;
+  &lt;label&gt;&lt;input type=&quot;radio&quot; value=&quot;no&quot; v-prop=&quot;answer&quot;&gt; Нет&lt;/label&gt;
+  &lt;div v-text=&quot;answer&quot;&gt;&lt;/div&gt;
+
+  &lt;label&gt;Комментарий&lt;/label&gt;
+  &lt;textarea v-prop=&quot;content&quot;&gt;&lt;/textarea&gt;
+  &lt;div v-text=&quot;content&quot;&gt;&lt;/div&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data="{
+  signIn: '', inputo: 10, singlet: true, colors: ['Красный', 'Жёлтый'],
+  select: '', multiple: [], answer: '', content: 'Всё работает!'
+}">
+  <label>Логин</label>
+  <input v-prop="signIn" type="text">
+  <div v-text="signIn"></div>
+
+  <label>Количество (от 8 до 12)</label>
+  <input v-prop="inputo" :type="'number'" :min="8" :max="12">
+  <div v-text="inputo"></div>
+
+  <label>
+    <input type="checkbox" v-prop="singlet"> Согласен получать рассылку
+  </label>
+  <div v-text="singlet"></div>
+
+  <label>Любимые цвета</label>
+  <label><input type="checkbox" value="Красный" v-prop="colors"> Красный</label>
+  <label><input type="checkbox" value="Оранжевый" v-prop="colors"> Оранжевый</label>
+  <label><input type="checkbox" value="Жёлтый" v-prop="colors"> Жёлтый</label>
+  <div v-text="colors"></div>
+
+  <label>Размер</label>
+  <select v-prop="select">
+    <option value="">Выберите размер</option>
+    <option value="Маленький">Маленький</option>
+    <option value="Средний">Средний</option>
+    <option value="Большой">Большой</option>
+  </select>
+  <div v-text="select"></div>
+
+  <label>Категории (можно несколько)</label>
+  <select multiple v-prop="multiple">
+    <option value="Электроника">Электроника</option>
+    <option value="Одежда">Одежда</option>
+    <option value="Книги">Книги</option>
+  </select>
+  <div v-text="multiple"></div>
+
+  <label>Вам всё понравилось?</label>
+  <label><input type="radio" value="yes" v-prop="answer"> Да</label>
+  <label><input type="radio" value="no" v-prop="answer"> Нет</label>
+  <div v-text="answer"></div>
+
+  <label>Комментарий</label>
+  <textarea v-prop="content"></textarea>
+  <div v-text="content"></div>
+</div>
+
+<h2>Загрузка файла с индикатором прогресса</h2>
+
+<p>
+  Метод <code>$ajax</code> умеет отслеживать прогресс загрузки — это удобно совмещать с элементом
+  <code>&lt;progress&gt;</code>, который реактивно обновляется по мере отправки файла на сервер.
+</p>
+
+<pre>
+&lt;div v-data=&quot;{ percent: 0, items: [] }&quot;&gt;
+  &lt;form @submit.prevent=&quot;$ajax('https://jsonplaceholder.typicode.com/posts', {}, response =&gt; percent = response)&quot;&gt;
+    &lt;input type=&quot;file&quot; name=&quot;file&quot;&gt;
+    &lt;button type=&quot;submit&quot;&gt;Загрузить&lt;/button&gt;
+    &lt;progress :value=&quot;percent&quot; max=&quot;100&quot;&gt;&lt;/progress&gt;
+  &lt;/form&gt;
+
+  &lt;button type=&quot;button&quot; @click.delay.1000ms.once=&quot;$ajax('https://jsonplaceholder.typicode.com/posts', {}, response =&gt; items = response.json)&quot;&gt;
+    Показать список постов (загрузится один раз, через секунду)
+  &lt;/button&gt;
+  &lt;ul&gt;
+    &lt;li v-each=&quot;item in items&quot;&gt;
+      &lt;span v-text=&quot;item.id&quot;&gt;&lt;/span&gt;: &lt;span v-text=&quot;item.title&quot;&gt;&lt;/span&gt;
+    &lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data="{ percent: 0, items: [] }">
+  <form @submit.prevent="$ajax('https://jsonplaceholder.typicode.com/posts', {}, response => percent = response)">
+    <input type="file" name="file">
+    <button type="submit">Загрузить</button>
+    <progress :value="percent" max="100"></progress>
+  </form>
+
+  <button type="button" @click.delay.1000ms.once="$ajax('https://jsonplaceholder.typicode.com/posts', {}, response => items = response.json)">
+    Показать список постов (загрузится один раз, через секунду)
+  </button>
+  <ul>
+    <li v-each="item in items">
+      <span v-text="item.id"></span>: <span v-text="item.title"></span>
+    </li>
+  </ul>
+</div>
+
+<h2>v-text, v-html и доступ к элементу через $refs</h2>
+
+<p>
+  Пример показывает разницу между <code>v-text</code> и <code>v-html</code>, а также обращение
+  к DOM-элементу по имени, заданному атрибутом <code>v-ref</code>, прямо из обработчика клика на
+  кнопке.
+</p>
+
+<pre>
+&lt;div v-data=&quot;{ label: 'Обычный текст', markup: '&lt;strong&gt;HTML-разметка&lt;/strong&gt;' }&quot;&gt;
+  &lt;div v-text=&quot;label&quot; v-ref=&quot;labelEl&quot;&gt;&lt;/div&gt;
+  &lt;div v-html=&quot;markup&quot;&gt;&lt;/div&gt;
+  &lt;button @click=&quot;console.log($refs.labelEl)&quot;&gt;Показать элемент в консоли&lt;/button&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data="{ label: 'Обычный текст', markup: '<strong>HTML-разметка</strong>' }">
+  <div v-text="label" v-ref="labelEl"></div>
+  <div v-html="markup"></div>
+  <button @click="console.log($refs.labelEl)">Показать элемент в консоли</button>
+</div>
+
+<h2>Управляемое поле и счётчик с условным показом</h2>
+
+<p>
+  Кнопка может менять значение поля напрямую, а <code>v-show</code> — показывать подсказку
+  только при выполнении условия, без лишних проверок и дублирования логики в разметке.
+</p>
+
+<pre>
+&lt;div v-data=&quot;{ friends: 'Привет, друг!', count: 2 }&quot;&gt;
+  &lt;input v-prop=&quot;friends&quot;&gt;
+  &lt;button @click=&quot;friends = 'Привет, мир!'&quot;&gt;Заменить текст&lt;/button&gt;
+
+  &lt;button @click=&quot;count--&quot;&gt;-&lt;/button&gt;
+  &lt;span v-text=&quot;count&quot;&gt;&lt;/span&gt;
+  &lt;button @click=&quot;count++&quot;&gt;+&lt;/button&gt;
+  &lt;div v-show=&quot;count &gt; 2&quot;&gt;Значение больше двух&lt;/div&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data="{ friends: 'Привет, друг!', count: 2 }">
+  <input v-prop="friends">
+  <button @click="friends = 'Привет, мир!'">Заменить текст</button>
+
+  <button @click="count--">-</button>
+  <span v-text="count"></span>
+  <button @click="count++">+</button>
+  <div v-show="count > 2">Значение больше двух</div>
+</div>
+
+<h2>Выпадающее меню с закрытием по клику вне его</h2>
+
+<p>
+  Модификатор <code>.outside</code> у <code>@click</code> закрывает меню при клике в любом
+  другом месте страницы — частая задача для выпадающих меню, поповеров и всплывающих подсказок.
+</p>
+
+<pre>
+&lt;div v-data=&quot;{ open: false }&quot;&gt;
+  &lt;button @click=&quot;open = true&quot;&gt;Открыть меню&lt;/button&gt;
+  &lt;ul :class=&quot;{ hidden: !open }&quot; @click.outside=&quot;open = false&quot;&gt;
+    &lt;li&gt;Пункт 1&lt;/li&gt;
+    &lt;li&gt;Пункт 2&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data="{ open: false }">
+  <button @click="open = true">Открыть меню</button>
+  <ul :class="{ hidden: !open }" @click.outside="open = false">
+    <li>Пункт 1</li>
+    <li>Пункт 2</li>
+  </ul>
+</div>
+
+<h2>Особые события: load, intersect и порядок обработчиков</h2>
+
+<p>
+  Помимо обычных событий браузера Youla.js поддерживает <code>@load</code> (срабатывает при
+  инициализации элемента) и <code>@intersect</code> (элемент появился в области видимости).
+  Модификатор <code>.capture</code> меняет порядок срабатывания обработчиков на вложенных элементах.
+</p>
+
+<pre>
+&lt;div @load=&quot;console.log('Элемент инициализирован')&quot;&gt;&lt;/div&gt;
+&lt;div @intersect=&quot;console.log('Появился в области видимости')&quot;&gt;Прокрутите до сюда&lt;/div&gt;
+&lt;div @intersect.once=&quot;console.log('Появился, сработает только один раз')&quot;&gt;И до сюда&lt;/div&gt;
+
+&lt;div @click.capture=&quot;console.log('Сработает первым')&quot;&gt;
+  &lt;button @click=&quot;console.log('Сработает вторым')&quot;&gt;Нажми меня&lt;/button&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo">
+  <div @load="console.log('Элемент инициализирован')"></div>
+  <div @intersect="console.log('Появился в области видимости')">Прокрутите до сюда</div>
+  <div @intersect.once="console.log('Появился, сработает только один раз')">И до сюда</div>
+
+  <div @click.capture="console.log('Сработает первым')">
+    <button @click="console.log('Сработает вторым')">Нажми меня</button>
+  </div>
+</div>
+
+<h2>Youla.data: усложняем задачу, упрощаем разметку</h2>
+
+<p>
+  Пока состояние компонента — пара плоских свойств, объектный литерал прямо в атрибуте
+  <code>v-data="{...}"</code> остаётся самым коротким и понятным путём, как в примерах выше.
+</p>
+
+<p>
+  Но как только в задаче появляется повторяющаяся логика — проверка границ значения, сравнение
+  с активной вкладкой, фильтрация списка — расписывать её в каждом выражении становится многословно и хрупко.
+</p>
+
+<p>
+  Одна и та же проверка дублируется в нескольких атрибутах, а любое изменение поведения приходится
+  аккуратно повторять во всех местах, где она встречается.
+</p>
+
+<p>
+  <code>Youla.data(имя, callback)</code> решает это иначе: даёт компоненту имя и переносит всю
+  повторяющуюся логику в обычный JS-объект с методами, вызываемыми из разметки.
+</p>
+
+<p>
+  Разметка получает только короткие вызовы вроде <code>increment()</code> или
+  <code>isActive('profile')</code>, а вся логика проверок остаётся в одном месте, в JS-файле
+  компонента.
+</p>
+
+<p>
+  Такую регистрацию нужно выполнить раньше, чем Youla.js начнёт разбирать страницу, поэтому вызов
+  оборачивают в событие <code>youla:init</code>, которое библиотека создаёт в самом начале своей работы:
+</p>
+
+<pre>
+document.addEventListener('youla:init', () =&gt; {
+  Youla.data('имя', () =&gt; ({
+    // свойства и методы компонента
+  }));
+});
+</pre>
+
+<p>
+  В разметке компонент подключается по имени точно так же, как обычный объект: атрибуту
+  <code>v-data</code> достаточно передать строку с именем, без фигурных скобок.
+</p>
+
+<pre>
+&lt;div v-data=&quot;имя&quot;&gt;...&lt;/div&gt;
+</pre>
+
+<h3>Счётчик с ограничениями</h3>
+
+<p>
+  Простой <code>count++</code>/<code>count--</code> из примера выше отлично работает, пока не нужно
+  ограничивать значение конкретным диапазоном или проверять его перед изменением.
+</p>
+
+<p>
+  Как только появляются границы и шаг изменения, писать проверку в <code>@click</code> для каждой
+  кнопки, а потом ещё раз в <code>:disabled</code> — становится избыточно и легко забыть.
+</p>
+
+<p>
+  <code>increment()</code>/<code>decrement()</code> убирают это дублирование: границы и шаг хранятся
+  в данных компонента один раз, и методы сами следят, чтобы значение их не нарушало.
+</p>
+
+<pre>
+document.addEventListener('youla:init', () =&gt; {
+  Youla.data('counter', () =&gt; ({
+    min: 0,
+    max: 5,
+    step: 1,
+    value: 0,
+    increment() {
+      this.value = Math.min(this.value + this.step, this.max);
+    },
+    decrement() {
+      this.value = Math.max(this.value - this.step, this.min);
+    },
+  }));
+});
+</pre>
+
+<pre>
+&lt;div v-data=&quot;counter&quot;&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;decrement()&quot; :disabled=&quot;value &lt;= min&quot;&gt;−&lt;/button&gt;
+  &lt;span v-text=&quot;value&quot;&gt;&lt;/span&gt; / &lt;span v-text=&quot;max&quot;&gt;&lt;/span&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;increment()&quot; :disabled=&quot;value &gt;= max&quot;&gt;+&lt;/button&gt;
+&lt;/div&gt;
+</pre>
+
+<script>
+  document.addEventListener('youla:init', () => {
+    Youla.data('counter', () => ({
+      min: 0,
+      max: 5,
+      step: 1,
+      value: 0,
+      increment() {
+        this.value = Math.min(this.value + this.step, this.max);
+      },
+      decrement() {
+        this.value = Math.max(this.value - this.step, this.min);
+      },
+    }));
+  });
+</script>
+
+<div class="demo" v-data="counter">
+  <button type="button" @click="decrement()" :disabled="value <= min">−</button>
+  <span v-text="value"></span> / <span v-text="max"></span>
+  <button type="button" @click="increment()" :disabled="value >= max">+</button>
+</div>
+
+<%= _.template(require('./parts/footer.html').default)(data) %>

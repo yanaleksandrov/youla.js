@@ -6,9 +6,13 @@
 <h1>Полный синтаксис</h1>
 
 <p>
-  Эта страница — краткая сводка всего синтаксиса Youla.js в одном месте: типы атрибутов,
-  директивы и их модификаторы, специальные переменные в выражениях. За подробностями и
-  живыми примерами каждой директивы переходите по ссылке в соответствующей таблице.
+  Эта страница — краткая сводка синтаксиса Youla.js: типы атрибутов, директивы с
+  модификаторами и специальные переменные, доступные в любом выражении внутри разметки.
+</p>
+
+<p>
+  За подробностями и живыми примерами каждой директивы переходите по ссылке в
+  соответствующей таблице.
 </p>
 
 <h2>Типы атрибутов</h2>
@@ -21,7 +25,7 @@
       <th>Пример</th>
     </tr>
     <tr>
-      <td><code>v-data</code></td>
+      <td><a href="/v-data"><code>v-data</code></a></td>
       <td>Отмечает элемент как корень компонента и задаёт его реактивные данные</td>
       <td><code>&lt;div v-data=&quot;{ count: 0 }&quot;&gt;</code></td>
     </tr>
@@ -31,12 +35,12 @@
       <td><code>&lt;div v-show=&quot;open&quot;&gt;</code></td>
     </tr>
     <tr>
-      <td><code>:атрибут</code></td>
+      <td><a href="/attributes"><code>:attribute</code></a></td>
       <td>Динамическая привязка значения обычного HTML-атрибута к данным</td>
       <td><code>&lt;img :src=&quot;url&quot;&gt;</code></td>
     </tr>
     <tr>
-      <td><code>@событие</code></td>
+      <td><a href="/events"><code>@event</code></a></td>
       <td>Слушатель события браузера, с поддержкой модификаторов</td>
       <td><code>&lt;button @click=&quot;open = true&quot;&gt;</code></td>
     </tr>
@@ -74,7 +78,7 @@
     </tr>
     <tr>
       <td><a href="/v-show"><code>v-show</code></a></td>
-      <td><code>.lazy</code></td>
+      <td>—</td>
       <td>Переключает видимость элемента через <code>display</code>, не удаляя его из DOM</td>
     </tr>
     <tr>
@@ -84,8 +88,13 @@
     </tr>
     <tr>
       <td><a href="/v-prop"><code>v-prop</code></a></td>
-      <td><code>.number</code>, <code>.trim</code>, <code>.lazy</code>, <code>.local</code>, <code>.cookie</code></td>
+      <td><code>.lazy</code>, <code>.number</code>, <code>.trim</code>, <code>.local</code>, <code>.cookie</code></td>
       <td>Двусторонняя привязка значения поля формы (<code>input</code>, <code>select</code>, <code>textarea</code>) к данным</td>
+    </tr>
+    <tr>
+      <td><a href="/v-bind"><code>v-bind</code></a></td>
+      <td>—</td>
+      <td>Задаёт директивы, события и атрибуты элемента одним JS-объектом вместо перечисления в разметке</td>
     </tr>
   </tbody>
 </table>
@@ -100,7 +109,10 @@ item in 5                      — диапазон чисел (здесь: от
 item in items join ', '        — со вставкой текстового разделителя между элементами
 </pre>
 
-<p>Подробности и живые примеры — на странице <a href="/v-each">v-each</a>.</p>
+<p>
+  Подробности синтаксиса и живой, редактируемый пример перебора массива, объекта или диапазона
+  чисел — на отдельной странице <a href="/v-each">v-each</a>, ссылка на которую есть выше.
+</p>
 
 <h2>Модификаторы событий</h2>
 
@@ -119,6 +131,8 @@ item in items join ', '        — со вставкой текстового р
     <tr><td><code>.capture</code></td><td>Регистрирует слушатель с <code>{ capture: true }</code></td></tr>
     <tr><td><code>.once</code></td><td>Обработчик срабатывает только один раз</td></tr>
     <tr><td><code>.delay.250ms</code></td><td>Откладывает вызов обработчика на указанное время</td></tr>
+    <tr><td><code>.enter</code>, <code>.esc</code>, <code>.tab</code>, <code>.space</code>, <code>.up</code>/<code>.down</code>/<code>.left</code>/<code>.right</code>, <code>.delete</code>, <code>.backspace</code></td><td>Срабатывает только на эту клавишу (по <code>event.key</code>); любая другая клавиша, например <code>.s</code>, подставляется по названию напрямую</td></tr>
+    <tr><td><code>.ctrl</code>, <code>.alt</code>, <code>.shift</code>, <code>.meta</code></td><td>Требует, чтобы клавиша была зажата в момент события; сочетается с модификатором клавиши, например <code>.ctrl.s</code></td></tr>
   </tbody>
 </table>
 
@@ -169,9 +183,12 @@ item in items join ', '        — со вставкой текстового р
 
 <p>
   В значение любой директивы или события можно передать произвольное JavaScript-выражение:
-  сравнения (<code>count &gt; 0</code>), тернарные операторы, шаблонные строки, вызовы методов,
-  доступ к вложенным свойствам через точечную нотацию (<code>user.profile.name</code>) — всё,
-  что вычисляется в одну строку.
+  сравнения (<code>count &gt; 0</code>), тернарные операторы, шаблонные строки, вызовы методов.
+</p>
+
+<p>
+  Доступ к вложенным свойствам объекта работает через обычную точечную нотацию, например
+  <code>user.profile.name</code> — так же, как в любом стандартном JavaScript-выражении.
 </p>
 
 <%= _.template(require('./parts/footer.html').default)(data) %>

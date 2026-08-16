@@ -1,0 +1,97 @@
+<% var data = {
+  title: "Обратный отсчёт"
+}; %>
+<%= _.template(require('./parts/header.html').default)(data) %>
+
+<h1>Обратный отсчёт до даты</h1>
+
+<p>
+  Таймер запускается один раз и сам пересчитывает дни, часы, минуты и секунды каждую секунду через
+  <code>setInterval</code>.
+</p>
+
+<p>
+  Запустить его нужно сразу при появлении компонента на странице, а не по клику — для этого
+  подходит специальное событие <code>@load</code>, которое срабатывает сразу после инициализации
+  элемента. Подробнее — на странице <a href="/events">События</a>.
+</p>
+
+<pre>
+document.addEventListener('youla:init', () =&gt; {
+  Youla.data('countdown', () =&gt; ({
+    end: new Date(Date.now() + 65 * 1000).toISOString(),
+    day:  '00',
+    hour: '00',
+    min:  '00',
+    sec:  '00',
+    start() {
+      let end = new Date(this.end).valueOf();
+
+      this.timer = setInterval(() =&gt; {
+        let diff = Math.max(0, Math.round((end - Date.now()) / 1000));
+
+        this.day  = String(Math.floor(diff / 86400)).padStart(2, '0');
+        this.hour = String(Math.floor((diff / 3600) % 24)).padStart(2, '0');
+        this.min  = String(Math.floor((diff / 60) % 60)).padStart(2, '0');
+        this.sec  = String(diff % 60).padStart(2, '0');
+
+        if (diff &lt;= 0) {
+          clearInterval(this.timer);
+        }
+      }, 1000);
+    },
+  }));
+});
+</pre>
+
+<pre>
+&lt;div v-data=&quot;countdown&quot; @load=&quot;start()&quot;&gt;
+  &lt;span v-text=&quot;day&quot;&gt;&lt;/span&gt; дн.
+  &lt;span v-text=&quot;hour&quot;&gt;&lt;/span&gt; ч.
+  &lt;span v-text=&quot;min&quot;&gt;&lt;/span&gt; мин.
+  &lt;span v-text=&quot;sec&quot;&gt;&lt;/span&gt; сек.
+&lt;/div&gt;
+</pre>
+
+<script>
+  document.addEventListener('youla:init', () => {
+    Youla.data('countdown', () => ({
+      end: new Date(Date.now() + 65 * 1000).toISOString(),
+      day:  '00',
+      hour: '00',
+      min:  '00',
+      sec:  '00',
+      start() {
+        let end = new Date(this.end).valueOf();
+
+        this.timer = setInterval(() => {
+          let diff = Math.max(0, Math.round((end - Date.now()) / 1000));
+
+          this.day  = String(Math.floor(diff / 86400)).padStart(2, '0');
+          this.hour = String(Math.floor((diff / 3600) % 24)).padStart(2, '0');
+          this.min  = String(Math.floor((diff / 60) % 60)).padStart(2, '0');
+          this.sec  = String(diff % 60).padStart(2, '0');
+
+          if (diff <= 0) {
+            clearInterval(this.timer);
+          }
+        }, 1000);
+      },
+    }));
+  });
+</script>
+
+<div class="demo" v-data="countdown" @load="start()">
+  <span v-text="day"></span> дн.
+  <span v-text="hour"></span> ч.
+  <span v-text="min"></span> мин.
+  <span v-text="sec"></span> сек.
+</div>
+
+<p>
+  В примере обратный отсчёт настроен всего на 65 секунд, чтобы можно было увидеть его завершение,
+  не дожидаясь реальной даты, — в боевом коде <code>end</code> обычно приходит с сервера или
+  вычисляется от настоящей даты события.
+</p>
+
+<%= _.template(require('./parts/footer.html').default)(data) %>

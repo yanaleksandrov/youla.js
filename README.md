@@ -1,7 +1,6 @@
 # Youla.js
 
-A tiny and powerful JS library for creating interactive UI. It offers a Vue-like API for
-markup-driven development with automatic reactions, updates, and real-time rendering.
+Youla.js is a small JavaScript library for adding interactivity to HTML. It follows a markup-first, Vue-like API: directives live directly in your tags and react to data changes automatically, without a build step.
 
 ```html
 <div v-data="{ open: false }">
@@ -10,8 +9,7 @@ markup-driven development with automatic reactions, updates, and real-time rende
 </div>
 ```
 
-No build step, no compiler — Youla.js reads directives straight out of your existing HTML and
-keeps it in sync with your data.
+No build step, no compiler needed — Youla.js reads the directives already present in your HTML and keeps that markup in sync with your data as it changes, updating only what actually needs to change.
 
 ## Installation
 
@@ -31,8 +29,8 @@ Available scripts:
 
 ## Usage
 
-Add `v-data` to any element to turn it into a component with its own reactive data, then bind
-behavior and content to it with directives:
+Add `v-data` to any element to turn it into a component with its own reactive data. From there, bind
+behavior and content to that data using directives, directly inside your existing markup:
 
 ```html
 <ul v-data="{ colors: ['Red', 'Orange', 'Yellow'] }">
@@ -54,7 +52,7 @@ Youla.js ships with:
 | `@event`         | Listens for a browser event, with modifiers like `.prevent`/`.once`  |
 
 Run `npm start` and open `/syntax` for the full syntax reference, or browse the other pages under
-`src/view` for live, editable examples of every directive.
+`src/view` for live, editable examples of every directive covered in this README.
 
 ## Contributing
 

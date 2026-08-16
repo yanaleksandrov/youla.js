@@ -1,0 +1,87 @@
+<% var data = {
+  title: "Буфер обмена"
+}; %>
+<%= _.template(require('./parts/header.html').default)(data) %>
+
+<h1>Копирование в буфер обмена</h1>
+
+<p>
+  Кнопка «Скопировать» берёт текст поля через <code>$refs</code>, копирует его в буфер обмена и
+  на полторы секунды показывает подпись «Скопировано!».
+</p>
+
+<p>
+  У кнопки два динамических атрибута — клик и подпись, — поэтому они собраны в один набор
+  <code>action</code> и подключены через <a href="/v-bind"><code>v-bind="action"</code></a>
+  вместо двух отдельных атрибутов.
+</p>
+
+<pre>
+document.addEventListener('youla:init', () =&gt; {
+  Youla.data('clipboard', () =&gt; ({
+    copied: false,
+    copy(text) {
+      navigator.clipboard.writeText(text).then(() =&gt; {
+        this.copied = true;
+
+        setTimeout(() =&gt; this.copied = false, 1500);
+      });
+    },
+    action: {
+      '@click': 'copy($refs.snippet.value)',
+      'v-text': &quot;copied ? 'Скопировано!' : 'Скопировать'&quot;,
+    },
+  }));
+});
+</pre>
+
+<pre>
+&lt;div v-data=&quot;clipboard&quot;&gt;
+  &lt;input v-ref=&quot;snippet&quot; value=&quot;npm install youla.js&quot; readonly&gt;
+  &lt;button type=&quot;button&quot; v-bind=&quot;action&quot;&gt;&lt;/button&gt;
+&lt;/div&gt;
+</pre>
+
+<p>
+  <code>$refs</code> доступен только в выражениях разметки, поэтому <code>action</code> оформлен
+  строками, а не методами: строка <code>'@click'</code> вычисляется так же, как если бы была
+  написана прямо в атрибуте, и видит <code>$refs</code>.
+</p>
+
+<p>
+  Метод получил бы только <code>this</code> с данными компонента — без <code>$refs</code>,
+  <code>$el</code> и <code>$event</code>. Подробнее об этом различии — на странице
+  <a href="/v-bind">v-bind</a>.
+</p>
+
+<script>
+  document.addEventListener('youla:init', () => {
+    Youla.data('clipboard', () => ({
+      copied: false,
+      copy(text) {
+        navigator.clipboard.writeText(text).then(() => {
+          this.copied = true;
+
+          setTimeout(() => this.copied = false, 1500);
+        });
+      },
+      action: {
+        '@click': 'copy($refs.snippet.value)',
+        'v-text': "copied ? 'Скопировано!' : 'Скопировать'",
+      },
+    }));
+  });
+</script>
+
+<div class="demo" v-data="clipboard">
+  <input v-ref="snippet" value="npm install youla.js" readonly>
+  <button type="button" v-bind="action"></button>
+</div>
+
+<p>
+  <code>navigator.clipboard</code> работает только в защищённом контексте — на <code>localhost</code>
+  и по <code>HTTPS</code>. Если открыть страницу по обычному <code>HTTP</code>, браузер молча
+  откажет в разрешении, и <code>copied</code> просто не переключится.
+</p>
+
+<%= _.template(require('./parts/footer.html').default)(data) %>

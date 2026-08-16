@@ -3,194 +3,139 @@
 }; %>
 <%= _.template(require('./parts/header.html').default)(data) %>
 
-<div class="accordion">
-  <details class="accordion__item" name="accordion">
-    <summary class="accordion__title">Title of item 1</summary>
-    <div class="accordion__panel">
-      <p>Description of item 1</p>
-    </div>
-  </details>
-  <details class="accordion__item" name="accordion">
-    <summary class="accordion__title">Title of item 2</summary>
-    <div class="accordion__panel">
-      <p>Description of item 2</p>
-    </div>
-  </details>
-</div>
-<br>
-<br>
+<p>
+  Youla.js строится вокруг одной идеи: HTML на странице должен быть готов ещё до того, как
+  загрузится JavaScript. За данные и разметку отвечает сервер, а библиотека — только за
+  интерактивность поверх неё.
+</p>
 
-<div v-data="{signIn: 'привет', viewed: false, data: {percent: 0}, items: [], count: 11, lists: [{attributes: {href: 'https://poe.com/chat/2shu93txki2jj53eflg', target: '_blank'}, title: 'Hello World!'}, {attributes: {href: '#', target: '_blank'}, title: 'How are you?'}]}">
-  <form @submit.prevent="$ajax('https://jsonplaceholder.typicode.com/posts', {}, response => data = response).then(r => console.log(r))">
-    <input type="file" name="testFile" placeholder="Choose file">
-    <br>
-    <button type="submit">Submit</button>
-    <br>
-    <label for="progress">Загрузка файла:</label>
-    <br>
-    <progress id="progress" :value="data.percent" max="100"></progress>
-    <br>
-    <br>
+<p>
+  Это не ещё один способ отрисовать интерфейс на клиенте, а инструмент гидратации: Youla.js
+  читает уже готовую разметку и оживляет её директивами, ничего не перерисовывая заново.
+</p>
 
-    <button type="button" @click.delay.1000ms.once="$ajax('https://jsonplaceholder.typicode.com/posts', {}, response => items = response.json)">Test Fetch</button>
-    <ul>
-      <li v-each="item in items">
-        <span v-text="item.id"></span>
-        <a v-text="item.title"></a>
-      </li>
-    </ul>
-    <br>
-    <br>
+<p>
+  Поэтому основная задача разработчика — правильно получить и вывести данные на сервере.
+  Youla.js включается уже после — без мерцания страницы и без проблем с индексацией контента.
+</p>
 
-    <br>
-    <div>
-      sign-in prop
-    </div>
-    <input v-prop="signIn" type="text">
-    <div v-text="signIn"></div>
-    <br>
-    <br>
-    <div>
-      inputo
-    </div>
-    <input value="10" v-prop="inputo" :min="8" :max="12" :type="'number'">
-    <div v-text="inputo"></div>
-    <div v-text="count"></div>
-    <br>
+<h2>Основная философия</h2>
 
-    <div>
-      Single checkbox with boolean (single)
-    </div>
-    <input type="checkbox" v-prop="singlet" @change="console.log(singlet)" checked>
-    <div v-text="singlet"></div>
-    <div v-show="singlet !== true">Checkbox is checked</div>
-    <br>
+<p>
+  Страница остаётся читаемой и рабочей, даже если JavaScript не загрузился или отключён —
+  ссылки и формы работают как обычный HTML, а не как пустой контейнер в ожидании скрипта.
+</p>
 
-    <div>
-      Multiple checkboxes bound to array (colors)
-    </div>
-    <input type="checkbox" value="Red color!" v-prop="colors" checked>
-    <input type="checkbox" value="Orange color!" v-prop="colors" checked>
-    <input type="checkbox" value="Yellow color!" v-prop="colors" checked>
-    <br>
-    Colors: <span v-text="colors"></span>
-    <br>
-    <br>
+<p>
+  Поисковые роботы и парсеры соцсетей видят готовый контент сразу, а не пустой
+  <code>&lt;div&gt;</code>, который нужно дождаться и выполнить, чтобы получить текст страницы.
+</p>
 
-    <div>
-      Select
-    </div>
-    <select v-prop="select">
-      <option value="">Select A Color</option>
-      <option value="Value 1">Value 1</option>
-      <option value="Value 2">Value 2</option>
-      <option value="Value 3">Value 3</option>
-    </select>
-    <br>
-    Value of select: <span v-text="select"></span>
-    <br>
-    <br>
+<p>
+  Модификатор <code>.lazy</code> у <a href="/v-each"><code>v-each</code></a> и
+  <a href="/v-prop"><code>v-prop</code></a>, а также автоматическая синхронизация атрибута
+  <code>hidden</code> у <a href="/v-show"><code>v-show</code></a> — прямые следствия этого подхода:
+  они помогают сохранить то, что уже видно пользователю при первой загрузке страницы.
+</p>
 
-    <div>
-      Multiple select
-    </div>
-    <select multiple v-prop="multiple">
-      <option value="">Select A Color</option>
-      <option value="Value 1">Value 1</option>
-      <option value="Value 2">Value 2</option>
-      <option value="Value 3">Value 3</option>
-    </select>
-    <br>
-    Value of select: <span v-text="multiple"></span>
-    <br>
-    <br>
+<p>
+  Youla.js не трогает то, что сервер уже отрисовал верно — в некоторых подходах контент при
+  инициализации переотрисовывается или временно заменяется, до готовности скрипта.
+</p>
 
-    <div>
-      Radio inputs (answer)
-    </div>
-    <input type="radio" value="yes" v-prop="answer">
-    <input type="radio" value="no" v-prop="answer">
-    <br>
-    Answer: <span v-text="answer"></span>
-    <br>
-    <br>
+<p>
+  Библиотеке не нужен виртуальный DOM и сравнение деревьев — она читает конкретный элемент и
+  директиву на нём, поэтому клиентский код маленький и работает с любым бэкендом.
+</p>
 
-    <div>
-      Textarea
-    </div>
-    <textarea @keyup="content" v-prop="content">Hello World!</textarea>
-    <div v-text="content"></div>
-  </form>
+<h3>Чем это отличается от Alpine.js и Vue.js</h3>
 
-  <br><br><br><br><br><br><br><br><br><br>
-  <br><br><br><br><br><br><br><br><br><br>
-  <br><br><br><br><br><br><br><br><br><br>
-  <br><br><br><br><br><br><br><br><br><br>
-  <div @load="console.log('I\'m loaded!')"></div>
-  <div @intersect="console.log('Infinity observer: I\'m being showed!')">Infinity observer</div>
-  <div @intersect.once="console.log('Once observer: I\'m being showed!')">Once observer</div>
+<p>
+  Alpine.js использует похожий подход: директивы объявляются прямо в разметке, без отдельной
+  сборки. Для скрытия непроинициализированного контента до загрузки скрипта используется атрибут
+  <code>x-cloak</code> с правилом <code>display: none</code>.
+</p>
 
-  <div @click.capture="console.log('I will log first')">
-    <button @click="console.log('I will log second')">Click Me!</button>
-  </div>
-</div>
+<p>
+  Youla.js решает эту задачу иначе: сервер сразу выводит финальную разметку, и скрывать её на
+  время загрузки скрипта не требуется — директивы применяются к уже видимому контенту.
+</p>
 
-<div v-data="{ foo: 'bar', count: '2', hel: '<strong>v-html directive</strong>', test: 'X-text directive', open: false, tab: 'foo' }">
-  <div v-text="test"></div>
-  <div v-html="hel"></div>
-  <br>
-  <br>
-  <br>
+<p>
+  В типичной конфигурации Vue.js рендерит интерфейс на клиенте: исходный HTML — пустой контейнер,
+  а разметка появляется после загрузки и выполнения JS-бандла.
+</p>
 
-  <span v-text="foo" v-ref="lob"></span>
-  <br>
-  <br>
-  <br>
+<p>
+  Серверный рендеринг добавляется отдельно, например через Nuxt, и требует гидратации —
+  сопоставления серверного и клиентского результата, чтобы оба совпадали.
+</p>
 
-  <button @click="console.log($refs.lob)">console.log</button>
-  <br>
-  <br>
-  <br>
+<p>
+  У Youla.js один сценарий рендеринга — тот, что уже есть на вашем бэкенде. Дополнительная
+  инфраструктура для SSR не нужна, а гидратация — единственный режим работы библиотеки.
+</p>
 
-  Model input:
-  <div v-text="friends"></div>
-  <input value="Hello, my friend!" v-prop="friends">
-  <button @click="friends = 'Hello world!'">Change text</button>
-  <br>
-  <br>
-  <br>
+<h2>Установка</h2>
 
-  <div>
-    <button @click="count--">-</button>
-    <span v-text="count"></span>
-    <button @click="count++">+</button>
-  </div>
-  <div v-show="count > 2" style="font-size: 20px;">This is shown because count is more than 2</div>
-  <br>
-  <br>
-  <br>
+<p>
+  Youla.js пока не публикуется как npm-пакет — библиотеку нужно собрать из исходников репозитория
+  самостоятельно. Процесс простой и обычно занимает не больше пары минут, даже при первом
+  знакомстве с проектом.
+</p>
 
-  <input v-prop="test">
-  <button @click="test = 'baz'">Change to baz</button>
-  <br>
-  <br>
-  <br>
+<h3>Клонируйте репозиторий</h3>
 
-  <button @click="open = true">Open Dropdown</button>
-  <ul class="hidden" :class="{ 'hidden': ! open }" @click.outside="open = false">
-    Dropdown Body
-  </ul>
-  <br>
-  <br>
-  <br>
+<pre>
+git clone https://github.com/yanaleksandrov/Youla.js.git
+cd Youla.js
+</pre>
 
-  <div>
-    <button :class="{ 'active': tab === 'foo' }" @click="tab = 'foo'">Foo</button>
-    <button :class="{ 'active': tab === 'bar' }" @click="tab = 'bar'">Bar</button>
+<h3>Установите зависимости и соберите проект</h3>
 
-    <div :class="{ 'hidden': tab !== 'foo' }">Tab Foo</div>
-    <div class="hidden" :class="{ 'hidden': tab !== 'bar' }">Tab Bar</div>
-  </div>
-</div>
+<pre>
+npm install
+npm run build
+</pre>
+
+<p>
+  После сборки в папке <code>dist</code> появятся два файла: <code>youla.js</code> для разработки
+  с читаемым кодом и минифицированный <code>youla.min.js</code>, который стоит подключать в
+  готовом проекте.
+</p>
+
+<h3>Подключите библиотеку на странице</h3>
+
+<pre>
+&lt;script src=&quot;dist/youla.min.js&quot;&gt;&lt;/script&gt;
+</pre>
+
+<p>
+  Youla.js сама находит на странице все элементы с атрибутом <code>v-data</code> и инициализирует
+  их при загрузке — вызывать что-либо вручную или настраивать точку входа не требуется.
+</p>
+
+<h2>Общая рекомендация</h2>
+
+<p>
+  Держите JavaScript отдельно от разметки. Простое состояние удобно описывать прямо в <code>v-data="{ ... }"</code>. Но как только логики
+  становится больше, выносите её в отдельный JS-файл, а не разрастайте атрибут.
+</p>
+
+<p>
+  <code>Youla.data(имя, callback)</code> регистрирует именованный компонент со своими данными и
+  методами — в разметке остаётся только короткая ссылка на имя, а не весь объект целиком.
+</p>
+
+<p>
+  <code>Youla.method()</code> делает то же самое для переиспользуемых функций: результат доступен
+  как <code>$имяМетода</code> в любом выражении, без копирования одной логики по всей разметке.
+</p>
+
+<p>
+  Готовый пример с <code>Youla.data()</code> — на странице <a href="/examples">Примеры</a>, а
+  полный список специальных переменных вроде <code>$имяМетода</code> — в таблице на странице
+  <a href="/syntax">Полный синтаксис</a>.
+</p>
 
 <%= _.template(require('./parts/footer.html').default)(data) %>

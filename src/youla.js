@@ -1,8 +1,8 @@
 /**
  * The Directives
  *
- * Now that the core is all set up, we can register X directives like v-text or
- * v-html that form the basis of how X adds behavior to an app's static markup.
+ * Now that the core is all set up, we can register Youla.js directives like v-text or
+ * v-html that form the basis of how Youla.js adds behavior to an app's static markup.
  */
 import './scripts/directives/v-each';
 import './scripts/directives/v-html';
@@ -19,8 +19,8 @@ import './scripts/methods/$ajax';
 import './scripts/methods/$dispatch';
 
 /**
- * Let's build X together. For starters, we'll import X's core.
- * This is the object that will expose all of X's public API.
+ * Let's build Youla.js together. For starters, we'll import Youla.js's core.
+ * This is the object that will expose all of Youla.js's public API.
  */
 import { Youla } from './scripts/index';
 

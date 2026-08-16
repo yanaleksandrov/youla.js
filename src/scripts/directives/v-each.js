@@ -1,6 +1,20 @@
 import { directive } from '../directives';
 import { saferEval } from '../helpers';
 
+/**
+ * Renders a clone of the template element for each item in an array, object,
+ * or integer range, keeping the DOM in sync as the underlying collection
+ * changes. Supports `item in items`, `(item, index) in items`, and an
+ * optional `... join 'separator'` suffix. The `.lazy` modifier skips
+ * rendering on init, trusting whatever the server already rendered until the
+ * bound data actually changes.
+ *
+ * @param {HTMLElement} el - the template element carrying v-each; cloned once per rendered item.
+ * @param {string} output - the raw expression string; v-each parses `attribute.expression` itself rather than using an evaluated value.
+ * @param {object} attribute - the parsed attribute descriptor (expression, modifiers, etc. — see parseAttribute in ../helpers).
+ * @param {Component} component - the owning component instance, used to evaluate the items expression against its data.
+ * @param {object} [additionalHelperVariables] - loop variables from an enclosing v-each clone, so nested loops can resolve the parent item (e.g. `product in category.products`).
+ */
 directive('each', (el, output, attribute, component, additionalHelperVariables = {}) => {
   const {expression} = attribute;
   if (typeof expression !== 'string') {
@@ -61,7 +75,7 @@ directive('each', (el, output, attribute, component, additionalHelperVariables =
     (async () => {
       clone.__x_for_data = {...additionalHelperVariables, [item]: dataItem, [index]: +key || key};
 
-      await component.initialize(clone, component.data, clone.__x_for_data);
+      await component.initialize(clone);
 
       el.parentNode.appendChild(clone);
       if (array[idx + 1] && join) {

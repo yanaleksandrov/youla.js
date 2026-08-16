@@ -63,6 +63,19 @@ export function pulsate(callback, wait, immediate = false) {
   return setInterval(callback, wait);
 }
 
+// Walks up from "el" to the nearest ancestor (or itself) carrying loop
+// variables from an enclosing "v-each" clone (see "__x_for_data" in
+// ./directives/v-each), so evaluation done outside the initial render
+// (event handlers, Component#refresh) still sees the same "task"/"index"
+// the element was cloned with.
+export function getForData(el) {
+  let data;
+  while (el && !(data = el.__x_for_data)) {
+    el = el.parentElement;
+  }
+  return data;
+}
+
 export function saferEval(expression, dataContext, additionalHelperVariables = {}, noReturn = false) {
   expression = noReturn ? `with($data){${expression}}` : `var result; with($data){result=${expression}}; return result`;
 

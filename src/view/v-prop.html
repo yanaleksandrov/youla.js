@@ -7,7 +7,7 @@ title: "v-prop"
 
 <p>
   Директива связывает значения полей <code>input</code>, <code>select</code> и <code>textarea</code>
-  с <a href="/v-data"><code>v-data</code></a> без явного объявления их в директиве. За этой лаконичностью стоит решение
+  с <a href="/v-data"><code>v-data</code></a> без явного объявления их в корневой директиве компонента. За этой лаконичностью стоит решение
   сразу нескольких практических проблем.
 </p>
 
@@ -270,6 +270,18 @@ title: "v-prop"
   По умолчанию любые данные, хранящиеся в свойстве через v-prop, сохраняются в виде строки.
   Чтобы заставить Youla.js хранить значение как число в JavaScript, добавьте модификатор <code>.number</code>.
 </p>
+
+<pre>
+&lt;form v-data&gt;
+  &lt;input type=&quot;text&quot; value=&quot;10&quot; v-prop.number=&quot;age&quot;&gt;
+  &lt;div&gt;Значение: &lt;span v-text=&quot;age&quot;&gt;&lt;/span&gt;, тип: &lt;span v-text=&quot;typeof age&quot;&gt;&lt;/span&gt;&lt;/div&gt;
+&lt;/form&gt;
+</pre>
+
+<form class="demo" v-data>
+  <input type="text" value="10" v-prop.number="age">
+  <div>Значение: <span v-text="age"></span>, тип: <span v-text="typeof age"></span></div>
+</form>
 
 <p><code>.trim</code></p>
 

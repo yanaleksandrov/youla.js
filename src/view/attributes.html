@@ -81,10 +81,12 @@
 &lt;/ul&gt;
 </pre>
 
-<ul class="demo attr-tabs" v-data="{ tab: 'profile' }">
-  <li :class="{ active: tab === 'profile' }" @click="tab = 'profile'">Профиль</li>
-  <li :class="{ active: tab === 'settings' }" @click="tab = 'settings'">Настройки</li>
-</ul>
+<div class="demo">
+  <ul class="attr-tabs" v-data="{ tab: 'profile' }">
+    <li :class="{ active: tab === 'profile' }" @click="tab = 'profile'">Профиль</li>
+    <li :class="{ active: tab === 'settings' }" @click="tab = 'settings'">Настройки</li>
+  </ul>
+</div>
 
 <p>Массив и строка работают так же, как обычная конкатенация классов:</p>
 

@@ -61,7 +61,7 @@ directive('each', (el, output, attribute, component, additionalHelperVariables =
     (async () => {
       clone.__x_for_data = {...additionalHelperVariables, [item]: dataItem, [index]: +key || key};
 
-      await component.initialize(clone, component.data, clone.__x_for_data);
+      await component.initialize(clone);
 
       el.parentNode.appendChild(clone);
       if (array[idx + 1] && join) {

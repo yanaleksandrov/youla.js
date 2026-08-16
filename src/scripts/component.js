@@ -1,4 +1,4 @@
-import { domWalk, debounce, getAttributes, parseAttribute, saferEval, eventCreate, getNextModifier } from './helpers';
+import { domWalk, debounce, getAttributes, getForData, parseAttribute, saferEval, eventCreate, getNextModifier } from './helpers';
 import { updateAttribute } from './attributes';
 import { fetchProp, generateExpressionForProp } from './props';
 import { injectDataProviders } from './data';
@@ -29,7 +29,7 @@ export default class Component {
     this.rawData = fetchProp(el, this.rawData);
     this.data    = this.wrapDataInObservable(this.rawData);
 
-    this.initialize(el, this.data);
+    this.initialize(el);
   }
 
   evaluate(expressionOrFn, additionalHelperVariables) {
@@ -49,13 +49,25 @@ export default class Component {
 
     const proxiedData = makeProxy(this.data);
 
+    // "v-each" loop variables ("task", "index") are handed to saferEval as
+    // separate function parameters, not as properties of $data — so reading
+    // "task.checked" would never touch the tracking proxy above and "deps"
+    // would stay empty, making the binding look unrelated to every future
+    // data change. Wrap object-valued helper variables the same way so
+    // property reads on loop items are tracked too.
+    const trackedHelperVariables = additionalHelperVariables && Object.fromEntries(
+      Object.entries(additionalHelperVariables).map(([key, value]) => [
+        key, (typeof value === 'object' && value !== null) ? makeProxy(value) : value
+      ])
+    );
+
     // A v-bind entry may hand back a method instead of an expression string
     // (e.g. "v-show"() { return this.open }) — call it with the same
     // dependency-tracking proxy as "this", so property access is tracked
     // exactly like accessing $data inside a plain expression string.
     const output = typeof expressionOrFn === 'function'
       ? expressionOrFn.call(proxiedData)
-      : saferEval(expressionOrFn, proxiedData, additionalHelperVariables);
+      : saferEval(expressionOrFn, proxiedData, trackedHelperVariables);
 
     return { output, deps };
   }
@@ -67,8 +79,13 @@ export default class Component {
   // referencing "trigger" from Youla.data('dropdown', () => ({ trigger: {...} }))),
   // resolved the same way any other expression reads from the component's data —
   // no separate registry involved.
-  resolveAttributes(el, additionalHelperVariables) {
+  // "additionalHelperVariables" is never threaded in from the caller — it's
+  // derived here from the element itself (see getForData), so every caller
+  // automatically gets the right "v-each" loop scope without having to
+  // remember to pass it along.
+  resolveAttributes(el) {
     const self = this;
+    const additionalHelperVariables = getForData(el);
 
     return getAttributes(el).flatMap(attribute => {
       if (attribute.directive !== 'v-bind') {
@@ -163,45 +180,49 @@ export default class Component {
     return makeObservable(data);
   }
 
-  initialize(root, data, additionalHelperVariables) {
+  initialize(root) {
     const self = this;
 
-    domWalk(root, el => self.resolveAttributes(el, additionalHelperVariables).forEach(attribute => {
-      let {directive, event, expression, modifiers, bind, literal} = attribute;
+    domWalk(root, el => {
+      const additionalHelperVariables = getForData(el);
 
-      // init events
-      let propExpression;
-      if (directive === 'v-prop') {
-        propExpression = generateExpressionForProp(el, data, attribute);
+      self.resolveAttributes(el).forEach(attribute => {
+        let {directive, event, expression, modifiers, bind, literal} = attribute;
 
-        // If the element we are binding to is a select, a radio, or checkbox we'll listen for the change event instead of the "input" event.
-        event = ['select-multiple', 'select', 'checkbox', 'radio'].includes(el.type) || modifiers.includes('lazy')
-          ? 'change'
-          : 'input';
-      }
+        // init events
+        let propExpression;
+        if (directive === 'v-prop') {
+          propExpression = generateExpressionForProp(el, self.data, attribute);
 
-      if (event) {
-        self.registerListener(el, event, modifiers, propExpression || expression);
-      }
-
-      // init directives — attribute binding ("bind") is a distinct mechanism from
-      // directives, so it's resolved and dispatched the same way but never looked
-      // up in Youla.directives; see ./attributes
-      if (bind || directive in Youla.directives) {
-        let output = expression;
-        if (!literal && directive !== 'v-each') {
-          try {
-            ({ output } = self.evaluate(expression, additionalHelperVariables));
-          } catch (error) {}
+          // If the element we are binding to is a select, a radio, or checkbox we'll listen for the change event instead of the "input" event.
+          event = ['select-multiple', 'select', 'checkbox', 'radio'].includes(el.type) || modifiers.includes('lazy')
+            ? 'change'
+            : 'input';
         }
 
-        if (bind) {
-          updateAttribute(el, attribute.name.replace(':', ''), output);
-        } else {
-          Youla.directives[directive](el, output, attribute, self, additionalHelperVariables);
+        if (event) {
+          self.registerListener(el, event, modifiers, propExpression || expression);
         }
-      }
-    }));
+
+        // init directives — attribute binding ("bind") is a distinct mechanism from
+        // directives, so it's resolved and dispatched the same way but never looked
+        // up in Youla.directives; see ./attributes
+        if (bind || directive in Youla.directives) {
+          let output = expression;
+          if (!literal && directive !== 'v-each') {
+            try {
+              ({ output } = self.evaluate(expression, additionalHelperVariables));
+            } catch (error) {}
+          }
+
+          if (bind) {
+            updateAttribute(el, attribute.name.replace(':', ''), output);
+          } else {
+            Youla.directives[directive](el, output, attribute, self, additionalHelperVariables);
+          }
+        }
+      });
+    });
   }
 
   refresh() {
@@ -210,28 +231,37 @@ export default class Component {
     // use debounce for .outside modificator work
     // TODO: check, maybe this problem can solve with other solution
     debounce(() => {
-      domWalk(self.root, el => self.resolveAttributes(el).forEach(attribute => {
-        let {directive, expression, bind, literal} = attribute;
+      domWalk(self.root, el => {
+        // An element rendered inside a "v-each" clone only carries its loop
+        // variables ("task"/"index") on "__x_for_data" of the clone root
+        // (see ./directives/v-each) — without resolving them here too,
+        // bindings referencing them (":class", "v-text", ...) throw on every
+        // refresh and silently stop updating after the first render.
+        const additionalHelperVariables = getForData(el);
 
-        if (bind || directive in Youla.directives) {
-          let output = expression, deps = [];
-          if (directive === 'v-each') {
-            [, deps] = expression.split(' in ');
-          } else if (!literal) {
-            try {
-              ({ output, deps } = self.evaluate(expression));
-            } catch (error) {}
-          }
+        self.resolveAttributes(el).forEach(attribute => {
+          let {directive, expression, bind, literal} = attribute;
 
-          if (self.concernedData.filter(i => deps.includes(i)).length > 0) {
-            if (bind) {
-              updateAttribute(el, attribute.name.replace(':', ''), output);
-            } else {
-              Youla.directives[directive](el, output, attribute, self);
+          if (bind || directive in Youla.directives) {
+            let output = expression, deps = [];
+            if (directive === 'v-each') {
+              [, deps] = expression.split(' in ');
+            } else if (!literal) {
+              try {
+                ({ output, deps } = self.evaluate(expression, additionalHelperVariables));
+              } catch (error) {}
+            }
+
+            if (self.concernedData.filter(i => deps.includes(i)).length > 0) {
+              if (bind) {
+                updateAttribute(el, attribute.name.replace(':', ''), output);
+              } else {
+                Youla.directives[directive](el, output, attribute, self, additionalHelperVariables);
+              }
             }
           }
-        }
-      }));
+        });
+      });
 
       self.concernedData = [];
     }, 0)()
@@ -339,10 +369,7 @@ export default class Component {
       methods[key] = Youla.methods[key](e, target, this);
     });
 
-    let data = {}, el = target;
-    while (el && !(data = el.__x_for_data)) {
-      el = el.parentElement;
-    }
+    const data = getForData(target);
 
     saferEval(expression, this.data, {
       '$el': target,

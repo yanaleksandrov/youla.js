@@ -1,0 +1,145 @@
+<% var data = {
+  title: "Таблица с выбором строк"
+}; %>
+<%= _.template(require('./parts/header.html').default)(data) %>
+
+<h1>Таблица с выбором строк</h1>
+
+<p>
+  Массовые действия над списком — удалить, экспортировать, изменить статус сразу у нескольких
+  строк — требуют способа быстро выбрать нужные. Чекбокс в шапке включает и выключает все строки
+  разом, а клик с зажатым <kbd>Shift</kbd> выделяет весь диапазон между двумя кликами — как в
+  почтовых клиентах и админ-панелях.
+</p>
+
+<pre>
+document.addEventListener('youla:init', () =&gt; {
+  Youla.data('table', () =&gt; ({
+    anchor: null,
+    trigger: {
+      '@change': 'selectAll($el, $root)',
+    },
+    item: {
+      '@click': 'selectItem($el, $root, $event)',
+    },
+    items(root) {
+      return [...root.querySelectorAll('[v-bind~="item"]')];
+    },
+    selectAll(el, root) {
+      this.items(root).forEach(input =&gt; input.checked = el.checked);
+    },
+    selectItem(el, root, event) {
+      let items   = this.items(root);
+      let index   = items.indexOf(el);
+      let checked = el.checked;
+      let start   = event.shiftKey &amp;&amp; this.anchor !== null ? this.anchor : index;
+
+      for (let i = Math.min(start, index); i &lt;= Math.max(start, index); i++) {
+        items[i].checked = checked;
+      }
+      this.anchor = index;
+    },
+  }));
+});
+</pre>
+
+<pre>
+&lt;table v-data=&quot;table&quot;&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;&lt;input type=&quot;checkbox&quot; v-bind=&quot;trigger&quot;&gt;&lt;/th&gt;
+      &lt;th&gt;Имя&lt;/th&gt;
+      &lt;th&gt;Email&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;input type=&quot;checkbox&quot; v-bind=&quot;item&quot;&gt;&lt;/td&gt;
+      &lt;td&gt;Иван Петров&lt;/td&gt;
+      &lt;td&gt;ivan@example.com&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;input type=&quot;checkbox&quot; v-bind=&quot;item&quot;&gt;&lt;/td&gt;
+      &lt;td&gt;Мария Сидорова&lt;/td&gt;
+      &lt;td&gt;maria@example.com&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;input type=&quot;checkbox&quot; v-bind=&quot;item&quot;&gt;&lt;/td&gt;
+      &lt;td&gt;Алексей Смирнов&lt;/td&gt;
+      &lt;td&gt;alexey@example.com&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;input type=&quot;checkbox&quot; v-bind=&quot;item&quot;&gt;&lt;/td&gt;
+      &lt;td&gt;Ольга Кузнецова&lt;/td&gt;
+      &lt;td&gt;olga@example.com&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+</pre>
+
+<div class="demo">
+  <table v-data="table">
+    <thead>
+      <tr>
+        <th><input type="checkbox" v-bind="trigger"></th>
+        <th>Имя</th>
+        <th>Email</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><input type="checkbox" v-bind="item"></td>
+        <td>Иван Петров</td>
+        <td>ivan@example.com</td>
+      </tr>
+      <tr>
+        <td><input type="checkbox" v-bind="item"></td>
+        <td>Мария Сидорова</td>
+        <td>maria@example.com</td>
+      </tr>
+      <tr>
+        <td><input type="checkbox" v-bind="item"></td>
+        <td>Алексей Смирнов</td>
+        <td>alexey@example.com</td>
+      </tr>
+      <tr>
+        <td><input type="checkbox" v-bind="item"></td>
+        <td>Ольга Кузнецова</td>
+        <td>olga@example.com</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>Как пользоваться</h2>
+
+<table>
+  <tbody>
+    <tr>
+      <th>Набор</th>
+      <th>Куда навесить</th>
+      <th>Что делает</th>
+    </tr>
+    <tr>
+      <td><code>trigger</code></td>
+      <td>чекбокс «выбрать всё» (например, в шапке)</td>
+      <td>включает или выключает сразу все чекбоксы с <code>item</code></td>
+    </tr>
+    <tr>
+      <td><code>item</code></td>
+      <td>чекбокс каждой выбираемой строки</td>
+      <td>
+        обычный клик переключает только его; клик с <kbd>Shift</kbd> выделяет диапазон от
+        предыдущего клика до текущего
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  Разметка не обязана быть таблицей — подойдёт список или набор <code>&lt;div&gt;</code>, важно
+  только расставить <code>v-bind=&quot;trigger&quot;</code> и <code>v-bind=&quot;item&quot;</code>
+  на нужных чекбоксах.
+</p>
+
+<%= _.template(require('./parts/footer.html').default)(data) %>

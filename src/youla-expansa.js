@@ -44,5 +44,37 @@ document.addEventListener('youla:init', ()=> {
     getInitials(string, letters = 2) {
       return string.split(' ', letters).map(word => word.charAt(0)).join('').toUpperCase();
     },
-  }))
+  }));
+
+  /**
+   * Table checkboxes
+   *
+   * @since 1.0
+   */
+  Youla.data('table', () => ({
+    anchor: null,
+    trigger: {
+      '@change': 'selectAll($el, $root)',
+    },
+    item: {
+      '@click': 'selectItem($el, $root, $event)',
+    },
+    items(root) {
+      return [...root.querySelectorAll('[v-bind~="item"]')];
+    },
+    selectAll(el, root) {
+      this.items(root).forEach(input => input.checked = el.checked);
+    },
+    selectItem(el, root, event) {
+      let items   = this.items(root);
+      let index   = items.indexOf(el);
+      let checked = el.checked;
+      let start   = event.shiftKey && this.anchor !== null ? this.anchor : index;
+
+      for (let i = Math.min(start, index); i <= Math.max(start, index); i++) {
+        items[i].checked = checked;
+      }
+      this.anchor = index;
+    },
+  }));
 });

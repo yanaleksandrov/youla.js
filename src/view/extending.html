@@ -1,0 +1,192 @@
+<% var data = {
+  title: "Extending"
+}; %>
+<%= _.template(require('./parts/header.html').default)(data) %>
+
+<h1>Extending</h1>
+
+<p>
+  Youla.js не ограничивается встроенными директивами и специальными переменными — можно
+  регистрировать собственные <code>v-*</code> директивы и методы, доступные по имени <code>$</code>
+  внутри выражений, точно так же, как встроенные <a href="/v-show"><code>v-show</code></a> или
+  <code>$refs</code>.
+</p>
+
+<h2>Хук youla:init</h2>
+
+<p>
+  Прежде чем Youla.js начнёт искать на странице элементы с <code>v-data</code> и инициализировать
+  компоненты, документ получает событие <code>youla:init</code>. Это единственный момент, когда
+  регистрация новой директивы или метода гарантированно происходит раньше, чем они понадобятся —
+  весь код регистрации оборачивают в его обработчик.
+</p>
+
+<pre>
+document.addEventListener(&#39;youla:init&#39;, () =&gt; {
+  // здесь регистрируются директивы, методы и данные компонентов
+});
+</pre>
+
+<h2>Пользовательские директивы</h2>
+
+<p>
+  <code>Youla.directive(имя, callback)</code> регистрирует директиву <code>v-имя</code>. После
+  этого атрибут с таким именем на любом элементе внутри компонента ведёт себя как обычная
+  директива Youla.js: вычисляется заново при каждом изменении данных, от которых зависит его
+  выражение, и вызывает <code>callback</code> с результатом.
+</p>
+
+<table>
+  <tbody>
+    <tr>
+      <th>Параметр</th>
+      <th>Значение</th>
+    </tr>
+    <tr>
+      <td><code>el</code></td>
+      <td>DOM-элемент, на котором объявлена директива</td>
+    </tr>
+    <tr>
+      <td><code>output</code></td>
+      <td>Результат вычисления выражения из значения атрибута</td>
+    </tr>
+    <tr>
+      <td><code>attribute</code></td>
+      <td>Разобранный атрибут: <code>expression</code>, <code>modifiers</code> и другие поля</td>
+    </tr>
+    <tr>
+      <td><code>component</code></td>
+      <td>Компонент-владелец элемента — доступ к его реактивным данным через <code>component.data</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<pre>
+document.addEventListener(&#39;youla:init&#39;, () =&gt; {
+  Youla.directive(&#39;uppercase&#39;, (el, output) =&gt; {
+    el.textContent = String(output).toUpperCase();
+  });
+
+  Youla.data(&#39;greeting&#39;, () =&gt; ({
+    name: &#39;youla.js&#39;,
+  }));
+});
+</pre>
+
+<pre>
+&lt;div v-data=&quot;greeting&quot;&gt;
+  &lt;input v-prop=&quot;name&quot; /&gt;
+  &lt;p v-uppercase=&quot;name&quot;&gt;&lt;/p&gt;
+&lt;/div&gt;
+</pre>
+
+<script>
+  document.addEventListener('youla:init', () => {
+    Youla.directive('uppercase', (el, output) => {
+      el.textContent = String(output).toUpperCase();
+    });
+
+    Youla.data('greeting', () => ({
+      name: 'youla.js',
+    }));
+  });
+</script>
+
+<div class="demo" v-data="greeting">
+  <input v-prop="name" />
+  <p v-uppercase="name"></p>
+</div>
+
+<p>
+  Директива вызывается заново по тем же правилам, что и встроенные: Youla.js сам следит, какие
+  свойства читает выражение из значения атрибута, и перезапускает <code>callback</code>, только
+  когда одно из них меняется — писать код отслеживания изменений внутри директивы не нужно.
+</p>
+
+<p>
+  Регистрировать директиву с уже занятым именем нельзя — Youla.js оставит первую регистрацию как
+  есть и выведет предупреждение в консоль, вместо того чтобы молча её перезаписать.
+</p>
+
+<h2>Пользовательские методы</h2>
+
+<p>
+  <code>Youla.method(имя, callback)</code> регистрирует метод, доступный внутри обработчика любого
+  события (<code>@click</code>, <code>@input</code> и т.п.) как <code>$имя</code> — рядом со
+  встроенными <code>$el</code>, <code>$event</code>, <code>$refs</code> и <code>$root</code>.
+</p>
+
+<p>
+  В отличие от директивы, <code>callback</code> здесь — не сам метод, а фабрика: она вызывается
+  один раз на каждое обращение к <code>$имя</code> с текущими <code>el</code> и
+  <code>component</code>, а возвращённая ею функция и есть то, что реально вызывается в выражении.
+</p>
+
+<table>
+  <tbody>
+    <tr>
+      <th>Параметр фабрики</th>
+      <th>Значение</th>
+    </tr>
+    <tr>
+      <td><code>event</code></td>
+      <td>Объект события, вызвавшего обработчик</td>
+    </tr>
+    <tr>
+      <td><code>el</code></td>
+      <td>Элемент, на котором объявлен обработчик события</td>
+    </tr>
+    <tr>
+      <td><code>component</code></td>
+      <td>Компонент-владелец — доступ к его реактивным данным через <code>component.data</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<pre>
+document.addEventListener(&#39;youla:init&#39;, () =&gt; {
+  Youla.method(&#39;roll&#39;, () =&gt; () =&gt; Math.ceil(Math.random() * 6));
+
+  Youla.data(&#39;dice&#39;, () =&gt; ({
+    value: 1,
+  }));
+});
+</pre>
+
+<pre>
+&lt;div v-data=&quot;dice&quot;&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;value = $roll()&quot;&gt;Бросить кубик&lt;/button&gt;
+  &lt;span v-text=&quot;value&quot;&gt;&lt;/span&gt;
+&lt;/div&gt;
+</pre>
+
+<script>
+  document.addEventListener('youla:init', () => {
+    Youla.method('roll', () => () => Math.ceil(Math.random() * 6));
+
+    Youla.data('dice', () => ({
+      value: 1,
+    }));
+  });
+</script>
+
+<div class="demo" v-data="dice">
+  <button type="button" @click="value = $roll()">Бросить кубик</button>
+  <span v-text="value"></span>
+</div>
+
+<p>
+  Метод, зарегистрированный через <code>Youla.method()</code>, доступен только внутри выражений
+  событий — <code>@click</code>, <code>@input</code> и подобных. Директивы и <code>:attribute</code>
+  вычисляются другим путём, где <code>$имя</code> не подставляется, поэтому вызывать его напрямую
+  из <a href="/v-text"><code>v-text</code></a> или <a href="/attributes"><code>:attribute</code></a>
+  нельзя — присвойте результат данным компонента внутри обработчика события, как в примере выше,
+  и уже эти данные читайте в директиве.
+</p>
+
+<p>
+  Как и с директивами, имя, которое уже занято, повторно зарегистрировать нельзя — Youla.js
+  предупредит об этом в консоли и оставит первую регистрацию без изменений.
+</p>
+
+<%= _.template(require('./parts/footer.html').default)(data) %>

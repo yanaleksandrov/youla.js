@@ -1084,45 +1084,6 @@ document.addEventListener('youla:init', ()=> {
   }));
 
   /**
-   * Avatar
-   *
-   * @since 1.0
-   */
-  Youla.data('!!!old-now-in youla-expansa--avatar', () => ({
-    content: '',
-    image: '',
-    add(event, callback) {
-      let file = event.target.files[0];
-      if (file) {
-        let reader = new FileReader();
-        reader.onload = e => {
-          this.image = e.target.result;
-        };
-        reader.readAsDataURL(file);
-      }
-
-      if (callback) {
-        callback();
-      }
-    },
-    remove() {
-      let root  = this.$el.closest('[v-data]'),
-        input = root && root.querySelector('input[type="file"]');
-      if (input) {
-        input.value = '';
-      }
-      this.image = '';
-    },
-    getInitials( string, letters = 2 ) {
-      const wordArray = string.split(' ').slice( 0, letters );
-      if ( wordArray.length >= 2 ) {
-        return wordArray.reduce( ( accumulator, currentValue ) => `${accumulator}${currentValue[0].charAt(0)}`.toUpperCase(), '' );
-      }
-      return wordArray[0].charAt(0).toUpperCase();
-    },
-  }))
-
-  /**
    * Custom fields builder.
    *
    * @since 1.0

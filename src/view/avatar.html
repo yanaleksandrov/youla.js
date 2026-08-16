@@ -57,14 +57,15 @@ Youla.data('avatar', () =&gt; ({
 </pre>
 
 <pre>
-&lt;div v-data=&quot;avatar&quot;&gt;
-  &lt;input type=&quot;text&quot; v-bind=&quot;field&quot; placeholder=&quot;Введите имя&quot;&gt;
-
+&lt;div class=&quot;demo example-avatar&quot; v-data=&quot;avatar&quot;&gt;
   &lt;div class=&quot;avatar-circle&quot; v-bind=&quot;picture&quot;&gt;
     &lt;span v-bind=&quot;initials&quot; hidden&gt;&lt;/span&gt;
   &lt;/div&gt;
 
+  &lt;input type=&quot;text&quot; placeholder=&quot;Введите имя&quot; v-bind=&quot;field&quot;&gt;
+
   &lt;input type=&quot;file&quot; accept=&quot;image/*&quot; v-bind=&quot;uploader&quot;&gt;
+
   &lt;button type=&quot;button&quot; v-bind=&quot;remover&quot; hidden&gt;Удалить&lt;/button&gt;
 &lt;/div&gt;
 </pre>
@@ -97,7 +98,7 @@ Youla.data('avatar', () =&gt; ({
     <span v-bind="initials" hidden></span>
   </div>
 
-  <input type="text" v-bind="field" placeholder="Введите имя">
+  <input type="text" placeholder="Введите имя" v-bind="field">
 
   <input type="file" accept="image/*" v-bind="uploader">
 

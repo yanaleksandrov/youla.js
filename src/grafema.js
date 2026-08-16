@@ -1088,7 +1088,7 @@ document.addEventListener('youla:init', ()=> {
    *
    * @since 1.0
    */
-  Youla.data('avatar', () => ({
+  Youla.data('!!!old-now-in youla-expansa--avatar', () => ({
     content: '',
     image: '',
     add(event, callback) {

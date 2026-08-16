@@ -1,0 +1,176 @@
+<% var data = {
+  title: "Аватар"
+}; %>
+<%= _.template(require('./parts/header.html').default)(data) %>
+
+<h1>Загрузчик аватарки</h1>
+
+<p>
+  Форме профиля обычно нужен загрузчик фото: показать превью сразу после выбора файла, до всякой
+  отправки на сервер, и чем-то заменить пустое место, пока файл не выбран — обычно инициалами
+  пользователя. Написанное вручную, это каждый раз одна и та же связка <code>FileReader</code>,
+  запасного состояния и очистки <code>input[type="file"]</code> по кнопке «Удалить».
+</p>
+
+<pre>
+Youla.data('avatar', () =&gt; ({
+  content: '', image: '',
+
+  field: {
+    'v-prop': 'content',
+  },
+  picture: {
+    ':style': &quot;image &amp;&amp; `background-image:url(${image})`&quot;,
+  },
+  initials(letters = 2) {
+    return {
+      'v-show': '!image',
+      'v-text': `content &amp;&amp; getInitials(content, ${letters})`,
+    }
+  },
+  uploader: {
+    '@change': 'add($event)',
+  },
+  remover: {
+    '@click': 'remove($event)',
+    'v-show': 'image',
+  },
+
+  add(event, callback) {
+    let file = event.target.files[0];
+    if (file) {
+      let reader = new FileReader();
+      reader.onload = e =&gt; {
+        this.image = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    if (callback) {
+      callback();
+    }
+  },
+  remove(event) {
+    let root  = event.target.closest('[v-data]'),
+      input = root &amp;&amp; root.querySelector('input[type="file"]');
+    if (input) {
+      input.value = '';
+    }
+    this.image = '';
+  },
+  getInitials(string, letters = 2) {
+    const wordArray = string.split(' ').slice(0, letters);
+    if (wordArray.length &gt;= 2) {
+      return wordArray.reduce((accumulator, currentValue) =&gt; `${accumulator}${currentValue[0].charAt(0)}`.toUpperCase(), '');
+    }
+    return wordArray[0].charAt(0).toUpperCase();
+  },
+}))
+</pre>
+
+<pre>
+&lt;div v-data=&quot;avatar&quot;&gt;
+  &lt;input type=&quot;text&quot; v-bind=&quot;field&quot; placeholder=&quot;Введите имя&quot;&gt;
+
+  &lt;div class=&quot;avatar-circle&quot; v-bind=&quot;picture&quot;&gt;
+    &lt;span v-bind=&quot;initials(1)&quot; hidden&gt;&lt;/span&gt;
+  &lt;/div&gt;
+
+  &lt;input type=&quot;file&quot; accept=&quot;image/*&quot; v-bind=&quot;uploader&quot;&gt;
+  &lt;button type=&quot;button&quot; v-bind=&quot;remover&quot; hidden&gt;Удалить&lt;/button&gt;
+&lt;/div&gt;
+</pre>
+
+<style>
+  .example-avatar { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; }
+  .example-avatar .avatar-circle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 4rem;
+    height: 4rem;
+    flex: none;
+    background-color: var(--teal-soft);
+    background-size: cover;
+    background-position: center;
+    border-radius: 50%;
+    color: var(--teal);
+    font-weight: 600;
+  }
+</style>
+
+<div class="demo example-avatar" v-data="avatar">
+  <div class="avatar-circle" v-bind="picture">
+    <span v-bind="initials(1)" hidden></span>
+  </div>
+
+  <input type="text" v-bind="field" placeholder="Введите имя">
+
+  <input type="file" accept="image/*" v-bind="uploader">
+
+  <button type="button" v-bind="remover" hidden>Удалить</button>
+</div>
+
+<p>
+  <code>image</code> хранит выбранный файл как <code>data:</code>-URL — этого достаточно для
+  превью, но для реальной загрузки файл нужно дополнительно отправить на сервер, сам компонент
+  этим не занимается.
+</p>
+
+<h2>Как пользоваться</h2>
+
+<table>
+  <tbody>
+    <tr>
+      <th>Набор</th>
+      <th>Куда навесить</th>
+      <th>Что делает</th>
+    </tr>
+    <tr>
+      <td><code>field</code></td>
+      <td>текстовое поле имени</td>
+      <td><code>v-prop</code> двусторонне связывает поле с <code>content</code></td>
+    </tr>
+    <tr>
+      <td><code>picture</code></td>
+      <td>контейнер превью</td>
+      <td><code>:style</code> подставляет <code>image</code> фоном, пока он не пуст</td>
+    </tr>
+    <tr>
+      <td><code>initials(letters)</code></td>
+      <td>заглушка внутри превью</td>
+      <td>
+        <code>v-show</code> показывает её, пока файла нет; <code>v-text</code> — первые
+        <code>letters</code> букв <code>content</code> (по умолчанию 2)
+      </td>
+    </tr>
+    <tr>
+      <td><code>uploader</code></td>
+      <td><code>input[type="file"]</code></td>
+      <td><code>@change</code> читает выбранный файл в <code>image</code></td>
+    </tr>
+    <tr>
+      <td><code>remover</code></td>
+      <td>кнопка «Удалить»</td>
+      <td>
+        <code>v-show</code> появляется, только когда <code>image</code> заполнен;
+        <code>@click</code> очищает и <code>image</code>, и сам <code>input[type="file"]</code>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  <code>type</code> и <code>accept</code> у обоих <code>input</code> и кнопки — обычные native-
+  атрибуты, поэтому они остаются прямо в разметке, а не переезжают в <code>Youla.data</code>: в
+  наборы <code>v-bind</code> идут только методы, события, <code>:attribute</code> и директивы.
+</p>
+
+<p>
+  И <code>add</code>, и <code>remove</code> получают событие первым аргументом
+  (<code>add($event)</code>, <code>remove($event)</code>) — <code>event.target</code> внутри них
+  и есть тот элемент, на котором сработало событие, доступа к нему через <code>this.$el</code>
+  внутри обычного метода нет.
+</p>
+
+<%= _.template(require('./parts/footer.html').default)(data) %>

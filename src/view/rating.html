@@ -1,0 +1,113 @@
+<% var data = {
+  title: "Рейтинг"
+}; %>
+<%= _.template(require('./parts/header.html').default)(data) %>
+
+<h1>Рейтинг звёздами</h1>
+
+<p>
+  Пять звёзд, и у каждой — три динамические привязки сразу: подсветка при наведении и выборе
+  (<code>:class</code>), запоминание наведённой звезды (<code>@mouseenter</code>) и клик для выбора
+  оценки (<code>@click</code>). Переписывать эту тройку пять раз с разными номерами было бы то же
+  дублирование, что и в примере <a href="/v-bind">v-bind</a> с параметризованными вкладками —
+  здесь та же идея: метод <code>star(n)</code> возвращает набор для конкретного номера, а разметка
+  лишь подставляет его через <code>v-bind="star(n)"</code>.
+</p>
+
+<pre>
+document.addEventListener('youla:init', () =&gt; {
+  Youla.data('rating', () =&gt; ({
+    value: 3,
+    hovered: 0,
+    hover(n) {
+      this.hovered = n;
+    },
+    leave() {
+      this.hovered = 0;
+    },
+    rate(n) {
+      this.value = n;
+    },
+    isFilled(n) {
+      return n &lt;= (this.hovered || this.value);
+    },
+    star(n) {
+      return {
+        ':class': `{ filled: isFilled(${n}) }`,
+        '@mouseenter': `hover(${n})`,
+        '@click': `rate(${n})`,
+      };
+    },
+  }));
+});
+</pre>
+
+<pre>
+&lt;div v-data=&quot;rating&quot; @mouseleave=&quot;leave()&quot;&gt;
+  &lt;span v-bind=&quot;star(1)&quot; class=&quot;star&quot;&gt;★&lt;/span&gt;
+  &lt;span v-bind=&quot;star(2)&quot; class=&quot;star&quot;&gt;★&lt;/span&gt;
+  &lt;span v-bind=&quot;star(3)&quot; class=&quot;star&quot;&gt;★&lt;/span&gt;
+  &lt;span v-bind=&quot;star(4)&quot; class=&quot;star&quot;&gt;★&lt;/span&gt;
+  &lt;span v-bind=&quot;star(5)&quot; class=&quot;star&quot;&gt;★&lt;/span&gt;
+
+  &lt;div&gt;Оценка: &lt;span v-text=&quot;value&quot;&gt;&lt;/span&gt; из 5&lt;/div&gt;
+&lt;/div&gt;
+</pre>
+
+<p>
+  Звёзды написаны явно, а не через <a href="/v-each"><code>v-each</code></a>: их ровно пять и это
+  не меняющийся список, а фиксированный набор кнопок — <code>v-each</code> здесь пересчитывал бы
+  один и тот же шаблон без реальной пользы. <code>star(n)</code> вызывается прямо в разметке с
+  нужным номером, а <code>${n}</code> подставляется в строки-выражения один раз, при вызове метода.
+</p>
+
+<style>
+  .example-rating .star { cursor: pointer; font-size: 1.75rem; color: var(--line); }
+  .example-rating .star.filled { color: #f2b100; }
+</style>
+
+<script>
+  document.addEventListener('youla:init', () => {
+    Youla.data('rating', () => ({
+      value: 3,
+      hovered: 0,
+      hover(n) {
+        this.hovered = n;
+      },
+      leave() {
+        this.hovered = 0;
+      },
+      rate(n) {
+        this.value = n;
+      },
+      isFilled(n) {
+        return n <= (this.hovered || this.value);
+      },
+      star(n) {
+        return {
+          ':class': `{ filled: isFilled(${n}) }`,
+          '@mouseenter': `hover(${n})`,
+          '@click': `rate(${n})`,
+        };
+      },
+    }));
+  });
+</script>
+
+<div class="demo example-rating" v-data="rating" @mouseleave="leave()">
+  <span v-bind="star(1)" class="star">★</span>
+  <span v-bind="star(2)" class="star">★</span>
+  <span v-bind="star(3)" class="star">★</span>
+  <span v-bind="star(4)" class="star">★</span>
+  <span v-bind="star(5)" class="star">★</span>
+
+  <div>Оценка: <span v-text="value"></span> из 5</div>
+</div>
+
+<p>
+  <code>hovered</code> хранит номер звезды под курсором и сбрасывается методом <code>leave()</code>,
+  повешенным на весь компонент, — поэтому подсветка при наведении не зависит от того, над какой
+  именно звездой сейчас курсор.
+</p>
+
+<%= _.template(require('./parts/footer.html').default)(data) %>

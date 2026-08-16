@@ -1,0 +1,282 @@
+<% var data = {
+  title: "Примеры"
+}; %>
+<%= _.template(require('./parts/header.html').default)(data) %>
+
+<h1>Примеры</h1>
+
+<p>
+  На этой странице собраны комплексные примеры, демонстрирующие совместную работу директив
+  Youla.js: <a href="/v-data"><code>v-data</code></a>, <a href="/v-text"><code>v-text</code></a>,
+  <a href="/v-html"><code>v-html</code></a>, <a href="/v-show"><code>v-show</code></a>,
+  <a href="/v-prop"><code>v-prop</code></a>, <a href="/v-each"><code>v-each</code></a> и
+  <a href="/v-bind"><code>v-bind</code></a>, а также события и атрибуты.
+</p>
+
+<div class="demo" v-data="{signIn: 'привет', viewed: false, data: {percent: 0}, items: [], count: 11, lists: [{attributes: {href: 'https://poe.com/chat/2shu93txki2jj53eflg', target: '_blank'}, title: 'Hello World!'}, {attributes: {href: '#', target: '_blank'}, title: 'How are you?'}]}">
+  <form @submit.prevent="$ajax('https://jsonplaceholder.typicode.com/posts', {}, response => data = response).then(r => console.log(r))">
+    <input type="file" name="testFile" placeholder="Choose file">
+    <br>
+    <button type="submit">Submit</button>
+    <br>
+    <label for="progress">Загрузка файла:</label>
+    <br>
+    <progress id="progress" :value="data.percent" max="100"></progress>
+    <br>
+    <br>
+
+    <button type="button" @click.delay.1000ms.once="$ajax('https://jsonplaceholder.typicode.com/posts', {}, response => items = response.json)">Test Fetch</button>
+    <ul>
+      <li v-each="item in items">
+        <span v-text="item.id"></span>
+        <a v-text="item.title"></a>
+      </li>
+    </ul>
+    <br>
+    <br>
+
+    <br>
+    <div>
+      sign-in prop
+    </div>
+    <input v-prop="signIn" type="text">
+    <div v-text="signIn"></div>
+    <br>
+    <br>
+
+    <div>
+      inputo
+    </div>
+    <input value="10" v-prop="inputo" :min="8" :max="12" :type="'number'">
+    <div v-text="inputo"></div>
+    <div v-text="count"></div>
+    <br>
+
+    <div>
+      Single checkbox with boolean (single)
+    </div>
+    <input type="checkbox" v-prop="singlet" @change="console.log(singlet)" checked>
+    <div v-text="singlet"></div>
+    <div v-show="singlet !== true">Checkbox is checked</div>
+    <br>
+
+    <div>
+      Multiple checkboxes bound to array (colors)
+    </div>
+    <input type="checkbox" value="Red color!" v-prop="colors" checked>
+    <input type="checkbox" value="Orange color!" v-prop="colors" checked>
+    <input type="checkbox" value="Yellow color!" v-prop="colors" checked>
+    <br>
+    Colors: <span v-text="colors"></span>
+    <br>
+    <br>
+
+    <div>
+      Select
+    </div>
+    <select v-prop="select">
+      <option value="">Select A Color</option>
+      <option value="Value 1">Value 1</option>
+      <option value="Value 2">Value 2</option>
+      <option value="Value 3">Value 3</option>
+    </select>
+    <br>
+    Value of select: <span v-text="select"></span>
+    <br>
+    <br>
+
+    <div>
+      Multiple select
+    </div>
+    <select multiple v-prop="multiple">
+      <option value="">Select A Color</option>
+      <option value="Value 1">Value 1</option>
+      <option value="Value 2">Value 2</option>
+      <option value="Value 3">Value 3</option>
+    </select>
+    <br>
+    Value of select: <span v-text="multiple"></span>
+    <br>
+    <br>
+
+    <div>
+      Radio inputs (answer)
+    </div>
+    <input type="radio" value="yes" v-prop="answer">
+    <input type="radio" value="no" v-prop="answer">
+    <br>
+    Answer: <span v-text="answer"></span>
+    <br>
+    <br>
+
+    <div>
+      Textarea
+    </div>
+    <textarea @keyup="content" v-prop="content">Hello World!</textarea>
+    <div v-text="content"></div>
+  </form>
+
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <br><br><br><br><br><br><br><br><br><br>
+  <div @load="console.log('I\'m loaded!')"></div>
+  <div @intersect="console.log('Infinity observer: I\'m being showed!')">Infinity observer</div>
+  <div @intersect.once="console.log('Once observer: I\'m being showed!')">Once observer</div>
+
+  <div @click.capture="console.log('I will log first')">
+    <button @click="console.log('I will log second')">Click Me!</button>
+  </div>
+</div>
+
+<div class="demo" v-data="{ foo: 'bar', count: '2', hel: '<strong>v-html directive</strong>', test: 'X-text directive', open: false, tab: 'foo' }">
+  <div v-text="test"></div>
+  <div v-html="hel"></div>
+  <br>
+  <br>
+  <br>
+
+  <span v-text="foo" v-ref="lob"></span>
+  <br>
+  <br>
+  <br>
+
+  <button @click="console.log($refs.lob)">console.log</button>
+  <br>
+  <br>
+  <br>
+
+  Model input:
+  <div v-text="friends"></div>
+  <input value="Hello, my friend!" v-prop="friends">
+  <button @click="friends = 'Hello world!'">Change text</button>
+  <br>
+  <br>
+  <br>
+
+  <div>
+    <button @click="count--">-</button>
+    <span v-text="count"></span>
+    <button @click="count++">+</button>
+  </div>
+  <div v-show="count > 2" style="font-size: 20px;">This is shown because count is more than 2</div>
+  <br>
+  <br>
+  <br>
+
+  <input v-prop="test">
+  <button @click="test = 'baz'">Change to baz</button>
+  <br>
+  <br>
+  <br>
+
+  <button @click="open = true">Open Dropdown</button>
+  <ul class="hidden" :class="{ 'hidden': ! open }" @click.outside="open = false">
+    Dropdown Body
+  </ul>
+  <br>
+  <br>
+  <br>
+
+  <div>
+    <button :class="{ 'active': tab === 'foo' }" @click="tab = 'foo'">Foo</button>
+    <button :class="{ 'active': tab === 'bar' }" @click="tab = 'bar'">Bar</button>
+
+    <div :class="{ 'hidden': tab !== 'foo' }">Tab Foo</div>
+    <div class="hidden" :class="{ 'hidden': tab !== 'bar' }">Tab Bar</div>
+  </div>
+</div>
+
+<h2>Youla.data: усложняем задачу, упрощаем разметку</h2>
+
+<p>
+  Пока состояние компонента — пара плоских свойств, объектный литерал прямо в атрибуте
+  <code>v-data="{...}"</code> — самый короткий путь, как в примерах выше. Но как только в задаче
+  появляется повторяющаяся логика (проверка границ значения, сравнение с текущей активной вкладкой,
+  фильтрация списка) — расписывать её каждый раз внутри выражений в разметке становится многословно
+  и хрупко: одна и та же проверка дублируется в нескольких атрибутах, а любое изменение поведения
+  нужно аккуратно повторить во всех местах.
+</p>
+
+<p>
+  <code>Youla.data(имя, callback)</code> решает это иначе: даёт компоненту имя, переносит всю логику
+  в обычный JS-объект с методами, а разметка получает только короткие вызовы вроде
+  <code>increment()</code> или <code>isActive('profile')</code>. Такое определение должно быть
+  зарегистрировано раньше, чем Youla.js начнёт разбирать страницу, поэтому вызов оборачивают в
+  событие <code>youla:init</code>, которое библиотека создаёт в самом начале своей работы:
+</p>
+
+<pre>
+document.addEventListener('youla:init', () =&gt; {
+  Youla.data('имя', () =&gt; ({
+    // свойства и методы компонента
+  }));
+});
+</pre>
+
+<p>В разметке компонент подключается по имени точно так же, как обычный объект в <code>v-data</code>:</p>
+
+<pre>
+&lt;div v-data=&quot;имя&quot;&gt;...&lt;/div&gt;
+</pre>
+
+<h3>Счётчик с ограничениями</h3>
+
+<p>
+  Простой <code>count++</code>/<code>count--</code> из примера выше отлично работает, пока не нужно
+  ограничивать значение диапазоном. Как только появляются нижняя и верхняя границы и шаг изменения,
+  писать проверку прямо в <code>@click</code> для каждой кнопки — а потом ещё раз в <code>:disabled</code>,
+  чтобы кнопка отключалась на границе — становится избыточно. Метод убирает это дублирование: границы
+  и шаг хранятся в данных компонента один раз, а <code>increment()</code>/<code>decrement()</code>
+  сами знают, как их не нарушить.
+</p>
+
+<pre>
+document.addEventListener('youla:init', () =&gt; {
+  Youla.data('counter', () =&gt; ({
+    min: 0,
+    max: 5,
+    step: 1,
+    value: 0,
+    increment() {
+      this.value = Math.min(this.value + this.step, this.max);
+    },
+    decrement() {
+      this.value = Math.max(this.value - this.step, this.min);
+    },
+  }));
+});
+</pre>
+
+<pre>
+&lt;div v-data=&quot;counter&quot;&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;decrement()&quot; :disabled=&quot;value &lt;= min&quot;&gt;−&lt;/button&gt;
+  &lt;span v-text=&quot;value&quot;&gt;&lt;/span&gt; / &lt;span v-text=&quot;max&quot;&gt;&lt;/span&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;increment()&quot; :disabled=&quot;value &gt;= max&quot;&gt;+&lt;/button&gt;
+&lt;/div&gt;
+</pre>
+
+<script>
+  document.addEventListener('youla:init', () => {
+    Youla.data('counter', () => ({
+      min: 0,
+      max: 5,
+      step: 1,
+      value: 0,
+      increment() {
+        this.value = Math.min(this.value + this.step, this.max);
+      },
+      decrement() {
+        this.value = Math.max(this.value - this.step, this.min);
+      },
+    }));
+  });
+</script>
+
+<div class="demo" v-data="counter">
+  <button type="button" @click="decrement()" :disabled="value <= min">−</button>
+  <span v-text="value"></span> / <span v-text="max"></span>
+  <button type="button" @click="increment()" :disabled="value >= max">+</button>
+</div>
+
+<%= _.template(require('./parts/footer.html').default)(data) %>

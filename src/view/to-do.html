@@ -10,50 +10,113 @@
   в одном небольшом компоненте: <a href="/v-prop"><code>v-prop</code></a> связывает поле ввода с данными,
   <a href="/v-each"><code>v-each</code></a> строит список задач, <a href="/v-show"><code>v-show</code></a>
   прячет список и кнопку очистки, пока задач нет, а <a href="/attributes"><code>:class</code></a> и
-  <a href="/v-text"><code>v-text</code></a> отображают состояние каждой задачи.
+  <a href="/v-text"><code>v-text</code></a> отображают состояние каждой задачи. Каждый элемент
+  разметки — кнопка добавления, чекбокс, подпись задачи, кнопка удаления и кнопка очистки — получает
+  свой набор атрибутов и событий через <a href="/v-bind"><code>v-bind</code></a>, поэтому в разметке
+  не осталось ни одной инлайновой директивы или обработчика: только имя набора.
 </p>
 
 <pre>
-&lt;div class=&quot;demo&quot; v-data=&quot;{tasks: []}&quot;&gt;
-  &lt;div&gt;Добавить задачу:&lt;/div&gt;
+document.addEventListener('youla:init', () =&gt; {
+  Youla.data('todo', () =&gt; ({
+    value: '',
+    tasks: [],
+    adder: {
+      '@click': &quot;tasks = [...tasks, {title: value, checked: false}]; value = ''&quot;,
+      ':disabled': '!value.trim()',
+    },
+    checkbox: {
+      '@change': 'task.checked = !task.checked',
+      ':checked': 'task.checked',
+    },
+    status: {
+      'v-text': 'task.title',
+      ':class': &quot;task.checked &amp;&amp; 'strike'&quot;,
+    },
+    remover: {
+      '@click': 'tasks = tasks.filter((_, i) =&gt; i != index)',
+    },
+    clearer: {
+      '@click': 'tasks = []',
+    },
+  }));
+});
+</pre>
+
+<pre>
+&lt;div v-data=&quot;todo&quot;&gt;
+  &lt;p&gt;Добавить задачу:&lt;/p&gt;
   &lt;input placeholder=&quot;Введите новую задачу...&quot; v-prop=&quot;value&quot; /&gt;
-  &lt;button type=&quot;button&quot; @click=&quot;tasks = [...tasks, {title: value, checked: false}]; value = &#39;&#39;&quot; :disabled=&quot;!value.trim()&quot;&gt;Добавить&lt;/button&gt;
-  &lt;br&gt;
+  &lt;button type=&quot;button&quot; v-bind=&quot;adder&quot;&gt;Добавить&lt;/button&gt;
 
   &lt;div v-show=&quot;tasks.length&quot; hidden&gt;
     &lt;p&gt;Список задач:&lt;/p&gt;
     &lt;ul&gt;
       &lt;li v-each=&quot;(task, index) in tasks&quot;&gt;
         &lt;label&gt;
-          &lt;input type=&quot;checkbox&quot; @change=&quot;task.checked = !task.checked&quot; :checked=&quot;task.checked&quot;&gt;
-          &lt;span v-text=&quot;task.title&quot; :class=&quot;task.checked &amp;&amp; &#39;strike&#39;&quot;&gt;&lt;/span&gt;
+          &lt;input type=&quot;checkbox&quot; v-bind=&quot;checkbox&quot;&gt; &lt;span v-bind=&quot;status&quot;&gt;&lt;/span&gt;
         &lt;/label&gt;
-        &lt;button @click=&quot;tasks = tasks.filter((_, i) =&gt; i != index)&quot;&gt;Удалить&lt;/button&gt;
+        &lt;button v-bind=&quot;remover&quot;&gt;Удалить&lt;/button&gt;
       &lt;/li&gt;
     &lt;/ul&gt;
-    &lt;button v-show=&quot;tasks.length&quot; @click=&quot;tasks = []&quot; hidden&gt;Очистить всё&lt;/button&gt;
+    &lt;button v-bind=&quot;clearer&quot;&gt;Очистить всё&lt;/button&gt;
   &lt;/div&gt;
 &lt;/div&gt;
 </pre>
 
-<div class="demo" v-data="{tasks: []}">
-  <div>Добавить задачу:</div>
+<p>
+  <code>checkbox</code>, <code>status</code> и <code>remover</code> — свойства со строками-выражениями,
+  определённые на верхнем уровне компонента, но используются они на элементах внутри
+  <a href="/v-each"><code>v-each</code></a> и там же получают доступ к переменным цикла
+  <code>task</code> и <code>index</code> — так же, как строки внутри <code>v-bind</code> получают их
+  на странице <a href="/v-bind">v-bind</a>. У <code>remover</code> всего один ключ, но он всё равно
+  вынесен в набор — ради единообразия: в разметке компонента не осталось ни одного элемента с
+  обработчиком или директивой, написанными напрямую.
+</p>
+
+<script>
+  document.addEventListener('youla:init', () => {
+    Youla.data('todo', () => ({
+      value: '',
+      tasks: [],
+      adder: {
+        '@click': "tasks = [...tasks, {title: value, checked: false}]; value = ''",
+        ':disabled': '!value.trim()',
+      },
+      checkbox: {
+        '@change': 'task.checked = !task.checked',
+        ':checked': 'task.checked',
+      },
+      status: {
+        'v-text': 'task.title',
+        ':class': "task.checked && 'strike'",
+      },
+      remover: {
+        '@click': 'tasks = tasks.filter((_, i) => i != index)',
+      },
+      clearer: {
+        '@click': 'tasks = []',
+      },
+    }));
+  });
+</script>
+
+<div class="demo" v-data="todo">
+  <p>Добавить задачу:</p>
   <input placeholder="Введите новую задачу..." v-prop="value" />
-  <button type="button" @click="tasks = [...tasks, {title: value, checked: false}]; value = ''" :disabled="!value.trim()">Добавить</button>
-  <br>
+  <button type="button" v-bind="adder">Добавить</button>
 
   <div v-show="tasks.length" hidden>
     <p>Список задач:</p>
     <ul>
       <li v-each="(task, index) in tasks">
         <label>
-          <input type="checkbox" @change="task.checked = !task.checked" :checked="task.checked">
-          <span v-text="task.title" :class="task.checked && 'strike'"></span>
+          <input type="checkbox" v-bind="checkbox"> <span v-bind="status"></span>
         </label>
-        <button @click="tasks = tasks.filter((_, i) => i != index)">Удалить</button>
+        <button v-bind="remover">Удалить</button>
       </li>
     </ul>
-    <button v-show="tasks.length" @click="tasks = []" hidden>Очистить всё</button>
+    <button v-bind="clearer">Очистить всё</button>
   </div>
 </div>
 

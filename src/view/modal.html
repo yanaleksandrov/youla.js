@@ -1,0 +1,135 @@
+<% var data = {
+  title: "Модальное окно"
+}; %>
+<%= _.template(require('./parts/header.html').default)(data) %>
+
+<h1>Модальное окно</h1>
+
+<p>
+  Модальное окно — это открытие/закрытие по флагу (<a href="/v-show"><code>v-show</code></a>),
+  закрытие кликом по фону, закрытие клавишей <code>Escape</code>, блокировка прокрутки страницы и
+  пара ARIA-атрибутов для доступности. По отдельности каждая часть простая, но на двух элементах
+  (фон и окно) вместе они превращаются в длинный список атрибутов. <a href="/v-bind"><code>v-bind</code></a>
+  собирает атрибуты, директивы и события одного элемента в один именованный набор внутри
+  <code>Youla.data</code> — в разметке от него остаётся только <code>v-bind="имя"</code>.
+</p>
+
+<pre>
+document.addEventListener('youla:init', () =&gt; {
+  Youla.data('modal', () =&gt; ({
+    open: false,
+    show() {
+      this.open = true;
+      document.body.style.overflow = 'hidden';
+    },
+    hide() {
+      this.open = false;
+      document.body.style.overflow = '';
+    },
+    backdrop: {
+      'v-show': 'open',
+      ':aria-hidden': '!open',
+    },
+    panel: {
+      'role': 'dialog',
+      ':aria-modal': 'open',
+      '@click.stop'() {},
+      '@click.outside'() {
+        this.hide();
+      },
+    },
+  }));
+});
+</pre>
+
+<pre>
+&lt;div v-data=&quot;modal&quot; @keydown.window=&quot;$event.key === 'Escape' &amp;&amp; hide()&quot;&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;show()&quot;&gt;Открыть модальное окно&lt;/button&gt;
+
+  &lt;div class=&quot;modal-backdrop&quot; v-bind=&quot;backdrop&quot;&gt;
+    &lt;div class=&quot;modal-window&quot; v-bind=&quot;panel&quot;&gt;
+      &lt;h3&gt;Заголовок окна&lt;/h3&gt;
+      &lt;p&gt;Закрыть можно кликом по фону, клавишей Escape или кнопкой ниже.&lt;/p&gt;
+      &lt;button type=&quot;button&quot; @click=&quot;hide()&quot;&gt;Закрыть&lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+</pre>
+
+<p>
+  Обратите внимание: специального модификатора вроде <code>.escape</code> у событий нет — библиотека
+  поддерживает только универсальные модификаторы (<code>.window</code>, <code>.prevent</code>,
+  <code>.stop</code>, <code>.outside</code>, <code>.once</code>, <code>.delay</code>, <code>.passive</code>,
+  <code>.capture</code>), поэтому конкретную клавишу проверяют прямо в выражении через
+  <code>$event.key</code>. А открывающая кнопка и Escape-обработчик остались обычными атрибутами
+  напрямую в разметке — на элементе всего одна динамическая привязка, оборачивать её в
+  <code>v-bind</code> смысла нет.
+</p>
+
+<style>
+  .example-modal { position: relative; min-height: 220px; }
+  .example-modal .modal-backdrop {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, .5);
+  }
+  .example-modal .modal-window {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: .5rem;
+    padding: 1.5rem;
+    max-width: 320px;
+  }
+</style>
+
+<script>
+  document.addEventListener('youla:init', () => {
+    Youla.data('modal', () => ({
+      open: false,
+      show() {
+        this.open = true;
+        document.body.style.overflow = 'hidden';
+      },
+      hide() {
+        this.open = false;
+        document.body.style.overflow = '';
+      },
+      backdrop: {
+        'v-show': 'open',
+        ':aria-hidden': '!open',
+      },
+      panel: {
+        'role': 'dialog',
+        ':aria-modal': 'open',
+        '@click.stop'() {},
+        '@click.outside'() {
+          this.hide();
+        },
+      },
+    }));
+  });
+</script>
+
+<div class="demo example-modal" v-data="modal" @keydown.window="$event.key === 'Escape' && hide()">
+  <button type="button" @click="show()">Открыть модальное окно</button>
+
+  <div class="modal-backdrop" v-bind="backdrop">
+    <div class="modal-window" v-bind="panel">
+      <h3>Заголовок окна</h3>
+      <p>Закрыть можно кликом по фону, клавишей Escape или кнопкой ниже.</p>
+      <button type="button" @click="hide()">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<p>
+  <code>show()</code> и <code>hide()</code> — обычные методы, поэтому изменение <code>open</code>
+  и работа с <code>document.body</code> происходят в одном месте. А <code>backdrop</code> и
+  <code>panel</code> — обычные свойства (не методы) со строками-выражениями и парой методов-обработчиков
+  внутри: строки читают <code>open</code> точно так же, как если бы были написаны в разметке напрямую.
+</p>
+
+<%= _.template(require('./parts/footer.html').default)(data) %>

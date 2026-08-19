@@ -12,46 +12,41 @@
 </p>
 
 <pre>
-Youla.data('avatar', () =&gt; ({
-  name: '',
-  image: '',
+Youla.data(&#39;avatar&#39;, () =&gt; ({
+  name: &#39;&#39;,
+  image: &#39;&#39;,
   field: {
-    'v-prop': 'name',
+    &#39;v-prop&#39;: &#39;name&#39;,
   },
   picture: {
-    ':title': 'name',
-    ':style': &quot;image &amp;&amp; `background-image:url(${image})`&quot;,
+    &#39;:title&#39;: &#39;name&#39;,
+    &#39;:style&#39;: &quot;image &amp;&amp; `background-image:url(${image})`&quot;,
   },
   initials: {
-    'v-show': '!image',
-    'v-text': `name &amp;&amp; getInitials(name)`,
+    &#39;v-show&#39;: &#39;!image&#39;,
+    &#39;v-text&#39;() {
+      return this.name.trim().split(/\s+/).map(word =&gt; word[0]).slice(0, 2).join(&#39;&#39;).toUpperCase();
+    },
   },
   uploader: {
-    '@change': 'add($event)',
+    &#39;@change&#39;() {
+      let file = this.$event.target.files[0];
+      if (file) {
+        let reader = new FileReader();
+        reader.onload = e =&gt; this.image = e.target.result;
+        reader.readAsDataURL(file);
+      }
+    },
   },
   remover: {
-    '@click': 'remove($root)',
-    'v-show': 'image',
-  },
-  add(event, callback) {
-    let file = event.target.files[0];
-    if (file) {
-      let reader = new FileReader();
-      reader.onload = e =&gt; this.image = e.target.result;
-      reader.readAsDataURL(file);
-    }
-
-    callback?.();
-  },
-  remove(root) {
-    let input = root.querySelector('input[type="file"]');
-    if (input) {
-      input.value = '';
-    }
-    this.image = '';
-  },
-  getInitials(string, letters = 2) {
-    return string.split(' ', letters).map(word =&gt; word.charAt(0)).join('').toUpperCase();
+    &#39;v-show&#39;: &#39;image&#39;,
+    &#39;@click&#39;() {
+      let input = this.$root.querySelector(&#39;input[type=&quot;file&quot;]&#39;);
+      if (input) {
+        input.value = &#39;&#39;;
+      }
+      this.image = &#39;&#39;;
+    },
   },
 }))
 </pre>

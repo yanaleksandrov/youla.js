@@ -16,33 +16,29 @@ document.addEventListener('youla:init', ()=> {
     },
     initials: {
       'v-show': '!image',
-      'v-text': `name && getInitials(name)`,
+      'v-text'() {
+        return this.name.trim().split(/\s+/).map(word => word[0]).slice(0, 2).join('').toUpperCase();
+      },
     },
     uploader: {
-      '@change': 'add($event)',
+      '@change'() {
+        let file = this.$event.target.files[0];
+        if (file) {
+          let reader = new FileReader();
+          reader.onload = e => this.image = e.target.result;
+          reader.readAsDataURL(file);
+        }
+      },
     },
     remover: {
-      '@click': 'remove($root)',
       'v-show': 'image',
-    },
-    add(event, callback) {
-      let file = event.target.files[0];
-      if (file) {
-        let reader = new FileReader();
-        reader.onload = e => this.image = e.target.result;
-        reader.readAsDataURL(file);
-      }
-      callback?.();
-    },
-    remove(root) {
-      let input = root.querySelector('input[type="file"]');
-      if (input) {
-        input.value = '';
-      }
-      this.image = '';
-    },
-    getInitials(string, letters = 2) {
-      return string.split(' ', letters).map(word => word.charAt(0)).join('').toUpperCase();
+      '@click'() {
+        let input = this.$root.querySelector('input[type="file"]');
+        if (input) {
+          input.value = '';
+        }
+        this.image = '';
+      },
     },
   }));
 

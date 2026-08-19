@@ -12,14 +12,17 @@
 </p>
 
 <pre>
-&lt;div v-data=&quot;{username: &#039;Yan Aleksandrov&#039;}&quot;&gt;
-  Имя: &lt;strong v-text=&quot;username&quot;&gt;&lt;/strong&gt;
+&lt;div v-data=&quot;{ username: &#39;Yan&#39; }&quot;&gt;
+  &lt;button @click=&quot;username = &#39;Yan Aleksandrov&#39;&quot;&gt;Поменять на &quot;Yan Aleksandrov&quot;&lt;/button&gt;
+
+  Имя: &lt;strong v-text=&quot;username&quot;&gt;Yan&lt;/strong&gt;
 &lt;/div&gt;
 </pre>
 
 <div class="demo" v-data="{ username: 'Yan' }">
-  <p>Имя: <strong v-text="username">Yan</strong></p>
   <button @click="username = 'Yan Aleksandrov'">Поменять на "Yan Aleksandrov"</button>
+
+  Имя: <strong v-text="username">Yan</strong>
 </div>
 
 <h2>Реактивное обновление</h2>

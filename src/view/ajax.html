@@ -1,0 +1,417 @@
+<% var data = {
+  title: "Ajax и обновление фрагментов"
+}; %>
+<%= _.template(require('./parts/header.html').default)(data) %>
+
+<h1>Ajax и обновление фрагментов ($ajax)</h1>
+
+<p>
+  Подходит для <code>ajax</code> запросов к любому API, и для проектов, где сервер сам решает, что на
+  странице должно поменяться после ответа: какой фрагмент перерисовать, куда перейти, что показать
+  в уведомлении. Подключается отдельным файлом после <code>youla.js</code>:
+</p>
+
+<pre>
+&lt;script defer src=&quot;youla.js&quot;&gt;&lt;/script&gt;
+&lt;script defer src=&quot;youla-ajax.js&quot;&gt;&lt;/script&gt;
+</pre>
+
+<h2>Как это устроено</h2>
+
+<p>
+  <code>route</code> — единственный обязательный аргумент — играет две роли сразу. Во-первых, это
+  путь запроса: он добавляется к <code>Youla.baseURL</code>, либо используется как есть, если это
+  уже полный URL (<code>http(s)://...</code>). Во-вторых, это имя события
+  <code>ajax:route</code>, которое диспетчеризуется на <code>document</code>, когда ответ
+  приходит — на него может подписаться любая другая часть страницы.
+</p>
+
+<p>
+  <code>Youla.baseURL</code> — пустая строка по умолчанию (маршруты используются как есть,
+  относительно текущей страницы); задать её можно один раз, в своём же обработчике
+  <code>youla:init</code>:
+</p>
+
+<pre>
+document.addEventListener('youla:init', () =&gt; {
+  Youla.baseURL = 'https://api.example.com';
+});
+</pre>
+
+<p>
+  Метод запроса берётся из атрибута <code>method</code> элемента, на котором вызван
+  <code>$ajax</code>; без атрибута — <code>POST</code> для <code>&lt;form&gt;</code> и
+  <code>GET</code> для всего остального.
+</p>
+
+<pre>
+$ajax(route, payload, onProgress, options)
+</pre>
+
+<table>
+  <tbody>
+    <tr>
+      <th>Параметр</th>
+      <th>Значение</th>
+    </tr>
+    <tr>
+      <td><code>route</code></td>
+      <td>путь запроса (или полный URL) и одновременно имя события <code>ajax:route</code></td>
+    </tr>
+    <tr>
+      <td><code>payload</code></td>
+      <td>
+        необязательный объект — его пары добавляются в тело запроса вдобавок к полям элемента,
+        от имени которого вызван <code>$ajax</code>
+      </td>
+    </tr>
+    <tr>
+      <td><code>onProgress</code></td>
+      <td>
+        необязательный колбэк — вызывается при старте, во время загрузки файла и по завершении, с
+        объектом <code>{ percent, loaded, total, start, progress, end, status, url, raw, json, blob }</code>
+        (<code>raw</code> — тело ответа как текст, <code>json</code> — тот же текст, разобранный как
+        JSON, или <code>null</code>, если это не JSON)
+      </td>
+    </tr>
+    <tr>
+      <td><code>options</code></td>
+      <td>
+        необязательный объект <code>{ headers, credentials }</code> — <code>headers</code>
+        добавляет заголовки запроса, <code>credentials</code> (булево, по умолчанию
+        <code>true</code>) управляет отправкой куки
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  Тело запроса собирается из элемента, на котором вызван <code>$ajax</code>: для
+  <code>&lt;form&gt;</code> — вся форма целиком (файлы из <code>input[type="file"]</code> уже
+  включены), для любого другого поля — только его собственное значение (или выбранные файлы, если
+  это одиночный <code>input[type="file"]</code>). Пока запрос выполняется, элемент и любые
+  <code>[type="submit"]</code> внутри него получают класс <code>is-load</code> — оформление этого
+  состояния (спиннер, затемнение) остаётся за CSS проекта.
+</p>
+
+<p>
+  Ответ сервера разбирается как JSON, когда это возможно, иначе промис получает необработанный
+  текст. Если разобранное значение — объект вида <code>{ data }</code>, дальше используется именно
+  <code>data</code>: если это массив, каждый его элемент применяется к странице автоматически (см.
+  таблицу действий ниже), а промис получает то же значение <code>data</code>. Если ответ — что
+  угодно другое (обычный JSON-массив/объект без обёртки, строка, HTML), оно просто возвращается
+  вызывающей стороне как есть — фрагменты не единственный сценарий использования.
+</p>
+
+<h2>Действия для обновления фрагментов</h2>
+
+<p>
+  Каждый элемент массива <code>data</code> — это <code>{ target, ...действия }</code>, где
+  <code>target</code> — CSS-селектор, а остальные ключи — имена действий (через двоеточие можно
+  задать задержку в миллисекундах, например <code>"update:300"</code>). Для действий, не
+  привязанных к конкретному элементу страницы (<code>notify</code>, <code>redirect</code>,
+  <code>reload</code>, <code>changeURL</code>) <code>target</code> можно не указывать вовсе.
+</p>
+
+<table>
+  <tbody>
+    <tr>
+      <th>Действие</th>
+      <th>Что делает</th>
+    </tr>
+    <tr><td><code>update</code></td><td>заменяет <code>innerHTML</code> цели</td></tr>
+    <tr><td><code>replace</code></td><td>заменяет саму цель через <code>outerHTML</code></td></tr>
+    <tr><td><code>remove</code></td><td>удаляет цель из DOM</td></tr>
+    <tr>
+      <td>
+        <code>before</code>, <code>prepend</code>,<br>
+        <code>append</code>, <code>after</code>
+      </td>
+      <td>вставляют HTML рядом с целью — четыре позиции <code>insertAdjacentHTML</code></td>
+    </tr>
+    <tr><td><code>value</code></td><td>устанавливает <code>target.value</code> (очистка полей формы)</td></tr>
+    <tr><td><code>classList.add</code> / <code>classList.remove</code></td><td>переключают класс</td></tr>
+    <tr><td><code>setAttribute</code></td><td>значение — пара <code>[имя, значение]</code></td></tr>
+    <tr><td><code>removeAttribute</code></td><td>значение — имя атрибута</td></tr>
+    <tr><td><code>scrollTo</code> / <code>scrollIntoView</code></td><td>плавно прокручивают к цели</td></tr>
+    <tr><td><code>changeURL</code></td><td>меняет адресную строку без перезагрузки (<code>history.pushState</code>)</td></tr>
+    <tr><td><code>redirect</code> / <code>reload</code></td><td>переход по адресу или перезагрузка страницы</td></tr>
+    <tr>
+      <td><code>notify</code></td>
+      <td>
+        диспетчеризует <code>ajax:notify</code> с текстом уведомления — сам метод очередь
+        уведомлений не рисует, см. сценарий 3 ниже
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<script>
+  (function () {
+    // Мок-запросы для демо ниже: подставляет ответы сервера вместо реальной сети,
+    // сама реализация $ajax работает с этим объектом в точности как с настоящим XHR.
+    const routes = {
+      '/demo/like': () => ({
+        data: [
+          { target: '#like-count', update: '★ 43' },
+          { target: '#like-button', 'classList.add': 'is-liked' },
+        ],
+      }),
+      '/demo/upload': () => ({
+        data: [
+          { target: '#upload-result', update: 'Файл «photo.png» загружен и обработан.' },
+        ],
+      }),
+      '/demo/comment': body => ({
+        data: [
+          {
+            target: '#comment-list',
+            append: `<li>${(body.get('text') || '').replace(/</g, '&lt;')}</li>`,
+          },
+          { target: '#comment-input', value: '' },
+          { 'notify:400': 'Комментарий опубликован' },
+        ],
+      }),
+      '/demo/echo': () => ({ data: 'исходный ответ сервера' }),
+    };
+
+    function MockXHR() {
+      this.upload = {};
+      this.status = 0;
+      this.responseText = '';
+      this.responseURL = '';
+    }
+    MockXHR.prototype.open = function (method, url) {
+      this._url = url;
+    };
+    MockXHR.prototype.setRequestHeader = function () {};
+    MockXHR.prototype.send = function (body) {
+      const respond = routes[this._url];
+      const steps   = [0, 35, 70, 100];
+      let i = 0;
+
+      this.onloadstart && this.onloadstart({ type: 'loadstart', loaded: 0, total: 100 });
+
+      const tick = () => {
+        if (this._aborted) return;
+        this.upload.onprogress && this.upload.onprogress({ type: 'progress', loaded: steps[i], total: 100 });
+        i++;
+        if (i < steps.length) {
+          this._timer = setTimeout(tick, 150);
+          return;
+        }
+        this.status       = respond ? 200 : 404;
+        this.responseURL  = this._url;
+        this.responseText = JSON.stringify(respond ? respond(body) : { data: [] });
+        this.onload && this.onload();
+        this.onloadend && this.onloadend({ type: 'loadend', loaded: 100, total: 100 });
+      };
+      this._timer = setTimeout(tick, 150);
+    };
+    MockXHR.prototype.abort = function () {
+      this._aborted = true;
+      clearTimeout(this._timer);
+    };
+
+    window.XMLHttpRequest = MockXHR;
+  })();
+
+  document.addEventListener('youla:init', () => {
+    // Сценарий 4 — сторонний код перехватывает ответ конкретного route и подменяет
+    // значение, с которым разрешится промис исходного вызова $ajax.
+    document.addEventListener('ajax:/demo/echo', ({ detail }) => {
+      detail.resolve(`перехвачено: «${detail.data}»`);
+    });
+
+    // Мини-очередь уведомлений — такая же, как в примере /toasts, только подписана
+    // на событие ajax:notify вместо собственного метода notify().
+    Youla.data('ajaxToasts', () => ({
+      items: [],
+      counter: 0,
+      onNotify(message) {
+        const id = ++this.counter;
+        this.items = [...this.items, { id, message }];
+        setTimeout(() => this.items = this.items.filter(item => item.id !== id), 3000);
+      },
+    }));
+  });
+</script>
+
+<style>
+  .example-ajax .is-load { opacity: .5; pointer-events: none; }
+  .example-ajax .is-liked { color: #d64545; font-weight: 600; }
+  .example-ajax progress { display: block; width: 100%; margin-top: .5rem; }
+  .example-ajax ul { margin: .5rem 0; padding-left: 1.25rem; }
+  .example-ajax + .example-ajax { margin-top: 1.5rem; }
+  .ajax-toast {
+    display: inline-block;
+    margin-top: .5rem;
+    padding: .35rem .75rem;
+    border: 1px solid var(--line);
+    border-radius: .35rem;
+    background: var(--surface);
+  }
+</style>
+
+<h2>Сценарий 1: обновление фрагмента одним действием</h2>
+
+<p>
+  Клик по кнопке отправляет запрос без формы — тело пустое, вызывающий элемент лишь определяет,
+  куда добавить класс <code>is-load</code> на время запроса. Ответ обновляет счётчик и подсвечивает
+  саму кнопку.
+</p>
+
+<pre>
+&lt;div v-data=&quot;{}&quot;&gt;
+  &lt;button type=&quot;button&quot; id=&quot;like-button&quot; @click=&quot;$ajax('/demo/like')&quot;&gt;
+    &lt;span id=&quot;like-count&quot;&gt;★ 42&lt;/span&gt; Нравится
+  &lt;/button&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo example-ajax" v-data>
+  <button type="button" id="like-button" @click="$ajax('/demo/like')">
+    <span id="like-count">★ 42</span> Нравится
+  </button>
+</div>
+
+<h2>Сценарий 2: прогресс загрузки файла</h2>
+
+<p>
+  Третий аргумент — колбэк прогресса — получает объект с полем <code>percent</code> на каждом шаге
+  загрузки, чем удобно управлять элементом <code>&lt;progress&gt;</code>.
+</p>
+
+<pre>
+&lt;div v-data=&quot;{ percent: 0 }&quot;&gt;
+  &lt;form @submit.prevent=&quot;
+    $ajax('/demo/upload', {}, p =&gt; percent = p.percent)
+      .then(() =&gt; percent = 0)
+  &quot;&gt;
+    &lt;input type=&quot;file&quot; name=&quot;file&quot;&gt;
+    &lt;button type=&quot;submit&quot;&gt;Загрузить&lt;/button&gt;
+    &lt;progress :value=&quot;percent&quot; max=&quot;100&quot;&gt;&lt;/progress&gt;
+  &lt;/form&gt;
+  &lt;div id=&quot;upload-result&quot;&gt;&lt;/div&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo example-ajax" v-data="{ percent: 0 }">
+  <form @submit.prevent="$ajax('/demo/upload', {}, p => percent = p.percent).then(() => percent = 0)">
+    <input type="file" name="file">
+    <button type="submit">Загрузить</button>
+    <progress :value="percent" max="100"></progress>
+  </form>
+  <div id="upload-result"></div>
+</div>
+
+<h2>Сценарий 3: форма, список и уведомление в одном ответе</h2>
+
+<p>
+  Один ответ сервера может нести сразу несколько независимых действий с разными целями и
+  задержками: тут это добавление пункта в список, очистка поля формы и уведомление — оно
+  показывается на 400мс позже остальных, чтобы не мигать одновременно со списком.
+</p>
+
+<p>
+  Само уведомление показывает соседний компонент <code>ajaxToasts</code>, который ничего не знает
+  про <code>$ajax</code> — он просто слушает <code>ajax:notify</code> через модификатор
+  <code>.document</code>, как обычное DOM-событие.
+</p>
+
+<pre>
+Youla.data('ajaxToasts', () =&gt; ({
+  items: [],
+  counter: 0,
+  onNotify(message) {
+    const id = ++this.counter;
+    this.items = [...this.items, { id, message }];
+    setTimeout(() =&gt; this.items = this.items.filter(item =&gt; item.id !== id), 3000);
+  },
+}));
+</pre>
+
+<pre>
+&lt;div v-data=&quot;{ text: '' }&quot;&gt;
+  &lt;form @submit.prevent=&quot;$ajax('/demo/comment')&quot;&gt;
+    &lt;input id=&quot;comment-input&quot; v-prop=&quot;text&quot; name=&quot;text&quot; placeholder=&quot;Комментарий...&quot;&gt;
+    &lt;button type=&quot;submit&quot;&gt;Отправить&lt;/button&gt;
+  &lt;/form&gt;
+&lt;/div&gt;
+&lt;ul id=&quot;comment-list&quot;&gt;&lt;/ul&gt;
+
+&lt;div @ajax:notify.document=&quot;onNotify($event.detail)&quot; v-data=&quot;ajaxToasts&quot;&gt;
+  &lt;div v-each=&quot;item in items&quot; class=&quot;ajax-toast&quot;&gt;
+    &lt;span v-text=&quot;item.message&quot;&gt;&lt;/span&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo example-ajax">
+  <div v-data="{ text: '' }">
+    <form @submit.prevent="$ajax('/demo/comment')">
+      <input id="comment-input" v-prop="text" name="text" placeholder="Комментарий...">
+      <button type="submit">Отправить</button>
+    </form>
+  </div>
+  <ul id="comment-list"></ul>
+
+  <div @ajax:notify.document="onNotify($event.detail)" v-data="ajaxToasts">
+    <div v-each="item in items" class="ajax-toast">
+      <span v-text="item.message"></span>
+    </div>
+  </div>
+</div>
+
+<h2>Сценарий 4: значение, отличное от фрагментов, и перехват ответа</h2>
+
+<p>
+  <code>data</code> необязательно должна быть массивом фрагментов — сервер вправе вернуть строку,
+  число или объект, и <code>$ajax</code> просто передаст его вызывающей стороне. А поскольку
+  ответ дополнительно диспетчеризуется как событие <code>ajax:route</code>, любой другой код на
+  странице может подменить итоговое значение, вызвав <code>event.detail.resolve(...)</code> —
+  раньше, чем это сделает сам метод.
+</p>
+
+<pre>
+// где-то ещё на странице, до клика:
+document.addEventListener('ajax:/demo/echo', ({ detail }) =&gt; {
+  detail.resolve(`перехвачено: «${detail.data}»`);
+});
+</pre>
+
+<pre>
+&lt;div v-data=&quot;{ outcome: '' }&quot;&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;$ajax('/demo/echo').then(value =&gt; outcome = value)&quot;&gt;
+    Отправить
+  &lt;/button&gt;
+  &lt;div v-text=&quot;outcome&quot;&gt;&lt;/div&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo example-ajax" v-data="{ outcome: '' }">
+  <button type="button" @click="$ajax('/demo/echo').then(value => outcome = value)">Отправить</button>
+  <div v-text="outcome"></div>
+</div>
+
+<p>
+  Без перехватчика промис получил бы исходную строку <code>«исходный ответ сервера»</code> — на
+  этой странице перехватчик выше уже зарегистрирован, поэтому результат приходит изменённым.
+</p>
+
+<h2>Ошибки и повторные вызовы</h2>
+
+<p>
+  Если ответ пришёл с HTTP-статусом вне диапазона 200–299, либо запрос не смог выполниться
+  (обрыв сети), промис <code>$ajax</code> отклоняется (<code>reject</code>) вместо того, чтобы
+  молча обработать тело ответа как успешное — ошибку можно поймать обычным <code>.catch()</code>.
+</p>
+
+<p>
+  Повторный вызов <code>$ajax</code> с того же элемента, пока предыдущий запрос ещё выполняется
+  (например, двойной клик), сначала отменяет предыдущий — его промис отклоняется как
+  «отменён», и он не сможет применить свои фрагменты к странице позже, в непредсказуемом порядке
+  поверх результата нового запроса.
+</p>
+
+<%= _.template(require('./parts/footer.html').default)(data) %>

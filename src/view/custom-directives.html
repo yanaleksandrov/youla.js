@@ -77,7 +77,7 @@ Youla.data(&#39;user&#39;, () =&gt; ({
 &lt;/span&gt;
 </pre>
 
-<div class="demo" v-data="{}">
+<div class="demo" v-data>
   <span id="listen-demo" v-listen="true" data-start="0.5" data-end="1.5">Прослушать сигнал</span>
 </div>
 
@@ -126,7 +126,7 @@ Youla.data(&#39;user&#39;, () =&gt; ({
 </p>
 
 <pre>
-&lt;div v-data=&quot;{ open: false }&quot;&gt;
+&lt;div v-data=&quot;{ open: true }&quot;&gt;
   &lt;button type=&quot;button&quot; @click=&quot;open = !open&quot;&gt;Переключить&lt;/button&gt;
   &lt;div v-collapse=&quot;open&quot;&gt;Содержимое, которое плавно раскрывается и закрывается.&lt;/div&gt;
 &lt;/div&gt;
@@ -155,7 +155,7 @@ Youla.data(&#39;user&#39;, () =&gt; ({
 &lt;textarea v-textarea=&quot;6&quot; rows=&quot;2&quot;&gt;&lt;/textarea&gt;
 </pre>
 
-<div class="demo" v-data="{}">
+<div class="demo" v-data>
   <textarea v-textarea="6" rows="2" placeholder="Печатайте здесь — поле будет расти..."></textarea>
 </div>
 
@@ -190,7 +190,7 @@ Youla.data(&#39;user&#39;, () =&gt; ({
   }
 </style>
 
-<div class="demo" v-data="{}">
+<div class="demo" v-data>
   <div class="progress-bar" v-progress.100.20.90.800ms>
     <i></i>
   </div>
@@ -213,7 +213,7 @@ Youla.data(&#39;user&#39;, () =&gt; ({
 &lt;/select&gt;
 </pre>
 
-<div class="demo" v-data="{}">
+<div class="demo" v-data>
   <select v-select multiple>
     <option value="js">JavaScript</option>
     <option value="ts">TypeScript</option>
@@ -243,7 +243,7 @@ Youla.data(&#39;user&#39;, () =&gt; ({
 &lt;/div&gt;
 </pre>
 
-<div class="demo" v-data="{}" style="position: relative; display: flex; gap: 1rem; align-items: flex-start;">
+<div class="demo" v-data style="position: relative; display: flex; gap: 1rem; align-items: flex-start;">
   <div v-sticky style="width: 180px; padding: 0.75rem; border-radius: 0.4rem; border: 1px solid var(--line);">
     Прокрутите страницу — я слежу за этой колонкой
   </div>

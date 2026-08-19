@@ -35,13 +35,15 @@
   элементу, полученному через <code>querySelector</code>.
 </p>
 
-<h2>$refs доступен только в обработчиках событий</h2>
+<h2>$refs доступен в любом выражении</h2>
 
 <p>
-  <code>$refs</code>, как и <code>$el</code>, <code>$event</code> и <code>$root</code>, передаётся
-  только в выражения <code>@событие</code> (подробнее — на странице
-  <a href="/syntax">Полный синтаксис</a>). Внутри значения <code>v-text</code>, <code>v-show</code>
-  и других директив <code>$refs</code> не существует.
+  <code>$refs</code>, как и <code>$el</code>, <code>$event</code> и <code>$root</code>, доступен
+  в любом выражении — не только в <code>@событие</code>, но и в значении <code>v-text</code>,
+  <code>v-show</code>, <code>:class</code> и других директив (подробнее — на странице
+  <a href="/syntax">Полный синтаксис</a>). Внутри метода, вызванного из выражения (как
+  <code>highlight()</code> ниже), эти переменные доступны через <code>this.$refs</code>,
+  <code>this.$el</code> и так далее — без явной передачи аргументом.
 </p>
 
 <p>
@@ -80,8 +82,8 @@ Youla.data(&#39;taskList&#39;, () =&gt; ({
     }
   },
 
-  highlight(el) {
-    el.scrollIntoView({ behavior: &#39;smooth&#39; });
+  highlight(id) {
+    this.$refs[`task-${id}`].scrollIntoView({ behavior: &#39;smooth&#39; });
   },
 }))
 </pre>
@@ -92,7 +94,7 @@ Youla.data(&#39;taskList&#39;, () =&gt; ({
     &lt;span v-text=&quot;task.title&quot;&gt;&lt;/span&gt;
   &lt;/li&gt;
 
-  &lt;button @click=&quot;highlight($refs['task-2'])&quot;&gt;Показать вторую задачу&lt;/button&gt;
+  &lt;button @click=&quot;highlight(2)&quot;&gt;Показать вторую задачу&lt;/button&gt;
 &lt;/ul&gt;
 </pre>
 
@@ -108,8 +110,9 @@ Youla.data(&#39;taskList&#39;, () =&gt; ({
           'v-ref': `task-${task.id}`,
         }
       },
-      highlight(el) {
-        el.scrollIntoView({ behavior: 'smooth' });
+      highlight(id) {
+        console.log(this);
+        this.$refs[`task-${id}`].scrollIntoView({ behavior: 'smooth' });
       },
     }));
   });
@@ -121,16 +124,15 @@ Youla.data(&#39;taskList&#39;, () =&gt; ({
       <span v-text="task.title"></span>
     </li>
   </ul>
-  <button type="button" @click="highlight($refs['task-2'])">Показать вторую задачу</button>
+  <button type="button" @click="highlight(2)">Показать вторую задачу</button>
 </div>
 
 <p>
-  <code>$refs</code> доступен только внутри самой строки выражения <code>@click="..."</code> — метод,
-  вызванный из неё (как <code>highlight()</code> выше), <code>$refs</code> не получает вовсе, ни как
-  <code>this.$refs</code>, ни как отдельную переменную. Поэтому элемент находят прямо в выражении
-  (<code>$refs['task-2']</code>) и передают в метод уже готовым — так же, как в примере с буфером
-  обмена на странице <a href="/clipboard">Буфер обмена</a>, где <code>$refs.snippet.value</code>
-  вычисляется в самом выражении, а не внутри <code>copy()</code>.
+  <code>highlight()</code> обращается к <code>this.$refs</code> напрямую, поэтому click-выражение
+  теперь просто <code>highlight(2)</code> — без передачи <code>$refs</code> аргументом.
+  <code>this</code> внутри метода — те же реактивные данные компонента (<code>tasks</code>,
+  <code>row</code>, <code>highlight</code>), что и в любом другом методе <code>v-data</code>,
+  только с <code>$el</code>, <code>$event</code>, <code>$refs</code> и <code>$root</code> поверх них.
 </p>
 
 <h2>Один компонент — одна область видимости</h2>

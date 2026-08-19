@@ -3,6 +3,7 @@ import { debounce, domReady, eventCreate, hasDirective, pulsate } from './helper
 import { directive } from './directives';
 import { method } from './methods';
 import { data } from './data';
+import { variable } from './variables';
 
 export const Youla = {
   data,
@@ -12,6 +13,8 @@ export const Youla = {
   method,
   methods: {},
   pulsate,
+  variable,
+  variables: {},
 
   /**
    * Boots Youla.js: fires the `youla:init` event (the hook user code uses to

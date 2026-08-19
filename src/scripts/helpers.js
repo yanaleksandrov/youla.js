@@ -1,7 +1,7 @@
 /**
  * Waits for the DOM to finish parsing.
  *
- * @returns {Promise<void>} Resolves immediately if the document has already loaded, otherwise once "DOMContentLoaded" fires.
+ * @returns {Promise<void>} Resolves once the document is ready.
  */
 export function domReady() {
   return new Promise(resolve => {
@@ -14,10 +14,8 @@ export function domReady() {
 }
 
 /**
- * Checks whether an element carries a given directive, regardless of any modifiers on it (e.g.
- * "v-data.local", "v-data.cookie"). Matching by directive root instead of the exact attribute
- * name means a new modifier never needs its own check added everywhere that cares whether an
- * element carries that directive at all.
+ * Checks whether an element carries a directive, matching by base name so any modifiers
+ * on it (e.g. "v-data.local") are ignored.
  *
  * @param {Element} el - The element to check.
  * @param {string} name - The directive's base name, e.g. "v-data".
@@ -43,8 +41,8 @@ export function closestDirective(el, name) {
 
 /**
  * Walks the DOM tree rooted at "el" depth-first, invoking "callback" for "el" itself and every
- * descendant — except it doesn't descend past a nested "v-data" component boundary, and treats a
- * "v-each" template element as a leaf rather than walking into its (unrendered) children.
+ * descendant. Stops at a nested "v-data" component's boundary, and treats a "v-each" template
+ * element as a leaf rather than walking into its unrendered children.
  *
  * @param {Element} el - The root element to start walking from.
  * @param {Function} callback - Invoked once for "el" and for each element visited under it.
@@ -74,11 +72,12 @@ export function domWalk(el, callback) {
 }
 
 /**
- * Creates a debounced function that delays the invocation of the provided function using a specified wait time.
+ * Creates a debounced function that delays invoking "callback" until "wait" ms have passed
+ * since the last call.
  *
  * @param {Function} callback - The function to be debounced.
  * @param {number} wait - The delay in milliseconds.
- * @returns {Function} - The debounced function.
+ * @returns {Function} The debounced function.
  */
 export function debounce(callback, wait) {
   let timeout;
@@ -91,12 +90,11 @@ export function debounce(callback, wait) {
 }
 
 /**
- * Repeatedly invokes the given function at the specified interval.
- * Optionally invokes the function immediately on the first call.
+ * Repeatedly invokes "callback" at the given interval, optionally once immediately first.
  *
  * @param {Function} callback - The function to be executed repeatedly.
  * @param {number} wait - The time interval in milliseconds between each call.
- * @param {boolean} immediate - If true, the function is called immediately once before the interval starts.
+ * @param {boolean} immediate - If true, calls "callback" once before the interval starts.
  * @returns {number} A timer ID that can be used with clearInterval to stop the execution.
  */
 export function pulsate(callback, wait, immediate = false) {
@@ -107,9 +105,7 @@ export function pulsate(callback, wait, immediate = false) {
 
 /**
  * Walks up from "el" to the nearest ancestor (or itself) carrying loop variables from an
- * enclosing "v-each" clone (see "__x_for_data" in ./directives/v-each), so evaluation done
- * outside the initial render (event handlers, Component#refresh) still sees the same
- * "task"/"index" the element was cloned with.
+ * enclosing "v-each" clone (see "__x_for_data" in ./directives/v-each).
  *
  * @param {Element} el - The element to start searching from.
  * @returns {object|undefined} The loop variables stored on the nearest "v-each" clone, if any.
@@ -120,6 +116,91 @@ export function getForData(el) {
     el = el.parentElement;
   }
   return data;
+}
+
+/**
+ * Creates a Proxy standing in for "$refs": each property access walks the DOM to find the
+ * element carrying a matching "v-ref" attribute.
+ *
+ * @param {HTMLElement} root - The component's root element ("v-data"), to scope the walk to.
+ * @returns {Proxy} An object whose properties resolve to "v-ref" elements.
+ */
+export function createRefsProxy(root) {
+  return new Proxy({}, {
+    get(object, property) {
+      let ref;
+
+      // domWalk instead of querySelector, since querySelector can't easily
+      // exclude "v-ref" elements belonging to a nested component.
+      domWalk(root, el => (el.getAttribute('v-ref') === property ? (ref = el) : null));
+
+      return ref;
+    }
+  });
+}
+
+/**
+ * Builds the "$el"/"$event"/"$refs"/"$root" magic variables, keyed the way saferEval expects
+ * for "additionalHelperVariables" — plus one entry per custom variable registered via
+ * "Youla.variable()", each recomputed by calling its factory with the same "root"/"el"/"event".
+ *
+ * @param {HTMLElement} root - The component's root element ("v-data"), used for "$root" and to scope "$refs".
+ * @param {HTMLElement} el - The element the expression is being evaluated for/against; becomes "$el".
+ * @param {Event} [event] - The triggering DOM event, if any; becomes "$event" (undefined otherwise).
+ * @returns {object} The magic variables, ready to merge into "additionalHelperVariables".
+ */
+export function createMagicVariables(root, el, event) {
+  const custom = {};
+
+  Object.entries(Youla.variables).forEach(([name, callback]) => {
+    custom[name] = callback(root, el, event);
+  });
+
+  // Spread first so a built-in name can never be shadowed by a custom
+  // variable — "Youla.variable()" already refuses to register one of these,
+  // but this keeps the guarantee even if "Youla.variables" is poked directly.
+  return {
+    ...custom,
+    '$el': el,
+    '$event': event,
+    '$refs': createRefsProxy(root),
+    '$root': root
+  };
+}
+
+/**
+ * Wraps "dataContext" in a Proxy that resolves the magic variables before falling through to
+ * the real data — so they're reachable both as bare identifiers in an expression (via
+ * "with($data)") and as "this.$refs" etc. inside any method called from it. Writes to a magic
+ * key are accepted but discarded, so a method never mutates the real data by accident.
+ *
+ * @param {object} dataContext - The data object (or Proxy) to wrap.
+ * @param {object} magicVariables - The magic variables to expose, as built by createMagicVariables().
+ * @returns {Proxy} The wrapped context, safe to pass as "$data" to saferEval.
+ */
+export function withMagicVariables(dataContext, magicVariables) {
+  return new Proxy(dataContext, {
+    get: (target, prop) => prop in magicVariables ? magicVariables[prop] : target[prop],
+    has: (target, prop) => prop in magicVariables || prop in target,
+    set: (target, prop, value) => prop in magicVariables ? true : Reflect.set(target, prop, value)
+  });
+}
+
+/**
+ * Splits a merged helper-variables bag into its magic variables (anything with a "$" prefix)
+ * and everything else (e.g. "v-each" loop variables).
+ *
+ * @param {object} [helperVariables] - The merged bag, as built at each Component evaluation call site.
+ * @returns {{magicVariables: object, otherVariables: object}}
+ */
+export function splitMagicVariables(helperVariables = {}) {
+  const magicVariables = {}, otherVariables = {};
+
+  Object.entries(helperVariables).forEach(([key, value]) => {
+    (key[0] === '$' ? magicVariables : otherVariables)[key] = value;
+  });
+
+  return { magicVariables, otherVariables };
 }
 
 /**
@@ -144,10 +225,8 @@ export function saferEval(expression, dataContext, additionalHelperVariables = {
 const ATTRIBUTE_PREFIX = /^(v-|@|:)/;
 
 /**
- * Classifies a single name/value pair into the shape Component dispatches on. Shared by
- * getAttributes() (real DOM attributes, value is always a string) and v-bind's runtime
- * expansion (see Component#resolveAttributes), where a JS object's entries are classified the
- * same way so neither path has to reimplement directive/event/bind detection on its own.
+ * Classifies a single name/value pair into the shape Component dispatches on. Used both for
+ * real DOM attributes and for a "v-bind" object's entries.
  *
  * @param {string} name - The raw attribute or object key, e.g. "v-each.lazy", "@click.prevent", ":class".
  * @param {*} value - The attribute's string value, or (for v-bind entries) any JS value.
@@ -216,9 +295,7 @@ export function getNextModifier(modifiers, modifierAfter, defaultValue = '') {
   return modifiers[modifiers.indexOf(modifierAfter) + 1] || defaultValue;
 }
 
-// Common key names/combos, so "@keydown.enter" or "@keyup.ctrl.s" don't
-// require filtering "$event.key" by hand inside the expression (the only
-// option before this — see the ".escape" note on the modal example page).
+// Key names/combos for filtering "$event.key" via modifiers, e.g. "@keydown.enter" or "@keyup.ctrl.s".
 const KEY_ALIASES = {
   enter: 'Enter', esc: 'Escape', escape: 'Escape', tab: 'Tab', space: ' ',
   up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight',
@@ -227,10 +304,8 @@ const KEY_ALIASES = {
 
 const SYSTEM_MODIFIER_KEYS = { ctrl: 'ctrlKey', alt: 'altKey', shift: 'shiftKey', meta: 'metaKey' };
 
-// Every other modifier Component#registerListener already gives dedicated
-// behavior to — whatever's left on a "@keydown.enter"-style attribute is a
-// key filter instead. Kept as a set here so a new behavior modifier only
-// needs to be added in one place to stay excluded from key matching.
+// Behavior modifiers Component#registerListener gives dedicated handling to — anything
+// else on a "@keydown.enter"-style attribute is treated as a key filter instead.
 const BEHAVIOR_MODIFIERS = new Set(['window', 'document', 'passive', 'capture', 'delay', 'prevent', 'stop', 'outside', 'once']);
 
 /**

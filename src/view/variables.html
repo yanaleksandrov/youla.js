@@ -1,0 +1,196 @@
+<% var data = {
+  title: "Variables"
+}; %>
+<%= _.template(require('./parts/header.html').default)(data) %>
+
+<h1>Variables</h1>
+
+<p>
+  Youla.js прокидывает в каждое выражение четыре особые переменные — <code>$el</code>,
+  <code>$event</code>, <code>$refs</code> и <code>$root</code>. Они не хранятся в данных
+  компонента и не объявляются в <code>v-data</code> — библиотека подставляет их сама,
+  поэтому они доступны сразу везде, где допустимо JS-выражение: в обработчиках событий,
+  в значении <code>v-text</code>, <code>v-show</code>, <code>:class</code> и любой другой
+  директивы.
+</p>
+
+<p>
+  Внутри метода, вызванного из такого выражения (например, зарегистрированного через
+  <code>Youla.data()</code> или <code>Youla.method()</code>), те же переменные доступны как
+  <code>this.$el</code>, <code>this.$event</code>, <code>this.$refs</code> и
+  <code>this.$root</code> — без явной передачи их аргументом.
+</p>
+
+<h2><code>$el</code></h2>
+
+<p>
+  DOM-элемент, на котором объявлено текущее выражение — не корень компонента, а именно тот
+  элемент, чей атрибут сейчас вычисляется. У каждого элемента своё значение <code>$el</code>.
+</p>
+
+<pre>
+&lt;div v-data&gt;
+  Тег этого элемента: &lt;strong v-text=&quot;$el.tagName&quot;&gt;&lt;/strong&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data>
+  Тег этого элемента: <strong v-text="$el.tagName"></strong>
+</div>
+
+<p>
+  <code>$el</code> вычисляется на <code>&lt;strong&gt;</code>, а не на обёртывающем
+  <code>&lt;div v-data&gt;</code> — поэтому в тексте появляется <code>STRONG</code>, а не
+  <code>DIV</code>. Так же <code>$el</code> использует и сама директива
+  <a href="/v-prop"><code>v-prop</code></a> внутри себя, чтобы прочитать текущее значение поля
+  формы (<code>$el.value</code>, <code>$el.checked</code>) без явного упоминания элемента
+  в разметке.
+</p>
+
+<h2><code>$event</code></h2>
+
+<p>
+  Объект события браузера, вызвавшего обработчик. В отличие от остальных трёх переменных,
+  <code>$event</code> имеет смысл только внутри выражения <code>@событие</code> — снаружи
+  обработчика события не существует, поэтому там она равна <code>undefined</code>.
+</p>
+
+<pre>
+&lt;div v-data=&quot;{ lastKey: '' }&quot;&gt;
+  &lt;input @keyup=&quot;lastKey = $event.key&quot; placeholder=&quot;Печатайте здесь&quot;&gt;
+  &lt;p&gt;Последняя нажатая клавиша: &lt;strong v-text=&quot;lastKey&quot;&gt;&lt;/strong&gt;&lt;/p&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data="{ lastKey: '' }">
+  <input @keyup="lastKey = $event.key" placeholder="Печатайте здесь">
+  <p>Последняя нажатая клавиша: <strong v-text="lastKey"></strong></p>
+</div>
+
+<p>
+  Готовые модификаторы вроде <code>.prevent</code> и <code>.stop</code> — это просто
+  сокращения для вызова <code>$event.preventDefault()</code> и
+  <code>$event.stopPropagation()</code>; подробности — на странице
+  <a href="/events">События</a>.
+</p>
+
+<h2><code>$refs</code></h2>
+
+<p>
+  Доступ к элементам компонента, помеченным атрибутом <a href="/v-ref"><code>v-ref</code></a>,
+  по их имени — без <code>document.querySelector</code> и без хранения ссылки на элемент
+  в данных.
+</p>
+
+<pre>
+&lt;div v-data&gt;
+  &lt;input v-ref=&quot;email&quot; type=&quot;email&quot; placeholder=&quot;you@example.com&quot;&gt;
+  &lt;button @click=&quot;$refs.email.focus()&quot;&gt;Перейти к полю&lt;/button&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data>
+  <input v-ref="email" type="email" placeholder="you@example.com">
+  <button @click="$refs.email.focus()">Перейти к полю</button>
+</div>
+
+<p>
+  <code>$refs</code> ищет элемент только внутри своего компонента и не видит
+  <code>v-ref</code>-элементы вложенных компонентов. Динамические имена через
+  <code>v-bind</code> и другие детали — на странице <a href="/v-ref"><code>v-ref</code></a>.
+</p>
+
+<h2><code>$root</code></h2>
+
+<p>
+  Корневой элемент компонента — тот самый, на котором объявлен <code>v-data</code>. Удобен,
+  когда из глубоко вложенного элемента нужно достать до корня, не расставляя
+  <code>v-ref</code> по всей разметке.
+</p>
+
+<pre>
+&lt;div v-data&gt;
+  &lt;div&gt;
+    &lt;div&gt;
+      &lt;button @click=&quot;$root.style.background = '#fef3c7'&quot;&gt;Подсветить компонент&lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data>
+  <div>
+    <div>
+      <button @click="$root.style.background = '#fef3c7'">Подсветить компонент</button>
+    </div>
+  </div>
+</div>
+
+<p>
+  Кнопка вложена на три уровня внутрь, но <code>$root</code> всё равно указывает на внешний
+  <code>&lt;div v-data&gt;</code>, а не на своего непосредственного родителя.
+</p>
+
+<h2>Внутри методов: <code>this.$el</code>, <code>this.$event</code>, <code>this.$refs</code>, <code>this.$root</code></h2>
+
+<p>
+  Когда выражение вызывает метод компонента, <code>this</code> внутри него — те же реактивные
+  данные, что и в любом другом методе <code>v-data</code>, только с четырьмя переменными
+  поверх них. Это избавляет от необходимости передавать <code>$el</code>, <code>$event</code>,
+  <code>$refs</code> и <code>$root</code> в метод аргументами вручную.
+</p>
+
+<pre>
+Youla.data(&#39;card&#39;, () =&gt; ({
+  status: &#39;Нажмите кнопку&#39;,
+
+  inspect() {
+    const { $el, $event, $root, $refs } = this;
+
+    this.status = `Элемент: &lt;${$el.tagName.toLowerCase()}&gt;, ` +
+      `событие: &quot;${$event.type}&quot;, ` +
+      `корень: &lt;${$root.tagName.toLowerCase()}&gt;, ` +
+      `поле по ссылке: ${$refs.note.value || &#39;(пусто)&#39;}`;
+  },
+}));
+</pre>
+
+<pre>
+&lt;div v-data=&quot;card&quot;&gt;
+  &lt;input v-ref=&quot;note&quot; placeholder=&quot;Впишите что-нибудь&quot;&gt;
+  &lt;button @click=&quot;inspect()&quot;&gt;Проверить переменные&lt;/button&gt;
+  &lt;p v-text=&quot;status&quot;&gt;&lt;/p&gt;
+&lt;/div&gt;
+</pre>
+
+<script>
+  document.addEventListener('youla:init', () => {
+    Youla.data('card', () => ({
+      status: 'Нажмите кнопку',
+
+      inspect() {
+        const { $el, $event, $root, $refs } = this;
+
+        this.status = `Элемент: <${$el.tagName.toLowerCase()}>, ` +
+          `событие: "${$event.type}", ` +
+          `корень: <${$root.tagName.toLowerCase()}>, ` +
+          `поле по ссылке: ${$refs.note.value || '(пусто)'}`;
+      },
+    }));
+  });
+</script>
+
+<div class="demo" v-data="card">
+  <input v-ref="note" placeholder="Впишите что-нибудь">
+  <button @click="inspect()">Проверить переменные</button>
+  <p v-text="status"></p>
+</div>
+
+<p>
+  <code>this.$el</code> здесь — сама кнопка, а не корневой <code>&lt;div&gt;</code>, потому что
+  выражение <code>inspect()</code> объявлено именно на ней. Полная сводная таблица всех
+  специальных переменных, включая <code>$имяМетода</code> для методов
+  <code>Youla.method()</code>, — на странице <a href="/syntax">Полный синтаксис</a>.
+</p>
+
+<%= _.template(require('./parts/footer.html').default)(data) %>

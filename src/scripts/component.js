@@ -1,15 +1,12 @@
-import { domWalk, debounce, getAttributes, getForData, parseAttribute, saferEval, eventCreate, getNextModifier, isKeyModifier, matchesKeyModifiers } from './helpers';
+import { domWalk, debounce, getAttributes, getForData, parseAttribute, saferEval, eventCreate, getNextModifier, isKeyModifier, matchesKeyModifiers, createMagicVariables, withMagicVariables, splitMagicVariables } from './helpers';
 import { updateAttribute } from './attributes';
 import { fetchProp, generateExpressionForProp } from './props';
 import { injectDataProviders } from './data';
 import { storage, isStorageModifier, getStorageType, computeExpires } from './storage';
 
 /**
- * Determines whether a function is an arrow function, by inspecting its source
- * text rather than its shape — arrow functions and method shorthand both lack a
- * "prototype", so that alone can't tell them apart. An arrow's "=>" sits before
- * its body's opening "{" (or there's no "{" at all, for a concise body); a
- * function/method declaration never has "=>" in that position.
+ * Determines whether a function is an arrow function, by inspecting its source text: an
+ * arrow's "=>" sits before its body's opening "{" (or there's no "{" at all, for a concise body).
  *
  * @param {Function} fn - The function to inspect.
  * @returns {boolean} True if "fn" is an arrow function.
@@ -29,11 +26,8 @@ function isArrowFunction(fn) {
 
 export default class Component {
   /**
-   * Builds a component rooted at "el": reads its "v-data" expression and
-   * modifiers, evaluates the initial reactive data (merging in registered data
-   * providers and current form field values), rehydrates it from storage if
-   * ".local"/".cookie" was used, wraps it in an observable proxy, and performs
-   * the first render.
+   * Builds a component rooted at "el": reads its "v-data" expression and modifiers, builds the
+   * initial reactive data (data providers, form field values, storage), and performs the first render.
    *
    * @param {HTMLElement} el - The element carrying the "v-data" attribute.
    */
@@ -76,9 +70,8 @@ export default class Component {
   }
 
   /**
-   * Writes the component's raw data back to storage, if "v-data" carries a
-   * ".local"/".cookie" modifier — a no-op otherwise. Called after every
-   * reactive write, so persisted state always matches what's currently rendered.
+   * Writes the component's raw data to storage, if "v-data" carries a ".local"/".cookie"
+   * modifier — a no-op otherwise. Called after every reactive write.
    */
   persist() {
     if (this.storageType) {
@@ -87,19 +80,14 @@ export default class Component {
   }
 
   /**
-   * Evaluates an expression (or calls a function) against the component's
-   * data, tracking which top-level data properties were actually read along
-   * the way via a dependency-tracking proxy — so refresh() can later tell
-   * whether this exact binding needs to re-run after a given property changes.
+   * Evaluates an expression (or calls a function) against the component's data, tracking
+   * which top-level data properties were read via a dependency-tracking proxy.
    *
-   * @param {string|Function} expressionOrFn - A JS expression string, or a
-   *   function (e.g. a "v-bind" entry given as a method) to call with the
-   *   proxy as "this".
-   * @param {Object} [additionalHelperVariables] - Extra variables available to
-   *   the expression (e.g. "v-each" loop variables) alongside the component's
-   *   data.
-   * @returns {{output: *, deps: string[]}} The evaluated result and the list
-   *   of property names it read.
+   * @param {string|Function} expressionOrFn - A JS expression string, or a function (e.g. a
+   *   "v-bind" entry given as a method) to call with the proxy as "this".
+   * @param {Object} [additionalHelperVariables] - Extra variables available to the expression
+   *   (e.g. "v-each" loop variables, magic variables) alongside the component's data.
+   * @returns {{output: *, deps: string[]}} The evaluated result and the property names it read.
    */
   evaluate(expressionOrFn, additionalHelperVariables) {
     let deps = [];
@@ -118,48 +106,50 @@ export default class Component {
 
     const proxiedData = makeProxy(this.data);
 
+    // Magic variables ("$el", "$refs", "$root", ...) never go through the tracking proxy:
+    // they're DOM elements (or a Proxy that resolves to one), never reactive data, so tracking
+    // them buys nothing — and wrapping a DOM element in a Proxy whose "get" trap returns an
+    // unbound method breaks any method call on it ("$el.closest(...)") with an "Illegal
+    // invocation" TypeError. They're layered onto "$data" itself instead (see withMagicVariables),
+    // so they're reachable both as bare identifiers and as "this.$refs" inside a method.
+    const { magicVariables, otherVariables } = splitMagicVariables(additionalHelperVariables);
+
     // "v-each" loop variables ("task", "index") are handed to saferEval as
     // separate function parameters, not as properties of $data — so reading
     // "task.checked" would never touch the tracking proxy above and "deps"
     // would stay empty, making the binding look unrelated to every future
     // data change. Wrap object-valued helper variables the same way so
     // property reads on loop items are tracked too.
-    const trackedHelperVariables = additionalHelperVariables && Object.fromEntries(
-      Object.entries(additionalHelperVariables).map(([key, value]) => [
+    const trackedHelperVariables = Object.fromEntries(
+      Object.entries(otherVariables).map(([key, value]) => [
         key, (typeof value === 'object' && value !== null) ? makeProxy(value) : value
       ])
     );
 
+    const contextData = withMagicVariables(proxiedData, magicVariables);
+
     // A v-bind entry may hand back a method instead of an expression string
     // (e.g. "v-show"() { return this.open }) — call it with the same
-    // dependency-tracking proxy as "this", so property access is tracked
-    // exactly like accessing $data inside a plain expression string.
+    // context as "this", so property access is tracked exactly like
+    // accessing $data inside a plain expression string.
     const output = typeof expressionOrFn === 'function'
-      ? expressionOrFn.call(proxiedData)
-      : saferEval(expressionOrFn, proxiedData, trackedHelperVariables);
+      ? expressionOrFn.call(contextData)
+      : saferEval(expressionOrFn, contextData, trackedHelperVariables);
 
     return { output, deps };
   }
 
   /**
-   * Reads every directive/event/bind attribute off "el", expanding any
-   * "v-bind" entry into the individual directive/event/bind entries its
-   * expression resolves to — so initialize() and refresh() dispatch a
-   * "v-bind" exactly as if its entries had been written directly in the
-   * markup, through the same logic. The expression is just a normal v-data
-   * property (e.g. v-bind="trigger" referencing "trigger" from
-   * Youla.data('dropdown', () => ({ trigger: {...} }))), resolved the same
-   * way any other expression reads from the component's data — no separate
-   * registry involved. "additionalHelperVariables" is derived here from the
-   * element itself (see getForData) rather than threaded in from the caller,
-   * so every caller automatically gets the right "v-each" loop scope.
+   * Reads every directive/event/bind attribute off "el", expanding any "v-bind" entry into the
+   * individual directive/event/bind entries its expression resolves to (e.g. v-bind="trigger"
+   * referencing "trigger" from Youla.data('dropdown', () => ({ trigger: {...} }))).
    *
    * @param {HTMLElement} el - The element to read attributes from.
    * @returns {Array<Object>} The resolved list of attribute descriptors.
    */
   resolveAttributes(el) {
     const self = this;
-    const additionalHelperVariables = getForData(el);
+    const additionalHelperVariables = {...getForData(el), ...this.getMagicVariables(el)};
 
     return getAttributes(el).flatMap(attribute => {
       if (attribute.directive !== 'v-bind') {
@@ -222,11 +212,9 @@ export default class Component {
   }
 
   /**
-   * Wraps a plain data object (and, recursively, any nested object it
-   * contains) in a Proxy that tracks writes: each successful "set" queues the
-   * changed property in "concernedData" and triggers a refresh (plus a
-   * persist, if storage is enabled) — turning plain property assignment into
-   * reactivity.
+   * Wraps a plain data object (and, recursively, any nested object it contains) in a Proxy
+   * that tracks writes: each successful "set" queues the changed property in "concernedData"
+   * and triggers a refresh (plus a persist, if storage is enabled).
    *
    * @param {Object} data - The raw data object to make observable.
    * @returns {Object} The observable (proxied) version of "data".
@@ -276,7 +264,7 @@ export default class Component {
     const self = this;
 
     domWalk(root, el => {
-      const additionalHelperVariables = getForData(el);
+      const additionalHelperVariables = {...getForData(el), ...self.getMagicVariables(el)};
 
       self.resolveAttributes(el).forEach(attribute => {
         let {directive, event, expression, modifiers, bind, literal} = attribute;
@@ -340,7 +328,7 @@ export default class Component {
         // (see ./directives/v-each) — without resolving them here too,
         // bindings referencing them (":class", "v-text", ...) throw on every
         // refresh and silently stop updating after the first render.
-        const additionalHelperVariables = getForData(el);
+        const additionalHelperVariables = {...getForData(el), ...self.getMagicVariables(el)};
 
         self.resolveAttributes(el).forEach(attribute => {
           let {directive, expression, bind, literal} = attribute;
@@ -477,23 +465,24 @@ export default class Component {
   }
 
   /**
-   * Runs an event handler: a function is called directly with the
-   * component's data as "this" (so writes to it trigger reactivity the same
-   * way a plain expression's writes would); a string expression is evaluated
-   * with the usual "$el"/"$event"/"$refs"/"$root", every registered method,
-   * and any enclosing "v-each" loop variables available to it.
+   * Runs an event handler: a function is called directly with the component's data as "this";
+   * a string expression is evaluated with the magic variables, every registered method, and
+   * any enclosing "v-each" loop variables available to it.
    *
    * @param {string|Function} expressionOrFn - The handler to run.
    * @param {Event} e - The DOM event that triggered the handler.
    * @param {HTMLElement} target - The element the listener is attached to.
    */
   runListenerHandler(expressionOrFn, e, target) {
+    const contextData = withMagicVariables(this.data, this.getMagicVariables(target, e));
+
     // A v-bind entry may hand back a method instead of an expression string
     // (e.g. "@click"() { this.open = true }) — call it directly, with "this"
-    // as the component's reactive data, so writes to it trigger refresh() the
-    // same way "this.open = true" inside a saferEval'd expression would.
+    // as the component's reactive data (plus the magic variables), so writes
+    // to it trigger refresh() the same way "this.open = true" inside a
+    // saferEval'd expression would.
     if (typeof expressionOrFn === 'function') {
-      expressionOrFn.call(this.data, e);
+      expressionOrFn.call(contextData, e);
       return;
     }
 
@@ -505,37 +494,20 @@ export default class Component {
 
     const data = getForData(target);
 
-    saferEval(expression, this.data, {
-      '$el': target,
-      '$event': e,
-      '$refs': this.getRefsProxy(),
-      '$root': this.root,
+    saferEval(expression, contextData, {
       ...methods,
       ...data
     }, true);
   }
 
   /**
-   * Returns a Proxy standing in for "$refs": rather than caching elements up
-   * front, each property access walks the DOM on demand to find the element
-   * carrying a matching "v-ref" attribute, so it stays correct even if the
-   * DOM changes from outside the framework.
+   * Builds the "$el"/"$event"/"$refs"/"$root" magic variables for evaluation against/for "el".
    *
-   * @returns {Proxy} An object whose properties resolve to "v-ref" elements.
+   * @param {HTMLElement} el - The element the expression is being evaluated for/against; becomes "$el".
+   * @param {Event} [event] - The triggering DOM event, if any; becomes "$event".
+   * @returns {object} The magic variables, ready to merge into "additionalHelperVariables".
    */
-  getRefsProxy() {
-    let self = this
-
-    return new Proxy({}, {
-      get(object, property) {
-        let ref
-
-        // domWalk instead of querySelector, since querySelector can't easily
-        // exclude "v-ref" elements belonging to a nested component.
-        domWalk(self.root, el => (el.getAttribute('v-ref') === property ? (ref = el) : null));
-
-        return ref
-      }
-    })
+  getMagicVariables(el, event) {
+    return createMagicVariables(this.root, el, event);
   }
 }

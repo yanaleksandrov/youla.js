@@ -1,5 +1,5 @@
 import { directive } from '../directives';
-import { saferEval } from '../helpers';
+import { saferEval, withMagicVariables, splitMagicVariables } from '../helpers';
 
 /**
  * Renders a clone of the template element for each item in an array, object,
@@ -29,12 +29,12 @@ directive('each', (el, output, attribute, component, additionalHelperVariables =
    */
   let [, item, index = 'key', items, join] = expression.match(/^\(?([\w]+)(?:,\s*(\w+))?\)?\s+in\s+(.*?)(?:\s+join\s+'([^']+)')?$/) || [];
 
+  const { magicVariables, otherVariables } = splitMagicVariables(additionalHelperVariables);
+
   /**
-   * Step 2: extracting the data, based on the expression.
-   *
-   * For a nested "v-each" (e.g. "product in category.products"), the parent
-   * loop's current item ("category") is passed down via additionalHelperVariables,
-   * so it's resolved here the same way loop variables are resolved elsewhere (e.g. v-text).
+   * Step 2: resolve "items" against the component's data. For a nested "v-each" (e.g.
+   * "product in category.products"), the parent loop's current item ("category") is available
+   * via otherVariables.
    */
   let dataItems;
 
@@ -42,7 +42,7 @@ directive('each', (el, output, attribute, component, additionalHelperVariables =
     dataItems = Array.from({length: +items}, (_, i) => i + 1);
   } else {
     try {
-      dataItems = saferEval(`${items}`, component.data, additionalHelperVariables);
+      dataItems = saferEval(`${items}`, withMagicVariables(component.data, magicVariables), otherVariables);
     } catch (error) {
       return;
     }
@@ -73,7 +73,7 @@ directive('each', (el, output, attribute, component, additionalHelperVariables =
     clone.removeAttribute('v-each');
 
     (async () => {
-      clone.__x_for_data = {...additionalHelperVariables, [item]: dataItem, [index]: +key || key};
+      clone.__x_for_data = {...otherVariables, [item]: dataItem, [index]: +key || key};
 
       await component.initialize(clone);
 

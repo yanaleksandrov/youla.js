@@ -6,36 +6,24 @@ document.addEventListener('youla:init', () => {
   Youla.baseURL ??= '';
 
   /**
-   * Registers `$ajax(route, payload, onProgress, options)` — Youla.js's
-   * request method. Use it like a normal ajax helper for calls to any API,
-   * or lean on its extra features when the server drives what the page
-   * should do next (see the response handling below).
+   * Registers `$ajax(route, payload, onProgress, options)`, Youla.js's request method.
    *
-   * `route` has two jobs. As a URL, it's appended to `Youla.baseURL` unless
-   * it's already absolute (starts with `http://` or `https://`). As an
-   * event name, it becomes `ajax:${route}`, dispatched on `document` once
-   * the response arrives — any other part of the page can listen for that
-   * event to react to the response, or even replace the value the returned
-   * promise resolves with.
+   * `route` is appended to `Youla.baseURL` unless already absolute, and also becomes the
+   * `ajax:${route}` CustomEvent dispatched on `document` once the response arrives —
+   * listeners can react to it or replace the value the returned promise resolves with.
    *
-   * The response is parsed as JSON when possible, and returned as plain
-   * text otherwise. If the parsed value is an object with a `data`
-   * property, `data` becomes the resolved value instead of the whole
-   * object; when that `data` is an array, each entry is additionally
-   * treated as a fragment instruction that updates part of the page (see
-   * applyFragment) before the promise resolves.
+   * The response is parsed as JSON when possible, plain text otherwise. An object response
+   * with a `data` property resolves as `data` instead of the whole object; if that `data` is
+   * an array, each entry is treated as a fragment instruction that updates part of the page
+   * (see applyFragment).
    *
-   * The request body comes from the element `$ajax` was called on (see
-   * buildRequestBody): the whole form for a `<form>`, or just that one
-   * field otherwise. That element also gets an `is-load` class for as long
-   * as the request is running, so it's easy to style a loading state. The
-   * HTTP method defaults to `POST` for a `<form>` and `GET` for anything
-   * else, unless the element has its own `method` attribute.
+   * The request body comes from the element `$ajax` was called on (see buildRequestBody): the
+   * whole form for a `<form>`, or just that field otherwise. The element gets an `is-load`
+   * class for the request's duration. The HTTP method defaults to `POST` for a `<form>` and
+   * `GET` otherwise, unless a `method` attribute is set.
    *
-   * If `$ajax` is called again on the same element before the previous
-   * call has finished, that earlier call is cancelled first. This keeps
-   * two overlapping requests from applying their results to the page in
-   * whatever order their responses happen to arrive.
+   * Calling `$ajax` again on the same element cancels any request still in flight, so
+   * overlapping responses can't apply out of order.
    *
    * @param {Event} e - The triggering event (unused; part of every method's call signature).
    * @param {HTMLElement} el - The element `$ajax` was called on.

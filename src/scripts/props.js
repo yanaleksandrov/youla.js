@@ -4,17 +4,16 @@ import {
   getAttributes,
   setNestedObjectValue,
   getNestedObjectValue,
-  saferEval
+  saferEval,
+  createMagicVariables,
+  withMagicVariables
 } from './helpers';
 import { storage, isStorageModifier, getStorageType, castToType } from './storage';
 
 /**
- * Prepares every `v-prop`-bound form field under `rootElement` before the
- * component's data is wrapped in reactivity: ensures each field has a `name`,
- * seeds a default value into `data` for any property that doesn't exist yet,
- * evaluates the field's current DOM value into `data`, and — if `.local` or
- * `.cookie` is present — overwrites that value with whatever was persisted
- * from a previous visit.
+ * Prepares every `v-prop`-bound form field under `rootElement`: ensures each field has a
+ * `name`, seeds a default value into `data` for any property that doesn't exist yet, evaluates
+ * the field's current DOM value into `data`, and applies any persisted `.local`/`.cookie` value.
  *
  * @param {HTMLElement} rootElement - The component's root element.
  * @param {Object} data - The component's raw data object, mutated in place.
@@ -48,7 +47,7 @@ export function fetchProp(rootElement, data) {
     let value = generateExpressionForProp(el, data, attribute);
 
     // calc real value based on fields value attributes
-    saferEval(value, data, {'$el': el});
+    saferEval(value, withMagicVariables(data, createMagicVariables(rootElement, el)));
 
     // get data from localStorage or cookie
     if (isStorageModifier(modifiers)) {

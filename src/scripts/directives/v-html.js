@@ -1,9 +1,8 @@
 import { directive } from '../directives';
 
 /**
- * Sets the element's HTML content from the bound expression, without
- * escaping — unlike v-text, markup in the value is parsed into real DOM
- * nodes. Only use this with trusted content.
+ * Sets the element's HTML content from the bound expression: markup in the value is parsed
+ * into real DOM nodes, without escaping. Only use this with trusted content.
  *
  * @param {HTMLElement} el
  * @param {*} output - the directive attribute's expression, evaluated against the component's data.

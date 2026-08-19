@@ -189,4 +189,79 @@ document.addEventListener(&#39;youla:init&#39;, () =&gt; {
   предупредит об этом в консоли и оставит первую регистрацию без изменений.
 </p>
 
+<h2>Пользовательские переменные</h2>
+
+<p>
+  <code>Youla.variable(имя, callback)</code> регистрирует переменную <code>$имя</code>, доступную
+  в любом выражении — и в директивах, и в обработчиках событий — точно так же, как встроенные
+  <code>$el</code>, <code>$event</code>, <code>$refs</code> и <code>$root</code> (подробнее о них
+  — на странице <a href="/variables">Variables</a>).
+</p>
+
+<p>
+  Как и с методами, <code>callback</code> здесь — фабрика, а не готовое значение: она вызывается
+  заново при каждом вычислении выражения, а её результат становится <code>$имя</code> именно
+  для этого вычисления.
+</p>
+
+<table>
+  <tbody>
+    <tr>
+      <th>Параметр фабрики</th>
+      <th>Значение</th>
+    </tr>
+    <tr>
+      <td><code>root</code></td>
+      <td>Корневой элемент компонента — тот, на котором объявлен <code>v-data</code></td>
+    </tr>
+    <tr>
+      <td><code>el</code></td>
+      <td>Элемент, на котором объявлено вычисляемое выражение</td>
+    </tr>
+    <tr>
+      <td><code>event</code></td>
+      <td>Объект события — только внутри обработчика события, иначе <code>undefined</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<pre>
+document.addEventListener(&#39;youla:init&#39;, () =&gt; {
+  Youla.variable(&#39;now&#39;, () =&gt; new Date().toLocaleTimeString());
+});
+</pre>
+
+<pre>
+&lt;div v-data=&quot;{ tick: 0 }&quot;&gt;
+  &lt;button @click=&quot;tick++&quot;&gt;Обновить время&lt;/button&gt;
+  &lt;p&gt;Сейчас: &lt;strong v-text=&quot;&#x60;${$now} (обновлений: ${tick})&#x60;&quot;&gt;&lt;/strong&gt;&lt;/p&gt;
+&lt;/div&gt;
+</pre>
+
+<script>
+  document.addEventListener('youla:init', () => {
+    Youla.variable('now', () => new Date().toLocaleTimeString());
+  });
+</script>
+
+<div class="demo" v-data="{ tick: 0 }">
+  <button @click="tick++">Обновить время</button>
+  <p>Сейчас: <strong v-text="`${$now} (обновлений: ${tick})`"></strong></p>
+</div>
+
+<p>
+  <code>$now</code> не хранится в данных компонента и не отслеживается как зависимость — он
+  просто пересчитывается каждый раз, когда элемент, использующий его, перерисовывается по любой
+  другой причине (здесь — по клику, меняющему <code>tick</code>). Если в выражении не читать ни
+  одного реального свойства данных, оно вычислится один раз при инициализации и больше не
+  обновится, даже если значение <code>$имя</code> в этот момент изменилось бы.
+</p>
+
+<p>
+  Имена <code>$el</code>, <code>$event</code>, <code>$refs</code> и <code>$root</code>
+  зарезервированы встроенными переменными — <code>Youla.variable()</code> откажется их
+  переопределить и предупредит об этом в консоли. Как и с директивами и методами, повторная
+  регистрация уже занятого имени тоже не перезапишет первую.
+</p>
+
 <%= _.template(require('./parts/footer.html').default)(data) %>

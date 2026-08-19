@@ -121,22 +121,24 @@
   <div v-text="content"></div>
 </div>
 
-<h2>Загрузка файла с индикатором прогресса</h2>
+<h2 id="ajax">Загрузка файла с индикатором прогресса</h2>
 
 <p>
-  Метод <code>$ajax</code> умеет отслеживать прогресс загрузки — это удобно совмещать с элементом
+  Третий аргумент <code>$ajax</code> — колбэк прогресса — удобно совмещать с элементом
   <code>&lt;progress&gt;</code>, который реактивно обновляется по мере отправки файла на сервер.
+  Подробнее о <code>$ajax</code>, его действиях над фрагментами страницы и обработке ответов —
+  на странице <a href="/ajax">Ajax и фрагменты</a>.
 </p>
 
 <pre>
 &lt;div v-data=&quot;{ percent: 0, items: [] }&quot;&gt;
-  &lt;form @submit.prevent=&quot;$ajax('https://jsonplaceholder.typicode.com/posts', {}, response =&gt; percent = response)&quot;&gt;
+  &lt;form @submit.prevent=&quot;$ajax('https://jsonplaceholder.typicode.com/posts', {}, p =&gt; percent = p.percent)&quot;&gt;
     &lt;input type=&quot;file&quot; name=&quot;file&quot;&gt;
     &lt;button type=&quot;submit&quot;&gt;Загрузить&lt;/button&gt;
     &lt;progress :value=&quot;percent&quot; max=&quot;100&quot;&gt;&lt;/progress&gt;
   &lt;/form&gt;
 
-  &lt;button type=&quot;button&quot; @click.delay.1000ms.once=&quot;$ajax('https://jsonplaceholder.typicode.com/posts', {}, response =&gt; items = response.json)&quot;&gt;
+  &lt;button type=&quot;button&quot; @click.delay.1000ms.once=&quot;$ajax('https://jsonplaceholder.typicode.com/posts').then(response =&gt; items = response)&quot;&gt;
     Показать список постов (загрузится один раз, через секунду)
   &lt;/button&gt;
   &lt;ul&gt;
@@ -148,13 +150,13 @@
 </pre>
 
 <div class="demo" v-data="{ percent: 0, items: [] }">
-  <form @submit.prevent="$ajax('https://jsonplaceholder.typicode.com/posts', {}, response => percent = response)">
+  <form @submit.prevent="$ajax('https://jsonplaceholder.typicode.com/posts', {}, p => percent = p.percent)">
     <input type="file" name="file">
     <button type="submit">Загрузить</button>
     <progress :value="percent" max="100"></progress>
   </form>
 
-  <button type="button" @click.delay.1000ms.once="$ajax('https://jsonplaceholder.typicode.com/posts', {}, response => items = response.json)">
+  <button type="button" @click.delay.1000ms.once="$ajax('https://jsonplaceholder.typicode.com/posts').then(response => items = response)">
     Показать список постов (загрузится один раз, через секунду)
   </button>
   <ul>

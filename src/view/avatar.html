@@ -1,0 +1,153 @@
+<% var data = {
+  title: "Загрузчик аватарки"
+}; %>
+<%= _.template(require('./parts/header.html').default)(data) %>
+
+<h1>Загрузчик аватарки</h1>
+
+<p>
+  Форме профиля обычно нужен загрузчик фото: показать превью сразу после выбора файла, до
+  отправки на сервер, и чем-то заменить пустое место, пока файл не выбран — обычно инициалами
+  пользователя.
+</p>
+
+<pre>
+Youla.data(&#39;avatar&#39;, () =&gt; ({
+  name: &#39;&#39;,
+  image: &#39;&#39;,
+  field: {
+    &#39;v-prop&#39;: &#39;name&#39;,
+  },
+  picture: {
+    &#39;:title&#39;: &#39;name&#39;,
+    &#39;:style&#39;: &quot;image &amp;&amp; `background-image:url(${image})`&quot;,
+  },
+  initials: {
+    &#39;v-show&#39;: &#39;!image&#39;,
+    &#39;v-text&#39;() {
+      return this.name.trim().split(/\s+/).map(word =&gt; word[0]).slice(0, 2).join(&#39;&#39;).toUpperCase();
+    },
+  },
+  uploader: {
+    &#39;@change&#39;() {
+      let file = this.$event.target.files[0];
+      if (file) {
+        let reader = new FileReader();
+        reader.onload = e =&gt; this.image = e.target.result;
+        reader.readAsDataURL(file);
+      }
+    },
+  },
+  remover: {
+    &#39;v-show&#39;: &#39;image&#39;,
+    &#39;@click&#39;() {
+      let input = this.$root.querySelector(&#39;input[type=&quot;file&quot;]&#39;);
+      if (input) {
+        input.value = &#39;&#39;;
+      }
+      this.image = &#39;&#39;;
+    },
+  },
+}))
+</pre>
+
+<pre>
+&lt;div class=&quot;demo example-avatar&quot; v-data=&quot;avatar&quot;&gt;
+  &lt;div class=&quot;avatar-circle&quot; v-bind=&quot;picture&quot;&gt;
+    &lt;span v-bind=&quot;initials&quot; hidden&gt;&lt;/span&gt;
+  &lt;/div&gt;
+
+  &lt;input type=&quot;text&quot; placeholder=&quot;Введите имя&quot; v-bind=&quot;field&quot;&gt;
+
+  &lt;input type=&quot;file&quot; accept=&quot;image/*&quot; v-bind=&quot;uploader&quot;&gt;
+
+  &lt;button type=&quot;button&quot; v-bind=&quot;remover&quot; hidden&gt;Удалить&lt;/button&gt;
+&lt;/div&gt;
+</pre>
+
+<style>
+  .example-avatar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+		column-gap: 1rem;
+  }
+  .example-avatar .avatar-circle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 4rem;
+    height: 4rem;
+    flex: none;
+    background-color: var(--teal-soft);
+    background-size: cover;
+    background-position: center;
+    border-radius: 50%;
+    color: var(--teal);
+    font-weight: 600;
+  }
+</style>
+
+<div class="demo example-avatar" v-data="avatar">
+  <div class="avatar-circle" v-bind="picture">
+    <span v-bind="initials" hidden></span>
+  </div>
+
+  <input type="text" placeholder="Введите имя" v-bind="field">
+
+  <input type="file" accept="image/*" v-bind="uploader">
+
+  <button type="button" v-bind="remover" hidden>Удалить</button>
+</div>
+
+<p>
+  <code>image</code> хранит выбранный файл как <code>data:image/*</code> — этого достаточно для
+  превью, но для реальной загрузки файл нужно дополнительно отправить на сервер, сам компонент
+  этим не занимается.
+</p>
+
+<h2>Как пользоваться</h2>
+
+<table>
+  <tbody>
+    <tr>
+      <th>Набор</th>
+      <th>Куда навесить</th>
+      <th>Что делает</th>
+    </tr>
+    <tr>
+      <td><code>field</code></td>
+      <td>текстовое поле имени</td>
+      <td><code>v-prop</code> двусторонне связывает поле с <code>name</code></td>
+    </tr>
+    <tr>
+      <td><code>picture</code></td>
+      <td>контейнер превью</td>
+      <td><code>:style</code> подставляет <code>image</code> фоном, пока он не пуст</td>
+    </tr>
+    <tr>
+      <td><code>initials</code></td>
+      <td>заглушка внутри превью</td>
+      <td>
+        <code>v-show</code> показывает её, пока файла нет; <code>v-text</code> — первые две буквы
+        <code>name</code> через <code>getInitials(name)</code>
+      </td>
+    </tr>
+    <tr>
+      <td><code>uploader</code></td>
+      <td><code>input[type="file"]</code></td>
+      <td><code>@change</code> читает выбранный файл в <code>image</code></td>
+    </tr>
+    <tr>
+      <td><code>remover</code></td>
+      <td>кнопка «Удалить»</td>
+      <td>
+        <code>v-show</code> появляется, только когда <code>image</code> заполнен;
+        <code>@click</code> передаёт <code>$root</code> и очищает и <code>image</code>, и сам
+        <code>input[type="file"]</code>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<%= _.template(require('./parts/footer.html').default)(data) %>

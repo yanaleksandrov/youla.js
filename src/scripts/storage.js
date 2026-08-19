@@ -21,9 +21,8 @@ function wrapWithTTL(value, expires) {
  * Unwraps a value previously wrapped by wrapWithTTL().
  *
  * @param {string} raw - The raw string read from localStorage.
- * @returns {*} The unwrapped value; the EXPIRED symbol if its TTL has passed;
- * or `undefined` if "raw" isn't one of our envelopes (a plain value stored
- * without an expiration, or from before TTL support existed).
+ * @returns {*} The unwrapped value; the EXPIRED symbol if its TTL has passed; or `undefined`
+ * if "raw" isn't one of our envelopes (a plain value stored without an expiration).
  */
 function unwrapTTL(raw) {
   try {
@@ -89,7 +88,7 @@ export const storage = {
    * UTC string, every other key (e.g. "path", "domain", "secure", "samesite") is appended as
    * "key=value", or as a bare flag when its value is exactly true. For localStorage, only
    * "expires" (Date) is used, to fake a TTL — everything else is ignored. Omitting "expires"
-   * makes a cookie a session cookie, and a localStorage entry permanent, same as before.
+   * makes a cookie a session cookie and a localStorage entry permanent.
    * @returns {void}
    */
   set: (name, value, type = 'local', options = {path: '/'}) => {

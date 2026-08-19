@@ -15,7 +15,6 @@ import './scripts/directives/v-text';
  *
  * These are the methods that are magically available to all the Youla.js expressions, within your web app.
  */
-import './scripts/methods/$ajax';
 import './scripts/methods/$dispatch';
 
 /**

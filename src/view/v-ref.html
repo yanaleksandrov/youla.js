@@ -1,0 +1,150 @@
+<% var data = {
+  title: "v-ref"
+}; %>
+<%= _.template(require('./parts/header.html').default)(data) %>
+
+<h1>v-ref</h1>
+
+<p>
+  Атрибут <code>v-ref</code> именует элемент, чтобы затем обратиться к нему напрямую через
+  <code>$refs</code> внутри выражения обработчика события — без <code>document.querySelector</code>
+  и без хранения ссылки на элемент в данных компонента.
+</p>
+
+<p>
+  В отличие от директив вроде <a href="/v-show"><code>v-show</code></a> или
+  <a href="/v-text"><code>v-text</code></a>, значение <code>v-ref</code> не вычисляется как
+  JS-выражение — это обычная строка-имя, под которым элемент становится доступен в <code>$refs</code>.
+</p>
+
+<pre>
+&lt;div v-data=&quot;{ }&quot;&gt;
+  &lt;input v-ref=&quot;email&quot; type=&quot;email&quot; placeholder=&quot;you@example.com&quot;&gt;
+  &lt;button @click=&quot;$refs.email.focus()&quot;&gt;Перейти к полю&lt;/button&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data="{ }">
+  <input v-ref="email" type="email" placeholder="you@example.com">
+  <button @click="$refs.email.focus()">Перейти к полю</button>
+</div>
+
+<p>
+  Нажатие на кнопку вызывает <code>$refs.email</code> — DOM-элемент с атрибутом
+  <code>v-ref="email"</code> — и сразу передаёт ему <code>.focus()</code>, как обычному
+  элементу, полученному через <code>querySelector</code>.
+</p>
+
+<h2>$refs доступен только в обработчиках событий</h2>
+
+<p>
+  <code>$refs</code>, как и <code>$el</code>, <code>$event</code> и <code>$root</code>, передаётся
+  только в выражения <code>@событие</code> (подробнее — на странице
+  <a href="/syntax">Полный синтаксис</a>). Внутри значения <code>v-text</code>, <code>v-show</code>
+  и других директив <code>$refs</code> не существует.
+</p>
+
+<p>
+  Сам атрибут <code>v-ref</code> при этом можно писать на одном элементе вместе с любой другой
+  директивой — он ничего не меняет в её работе, просто добавляет элементу имя:
+</p>
+
+<pre>
+&lt;div v-text=&quot;label&quot; v-ref=&quot;labelEl&quot;&gt;&lt;/div&gt;
+&lt;button @click=&quot;console.log($refs.labelEl)&quot;&gt;Показать элемент в консоли&lt;/button&gt;
+</pre>
+
+<div class="demo" v-data="{ label: 'Обычный текст' }">
+  <div v-text="label" v-ref="labelEl"></div>
+  <button @click="console.log($refs.labelEl)">Показать элемент в консоли</button>
+</div>
+
+<h2>Динамические имена через v-bind</h2>
+
+<p>
+  Внутри <a href="/v-bind"><code>v-bind</code></a> ключ <code>'v-ref'</code> работает так же, как
+  и написанный прямо в разметке, но его значение можно вычислить — например, дать каждому элементу
+  цикла <a href="/v-each"><code>v-each</code></a> своё уникальное имя.
+</p>
+
+<pre>
+Youla.data(&#39;taskList&#39;, () =&gt; ({
+  tasks: [
+    { id: 1, title: &#39;Написать отчёт&#39; },
+    { id: 2, title: &#39;Проверить почту&#39; },
+  ],
+
+  row(task) {
+    return {
+      &#39;v-ref&#39;: `task-${task.id}`,
+    }
+  },
+
+  highlight(el) {
+    el.scrollIntoView({ behavior: &#39;smooth&#39; });
+  },
+}))
+</pre>
+
+<pre>
+&lt;ul v-data=&quot;taskList&quot;&gt;
+  &lt;li v-each=&quot;task in tasks&quot; v-bind=&quot;row(task)&quot;&gt;
+    &lt;span v-text=&quot;task.title&quot;&gt;&lt;/span&gt;
+  &lt;/li&gt;
+
+  &lt;button @click=&quot;highlight($refs['task-2'])&quot;&gt;Показать вторую задачу&lt;/button&gt;
+&lt;/ul&gt;
+</pre>
+
+<script>
+  document.addEventListener('youla:init', () => {
+    Youla.data('taskList', () => ({
+      tasks: [
+        { id: 1, title: 'Написать отчёт' },
+        { id: 2, title: 'Проверить почту' },
+      ],
+      row(task) {
+        return {
+          'v-ref': `task-${task.id}`,
+        }
+      },
+      highlight(el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      },
+    }));
+  });
+</script>
+
+<div class="demo" v-data="taskList">
+  <ul>
+    <li v-each="task in tasks" v-bind="row(task)">
+      <span v-text="task.title"></span>
+    </li>
+  </ul>
+  <button type="button" @click="highlight($refs['task-2'])">Показать вторую задачу</button>
+</div>
+
+<p>
+  <code>$refs</code> доступен только внутри самой строки выражения <code>@click="..."</code> — метод,
+  вызванный из неё (как <code>highlight()</code> выше), <code>$refs</code> не получает вовсе, ни как
+  <code>this.$refs</code>, ни как отдельную переменную. Поэтому элемент находят прямо в выражении
+  (<code>$refs['task-2']</code>) и передают в метод уже готовым — так же, как в примере с буфером
+  обмена на странице <a href="/clipboard">Буфер обмена</a>, где <code>$refs.snippet.value</code>
+  вычисляется в самом выражении, а не внутри <code>copy()</code>.
+</p>
+
+<h2>Один компонент — одна область видимости</h2>
+
+<p>
+  <code>$refs</code> ищет элемент только внутри текущего компонента: если внутри него вложен ещё
+  один элемент с собственным <code>v-data</code>, его <code>v-ref</code>-элементы в <code>$refs</code>
+  родителя не попадают — так каждый компонент случайно не задевает разметку другого.
+</p>
+
+<p>
+  Если на странице повторить одно и то же имя <code>v-ref</code> на нескольких элементах одного
+  компонента, <code>$refs</code> вернёт первый найденный при обходе DOM — держите имена уникальными
+  в пределах компонента, как обычные переменные.
+</p>
+
+<%= _.template(require('./parts/footer.html').default)(data) %>

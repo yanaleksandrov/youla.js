@@ -325,7 +325,7 @@ document.addEventListener('youla:init', ()=> {
    * root, via a WeakMap) drives navigation — `$step.goNext()`,
    * `$step.goBack()`, and the read-only helpers below. Panel visibility is
    * toggled directly here rather than through a `v-show` expression,
-   * because `$step`'s methods (like any `Youla.func`) only reach `@event`
+   * because `$step`'s methods (like any `Youla.method`) only reach `@event`
    * expressions, never `v-show`/`:attribute` ones.
    *
    * @since 1.0
@@ -337,7 +337,7 @@ document.addEventListener('youla:init', ()=> {
     step.isComplete = !!output;
     step.errors     = {};
   });
-  Youla.func('step', (e, el, component) => getWizard(el, component));
+  Youla.method('step', (e, el, component) => getWizard(el, component));
 
   const wizards = new WeakMap();
 

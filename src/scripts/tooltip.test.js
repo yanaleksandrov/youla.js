@@ -36,8 +36,7 @@ function stubSize(el, width, height) {
 }
 
 /**
- * Mirrors parseAttribute()'s "duration" extraction (see ../scripts/helpers.js):
- * a bare "<number><unit>" modifier, e.g. "300ms", parsed out of the raw list.
+ * Mirrors parseAttribute()'s "duration" extraction — a bare "<number><unit>" modifier.
  */
 function attr(modifiers = []) {
   const match = modifiers.map(m => /^(\d+)([a-z]+)$/.exec(m)).find(Boolean);
@@ -165,8 +164,7 @@ describe('tooltipDirective — mobile viewport', () => {
   it('positions against window.visualViewport when present, e.g. with the iOS keyboard open', () => {
     const el = mount();
     tooltipDirective(el, 'Tip', attr());
-    // Anchor sits below where a shrunk visual viewport (keyboard open) would end,
-    // but still within the full window height.
+    // Within window height, but below the shrunk visual viewport (keyboard open).
     stubRect(el, { top: 500, bottom: 520, left: 100, right: 150, width: 50, height: 20 });
     stubSize(el._x_tooltip.tooltip, 80, 24);
     window.visualViewport = { width: 1024, height: 400 };

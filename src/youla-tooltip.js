@@ -3,9 +3,7 @@ import { TooltipInstance, PLACEMENTS, TRIGGERS } from './scripts/tooltip';
 document.addEventListener('youla:init', ()=> {
 
   /**
-   * Shows "output" as a tooltip anchored to the element. Position and trigger come
-   * from the directive's modifiers, delay from a bare one like `.500ms`; content is
-   * trusted HTML (see v-html).
+   * Shows "output" as a tooltip anchored to the element; content is trusted HTML.
    *
    * @since 1.0
    */

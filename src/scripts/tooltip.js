@@ -4,6 +4,8 @@ export const TRIGGERS   = ['hover', 'click', 'focus'];
 const OFFSET = 8;
 const MARGIN = 4;
 
+const TOOLTIP_CLASS = 'v-tooltip';
+
 // Fallback removal if the CSS exit animation never fires (e.g. reduced motion).
 const EXIT_FALLBACK = 200;
 
@@ -29,10 +31,7 @@ function ensureRemovalObserver() {
   removalObserver.observe(document.body, { childList: true, subtree: true });
 }
 
-/**
- * Adds a batch of [target, type, handler, options] listeners; returns a function
- * that removes them all.
- */
+// Adds [target, type, handler, options] listeners; returns a function that removes them all.
 function bind(listeners) {
   listeners.forEach(([target, type, handler, options]) => {
     target.addEventListener(type, handler, options);
@@ -41,8 +40,7 @@ function bind(listeners) {
   return () => listeners.forEach(([target, type, handler, options]) => target.removeEventListener(type, handler, options));
 }
 
-// Coalesces bursts of scroll/resize events (e.g. iOS momentum scroll) into one
-// reposition pass per frame instead of one per event.
+// Coalesces bursts of scroll/resize events into one reposition pass per frame.
 let repositionQueued = false;
 const raf = window.requestAnimationFrame || (fn => setTimeout(fn, 16));
 
@@ -67,15 +65,13 @@ function ensureGlobalListeners() {
   window.addEventListener('scroll', scheduleReposition, { passive: true, capture: true });
   window.addEventListener('resize', scheduleReposition, { passive: true });
 
-  // Covers iOS Safari's on-screen keyboard and pinch-zoom, which resize the
-  // visual viewport without always firing a window "resize".
+  // Covers iOS Safari's keyboard and pinch-zoom, which resize the visual viewport without a window "resize".
   window.visualViewport?.addEventListener('resize', scheduleReposition);
   window.visualViewport?.addEventListener('scroll', scheduleReposition);
 }
 
 /**
- * Resolves a tooltip's position next to "anchorRect" for the given placement (or
- * "auto"), clamped to fit the viewport.
+ * Resolves a tooltip's position next to "anchorRect" for the given placement, clamped to the viewport.
  *
  * @param {object} anchorRect - The trigger element's bounding box.
  * @param {{width: number, height: number}} size - The tooltip's measured size.
@@ -119,17 +115,14 @@ export function computePosition(anchorRect, size, placement, viewport, offset = 
   return { top, left, placement: resolved };
 }
 
-/**
- * A tooltip's DOM element, positioning, triggers, and show/hide/destroy lifecycle.
- * Cached on the target element as `el._x_tooltip`.
- */
+// A tooltip's DOM element, positioning, triggers, and lifecycle. Cached as `el._x_tooltip`.
 export class TooltipInstance {
   constructor(el, content, placement, trigger, delay = 250) {
     Object.assign(this, { el, content, placement, trigger, delay, visible: false });
 
     // Only inserted into the DOM while shown — see show()/hide().
     this.tooltip = Object.assign(document.createElement('div'), {
-      id: `v-tooltip-${++uid}`,
+      id: `${TOOLTIP_CLASS}-${++uid}`,
       innerHTML: content,
     });
     this.tooltip.setAttribute('role', 'tooltip');
@@ -188,7 +181,7 @@ export class TooltipInstance {
       return;
     }
 
-    // "focus" only reacts to focus/blur (always immediate). "hover" adds mouseenter/mouseleave on top, delayed by "delay".
+    // "hover" adds mouseenter/mouseleave (delayed) on top of focus/blur.
     const listeners = [
       [el, 'focus', () => this.activate()],
       [el, 'blur', () => this.deactivate()],
@@ -227,8 +220,7 @@ export class TooltipInstance {
   reposition() {
     const anchorRect = this.el.getBoundingClientRect();
     const size        = { width: this.tooltip.offsetWidth, height: this.tooltip.offsetHeight };
-    // visualViewport tracks what's actually visible (keyboard, pinch-zoom); window
-    // innerWidth/innerHeight don't, on iOS Safari.
+    // visualViewport reflects the actually-visible area on iOS Safari; innerWidth/innerHeight don't.
     const vv          = window.visualViewport;
     const viewport     = { width: vv?.width ?? window.innerWidth, height: vv?.height ?? window.innerHeight };
     const { top, left, placement } = computePosition(anchorRect, size, this.placement, viewport);
@@ -239,15 +231,14 @@ export class TooltipInstance {
     this.syncClasses();
   }
 
-  // The only place that writes the tooltip's className — rebuilt from state
-  // (base class, animation state, resolved placement) rather than patched piecemeal.
+  // The only place that writes the tooltip's className.
   syncClasses() {
-    const classes = ['v-tooltip'];
+    const classes = [TOOLTIP_CLASS];
     if (this.animationState) {
-      classes.push(`v-tooltip--${this.animationState}`);
+      classes.push(`${TOOLTIP_CLASS}--${this.animationState}`);
     }
     if (this.resolvedPlacement) {
-      classes.push(`v-tooltip--${this.resolvedPlacement}`);
+      classes.push(`${TOOLTIP_CLASS}--${this.resolvedPlacement}`);
     }
     this.tooltip.className = classes.join(' ');
   }
@@ -263,7 +254,8 @@ export class TooltipInstance {
     // Hidden while positioning, so it doesn't flash at the wrong spot.
     this.tooltip.style.visibility = 'hidden';
     document.body.appendChild(this.tooltip);
-    this.reposition(); // also applies "v-tooltip--in" via syncClasses()
+
+    this.reposition();
     this.tooltip.style.visibility = 'visible';
 
     this.el.setAttribute('aria-describedby', this.tooltip.id);
@@ -271,9 +263,7 @@ export class TooltipInstance {
     visibleTooltips.add(this);
     ensureGlobalListeners();
 
-    // Outside click/tap or Escape always closes it — also covers a touch-opened
-    // "hover" tooltip, which has no mouseleave to fall back on.
-    // Capture phase, so it can't fire for the same click/tap that opened this.
+    // Outside click/tap or Escape closes it; capture phase so it can't fire for the opening click itself.
     this.detachDocListeners = bind([
       [document, 'click', e => {
         if (!this.el.contains(e.target) && !this.tooltip.contains(e.target)) {

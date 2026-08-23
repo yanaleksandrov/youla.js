@@ -294,13 +294,13 @@ table {
 		height: 10px;
 		position: absolute;
 		width: 10px;
+		background-color: #fff;
+		z-index: 0;
+		transition: 0.2s ease-in-out;
 		border-right: 1px solid var(--expansa-border, #dfe2e3);
 		border-bottom: 1px solid var(--expansa-border, #dfe2e3);
 		border-bottom-right-radius: 3px;
 		border-top-left-radius: 8px;
-		background-color: #fff;
-		z-index: 0;
-		transition: 0.2s ease-in-out;
 	}
 
 	&--in {

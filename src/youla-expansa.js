@@ -225,8 +225,8 @@ document.addEventListener('youla:init', ()=> {
       return;
     }
 
-    const start = Math.max(from, 0);
-    const end   = Math.min(to, 100);
+    const start = Math.min(Math.max(from, 0), 100);
+    const end   = Math.min(Math.max(to, 0), 100);
 
     const transitionDuration = duration ? `${duration.value}${duration.unit}` : '0ms';
     const reducedMotion      = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;

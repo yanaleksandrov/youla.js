@@ -200,17 +200,57 @@ document.addEventListener('youla:init', ()=> {
   });
 
   /**
-   * Animates a progress indicator into view once, the first time it
-   * scrolls into the viewport: sets `--youla-progress` (and
-   * `--youla-progress-transition`) as CSS custom properties, from
-   * `value.from.to.duration` modifiers — e.g. `v-progress.100.20.80.600ms`
-   * animates from 20% to 80% (of 100) over 600ms. Style the element's
-   * width (or similar) off `var(--youla-progress)` yourself.
+   * Animates a progress indicator into view once when it enters the viewport.
+   * Sets `--youla-progress` and `--youla-progress-transition` CSS properties
+   * based on `from.to` (both percentages) and the shared `<number><unit>`
+   * duration modifier. Skips the transition when reduced motion is preferred.
+   *
+   * `to` can also come from the directive's bound value instead of the `to`
+   * modifier — e.g. `v-progress.0.600ms="percent"` — in which case it's
+   * reactive: once the initial reveal has played, every change to `percent`
+   * transitions `--youla-progress` straight to the new value.
    *
    * @since 1.0
    */
-  Youla.directive('progress', (el, output, { modifiers }) => {
-    const [value = 100, from = 0, to = 100, duration = '0ms'] = modifiers;
+  Youla.directive('progress', (el, output, { modifiers, duration, expression }) => {
+    const [rawFrom = 0, rawTo = 100] = modifiers;
+
+    const from = parseInt(rawFrom);
+
+    const bound = expression !== '' && !isNaN(parseFloat(output));
+    const to    = bound ? parseFloat(output) : parseInt(rawTo);
+
+    if (isNaN(from) || isNaN(to)) {
+      console.warn('Youla.js: "v-progress" requires numeric from/to modifiers as percentages (or a numeric bound value), e.g. v-progress.20.80.600ms.');
+      return;
+    }
+
+    const start = Math.max(from, 0);
+    const end   = Math.min(to, 100);
+
+    const transitionDuration = duration ? `${duration.value}${duration.unit}` : '0ms';
+    const reducedMotion      = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const apply = (percent, animate) => {
+      if (animate && !reducedMotion()) {
+        el.style.setProperty('--youla-progress-transition', `width ${transitionDuration}`);
+      }
+      el.style.setProperty('--youla-progress', `${percent}%`);
+    };
+
+    // Already revealed — this call is a reactive update to the bound value, not the initial mount.
+    if (el._x_progress?.revealed) {
+      el._x_progress.end = end;
+      apply(end, true);
+      return;
+    }
+
+    if (el._x_progress) {
+      el._x_progress.end = end;
+      return;
+    }
+
+    el._x_progress = { revealed: false, end };
 
     new IntersectionObserver(([entry], observer) => {
       if (!entry.isIntersecting) {
@@ -218,17 +258,16 @@ document.addEventListener('youla:init', ()=> {
       }
       observer.unobserve(el);
 
-      let start = Math.max(parseInt(from) / parseInt(value) * 100, 0);
-      let end   = Math.min(parseInt(to)   / parseInt(value) * 100, 100);
-      if (start > end) {
-        [start, end] = [end, start];
-      }
+      el._x_progress.revealed = true;
 
       el.style.setProperty('--youla-progress', `${start}%`);
-      setTimeout(() => {
-        el.style.setProperty('--youla-progress-transition', `width ${duration}`);
-        el.style.setProperty('--youla-progress', `${end}%`);
-      }, 500);
+
+      if (reducedMotion()) {
+        apply(el._x_progress.end, false);
+        return;
+      }
+
+      setTimeout(() => apply(el._x_progress.end, true), 500);
     }).observe(el);
   });
 

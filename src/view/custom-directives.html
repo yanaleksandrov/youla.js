@@ -159,43 +159,6 @@ Youla.data(&#39;user&#39;, () =&gt; ({
   <textarea v-textarea="6" rows="2" placeholder="Печатайте здесь — поле будет расти..."></textarea>
 </div>
 
-<h2>v-progress: индикатор при появлении на экране</h2>
-
-<p>
-  Директива один раз (через <code>IntersectionObserver</code>) запускает анимацию, когда элемент
-  впервые появляется на экране, и выставляет два CSS-свойства — <code>--youla-progress</code> и
-  <code>--youla-progress-transition</code>. Сама директива ничего не рисует: связать эти переменные
-  с шириной, цветом или чем угодно ещё — задача вашего CSS.
-</p>
-
-<p>
-  Модификаторы задают значения по порядку — <code>value.from.to.duration</code>, например
-  <code>v-progress.100.20.90.800ms</code> анимирует от 20% к 90% (от 100) за 800мс.
-</p>
-
-<pre>
-&lt;div class=&quot;progress-bar&quot; v-progress.100.20.90.800ms&gt;
-  &lt;i&gt;&lt;/i&gt;
-&lt;/div&gt;
-</pre>
-
-<style>
-  .progress-bar { height: 10px; border-radius: 999px; background: var(--line); overflow: hidden; }
-  .progress-bar i {
-    display: block;
-    height: 100%;
-    background: var(--teal);
-    width: var(--youla-progress, 0%);
-    transition: var(--youla-progress-transition, none);
-  }
-</style>
-
-<div class="demo" v-data>
-  <div class="progress-bar" v-progress.100.20.90.800ms>
-    <i></i>
-  </div>
-</div>
-
 <h2>v-select: адаптер для SlimSelect</h2>
 
 <p>

@@ -66,10 +66,6 @@ document.addEventListener(&#39;youla:init&#39;, () =&gt; {
   Youla.directive(&#39;uppercase&#39;, (el, output) =&gt; {
     el.textContent = String(output).toUpperCase();
   });
-
-  Youla.data(&#39;greeting&#39;, () =&gt; ({
-    name: &#39;youla.js&#39;,
-  }));
 });
 </pre>
 
@@ -85,14 +81,10 @@ document.addEventListener(&#39;youla:init&#39;, () =&gt; {
     Youla.directive('uppercase', (el, output) => {
       el.textContent = String(output).toUpperCase();
     });
-
-    Youla.data('greeting', () => ({
-      name: 'youla.js',
-    }));
   });
 </script>
 
-<div class="demo" v-data="greeting">
+<div class="demo" v-data>
   <input v-prop="name" />
   <p v-uppercase="name"></p>
 </div>
@@ -146,15 +138,11 @@ document.addEventListener(&#39;youla:init&#39;, () =&gt; {
 <pre>
 document.addEventListener(&#39;youla:init&#39;, () =&gt; {
   Youla.method(&#39;roll&#39;, () =&gt; () =&gt; Math.ceil(Math.random() * 6));
-
-  Youla.data(&#39;dice&#39;, () =&gt; ({
-    value: 1,
-  }));
 });
 </pre>
 
 <pre>
-&lt;div v-data=&quot;dice&quot;&gt;
+&lt;div v-data=&quot;{ value: 1 }&quot;&gt;
   &lt;button type=&quot;button&quot; @click=&quot;value = $roll()&quot;&gt;Бросить кубик&lt;/button&gt;
   &lt;span v-text=&quot;value&quot;&gt;&lt;/span&gt;
 &lt;/div&gt;
@@ -163,26 +151,13 @@ document.addEventListener(&#39;youla:init&#39;, () =&gt; {
 <script>
   document.addEventListener('youla:init', () => {
     Youla.method('roll', () => () => Math.ceil(Math.random() * 6));
-
-    Youla.data('dice', () => ({
-      value: 1,
-    }));
   });
 </script>
 
-<div class="demo" v-data="dice">
+<div class="demo" v-data="{ value: 1 }">
   <button type="button" @click="value = $roll()">Бросить кубик</button>
   <span v-text="value"></span>
 </div>
-
-<p>
-  Метод, зарегистрированный через <code>Youla.method()</code>, доступен только внутри выражений
-  событий — <code>@click</code>, <code>@input</code> и подобных. Директивы и <code>:attribute</code>
-  вычисляются другим путём, где <code>$имя</code> не подставляется, поэтому вызывать его напрямую
-  из <a href="/v-text"><code>v-text</code></a> или <a href="/attributes"><code>:attribute</code></a>
-  нельзя — присвойте результат данным компонента внутри обработчика события, как в примере выше,
-  и уже эти данные читайте в директиве.
-</p>
 
 <p>
   Как и с директивами, имя, которое уже занято, повторно зарегистрировать нельзя — Youla.js

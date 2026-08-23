@@ -75,6 +75,23 @@ document.addEventListener('youla:init', ()=> {
   }));
 
   /**
+   * Code syntax highlight
+   *
+   * @since 1.0
+   */
+  Youla.directive('highlight', (el, output, { modifiers }) => {
+    const lang    = modifiers[0] || 'html';
+    const wrapper = document.createElement('code');
+
+    wrapper.className  = `language-${lang}`;
+    wrapper.innerHTML  = el.innerHTML;
+
+    el.classList.add('line-numbers');
+    el.setAttribute('data-lang', lang.toUpperCase());
+    el.replaceChildren(wrapper);
+  });
+
+  /**
    * Disable autofill, reliably — the readonly-until-focus trick stops
    * autofill from prefilling the field before the user interacts with it,
    * even when the browser ignores `autocomplete="off"`.
@@ -521,22 +538,5 @@ document.addEventListener('youla:init', ()=> {
     el.classList.add(LISTEN_CLASS);
     el.prepend(icon);
     el.append(audio);
-  });
-
-  /**
-   * Code syntax highlight
-   *
-   * @since 1.0
-   */
-  Youla.directive('highlight', (el, output, { modifiers }) => {
-    const lang    = modifiers[0] || 'html';
-    const wrapper = document.createElement('code');
-
-    wrapper.className  = `language-${lang}`;
-    wrapper.innerHTML  = el.innerHTML;
-
-    el.classList.add('line-numbers');
-    el.setAttribute('data-lang', lang.toUpperCase());
-    el.replaceChildren(wrapper);
   });
 });

@@ -345,105 +345,32 @@ document.addEventListener('youla:init', ()=> {
   });
 
   /**
-   * Multi-step wizard: `v-step="condition"` marks a panel's completion
-   * state from the bound expression; `$step` (one state machine per wizard
-   * root, via a WeakMap) drives navigation — `$step.goNext()`,
-   * `$step.goBack()`, and the read-only helpers below. Panel visibility is
-   * toggled directly here rather than through a `v-show` expression,
-   * because `$step`'s methods (like any `Youla.method`) only reach `@event`
-   * expressions, never `v-show`/`:attribute` ones.
+   * Date picker with Datepicker.js
    *
-   * @since 1.0
-   * @see based on https://github.com/glhd/alpine-wizard
+   * @see     https://github.com/wwilsman/Datepicker.js
+   * @since   1.0
    */
-  Youla.directive('step', (el, output, attribute, component) => {
-    const step = getWizard(el, component).getStep(el);
+  Youla.directive('pickadate', (e, el) => options => {
+    try {
+      options = Object.assign( {}, {
+        inline: true,
+        multiple: false,
+        ranged: true,
+        time: true,
+        lang: 'ru',
+        months: 2,
+        timeAmPm: false,
+        within: false,
+        without: false,
+        yearRange: 5,
+        weekStart: 1,
+      }, options );
 
-    step.isComplete = !!output;
-    step.errors     = {};
+      new Datepicker(el,options);
+    } catch (e) {
+      console.error( 'Youla.js: "Datepicker" is not defined. Details: https:://github.com/text-mask/text-mask' );
+    }
   });
-  Youla.method('step', (e, el, component) => getWizard(el, component));
-
-  const wizards = new WeakMap();
-
-  function getWizard(el, { root }) {
-    if (!wizards.has(root)) {
-      wizards.set(root, {
-        steps: [],
-        currentIndex: 0,
-        progress() {
-          let current = 0, complete = 0;
-          const total = this.steps.length;
-
-          this.steps.forEach((step, index) => {
-            if (index <= this.currentIndex) {
-              current++;
-              if (step.isComplete) {
-                complete++;
-              }
-            }
-          });
-
-          return {
-            total, complete, current,
-            incomplete: total - complete,
-            progress: `${Math.floor(current / total * 100)}%`,
-            completion: `${Math.floor(complete / total * 100)}%`,
-            percentage: Math.floor(complete / total * 100),
-          };
-        },
-        current()  { return this.steps[this.currentIndex] || { el: null, title: null }; },
-        previous() { return this.steps[this.previousIndex()] || { el: null, title: null }; },
-        next()     { return this.steps[this.nextIndex()] || { el: null, title: null }; },
-        previousIndex() { return findNextIndex(this.steps, this.currentIndex, -1); },
-        nextIndex()     { return findNextIndex(this.steps, this.currentIndex, 1); },
-        isStep(index)   { return (Array.isArray(index) ? index : [index]).includes(this.currentIndex); },
-        isFirst()       { return this.previousIndex() === null; },
-        isNotFirst()    { return !this.isFirst(); },
-        isLast()        { return this.nextIndex() === null; },
-        isNotLast()     { return !this.isLast(); },
-        isCompleted()   { return this.current().isComplete && this.nextIndex() === null; },
-        isUncompleted() { return !this.isCompleted(); },
-        canGoNext()     { return this.current().isComplete && this.nextIndex() !== null; },
-        cannotGoNext()  { return !this.canGoNext(); },
-        canGoBack()     { return this.previousIndex() !== null; },
-        cannotGoBack()  { return !this.canGoBack(); },
-        goNext() { this.goto(this.nextIndex()); },
-        goBack() { this.goto(this.previousIndex()); },
-        goto(index) {
-          if (index !== null && this.steps[index] !== void 0) {
-            this.currentIndex = index;
-          }
-          this.render();
-          return this.current();
-        },
-        render() {
-          this.steps.forEach((step, index) => {
-            step.el.style.display = index === this.currentIndex ? '' : 'none';
-          });
-        },
-        getStep(el) {
-          let step = this.steps.find(step => step.el === el);
-          if (!step) {
-            step = { el, title: '', isComplete: true, errors: {} };
-            this.steps.push(step);
-            this.render();
-          }
-          return step;
-        },
-      });
-    }
-    return wizards.get(root);
-  }
-
-  function findNextIndex(steps, current, direction = 1) {
-    for (let index = current + direction; index >= 0 && index < steps.length; index += direction) {
-      if (steps[index]) {
-        return index;
-      }
-    }
-    return null;
-  }
 
   /**
    * Turns an element with a `data-src` audio URL into a click-to-play

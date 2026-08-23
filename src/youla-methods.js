@@ -453,51 +453,6 @@ document.addEventListener('youla:init', ()=> {
     },
   }));
 
-
-
-
-
-
-
-
-
-
-  /**
-   * Counting time in four different units: seconds, minutes, hours and days.
-   *
-   * @since 1.0
-   */
-  Youla.data( 'timer', (endDate, startDate) => ({
-    timer: null,
-    end: endDate, // format: '2021-31-12T14:58:31+00:00'
-    day:  '01',
-    hour: '01',
-    min:  '01',
-    sec:  '01',
-    init() {
-      let start = startDate || new Date().valueOf(),
-        end   = new Date( this.end ).valueOf();
-
-      // if the start date is earlier than the end date
-      if( start < end ) {
-        // number of seconds between two dates
-        let diff = Math.round( ( end - start ) / 1000 );
-
-        let t = this;
-        this.timer = pulsate(() => {
-          t.day  = ( '0' + parseInt( diff / ( 60 * 60 * 24 ), 10 ) ).slice(-2);
-          t.hour = ( '0' + parseInt( ( diff / ( 60 * 60 ) ) % 24, 10 ) ).slice(-2);
-          t.min  = ( '0' + parseInt( ( diff / 60 ) % 60, 10 ) ).slice(-2);
-          t.sec  = ( '0' + parseInt( diff % 60, 10 ) ).slice(-2);
-
-          if( --diff < 0 ) {
-            t.days = t.hour = t.min = t.sec = '00';
-          }
-        }, 1000, true);
-      }
-    },
-  }));
-
   /**
    * Custom fields builder.
    *

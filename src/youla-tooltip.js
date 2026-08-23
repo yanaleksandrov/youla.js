@@ -1,4 +1,4 @@
-import { TooltipInstance, PLACEMENTS, TRIGGERS, parseDelay } from './scripts/tooltip';
+import { TooltipInstance, PLACEMENTS, TRIGGERS } from './scripts/tooltip';
 
 document.addEventListener('youla:init', ()=> {
 

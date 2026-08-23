@@ -13,11 +13,43 @@
   <code>img</code> — без каких-либо допущений об интерактивности элемента.
 </p>
 
+<h2>Модификаторы вкратце</h2>
+
+<table>
+  <tbody>
+    <tr>
+      <th>Модификатор</th>
+      <th>Категория</th>
+      <th>По умолчанию</th>
+    </tr>
+    <tr>
+      <td><code>.top</code> <code>.bottom</code> <code>.left</code> <code>.right</code> <code>.auto</code></td>
+      <td>Позиция</td>
+      <td><code>auto</code></td>
+    </tr>
+    <tr>
+      <td><code>.hover</code> <code>.click</code> <code>.focus</code></td>
+      <td>Триггер</td>
+      <td><code>hover</code></td>
+    </tr>
+    <tr>
+      <td><code>.500ms</code>, <code>.0ms</code> и другие «число + единица»</td>
+      <td>Задержка (только для <code>.hover</code>)</td>
+      <td><code>250</code> мс</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  Модификаторы независимы друг от друга и сочетаются в любом порядке — <code>v-tooltip.left.click</code>
+  и <code>v-tooltip.click.left</code> означают одно и то же.
+</p>
+
 <h2>Базовый пример</h2>
 
 <p>
   Без модификаторов используется поведение по умолчанию: наведение курсора (<code>hover</code>)
-  и подсказка сверху (<code>top</code>).
+  и подсказка с той стороны, где больше места (<code>auto</code>).
 </p>
 
 <pre>
@@ -128,68 +160,6 @@
   <input v-tooltip.focus="'Показывается только по фокусу, наведение курсора мышью ни на что не влияет'" placeholder="focus" class="tooltip-anchor">
 </div>
 
-<h2>Комбинации модификаторов</h2>
-
-<p>
-  Модификаторы позиции и триггера независимы и свободно сочетаются друг с другом.
-</p>
-
-<pre>
-&lt;div v-tooltip.top.hover=&quot;&#39;...&#39;&quot;&gt;&lt;/div&gt;
-&lt;div v-tooltip.bottom.click=&quot;&#39;...&#39;&quot;&gt;&lt;/div&gt;
-&lt;div v-tooltip.left.hover=&quot;&#39;...&#39;&quot;&gt;&lt;/div&gt;
-&lt;div v-tooltip.right.click=&quot;&#39;...&#39;&quot;&gt;&lt;/div&gt;
-&lt;div v-tooltip.auto.hover=&quot;&#39;...&#39;&quot;&gt;&lt;/div&gt;
-</pre>
-
-<div class="demo tooltip-grid" v-data>
-  <div v-tooltip.top.hover="'top + hover'" class="tooltip-anchor">top . hover</div>
-  <div v-tooltip.top.click="'top + click'" class="tooltip-anchor">top . click</div>
-  <div v-tooltip.bottom.hover="'bottom + hover'" class="tooltip-anchor">bottom . hover</div>
-  <div v-tooltip.bottom.click="'bottom + click'" class="tooltip-anchor">bottom . click</div>
-  <div v-tooltip.left.hover="'left + hover'" class="tooltip-anchor">left . hover</div>
-  <div v-tooltip.left.click="'left + click'" class="tooltip-anchor">left . click</div>
-  <div v-tooltip.right.hover="'right + hover'" class="tooltip-anchor">right . hover</div>
-  <div v-tooltip.right.click="'right + click'" class="tooltip-anchor">right . click</div>
-  <div v-tooltip.auto.hover="'auto + hover'" class="tooltip-anchor">auto . hover</div>
-  <div v-tooltip.auto.click="'auto + click'" class="tooltip-anchor">auto . click</div>
-</div>
-
-<h2>Разные элементы</h2>
-
-<p>
-  Директива не делает никаких допущений о цели — она одинаково работает на блочных, строчных,
-  интерактивных и неинтерактивных элементах, не добавляя им <code>tabindex</code> или роль,
-  которых там не было.
-</p>
-
-<pre>
-&lt;div v-tooltip=&quot;&#39;Подсказка на div&#39;&quot;&gt;div&lt;/div&gt;
-&lt;span v-tooltip=&quot;&#39;Подсказка на span&#39;&quot;&gt;span&lt;/span&gt;
-&lt;p v-tooltip=&quot;&#39;Подсказка на p&#39;&quot;&gt;p&lt;/p&gt;
-&lt;a href=&quot;#&quot; v-tooltip=&quot;&#39;Подсказка на a&#39;&quot;&gt;a&lt;/a&gt;
-&lt;button type=&quot;button&quot; v-tooltip=&quot;&#39;Подсказка на button&#39;&quot;&gt;button&lt;/button&gt;
-&lt;input placeholder=&quot;input&quot; v-tooltip=&quot;&#39;Подсказка на input&#39;&quot;&gt;
-&lt;img src=&quot;...&quot; v-tooltip=&quot;&#39;Подсказка на img&#39;&quot;&gt;
-</pre>
-
-<div class="demo tooltip-row" v-data>
-  <div v-tooltip="'Подсказка на div'" class="tooltip-anchor">div</div>
-  <span v-tooltip="'Подсказка на span'" class="tooltip-anchor">span</span>
-  <p v-tooltip="'Подсказка на p'" class="tooltip-anchor" style="margin:0;">p</p>
-  <a href="#" v-tooltip="'Подсказка на a'" class="tooltip-anchor" @click.prevent>a</a>
-  <button type="button" v-tooltip="'Подсказка на button'" class="tooltip-anchor">button</button>
-  <input placeholder="input" v-tooltip="'Подсказка на input'" class="tooltip-anchor">
-  <img
-    v-tooltip="'Подсказка на img'"
-    class="tooltip-anchor"
-    width="32"
-    height="32"
-    alt="демо-изображение"
-    src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32'><rect width='32' height='32' fill='%230e7a6b'/></svg>"
-  >
-</div>
-
 <h2>Особые случаи</h2>
 
 <p>
@@ -234,10 +204,77 @@
   </button>
 </div>
 
+<h3>Ошибка валидации поля</h3>
+
 <p>
-  Подробнее о том, как устроена регистрация директив вроде <code>v-tooltip</code> и что получает
-  их <code>callback</code>, — на странице <a href="/extending">Extending</a> и среди других
-  <a href="/custom-directives">пользовательских директив</a>.
+  Пока поле в фокусе, подсказка показывает текущий текст ошибки из <code>error()</code>, а как
+  только он становится пустой строкой — скрывается сама, той же логикой, что и в примере с пустой
+  подсказкой выше.
+</p>
+
+<pre>
+document.addEventListener(&#39;youla:init&#39;, () =&gt; {
+  Youla.data(&#39;validation&#39;, () =&gt; ({
+    email: &#39;&#39;,
+    error() {
+      if (!this.email) {
+        return &#39;Поле обязательно для заполнения&#39;;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email)) {
+        return &#39;Введите корректный email&#39;;
+      }
+      return &#39;&#39;;
+    },
+    field: {
+      &#39;v-prop&#39;: &#39;email&#39;,
+      &#39;v-tooltip.bottom.focus&#39;: &#39;error()&#39;,
+      &#39;:class&#39;: `{ &#39;tooltip-anchor--invalid&#39;: error() }`,
+    },
+  }));
+});
+</pre>
+
+<pre>
+&lt;div v-data=&quot;validation&quot;&gt;
+  &lt;input type=&quot;email&quot; placeholder=&quot;you@example.com&quot; v-bind=&quot;field&quot;&gt;
+&lt;/div&gt;
+</pre>
+
+<style>
+  .tooltip-anchor--invalid { border-color: #c0392b; }
+</style>
+
+<script>
+document.addEventListener('youla:init', () => {
+  Youla.data('validation', () => ({
+    email: '',
+    error() {
+      if (!this.email) {
+        return 'Поле обязательно для заполнения';
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email)) {
+        return 'Введите корректный email';
+      }
+      return '';
+    },
+    field: {
+      'v-prop': 'email',
+      'v-tooltip.bottom.focus': 'error()',
+      ':class': `{ 'tooltip-anchor--invalid': error() }`,
+    },
+  }));
+});
+</script>
+
+<div class="demo" v-data="validation">
+  <input type="email" placeholder="you@example.com" v-bind="field" class="tooltip-anchor">
+</div>
+
+<p>
+  <code>.focus</code> здесь принципиален: подсказка не появляется от наведения курсора мышью на
+  форму — только когда пользователь действительно печатает в это поле, — а красная рамка
+  (<code>:class</code>, независимо от фокуса) показывает, что поле невалидно, даже после того как
+  пользователь ушёл из него.
 </p>
 
 <%= _.template(require('./parts/footer.html').default)(data) %>

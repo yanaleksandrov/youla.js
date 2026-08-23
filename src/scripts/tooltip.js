@@ -152,6 +152,8 @@ export class TooltipInstance {
       this.hide();
     } else if (this.visible) {
       this.reposition();
+    } else if (this.active) {
+      this.show();
     }
   }
 
@@ -188,27 +190,27 @@ export class TooltipInstance {
 
     // "focus" only reacts to focus/blur (always immediate). "hover" adds mouseenter/mouseleave on top, delayed by "delay".
     const listeners = [
-      [el, 'focus', () => this.show()],
-      [el, 'blur', () => this.hide()],
+      [el, 'focus', () => this.activate()],
+      [el, 'blur', () => this.deactivate()],
     ];
 
     if (this.trigger === 'hover') {
       listeners.push(
         [el, 'mouseenter', () => {
           if (this.delay > 0) {
-            this.hoverTimer = setTimeout(() => this.show(), this.delay);
+            this.hoverTimer = setTimeout(() => this.activate(), this.delay);
           } else {
-            this.show();
+            this.activate();
           }
         }],
         [el, 'mouseleave', () => {
           clearTimeout(this.hoverTimer);
-          this.hide();
+          this.deactivate();
         }],
         // Touch has no hover/dwell to time — show right away, like focus.
         [el, 'touchstart', () => {
           clearTimeout(this.hoverTimer);
-          this.show();
+          this.activate();
         }, { passive: true }],
       );
     }
@@ -275,10 +277,10 @@ export class TooltipInstance {
     this.detachDocListeners = bind([
       [document, 'click', e => {
         if (!this.el.contains(e.target) && !this.tooltip.contains(e.target)) {
-          this.hide();
+          this.deactivate();
         }
       }, true],
-      [document, 'keydown', e => e.key === 'Escape' && this.hide()],
+      [document, 'keydown', e => e.key === 'Escape' && this.deactivate()],
     ]);
   }
 
@@ -315,7 +317,17 @@ export class TooltipInstance {
   }
 
   toggle() {
-    this.visible ? this.hide() : this.show();
+    this.active ? this.deactivate() : this.activate();
+  }
+
+  activate() {
+    this.active = true;
+    this.show();
+  }
+
+  deactivate() {
+    this.active = false;
+    this.hide();
   }
 
   destroy() {

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { TooltipInstance, PLACEMENTS, TRIGGERS, parseDelay, computePosition } from './tooltip';
+import { TooltipInstance, PLACEMENTS, TRIGGERS, computePosition } from './tooltip';
 
 /**
  * Mirrors the `Youla.directive('tooltip', ...)` callback in ../youla-tooltip.js.
@@ -475,6 +475,20 @@ describe('tooltipDirective — hover trigger', () => {
     expect(el._x_tooltip.visible).toBe(false);
   });
 
+  it('reappears when content goes empty then non-empty again while still hovered', () => {
+    const el = mount();
+    tooltipDirective(el, 'Tip', attr(['hover', '0ms']));
+
+    el.dispatchEvent(new Event('mouseenter'));
+    expect(el._x_tooltip.visible).toBe(true);
+
+    tooltipDirective(el, '', attr(['hover', '0ms']));
+    expect(el._x_tooltip.visible).toBe(false);
+
+    tooltipDirective(el, 'Tip again', attr(['hover', '0ms']));
+    expect(el._x_tooltip.visible).toBe(true);
+  });
+
   it('does not add a tabindex or interactive role to a non-interactive target', () => {
     const el = mount('span');
     tooltipDirective(el, 'Tip', attr(['hover']));
@@ -557,6 +571,22 @@ describe('tooltipDirective — focus trigger', () => {
 
     el.dispatchEvent(new Event('mouseleave'));
     expect(el._x_tooltip.visible).toBe(false);
+  });
+
+  it('reappears when content goes empty then non-empty again while still focused (validation error re-triggering)', () => {
+    const el = mount('input');
+    tooltipDirective(el, 'Invalid email', attr(['focus']));
+
+    el.dispatchEvent(new Event('focus'));
+    expect(el._x_tooltip.visible).toBe(true);
+
+    // Typing a valid value clears the error — tooltip hides, field stays focused.
+    tooltipDirective(el, '', attr(['focus']));
+    expect(el._x_tooltip.visible).toBe(false);
+
+    // Deleting characters makes it invalid again — must reappear without a fresh focus event.
+    tooltipDirective(el, 'Invalid email', attr(['focus']));
+    expect(el._x_tooltip.visible).toBe(true);
   });
 
   it('does not react to click', () => {

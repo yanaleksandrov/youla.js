@@ -200,33 +200,6 @@ document.addEventListener('youla:init', ()=> {
   });
 
   /**
-   * Adapter for Drooltip — position and trigger come from the directive's
-   * modifiers (e.g. `v-tooltip.left.click`), content from its bound value.
-   * Requires Drooltip to be loaded; this project doesn't bundle it.
-   *
-   * @since 1.0
-   */
-  Youla.directive('tooltip', (el, output, { modifiers }) => {
-    const position = modifiers.find(m => ['top', 'right', 'bottom', 'left'].includes(m)) || 'top';
-    const trigger  = modifiers.find(m => ['hover', 'click'].includes(m)) || 'hover';
-
-    try {
-      new Drooltip({
-        element: el,
-        trigger,
-        position,
-        background: '#fff',
-        color: '#1a1a1a',
-        animation: 'bounce',
-        content: output || null,
-        callback: null,
-      });
-    } catch {
-      console.warn('Youla.js: "Drooltip" is not defined — v-tooltip requires Drooltip.js to be loaded.');
-    }
-  });
-
-  /**
    * Animates a progress indicator into view once, the first time it
    * scrolls into the viewport: sets `--youla-progress` (and
    * `--youla-progress-transition`) as CSS custom properties, from

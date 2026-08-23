@@ -1,0 +1,243 @@
+<% var data = {
+  title: "Тултипы (v-tooltip)"
+}; %>
+<%= _.template(require('./parts/header.html').default)(data) %>
+
+<h1>Тултипы (v-tooltip)</h1>
+
+<p>
+  Директива <code>v-tooltip</code> показывает всплывающую подсказку у любого элемента — без
+  сборки, без сторонней библиотеки. Содержимое берётся из значения атрибута, позиция и способ показа — из модификаторов, например
+  <code>v-tooltip.left.click</code>. Директива работает на любом элементе: <code>div</code>,
+  <code>span</code>, <code>p</code>, <code>a</code>, <code>button</code>, <code>input</code>,
+  <code>img</code> — без каких-либо допущений об интерактивности элемента.
+</p>
+
+<h2>Базовый пример</h2>
+
+<p>
+  Без модификаторов используется поведение по умолчанию: наведение курсора (<code>hover</code>)
+  и подсказка сверху (<code>top</code>).
+</p>
+
+<pre>
+&lt;div v-tooltip=&quot;&#39;Простая подсказка&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;
+  Наведите курсор
+&lt;/div&gt;
+</pre>
+
+<style>
+  .tooltip-anchor {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: var(--surface);
+    cursor: default;
+  }
+  .tooltip-row { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
+  .tooltip-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
+  .tooltip-scroller {
+    display: flex;
+    gap: 3rem;
+    overflow-x: auto;
+    padding: 3rem 2rem;
+    border: 1px solid var(--line);
+    background: var(--surface);
+  }
+  .tooltip-scroller .tooltip-anchor { flex: 0 0 auto; }
+</style>
+
+<div class="demo" v-data>
+  <div v-tooltip="'Простая подсказка'" class="tooltip-anchor">Наведите курсор</div>
+</div>
+
+<h2>HTML в содержимом</h2>
+
+<p>
+  Значение директивы вставляется как настоящий HTML — так же, как в <a href="/v-html"><code>v-html</code></a>,
+  без экранирования и очистки: разметка внутри подсказки должна быть доверенной.
+</p>
+
+<pre>
+&lt;div v-tooltip=&quot;&#39;&lt;strong&gt;Заголовок&lt;/strong&gt;&lt;br&gt;&lt;span&gt;Описание&lt;/span&gt;&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;
+  Подсказка с разметкой
+&lt;/div&gt;
+</pre>
+
+<div class="demo tooltip-row" v-data>
+  <div v-tooltip="'<strong>Заголовок</strong><br><span>Описание</span>'" class="tooltip-anchor">
+    Подсказка с разметкой
+  </div>
+  <div v-tooltip="'Список пунктов:<ul><li>Первый</li><li>Второй</li><li>Третий</li></ul>'" class="tooltip-anchor">
+    Подсказка со списком
+  </div>
+  <div v-tooltip="''" class="tooltip-anchor">Пустая подсказка (не появится)</div>
+</div>
+
+<h2>Позиционирование</h2>
+
+<p>
+  Модификаторы <code>.top</code>, <code>.bottom</code>, <code>.left</code>, <code>.right</code> и
+  <code>.auto</code> задают, с какой стороны элемента появится подсказка. <code>auto</code> сам
+  выбирает сторону с наибольшим свободным местом — и пересчитывает её при скролле и ресайзе, пока
+  подсказка открыта.
+</p>
+
+<pre>
+&lt;div v-tooltip.top=&quot;&#39;Сверху&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;top&lt;/div&gt;
+&lt;div v-tooltip.bottom=&quot;&#39;Снизу&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;bottom&lt;/div&gt;
+&lt;div v-tooltip.left=&quot;&#39;Слева&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;left&lt;/div&gt;
+&lt;div v-tooltip.right=&quot;&#39;Справа&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;right&lt;/div&gt;
+&lt;div v-tooltip.auto=&quot;&#39;Авто&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;auto&lt;/div&gt;
+</pre>
+
+<div class="demo tooltip-row" v-data>
+  <div v-tooltip.top="'Сверху'" class="tooltip-anchor">top</div>
+  <div v-tooltip.bottom="'Снизу'" class="tooltip-anchor">bottom</div>
+  <div v-tooltip.left="'Слева'" class="tooltip-anchor">left</div>
+  <div v-tooltip.right="'Справа'" class="tooltip-anchor">right</div>
+  <div v-tooltip.auto="'Авто — сама выбирает сторону'" class="tooltip-anchor">auto</div>
+</div>
+
+<h2>Триггеры</h2>
+
+<p>
+  <code>.hover</code> (по умолчанию) показывает подсказку при наведении и фокусе, скрывает — при
+  уходе курсора или потере фокуса. <code>.click</code> переключает подсказку по клику и
+  дополнительно закрывается по клику снаружи и по клавише <kbd>Escape</kbd>. <code>.focus</code>
+  показывает подсказку только по фокусу, полностью игнорируя наведение курсора мышью — удобно для
+  подсказки-подтверждения у поля ввода, которая не должна появляться просто от наведения на форму.
+</p>
+
+<p>
+  На тач-устройствах у <code>.hover</code> нет наведения — подсказка появляется по тапу и, как и
+  <code>.click</code>, закрывается по тапу снаружи, так как отпускания пальца без «увода курсора»
+  не существует.
+</p>
+
+<pre>
+&lt;div v-tooltip.hover=&quot;&#39;Показывается по наведению&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;hover&lt;/div&gt;
+&lt;button type=&quot;button&quot; v-tooltip.click=&quot;&#39;Показывается по клику&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;click&lt;/button&gt;
+&lt;input v-tooltip.focus=&quot;&#39;Показывается только по фокусу&#39;&quot; placeholder=&quot;focus&quot; class=&quot;tooltip-anchor&quot;&gt;
+</pre>
+
+<div class="demo tooltip-row" v-data>
+  <div v-tooltip.hover="'Показывается по наведению'" class="tooltip-anchor">hover</div>
+  <button type="button" v-tooltip.click="'Показывается по клику, закрывается по Escape или клику снаружи'" class="tooltip-anchor">click</button>
+  <input v-tooltip.focus="'Показывается только по фокусу, наведение курсора мышью ни на что не влияет'" placeholder="focus" class="tooltip-anchor">
+</div>
+
+<h2>Комбинации модификаторов</h2>
+
+<p>
+  Модификаторы позиции и триггера независимы и свободно сочетаются друг с другом.
+</p>
+
+<pre>
+&lt;div v-tooltip.top.hover=&quot;&#39;...&#39;&quot;&gt;&lt;/div&gt;
+&lt;div v-tooltip.bottom.click=&quot;&#39;...&#39;&quot;&gt;&lt;/div&gt;
+&lt;div v-tooltip.left.hover=&quot;&#39;...&#39;&quot;&gt;&lt;/div&gt;
+&lt;div v-tooltip.right.click=&quot;&#39;...&#39;&quot;&gt;&lt;/div&gt;
+&lt;div v-tooltip.auto.hover=&quot;&#39;...&#39;&quot;&gt;&lt;/div&gt;
+</pre>
+
+<div class="demo tooltip-grid" v-data>
+  <div v-tooltip.top.hover="'top + hover'" class="tooltip-anchor">top . hover</div>
+  <div v-tooltip.top.click="'top + click'" class="tooltip-anchor">top . click</div>
+  <div v-tooltip.bottom.hover="'bottom + hover'" class="tooltip-anchor">bottom . hover</div>
+  <div v-tooltip.bottom.click="'bottom + click'" class="tooltip-anchor">bottom . click</div>
+  <div v-tooltip.left.hover="'left + hover'" class="tooltip-anchor">left . hover</div>
+  <div v-tooltip.left.click="'left + click'" class="tooltip-anchor">left . click</div>
+  <div v-tooltip.right.hover="'right + hover'" class="tooltip-anchor">right . hover</div>
+  <div v-tooltip.right.click="'right + click'" class="tooltip-anchor">right . click</div>
+  <div v-tooltip.auto.hover="'auto + hover'" class="tooltip-anchor">auto . hover</div>
+  <div v-tooltip.auto.click="'auto + click'" class="tooltip-anchor">auto . click</div>
+</div>
+
+<h2>Разные элементы</h2>
+
+<p>
+  Директива не делает никаких допущений о цели — она одинаково работает на блочных, строчных,
+  интерактивных и неинтерактивных элементах, не добавляя им <code>tabindex</code> или роль,
+  которых там не было.
+</p>
+
+<pre>
+&lt;div v-tooltip=&quot;&#39;Подсказка на div&#39;&quot;&gt;div&lt;/div&gt;
+&lt;span v-tooltip=&quot;&#39;Подсказка на span&#39;&quot;&gt;span&lt;/span&gt;
+&lt;p v-tooltip=&quot;&#39;Подсказка на p&#39;&quot;&gt;p&lt;/p&gt;
+&lt;a href=&quot;#&quot; v-tooltip=&quot;&#39;Подсказка на a&#39;&quot;&gt;a&lt;/a&gt;
+&lt;button type=&quot;button&quot; v-tooltip=&quot;&#39;Подсказка на button&#39;&quot;&gt;button&lt;/button&gt;
+&lt;input placeholder=&quot;input&quot; v-tooltip=&quot;&#39;Подсказка на input&#39;&quot;&gt;
+&lt;img src=&quot;...&quot; v-tooltip=&quot;&#39;Подсказка на img&#39;&quot;&gt;
+</pre>
+
+<div class="demo tooltip-row" v-data>
+  <div v-tooltip="'Подсказка на div'" class="tooltip-anchor">div</div>
+  <span v-tooltip="'Подсказка на span'" class="tooltip-anchor">span</span>
+  <p v-tooltip="'Подсказка на p'" class="tooltip-anchor" style="margin:0;">p</p>
+  <a href="#" v-tooltip="'Подсказка на a'" class="tooltip-anchor" @click.prevent>a</a>
+  <button type="button" v-tooltip="'Подсказка на button'" class="tooltip-anchor">button</button>
+  <input placeholder="input" v-tooltip="'Подсказка на input'" class="tooltip-anchor">
+  <img
+    v-tooltip="'Подсказка на img'"
+    class="tooltip-anchor"
+    width="32"
+    height="32"
+    alt="демо-изображение"
+    src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32'><rect width='32' height='32' fill='%230e7a6b'/></svg>"
+  >
+</div>
+
+<h2>Особые случаи</h2>
+
+<p>
+  Длинный или многострочный текст переносится по ширине ограниченной подсказки, а не растягивает
+  её в одну строку через весь экран.
+</p>
+
+<pre>
+&lt;div v-tooltip=&quot;&#39;Очень длинный текст подсказки, который не помещается в одну строку и должен
+корректно переноситься внутри ограниченной по ширине подсказки, не растягиваясь на весь экран.&#39;&quot;&gt;
+  Длинная подсказка
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data>
+  <div
+    v-tooltip="'Очень длинный текст подсказки, который не помещается в одну строку и должен корректно переноситься внутри ограниченной по ширине подсказки, не растягиваясь на весь экран.'"
+    class="tooltip-anchor"
+  >
+    Длинная подсказка
+  </div>
+</div>
+
+<h3>Динамическое содержимое</h3>
+
+<p>
+  Значение директивы — обычное реактивное выражение: подсказка обновляется вслед за данными
+  компонента, а сама её DOM-нода при этом не пересоздаётся.
+</p>
+
+<pre>
+&lt;div v-data=&quot;{ count: 0 }&quot;&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;count++&quot; v-tooltip=&quot;&#96;Кликов: ${count}&#96;&quot;&gt;
+    Наведите после клика
+  &lt;/button&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data="{ count: 0 }">
+  <button type="button" @click="count++" v-tooltip="`Кликов: ${count}`" class="tooltip-anchor">
+    Кликните, затем наведите курсор
+  </button>
+</div>
+
+<p>
+  Подробнее о том, как устроена регистрация директив вроде <code>v-tooltip</code> и что получает
+  их <code>callback</code>, — на странице <a href="/extending">Extending</a> и среди других
+  <a href="/custom-directives">пользовательских директив</a>.
+</p>
+
+<%= _.template(require('./parts/footer.html').default)(data) %>

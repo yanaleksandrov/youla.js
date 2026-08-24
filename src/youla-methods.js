@@ -190,102 +190,164 @@ document.addEventListener('youla:init', ()=> {
   /**
    * Selfie
    *
+   * `$stream` (one instance per `v-data` root, cached on the root element
+   * itself, like `$step`) wraps `getUserMedia` into a ready-made
+   * preview → snapshot → canvas → image scenario. Registered as a
+   * `Youla.variable()` rather than a `Youla.method()` — unlike most custom
+   * methods, that makes `error` (and every other property here) reachable
+   * from any expression (`v-show`, `:src`), not just `@event` ones.
+   *
+   * Its state still lives outside the reactive data, though, so nothing
+   * would otherwise mark a binding reading it as dirty — `notify()` forces
+   * the owning component to re-run every binding unconditionally whenever
+   * `error` changes, the same way `$step` does.
+   *
    * @since 1.0
    */
-  let stream = null;
-  Youla.method('stream', () => {
-    return {
-      check(refs) {
-        let canvas = refs.canvas,
-          video  = refs.video,
-          image  = refs.image;
+  Youla.variable('stream', (root) => {
+    if (!root._x_stream) {
+      root._x_stream = {
+        root,
+        error: null,
+        canvas: null,
+        get refs() {
+          return {
+            video:  root.querySelector('[v-ref="video"]'),
+            image:  root.querySelector('[v-ref="image"]'),
+            canvas: root.querySelector('[v-ref="canvas"]'),
+          };
+        },
+        check() {
+          console.log(this.$el);
+          const { video, image } = this.refs;
 
-        if (!canvas) {
-          console.error('Canvas element is undefined');
-          return false;
-        }
-
-        if (!video) {
-          console.error('Video for selfie preview is undefined');
-          return false;
-        }
-
-        if (!image) {
-          console.error('Image for output selfie is undefined');
-          return false;
-        }
-      },
-      isVisible(element) {
-        const styles = window.getComputedStyle(element);
-        if (styles) {
-          return !(styles.visibility === 'hidden' || styles.display === 'none' || parseFloat(styles.opacity) === 0);
-        }
-        return false;
-      },
-      start(refs) {
-        let video = refs.video;
-        const observer = new MutationObserver( mutations => {
-          for (let mutation of mutations) {
-            if (mutation.target === document.body && !stream ) {
-              setTimeout(async () => {
-                if (this.isVisible(video)) {
-                  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                    video.srcObject = stream = await navigator.mediaDevices.getUserMedia({video: true});
-                  } else {
-                    console.error('The browser does not support the getUserMedia API');
-                  }
-                }
-              }, 500);
-            }
+          if (!video) {
+            console.error('Video for selfie preview is undefined');
+            return false;
           }
-        });
-        observer.observe(document, {childList: true,subtree: true,attributes: true});
-      },
-      snapshot(refs) {
-        this.check(refs);
-        this.start(refs);
 
-        let canvas = refs.canvas,
-          video  = refs.video,
-          image  = refs.image;
+          if (!image) {
+            console.error('Image for output selfie is undefined');
+            return false;
+          }
 
-        let width  = video.offsetWidth,
-          height = video.offsetHeight;
+          return true;
+        },
+        getCanvas() {
+          return this.refs.canvas || (this.canvas || (this.canvas = document.createElement('canvas')));
+        },
+        isVisible(element) {
+          const styles = window.getComputedStyle(element);
+          if (styles) {
+            return !(styles.visibility === 'hidden' || styles.display === 'none' || parseFloat(styles.opacity) === 0);
+          }
+          return false;
+        },
+        setError(error) {
+          if (this.error !== error) {
+            this.error = error;
+            this.notify();
+          }
+        },
+        async requestStream(video) {
+          if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            this.setError('unsupported');
+            return;
+          }
 
-        let imageStyles = window.getComputedStyle(image),
-          imageWidth  = parseInt(imageStyles.width, 10),
-          imageHeight = parseInt(imageStyles.height, 10);
+          try {
+            video.srcObject = video._x_stream = await navigator.mediaDevices.getUserMedia({video: true});
+            this.setError(null);
+          } catch (error) {
+            this.setError(error.name === 'NotAllowedError' || error.name === 'SecurityError' ? 'denied' : 'unavailable');
+          }
+        },
+        start() {
+          const video = this.refs.video;
+          if (video._x_stream || video._x_streamObserver) {
+            return;
+          }
 
-        canvas.width  = imageWidth;
-        canvas.height = imageHeight;
+          if (this.isVisible(video)) {
+            this.requestStream(video);
+            return;
+          }
 
-        let offsetTop  = ( height - imageHeight ) / 2,
-          offsetLeft = ( width - imageWidth ) / 2;
+          video._x_streamObserver = new IntersectionObserver(entries => {
+            if (entries.some(entry => entry.isIntersecting) && this.isVisible(video)) {
+              video._x_streamObserver.disconnect();
+              video._x_streamObserver = null;
+              this.requestStream(video);
+            }
+          });
+          video._x_streamObserver.observe(video);
+        },
+        snap() {
+          if (!this.check()) {
+            return null;
+          }
+          this.start();
 
-        let ctx = canvas.getContext('2d');
+          const canvas = this.getCanvas();
+          const { video, image } = this.refs;
 
-        ctx.imageSmoothingQuality = 'low';
+          let imageStyles = window.getComputedStyle(image),
+            targetRatio = parseInt(imageStyles.width, 10) / parseInt(imageStyles.height, 10);
 
-        //let scale = height / imageHeight;
-        //console.log((offsetTop + offsetLeft) / 2)
-        //ctx.drawImage(video, 0, 0, width * 2, height * 2, 0, 0, width, height);
-        //ctx.drawImage(video, 0, 0, imageWidth, imageHeight);
-        ctx.drawImage(video, offsetLeft * 1.5, offsetTop * 1.5, height * 1.5, height * 1.5, 0, 0, imageWidth, imageHeight);
+          let videoWidth  = video.videoWidth,
+            videoHeight = video.videoHeight,
+            videoRatio  = videoWidth / videoHeight;
 
-        let imageData = canvas.toDataURL('image/png');
-        if ( imageData ) {
-          image.src = imageData;
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-        }
-        return imageData;
-      },
-      stop() {
-        if (stream) {
-          stream.getTracks().forEach(track => track.stop());
-        }
-        stream = null;
-      }
+          let sWidth, sHeight;
+          if (videoRatio > targetRatio) {
+            sHeight = videoHeight;
+            sWidth  = videoHeight * targetRatio;
+          } else {
+            sWidth  = videoWidth;
+            sHeight = videoWidth / targetRatio;
+          }
+
+          let sx = (videoWidth - sWidth) / 2,
+            sy = (videoHeight - sHeight) / 2;
+
+          canvas.width  = sWidth;
+          canvas.height = sHeight;
+
+          let ctx = canvas.getContext('2d');
+
+          // 1:1 pixel copy of the native camera resolution — no resampling, so no quality is lost
+          ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, sWidth, sHeight);
+
+          let imageData = canvas.toDataURL('image/png');
+          if ( imageData ) {
+            image.src = imageData;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+          }
+          return imageData;
+        },
+        stop() {
+          const video = this.refs.video;
+          if (video._x_streamObserver) {
+            video._x_streamObserver.disconnect();
+            video._x_streamObserver = null;
+          }
+          if (video._x_stream) {
+            video._x_stream.getTracks().forEach(track => track.stop());
+          }
+          video._x_stream = null;
+        },
+        notify() {
+          const root = this.root;
+          setTimeout(() => {
+            const component = root.__x;
+            if (component) {
+              component.refresh(true);
+            }
+          }, 0);
+        },
+      };
     }
+    return root._x_stream;
   });
 
   /**

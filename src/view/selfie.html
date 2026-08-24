@@ -1,0 +1,150 @@
+<% var data = {
+  title: "Селфи с камеры ($stream)"
+}; %>
+<%= _.template(require('./parts/header.html').default)(data) %>
+
+<h1>Селфи с камеры ($stream)</h1>
+
+<p>
+  <code>$stream</code> оборачивает <code>getUserMedia</code> в готовый сценарий «превью с
+  веб-камеры → снимок в <code>&lt;canvas&gt;</code> → результат в <code>&lt;img&gt;</code>».
+  Разметке нужны только два элемента, помеченных <a href="/v-ref"><code>v-ref</code></a> —
+  <code>video</code> и <code>image</code>, — а вся работа с камерой и кадрированием снимка
+  спрятана внутри него.
+</p>
+
+<p>
+  <code>&lt;canvas&gt;</code> в разметке не обязателен — если не передать <code>v-ref="canvas"</code>,
+  <code>$stream</code> заведёт его сам, вне DOM, как черновик для кадрирования кадра.
+</p>
+
+<p>
+  <code>$stream</code> — переменная (как <a href="/step"><code>$step</code></a>), поэтому доступна в
+  любом выражении, не только в <code>@click</code>: например, <code>$stream.error</code> можно
+  читать прямо в <code>v-show</code>, чтобы показать причину, по которой камера не заработала.
+</p>
+
+<pre>
+&lt;div v-data&gt;
+  &lt;video v-ref=&quot;video&quot; autoplay playsinline muted&gt;&lt;/video&gt;
+  &lt;img v-ref=&quot;image&quot; alt=&quot;Селфи&quot;&gt;
+
+  &lt;p v-show=&quot;$stream.error&quot;&gt;
+    &lt;span v-show=&quot;$stream.error === 'denied'&quot;&gt;Доступ к камере запрещён.&lt;/span&gt;
+    &lt;span v-show=&quot;$stream.error === 'unavailable'&quot;&gt;Не удалось получить доступ к камере.&lt;/span&gt;
+    &lt;span v-show=&quot;$stream.error === 'unsupported'&quot;&gt;Браузер не поддерживает камеру.&lt;/span&gt;
+  &lt;/p&gt;
+
+  &lt;button type=&quot;button&quot; @click=&quot;$stream.snap()&quot;&gt;Сделать снимок&lt;/button&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;$stream.stop()&quot;&gt;Остановить камеру&lt;/button&gt;
+&lt;/div&gt;
+</pre>
+
+<style>
+  .example-stream {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .example-stream video,
+  .example-stream img {
+    width: 12rem;
+    height: 9rem;
+    object-fit: cover;
+    background-color: var(--teal-soft);
+    border-radius: .5rem;
+  }
+  .example-stream .example-stream__actions {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+  }
+  .example-stream .example-stream__error {
+    flex-basis: 100%;
+    color: #d64545;
+  }
+</style>
+
+<div class="demo example-stream" v-data>
+  <video v-ref="video" autoplay playsinline muted></video>
+  <img v-ref="image" alt="Селфи">
+
+  <p class="example-stream__error" v-show="$stream.error" hidden>
+    <span v-show="$stream.error === 'denied'">Доступ к камере запрещён — разрешите его в настройках браузера.</span>
+    <span v-show="$stream.error === 'unavailable'">Не удалось получить доступ к камере.</span>
+    <span v-show="$stream.error === 'unsupported'">Браузер не поддерживает камеру.</span>
+  </p>
+
+  <div class="example-stream__actions">
+    <button type="button" @click="$stream.snap()">Сделать снимок</button>
+    <button type="button" @click="$stream.stop()">Остановить камеру</button>
+  </div>
+</div>
+
+<p>
+  При первом клике на «Сделать снимок» браузер спросит разрешение на доступ к камере — это
+  сработает только на <code>localhost</code> или по <code>HTTPS</code>, как и в примере с
+  <a href="/clipboard">буфером обмена</a>. Второй и последующие клики уже переиспользуют
+  полученный поток, не запрашивая разрешение заново.
+</p>
+
+<h2>Методы и свойства $stream вкратце</h2>
+
+<table>
+  <tbody>
+    <tr>
+      <th>Имя</th>
+      <th>Что делает</th>
+    </tr>
+    <tr>
+      <td><code>error</code></td>
+      <td>
+        <code>null</code>, пока всё в порядке, либо <code>'denied'</code> (доступ запрещён),
+        <code>'unavailable'</code> (камера недоступна) или <code>'unsupported'</code> (браузер не
+        поддерживает <code>getUserMedia</code>) — выставляется при вызове <code>start()</code>
+      </td>
+    </tr>
+    <tr>
+      <td><code>snap()</code></td>
+      <td>
+        Главный метод: проверяет наличие <code>video</code> и <code>image</code>, при необходимости
+        запускает камеру и рисует текущий кадр видео в <code>canvas</code> под размер
+        <code>image</code>. Возвращает готовый <code>data:image/png</code> и одновременно
+        подставляет его в <code>image.src</code>
+      </td>
+    </tr>
+    <tr>
+      <td><code>start()</code></td>
+      <td>
+        Запрашивает <code>getUserMedia</code> и подключает поток к <code>video</code>. Если видео
+        уже видимо на странице — запрашивает камеру сразу, если скрыто — дожидается появления
+        через <code>IntersectionObserver</code>. Повторные вызовы, пока поток уже получен или
+        ожидание уже идёт, ничего не делают
+      </td>
+    </tr>
+    <tr>
+      <td><code>stop()</code></td>
+      <td>Останавливает все треки потока и снимает ожидание видимости, если оно ещё не сработало</td>
+    </tr>
+    <tr>
+      <td><code>check()</code></td>
+      <td><code>true</code>, если в разметке найдены <code>video</code> и <code>image</code>; иначе выводит причину в консоль и возвращает <code>false</code></td>
+    </tr>
+    <tr>
+      <td><code>getCanvas()</code></td>
+      <td>Возвращает <code>v-ref="canvas"</code> из разметки, если он есть, иначе — созданный один раз и переиспользуемый закадровый <code>&lt;canvas&gt;</code></td>
+    </tr>
+    <tr>
+      <td><code>isVisible(el)</code></td>
+      <td><code>true</code>, если элемент не скрыт через <code>display</code>, <code>visibility</code> или нулевую <code>opacity</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  Поток привязан к конкретному <code>video</code>: если на странице несколько <code>$stream</code>,
+  у каждого — свой запрос камеры и свой набор треков, остановка одного не трогает другие.
+</p>
+
+<%= _.template(require('./parts/footer.html').default)(data) %>

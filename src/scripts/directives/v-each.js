@@ -19,12 +19,18 @@ directive('each', (el, output, attribute, component, additionalHelperVariables =
     return;
   }
 
-  // Parses "i in 5", "dog in dogs", or "(car, index) in cars" syntax, with dot notation support.
+  /**
+   * Step 1: parse v-each value
+   *
+   * Parses "i in 5", "dog in dogs", or "(car, index) in cars" syntax, with dot notation support, like: "(person, index) in data.list.persons"
+   */
   let [, item, index = 'key', items, join] = expression.match(/^\(?([\w]+)(?:,\s*(\w+))?\)?\s+in\s+(.*?)(?:\s+join\s+'([^']+)')?$/) || [];
 
   const { magicVariables, otherVariables } = splitMagicVariables(additionalHelperVariables);
 
-  // Resolves "items" against the component's data; a nested "v-each"'s parent item is available via otherVariables.
+  /**
+   * Step 2: resolves "items" against the component's data; a nested "v-each"'s parent item is available via otherVariables.
+   */
   let dataItems;
 
   if (Number.isInteger(+items)) {
@@ -37,7 +43,11 @@ directive('each', (el, output, attribute, component, additionalHelperVariables =
     }
   }
 
-  // Removes everything already rendered, then starts rendering the elements fresh.
+  /**
+   * Step 3: remove all and start elements rendering.
+   *
+   * Removes everything already rendered, then starts rendering the elements fresh.
+   */
   if (attribute.modifiers.includes('lazy')) {
     el.setAttribute(attribute.directive, expression);
     el.removeAttribute(attribute.name);

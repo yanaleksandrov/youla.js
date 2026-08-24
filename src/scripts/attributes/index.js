@@ -7,11 +7,10 @@ import { setStyles } from './styles';
  * resolved value back onto the element (updateAttribute()).
  */
 
+// Matches the "v-"/"@"/":" prefix marking an attribute as a directive, event, or binding.
 const ATTRIBUTE_PREFIX = /^(v-|@|:)/;
 
-// Matches a bare "<number><unit>" modifier, e.g. ".500ms" or ".30d" — a quantity
-// given directly as a modifier, without a preceding keyword like ".delay.". Whole
-// numbers only: a decimal point would itself split into a separate modifier.
+// Matches a bare "<number><unit>" modifier (e.g. ".500ms", ".30d") given directly, without a preceding keyword like ".delay.".
 const DURATION_MODIFIER = /^(\d+)([a-z]+)$/;
 
 /**

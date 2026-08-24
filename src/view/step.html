@@ -174,8 +174,8 @@
   </div>
 
   <p>
-    <button type="button" :disabled="$step.cannotGoBack()" @click="$step.goBack()">Назад</button>
-    <button type="button" :disabled="$step.cannotGoNext()" @click="$step.goNext()" v-show="$step.isNotLast()">Далее</button>
+    <button type="button" :disabled="$step.cannotGoBack()" @click="$step.goBack()" disabled>Назад</button>
+    <button type="button" :disabled="$step.cannotGoNext()" @click="$step.goNext()" v-show="$step.isNotLast()" disabled>Далее</button>
   </p>
 
   <pre v-text="JSON.stringify($step.getState(), null, 2)"></pre>

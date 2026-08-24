@@ -85,11 +85,7 @@
   &lt;/div&gt;
 
   &lt;ul class=&quot;dots&quot;&gt;
-    &lt;li v-each=&quot;n in [0, 1, 2]&quot;
-        :class=&quot;{ active: $step.isStep(n) }&quot;
-        @click=&quot;$step.goto(n)&quot;
-        v-text=&quot;n + 1&quot;&gt;
-    &lt;/li&gt;
+    &lt;li v-each=&quot;n in 3&quot; :class=&quot;{ active: $step.isStep(n-1) }&quot; v-text=&quot;n&quot;&gt;&lt;/li&gt;
   &lt;/ul&gt;
 
   &lt;div v-step=&quot;name.trim().length &gt; 0&quot;&gt;
@@ -97,21 +93,19 @@
     &lt;input v-prop=&quot;name&quot; placeholder=&quot;Иван&quot;&gt;
   &lt;/div&gt;
 
-  &lt;div v-step=&quot;/.+@.+\..+/.test(email)&quot;&gt;
+  &lt;div v-step=&quot;/.+@.+\..+/.test(email)&quot; hidden&gt;
     &lt;label&gt;Email&lt;/label&gt;
     &lt;input v-prop=&quot;email&quot; placeholder=&quot;ivan@example.com&quot;&gt;
   &lt;/div&gt;
 
-  &lt;div v-step=&quot;true&quot;&gt;
+  &lt;div v-step=&quot;true&quot; hidden&gt;
     Готово! &lt;span v-text=&quot;name&quot;&gt;&lt;/span&gt;, мы отправим подтверждение на &lt;span v-text=&quot;email&quot;&gt;&lt;/span&gt;.
-    &lt;p v-show=&quot;$step.isCompleted()&quot;&gt;Мастер завершён.&lt;/p&gt;
+    &lt;p&gt;Мастер завершён.&lt;/p&gt;
   &lt;/div&gt;
 
   &lt;p&gt;
     &lt;button type=&quot;button&quot; :disabled=&quot;$step.cannotGoBack()&quot; @click=&quot;$step.goBack()&quot;&gt;Назад&lt;/button&gt;
-    &lt;button type=&quot;button&quot; v-show=&quot;$step.isNotLast()&quot;
-            :disabled=&quot;$step.cannotGoNext()&quot;
-            @click=&quot;$step.goNext()&quot;&gt;Далее&lt;/button&gt;
+    &lt;button type=&quot;button&quot; :disabled=&quot;$step.cannotGoNext()&quot; @click=&quot;$step.goNext()&quot; v-show=&quot;$step.isNotLast()&quot;&gt;Далее&lt;/button&gt;
   &lt;/p&gt;
 
   &lt;pre v-text=&quot;JSON.stringify($step.getState(), null, 2)&quot;&gt;&lt;/pre&gt;
@@ -134,7 +128,6 @@
     justify-content: center;
     border-radius: 50%;
     border: 1px solid var(--line);
-    cursor: pointer;
   }
   #step-demo .dots li.active {
     background: var(--teal);
@@ -162,11 +155,7 @@
   </div>
 
   <ul class="dots">
-    <li v-each="n in [0, 1, 2]"
-        :class="{ active: $step.isStep(n) }"
-        @click="$step.goto(n)"
-        v-text="n + 1">
-    </li>
+    <li v-each="n in 3" :class="{ active: $step.isStep(n-1) }" v-text="n"></li>
   </ul>
 
   <div v-step="name.trim().length > 0">
@@ -181,14 +170,12 @@
 
   <div v-step="true" hidden>
     Готово! <span v-text="name"></span>, мы отправим подтверждение на <span v-text="email"></span>.
-    <p v-show="$step.isCompleted()">Мастер завершён.</p>
+    <p>Мастер завершён.</p>
   </div>
 
   <p>
     <button type="button" :disabled="$step.cannotGoBack()" @click="$step.goBack()">Назад</button>
-    <button type="button" v-show="$step.isNotLast()"
-            :disabled="$step.cannotGoNext()"
-            @click="$step.goNext()">Далее</button>
+    <button type="button" :disabled="$step.cannotGoNext()" @click="$step.goNext()" v-show="$step.isNotLast()">Далее</button>
   </p>
 
   <pre v-text="JSON.stringify($step.getState(), null, 2)"></pre>

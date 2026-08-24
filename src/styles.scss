@@ -246,7 +246,7 @@ table {
 [hidden],
 [v-each],
 [v-each\2elazy] {
-	display: none;
+	display: none !important;
 }
 
 .demo {

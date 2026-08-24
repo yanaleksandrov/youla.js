@@ -1,14 +1,7 @@
 document.addEventListener('youla:init', ()=> {
-
   /**
    * Password policy: checks a string against a fixed policy (minimum count per character
    * class, minimum length) and can generate a password that already satisfies it.
-   *
-   * Registered as `Youla.data()` rather than `Youla.method()` — unlike a one-off action
-   * like `$copy`, this one needs `value` and the last check's `valid` flags to stick
-   * around and stay reactive, so they're readable directly from `v-show`/`v-text`/`:class`
-   * on any element inside the component, not just inside the `@event` handler that ran
-   * `check()`.
    *
    * @since 1.0
    */
@@ -37,8 +30,8 @@ document.addEventListener('youla:init', ()=> {
       special: '!@#$%^&*(){|}~',
       digit: '0123456789'
     },
-    toggle(value) {
-      return !(!!value);
+    toggle() {
+      this.visible = !this.visible;
     },
     level() {
       return Math.min(4, Math.round(this.progress / 25));
@@ -48,49 +41,40 @@ document.addEventListener('youla:init', ()=> {
     },
     check(value) {
       let matchCount = 0;
-      let totalCount = 0;
+      // One point per character class plus one for the length rule — fixed, unlike the old
+      // per-call total, which only counted the length rule's point when it passed. That let a
+      // short password satisfying all 4 character classes read as 100% despite failing length.
+      let totalWeight = Object.keys(this.charsets).reduce((sum, type) => sum + this.min[type], 0) + 1;
 
-      for (const charset in this.charsets) {
-        let requiredCount = this.min[charset],
-          charsetRegex  = new RegExp(`[${this.charsets[charset]}]`, 'g'),
-          charsetCount  = (value.match(charsetRegex) || []).length;
+      for (const type in this.charsets) {
+        let charsetRegex = new RegExp(`[${this.charsets[type]}]`, 'g');
+        let charsetCount = (value.match(charsetRegex) || []).length;
 
-        matchCount += Math.min(charsetCount, requiredCount);
-        totalCount += requiredCount;
-
-        this.valid[charset] = charsetCount >= requiredCount;
+        matchCount += Math.min(charsetCount, this.min[type]);
+        this.valid[type] = charsetCount >= this.min[type];
       }
 
       this.valid.length = value.length >= this.min.length;
       if (this.valid.length) {
         matchCount += 1;
-        totalCount += 1;
       }
 
-      this.progress = totalCount === 0 ? totalCount : (matchCount / totalCount) * 100;
+      this.progress = (matchCount / totalWeight) * 100;
 
       return this.progress;
     },
     generate() {
-      let password = '',
-        types    = Object.keys(this.charsets);
+      let pool = Object.values(this.charsets).join('');
+      let password = '';
 
-      types.forEach(type => {
-        let count   = Math.max(this.min[type], 0),
-          charset = this.charsets[type];
-
-        for (let i = 0; i < count; i++) {
-          let randomIndex = Math.floor(Math.random() * charset.length);
-          password += charset[randomIndex];
+      for (const type in this.charsets) {
+        for (let i = 0; i < this.min[type]; i++) {
+          password += this.charsets[type][Math.floor(Math.random() * this.charsets[type].length)];
         }
-      });
+      }
 
       while (password.length < this.min.length) {
-        let randomIndex = Math.floor(Math.random() * types.length),
-          charType    = types[randomIndex],
-          charset     = this.charsets[charType],
-          randomCharIndex = Math.floor(Math.random() * charset.length);
-        password += charset[randomCharIndex];
+        password += pool[Math.floor(Math.random() * pool.length)];
       }
 
       this.value = this.shuffle(password);
@@ -100,16 +84,10 @@ document.addEventListener('youla:init', ()=> {
     },
     shuffle(password) {
       let array = password.split('');
-      let currentIndex = array.length;
-      let temporaryValue, randomIndex;
 
-      while (currentIndex !== 0) {
-        randomIndex = Math.floor(Math.random() * currentIndex);
-        currentIndex -= 1;
-
-        temporaryValue = array[currentIndex];
-        array[currentIndex] = array[randomIndex];
-        array[randomIndex] = temporaryValue;
+      for (let i = array.length - 1; i > 0; i--) {
+        let j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
       }
 
       return array.join('');

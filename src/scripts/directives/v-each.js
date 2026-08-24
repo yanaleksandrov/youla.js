@@ -11,7 +11,7 @@ import { saferEval, withMagicVariables, splitMagicVariables } from '../helpers';
  *
  * @param {HTMLElement} el - the template element carrying v-each; cloned once per rendered item.
  * @param {string} output - the raw expression string; v-each parses `attribute.expression` itself rather than using an evaluated value.
- * @param {object} attribute - the parsed attribute descriptor (expression, modifiers, etc. — see parseAttribute in ../helpers).
+ * @param {object} attribute - the parsed attribute descriptor (expression, modifiers, etc. — see parseAttribute in ../attributes).
  * @param {Component} component - the owning component instance, used to evaluate the items expression against its data.
  * @param {object} [additionalHelperVariables] - loop variables from an enclosing v-each clone, so nested loops can resolve the parent item (e.g. `product in category.products`).
  */

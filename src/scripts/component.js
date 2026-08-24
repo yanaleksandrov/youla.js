@@ -1,5 +1,5 @@
-import { domWalk, debounce, getAttributes, getForData, parseAttribute, saferEval, eventCreate, getNextModifier, isKeyModifier, matchesKeyModifiers, createMagicVariables, withMagicVariables, splitMagicVariables } from './helpers';
-import { updateAttribute } from './attributes';
+import { domWalk, debounce, getForData, saferEval, eventCreate, getNextModifier, isKeyModifier, matchesKeyModifiers, createMagicVariables, withMagicVariables, splitMagicVariables, makeObservable } from './helpers';
+import { getAttributes, parseAttribute, updateAttribute } from './attributes';
 import { fetchProp, generateExpressionForProp } from './props';
 import { injectDataProviders } from './data';
 import { storage, isStorageModifier, getStorageType, computeExpires } from './storage';
@@ -222,35 +222,13 @@ export default class Component {
   wrapDataInObservable(data) {
     this.concernedData = [];
 
-    const makeObservable = (obj) => {
-      if (obj !== null && typeof obj === 'object') {
-        return new Proxy(obj, {
-          set: (target, prop, value) => {
-            if (typeof value === 'object' && value !== null) {
-              value = makeObservable(value);
-            }
-
-            if (Reflect.set(target, prop, value) && !this.concernedData.includes(prop)) {
-              this.concernedData.push(prop);
-              this.refresh();
-              this.persist();
-            }
-
-            return true;
-          },
-          get: (target, prop) => {
-            const value = target[prop];
-            if (typeof value === 'object' && value !== null) {
-              return makeObservable(value);
-            }
-            return value;
-          }
-        });
+    return makeObservable(data, prop => {
+      if (!this.concernedData.includes(prop)) {
+        this.concernedData.push(prop);
+        this.refresh();
+        this.persist();
       }
-      return obj;
-    };
-
-    return makeObservable(data);
+    });
   }
 
   /**

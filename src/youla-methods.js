@@ -9,11 +9,16 @@ document.addEventListener('youla:init', ()=> {
    * `:attribute`, `v-text`), not just `@event` ones.
    *
    * Its state still lives outside the reactive data, though, so nothing
-   * would otherwise mark a binding reading `$step` as dirty. Rather than
-   * pushing that onto callers (a reactive property they must remember to
-   * read and bump), `notify()` forces the owning component to re-run every
-   * binding unconditionally — see `Component#refresh(force)` — whenever
-   * navigation happens or a step's `isComplete` changes.
+   * would otherwise mark a binding reading `$step` as dirty. `Youla.reactive()`
+   * wraps the wizard object below for exactly that: writing `this.currentIndex`
+   * (in `goto()`) or pushing onto `this.steps` (in `getStep()`) force-refreshes
+   * the owning component on its own — see `Component#refresh(force)` and
+   * `helpers.js#reactive`.
+   *
+   * The directive itself is the one exception: it mutates a step object
+   * stashed directly on the element (`el._x_step`), which bypasses that
+   * wrapper entirely (it's never read back through the wizard's own
+   * properties), so it still force-refreshes by hand via `Youla.forceRefresh()`.
    *
    * @since 1.0
    */
@@ -24,14 +29,14 @@ document.addEventListener('youla:init', ()=> {
 
     if (step.isComplete !== isComplete) {
       step.isComplete = isComplete;
-      wizard.notify();
+      Youla.forceRefresh(wizard.root);
     }
   });
   Youla.variable('step', (root, el) => getWizard(el, { root }));
 
   function getWizard(el, { root }) {
     if(!root._x_wizard) {
-      root._x_wizard = {
+      root._x_wizard = Youla.reactive({
         root,
         steps: [],
         currentIndex: 0,
@@ -134,17 +139,7 @@ document.addEventListener('youla:init', ()=> {
             this.currentIndex = index;
           }
           this.render();
-          this.notify();
           return this.current();
-        },
-        notify() {
-          const root = this.root;
-          setTimeout(() => {
-            const component = root.__x;
-            if(component) {
-              component.refresh(true);
-            }
-          }, 0);
         },
         render() {
           this.steps.forEach((step, index) => {
@@ -161,11 +156,10 @@ document.addEventListener('youla:init', ()=> {
 
             this.steps.push(step);
             this.render();
-            this.notify();
           }
           return step;
         },
-      };
+      }, root);
     }
     return root._x_wizard;
   }
@@ -198,16 +192,16 @@ document.addEventListener('youla:init', ()=> {
    * from any expression (`v-show`, `:src`), not just `@event` ones.
    *
    * Its state still lives outside the reactive data, though, so nothing
-   * would otherwise mark a binding reading it as dirty — `notify()` forces
-   * the owning component to re-run every binding unconditionally whenever
-   * `error` changes, the same way `$step` does.
+   * would otherwise mark a binding reading it as dirty — `Youla.reactive()`
+   * wraps the object below so writing `this.error` (in `requestStream()`)
+   * force-refreshes the owning component on its own, the same way `$step`
+   * relies on it for `this.currentIndex` and `this.steps`.
    *
    * @since 1.0
    */
   Youla.variable('stream', (root) => {
     if (!root._x_stream) {
-      root._x_stream = {
-        root,
+      root._x_stream = Youla.reactive({
         error: null,
         canvas: null,
         get refs() {
@@ -218,7 +212,6 @@ document.addEventListener('youla:init', ()=> {
           };
         },
         check() {
-          console.log(this.$el);
           const { video, image } = this.refs;
 
           if (!video) {
@@ -243,23 +236,17 @@ document.addEventListener('youla:init', ()=> {
           }
           return false;
         },
-        setError(error) {
-          if (this.error !== error) {
-            this.error = error;
-            this.notify();
-          }
-        },
         async requestStream(video) {
           if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            this.setError('unsupported');
+            this.error = 'unsupported';
             return;
           }
 
           try {
             video.srcObject = video._x_stream = await navigator.mediaDevices.getUserMedia({video: true});
-            this.setError(null);
+            this.error = null;
           } catch (error) {
-            this.setError(error.name === 'NotAllowedError' || error.name === 'SecurityError' ? 'denied' : 'unavailable');
+            this.error = error.name === 'NotAllowedError' || error.name === 'SecurityError' ? 'denied' : 'unavailable';
           }
         },
         start() {
@@ -336,16 +323,7 @@ document.addEventListener('youla:init', ()=> {
           }
           video._x_stream = null;
         },
-        notify() {
-          const root = this.root;
-          setTimeout(() => {
-            const component = root.__x;
-            if (component) {
-              component.refresh(true);
-            }
-          }, 0);
-        },
-      };
+      }, root);
     }
     return root._x_stream;
   });

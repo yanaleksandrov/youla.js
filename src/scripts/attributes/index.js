@@ -2,10 +2,62 @@ import { setClasses } from './classes';
 import { setStyles } from './styles';
 
 /**
- * Attribute handling: the fixed, built-in mechanism behind the ":attr" syntax for writing a
- * value onto an element's attributes/properties. getAttributes() (see ../helpers) flags these
- * attributes directly, so Component dispatches them here rather than through Youla.directives/Youla.methods.
+ * Attribute handling: parsing every directive/event/binding attribute off an element
+ * (getAttributes()/parseAttribute()) and, for the fixed ":attr" syntax specifically, writing a
+ * resolved value back onto the element (updateAttribute()) — Component dispatches ":attr"
+ * bindings here rather than through Youla.directives/Youla.methods.
  */
+
+const ATTRIBUTE_PREFIX = /^(v-|@|:)/;
+
+// Matches a bare "<number><unit>" modifier, e.g. ".500ms" or ".30d" — a quantity
+// given directly as a modifier, without a preceding keyword like ".delay.". Whole
+// numbers only: a decimal point would itself split into a separate modifier.
+const DURATION_MODIFIER = /^(\d+)([a-z]+)$/;
+
+/**
+ * Classifies a single name/value pair into the shape Component dispatches on. Used both for
+ * real DOM attributes and for a "v-bind" object's entries.
+ *
+ * @param {string} name - The raw attribute or object key, e.g. "v-each.lazy", "@click.prevent", ":class".
+ * @param {*} value - The attribute's string value, or (for v-bind entries) any JS value.
+ * @returns {{name: string, bind: boolean, directive: string, event: string, expression: *, modifiers: string[], duration: {value: number, unit: string}|null, literal: boolean}} The parsed attribute descriptor.
+ */
+export function parseAttribute(name, value) {
+  const startsWith = (name.match(ATTRIBUTE_PREFIX) || [''])[0];
+  const root       = name.replace(startsWith, '');
+  const parts      = root.split('.');
+  const modifiers  = root.split('.').slice(1);
+  const durationMatch = modifiers.map(m => m.match(DURATION_MODIFIER)).find(Boolean);
+
+  return {
+    name,
+    // Attribute binding (":attr") is core syntax, not a pluggable directive,
+    // so it gets its own flag rather than being reported as a directive.
+    bind: startsWith === ':',
+    directive: startsWith === 'v-' ? name.split('.')[0] : '',
+    event: startsWith === '@' ? parts[0] : '',
+    expression: value,
+    modifiers,
+    duration: durationMatch ? { value: Number(durationMatch[1]), unit: durationMatch[2] } : null,
+    // A v-bind entry whose value isn't a string (e.g. `disabled: true`) is
+    // already a final value, not an expression to run through saferEval.
+    literal: typeof value !== 'string'
+  }
+}
+
+/**
+ * Collects every directive/event/binding attribute on an element (":attr", "@event", "v-*"),
+ * already parsed via parseAttribute().
+ *
+ * @param {Element} el - The element to read attributes from.
+ * @returns {object[]} The parsed attribute descriptors, in DOM attribute order.
+ */
+export function getAttributes(el) {
+  return [...el.attributes]
+    .filter(({ name }) => ATTRIBUTE_PREFIX.test(name))
+    .map(({ name, value }) => parseAttribute(name, value));
+}
 
 /**
  * Writes a value onto an element for a given attribute/property name, resolving

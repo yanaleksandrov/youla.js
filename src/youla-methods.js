@@ -2,43 +2,49 @@ document.addEventListener('youla:init', ()=> {
   /**
    * Multi-step wizard: `v-step="condition"` marks a panel's completion
    * state from the bound expression; `$step` (one state machine per wizard
-   * root, via a WeakMap) drives navigation — `$step.goNext()`,
-   * `$step.goBack()`, and the read-only helpers below. Panel visibility is
-   * toggled directly here rather than through a `v-show` expression,
-   * because `$step`'s methods (like any `Youla.method`) only reach `@event`
-   * expressions, never `v-show`/`:attribute` ones.
+   * root, cached on the root element itself) drives navigation — `$step.goNext()`,
+   * `$step.goBack()`, and the read-only helpers below. Registered as a
+   * `Youla.variable()` rather than a `Youla.method()` — unlike most custom
+   * methods, that makes it reachable from any expression (`v-show`,
+   * `:attribute`, `v-text`), not just `@event` ones.
+   *
+   * Its state still lives outside the reactive data, though, so nothing
+   * would otherwise mark a binding reading `$step` as dirty. Rather than
+   * pushing that onto callers (a reactive property they must remember to
+   * read and bump), `notify()` forces the owning component to re-run every
+   * binding unconditionally — see `Component#refresh(force)` — whenever
+   * navigation happens or a step's `isComplete` changes.
    *
    * @since 1.0
-   * @see based on https://github.com/glhd/alpine-wizard
    */
-  Youla.directive('step', (el, output, attribute, component) => {
-    const step = getWizard(el, component).getStep(el);
+  Youla.directive('step', (el, output, _, component) => {
+    const wizard = getWizard(el, component);
+    const step   = wizard.getStep(el);
+    const isComplete = !!output;
 
-    step.isComplete = !!output;
-    step.errors     = {};
+    if (step.isComplete !== isComplete) {
+      step.isComplete = isComplete;
+      wizard.notify();
+    }
   });
-  Youla.method('step', (e, el, component) => getWizard(el, component));
-
-  const wizards = new WeakMap();
+  Youla.variable('step', (root, el) => getWizard(el, { root }));
 
   function getWizard(el, { root }) {
-    if (!wizards.has(root)) {
-      wizards.set(root, {
+    if(!root._x_wizard) {
+      root._x_wizard = {
+        root,
         steps: [],
         currentIndex: 0,
         progress() {
-          let current = 0, complete = 0;
-          const total = this.steps.length;
+          const total   = this.steps.length;
+          const current = Math.min(this.currentIndex + 1, total);
 
-          this.steps.forEach((step, index) => {
-            if (index <= this.currentIndex) {
-              current++;
-              if (step.isComplete) {
-                complete++;
-              }
+          let complete = 0;
+          for(let index = 0; index < current; index++) {
+            if(this.steps[index].isComplete) {
+              complete++;
             }
-          });
-
+          }
           return {
             total, complete, current,
             incomplete: total - complete,
@@ -47,57 +53,121 @@ document.addEventListener('youla:init', ()=> {
             percentage: Math.floor(complete / total * 100),
           };
         },
-        current()  { return this.steps[this.currentIndex] || { el: null, title: null }; },
-        previous() { return this.steps[this.previousIndex()] || { el: null, title: null }; },
-        next()     { return this.steps[this.nextIndex()] || { el: null, title: null }; },
-        previousIndex() { return findNextIndex(this.steps, this.currentIndex, -1); },
-        nextIndex()     { return findNextIndex(this.steps, this.currentIndex, 1); },
-        isStep(index)   { return (Array.isArray(index) ? index : [index]).includes(this.currentIndex); },
-        isFirst()       { return this.previousIndex() === null; },
-        isNotFirst()    { return !this.isFirst(); },
-        isLast()        { return this.nextIndex() === null; },
-        isNotLast()     { return !this.isLast(); },
-        isCompleted()   { return this.current().isComplete && this.nextIndex() === null; },
-        isUncompleted() { return !this.isCompleted(); },
-        canGoNext()     { return this.current().isComplete && this.nextIndex() !== null; },
-        cannotGoNext()  { return !this.canGoNext(); },
-        canGoBack()     { return this.previousIndex() !== null; },
-        cannotGoBack()  { return !this.canGoBack(); },
-        goNext() { this.goto(this.nextIndex()); },
-        goBack() { this.goto(this.previousIndex()); },
+        stepAt(index) {
+          return this.steps[index] || {
+            el: null,
+            title: null
+          };
+        },
+        current() {
+          return this.stepAt(this.currentIndex);
+        },
+        previous() {
+          return this.stepAt(this.previousIndex());
+        },
+        next() {
+          return this.stepAt(this.nextIndex());
+        },
+        previousIndex() {
+          return this.currentIndex - 1 >= 0 ? this.currentIndex - 1 : null;
+        },
+        nextIndex() {
+          return this.currentIndex + 1 < this.steps.length ? this.currentIndex + 1 : null;
+        },
+        isStep(index) {
+          return Array.isArray(index) ? index.includes(this.currentIndex) : index === this.currentIndex;
+        },
+        isFirst() {
+          return this.previousIndex() === null;
+        },
+        isNotFirst() {
+          return !this.isFirst();
+        },
+        isLast() {
+          return this.nextIndex() === null;
+        },
+        isNotLast() {
+          return !this.isLast();
+        },
+        isCompleted() {
+          return this.current().isComplete && this.nextIndex() === null;
+        },
+        isUncompleted() {
+          return !this.isCompleted();
+        },
+        canGoNext() {
+          return this.current().isComplete && this.nextIndex() !== null;
+        },
+        cannotGoNext() {
+          return !this.canGoNext();
+        },
+        canGoBack() {
+          return this.previousIndex() !== null;
+        },
+        cannotGoBack() {
+          return !this.canGoBack();
+        },
+        getState() {
+          return {
+            currentIndex: this.currentIndex,
+            isFirst: this.isFirst(),
+            isNotFirst: this.isNotFirst(),
+            isLast: this.isLast(),
+            isNotLast: this.isNotLast(),
+            canGoBack: this.canGoBack(),
+            cannotGoBack: this.cannotGoBack(),
+            canGoNext: this.canGoNext(),
+            cannotGoNext: this.cannotGoNext(),
+            isCompleted: this.isCompleted(),
+            isUncompleted: this.isUncompleted(),
+            progress: this.progress(),
+          };
+        },
+        goNext() {
+          this.goto(this.nextIndex());
+        },
+        goBack() {
+          this.goto(this.previousIndex());
+        },
         goto(index) {
-          if (index !== null && this.steps[index] !== void 0) {
+          if(index !== null && this.steps[index] !== void 0) {
             this.currentIndex = index;
           }
           this.render();
+          this.notify();
           return this.current();
+        },
+        notify() {
+          const root = this.root;
+          setTimeout(() => {
+            const component = root.__x;
+            if(component) {
+              component.refresh(true);
+            }
+          }, 0);
         },
         render() {
           this.steps.forEach((step, index) => {
-            step.el.style.display = index === this.currentIndex ? '' : 'none';
+            const isHidden = index !== this.currentIndex;
+            if(step.el.hidden !== isHidden) {
+              step.el.hidden = isHidden;
+            }
           });
         },
         getStep(el) {
-          let step = this.steps.find(step => step.el === el);
-          if (!step) {
-            step = { el, title: '', isComplete: true, errors: {} };
+          let step = el._x_step;
+          if(!step) {
+            step = el._x_step = { el, title: '', isComplete: true };
+
             this.steps.push(step);
             this.render();
+            this.notify();
           }
           return step;
         },
-      });
+      };
     }
-    return wizards.get(root);
-  }
-
-  function findNextIndex(steps, current, direction = 1) {
-    for (let index = current + direction; index >= 0 && index < steps.length; index += direction) {
-      if (steps[index]) {
-        return index;
-      }
-    }
-    return null;
+    return root._x_wizard;
   }
 
   /**

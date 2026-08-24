@@ -314,8 +314,14 @@ export default class Component {
    * Re-evaluates every element's bindings and re-runs only those whose
    * dependencies actually changed since the last flush — everything else is
    * left untouched. Clears "concernedData" once the pass completes.
+   *
+   * @param {boolean} [force] - When true, re-runs and re-applies every binding
+   *   unconditionally, ignoring "concernedData" — for state that lives outside
+   *   the reactive data entirely (nothing ever "sets" it through the tracked
+   *   proxy, so nothing would otherwise mark a binding reading it as dirty).
+   *   See `$step` in youla-methods.js for the motivating case.
    */
-  refresh() {
+  refresh(force = false) {
     const self = this;
 
     // Debounced (and deferred with a 0ms delay) so several data writes in the
@@ -343,7 +349,7 @@ export default class Component {
               } catch (error) {}
             }
 
-            if (self.concernedData.filter(i => deps.includes(i)).length > 0) {
+            if (force || self.concernedData.filter(i => deps.includes(i)).length > 0) {
               if (bind) {
                 updateAttribute(el, attribute.name.replace(':', ''), output);
               } else {

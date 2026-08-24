@@ -1,12 +1,7 @@
-import {
-  closestDirective,
-  domWalk,
-  setNestedObjectValue,
-  getNestedObjectValue,
-  saferEval,
-  createMagicVariables,
-  withMagicVariables
-} from './helpers';
+import { closestDirective, domWalk } from './dom';
+import { setNestedObjectValue, getNestedObjectValue } from './object-path';
+import { saferEval } from './eval';
+import { createMagicVariables, withMagicVariables } from './magic-variables';
 import { getAttributes } from './attributes';
 import { storage, isStorageModifier, getStorageType, castToType } from './storage';
 
@@ -19,7 +14,7 @@ import { storage, isStorageModifier, getStorageType, castToType } from './storag
  * @param {Object} data - The component's raw data object, mutated in place.
  * @returns {Object} `data`, for convenience (it's also mutated directly).
  */
-export function fetchProp(rootElement, data) {
+export function hydrateProps(rootElement, data) {
   domWalk(rootElement, el => getAttributes(el).filter(({directive}) => directive === 'v-prop').forEach(attribute => {
     let {expression, modifiers} = attribute;
 
@@ -64,10 +59,9 @@ export function fetchProp(rootElement, data) {
 }
 
 /**
- * Builds the assignment expression used to write a `v-prop`-bound field's
- * current DOM value onto `$data.<expression>`, accounting for the element's
- * type (checkbox array-toggle vs. plain boolean, radio, multi-select) and
- * the `.number`/`.trim` modifiers.
+ * Builds the assignment expression used to write a `v-prop`-bound field's current DOM value
+ * onto `$data.<expression>`, accounting for the element's type and the `.number`/`.trim`
+ * modifiers.
  *
  * @param {HTMLElement} el - The bound form field (input, select, or textarea).
  * @param {Object} data - The component's data object, read to resolve the current bound value.

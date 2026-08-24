@@ -1,8 +1,7 @@
 /**
- * Applies a `:style` binding to an element. An object value is delegated to
- * setStylesFromObject (one property per key); any other value is written as
- * the whole inline "style" attribute string, caching the previous value so
- * it can be restored later.
+ * Applies a `:style` binding to an element. An object value is delegated to setStylesFromObject
+ * (one property per key); any other value is written as the whole inline "style" attribute
+ * string, caching the previous value so it can be restored later.
  *
  * @param {HTMLElement} el - The element to update.
  * @param {Object|string} value - A style-object map, or a raw inline style string.
@@ -25,11 +24,9 @@ export function setStyles(el, value) {
 }
 
 /**
- * Sets each property in "value" as an inline style on the element, converting
- * camelCase keys to kebab-case (CSS custom properties, i.e. keys starting with
- * "--", are left untouched). Removes the "style" attribute entirely once no
- * properties remain, and returns a callback that restores the properties'
- * previous values.
+ * Sets each property in "value" as an inline style on the element, converting camelCase keys
+ * to kebab-case (CSS custom properties are left untouched), and removes the "style" attribute
+ * entirely once no properties remain.
  *
  * @param {HTMLElement} el - The element to update.
  * @param {Object.<string, string>} value - Map of CSS property (camelCase or custom property) to value.
@@ -41,10 +38,7 @@ function setStylesFromObject(el, value) {
   Object.entries(value).forEach(([key, value]) => {
     previousStyles[key] = el.style[key]
 
-    // When we use javascript object, css properties use the camelCase
-    // syntax but when we use setProperty, we need the css format
-    // so we need to convert camelCase to kebab-case.
-    // In case key is a CSS variable, leave it as it is.
+    // setProperty needs kebab-case, not the camelCase a JS style object uses, unless key is a CSS variable.
     if (! key.startsWith('--')) {
       key = key.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
     }

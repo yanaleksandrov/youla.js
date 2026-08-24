@@ -13,6 +13,6 @@ export function register(kind, target, name, callback) {
   if (!target[name]) {
     target[name] = callback;
   } else {
-    console.warn(`Youla.js: ${kind} '${name}' is already exists.`);
+    console.warn(`Youla.js: ${kind} '${name}' already exists.`);
   }
 }

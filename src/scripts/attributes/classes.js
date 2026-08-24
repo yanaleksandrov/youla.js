@@ -4,6 +4,7 @@
  * bool }), or a plain class string/expression. Object values are delegated
  * to setClassesFromObject; everything else goes through setClassesFromString.
  *
+ * @param {HTMLElement} el - The element to update.
  * @param {Array|Function|Object|string|boolean} value - The bound `:class` value.
  * @returns {Function} An "undo" callback that reverts exactly the classes this call added/removed.
  */

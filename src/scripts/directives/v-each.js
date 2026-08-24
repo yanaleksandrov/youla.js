@@ -1,13 +1,11 @@
 import { directive } from '../directives';
-import { saferEval, withMagicVariables, splitMagicVariables } from '../helpers';
+import { saferEval } from '../eval';
+import { withMagicVariables, splitMagicVariables } from '../magic-variables';
 
 /**
- * Renders a clone of the template element for each item in an array, object,
- * or integer range, keeping the DOM in sync as the underlying collection
- * changes. Supports `item in items`, `(item, index) in items`, and an
- * optional `... join 'separator'` suffix. The `.lazy` modifier skips
- * rendering on init, trusting whatever the server already rendered until the
- * bound data actually changes.
+ * Renders a clone of the template element for each item in an array, object, or integer range,
+ * keeping the DOM in sync as the collection changes. Supports `item in items`, `(item, index)
+ * in items`, and an optional `... join 'separator'` suffix; `.lazy` skips rendering on init.
  *
  * @param {HTMLElement} el - the template element carrying v-each; cloned once per rendered item.
  * @param {string} output - the raw expression string; v-each parses `attribute.expression` itself rather than using an evaluated value.
@@ -21,21 +19,12 @@ directive('each', (el, output, attribute, component, additionalHelperVariables =
     return;
   }
 
-  /**
-   * Step 1: parse v-each value
-   *
-   * may be "i in 5", "dog in dogs", "(car, index) in cars" syntax
-   * with support dot notation, like: "(person, index) in data.list.persons"
-   */
+  // Parses "i in 5", "dog in dogs", or "(car, index) in cars" syntax, with dot notation support.
   let [, item, index = 'key', items, join] = expression.match(/^\(?([\w]+)(?:,\s*(\w+))?\)?\s+in\s+(.*?)(?:\s+join\s+'([^']+)')?$/) || [];
 
   const { magicVariables, otherVariables } = splitMagicVariables(additionalHelperVariables);
 
-  /**
-   * Step 2: resolve "items" against the component's data. For a nested "v-each" (e.g.
-   * "product in category.products"), the parent loop's current item ("category") is available
-   * via otherVariables.
-   */
+  // Resolves "items" against the component's data; a nested "v-each"'s parent item is available via otherVariables.
   let dataItems;
 
   if (Number.isInteger(+items)) {
@@ -48,9 +37,7 @@ directive('each', (el, output, attribute, component, additionalHelperVariables =
     }
   }
 
-  /**
-   * Step 3: remove all and start elements rendering
-   */
+  // Removes everything already rendered, then starts rendering the elements fresh.
   if (attribute.modifiers.includes('lazy')) {
     el.setAttribute(attribute.directive, expression);
     el.removeAttribute(attribute.name);

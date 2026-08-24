@@ -4,8 +4,7 @@ import { setStyles } from './styles';
 /**
  * Attribute handling: parsing every directive/event/binding attribute off an element
  * (getAttributes()/parseAttribute()) and, for the fixed ":attr" syntax specifically, writing a
- * resolved value back onto the element (updateAttribute()) — Component dispatches ":attr"
- * bindings here rather than through Youla.directives/Youla.methods.
+ * resolved value back onto the element (updateAttribute()).
  */
 
 const ATTRIBUTE_PREFIX = /^(v-|@|:)/;
@@ -32,16 +31,14 @@ export function parseAttribute(name, value) {
 
   return {
     name,
-    // Attribute binding (":attr") is core syntax, not a pluggable directive,
-    // so it gets its own flag rather than being reported as a directive.
+    // Attribute binding (":attr") is core syntax, not a pluggable directive, so it gets its own flag rather than being reported as a directive.
     bind: startsWith === ':',
     directive: startsWith === 'v-' ? name.split('.')[0] : '',
     event: startsWith === '@' ? parts[0] : '',
     expression: value,
     modifiers,
     duration: durationMatch ? { value: Number(durationMatch[1]), unit: durationMatch[2] } : null,
-    // A v-bind entry whose value isn't a string (e.g. `disabled: true`) is
-    // already a final value, not an expression to run through saferEval.
+    // A v-bind entry whose value isn't a string (e.g. `disabled: true`) is already a final value, not an expression to run through saferEval.
     literal: typeof value !== 'string'
   }
 }
@@ -60,13 +57,9 @@ export function getAttributes(el) {
 }
 
 /**
- * Writes a value onto an element for a given attribute/property name, resolving
- * what "value" actually means for that pair so callers (attribute binding,
- * v-prop) never need to special-case el.type themselves. Handles form control
- * values (radio, checkbox, select, plain inputs), "class" and "style"
- * (delegated to setClasses/setStyles, undoing their previous call first),
- * boolean HTML attributes (removed when falsy), and falls back to a plain
- * setAttribute for anything else.
+ * Writes a value onto an element for a given attribute/property name, resolving what "value"
+ * actually means for that pair — form control values, "class"/"style" (via setClasses/
+ * setStyles), boolean attributes — so callers never need to special-case el.type themselves.
  *
  * @param {HTMLElement} el - The element to update.
  * @param {string} name - The attribute/property name ("value", "class", "style", or any other HTML attribute).

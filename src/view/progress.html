@@ -1,0 +1,198 @@
+<% var data = {
+  title: "Прогрессбар (v-progress)"
+}; %>
+<%= _.template(require('./parts/header.html').default)(data) %>
+
+<h1>Прогрессбар (v-progress)</h1>
+
+<p>
+  Директива <code>v-progress</code> запускает
+  анимацию полосы прогресса, когда элемент впервые появляется на экране, и выставляет два CSS-свойства:
+  <code>--youla-progress</code> (текущее значение в процентах) и
+  <code>--youla-progress-transition</code> (CSS-переход для него). Сама директива ничего не
+  рисует — связать эти переменные с шириной, цветом или чем угодно ещё нужно собственным CSS,
+  например <code>width: var(--youla-progress, 0%)</code>.
+</p>
+
+<h2>Модификаторы вкратце</h2>
+
+<table>
+  <tbody>
+    <tr>
+      <th>Модификатор</th>
+      <th>Значение</th>
+      <th>По умолчанию</th>
+    </tr>
+    <tr>
+      <td>1-й — например, <code>20</code> в <code>.20.90</code></td>
+      <td><code>from</code> — с какого процента начинается анимация</td>
+      <td><code>0</code></td>
+    </tr>
+    <tr>
+      <td>2-й — например, <code>90</code>; необязателен, если значение привязано (см. ниже)</td>
+      <td><code>to</code> — на каком проценте анимация заканчивается</td>
+      <td><code>100</code></td>
+    </tr>
+    <tr>
+      <td><code>.800ms</code>, <code>.0ms</code> и другие «число + единица»</td>
+      <td>Длительность перехода — тот же модификатор, что задаёт задержку у <a href="/tooltip"><code>v-tooltip</code></a></td>
+      <td><code>0ms</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  <code>from</code> и <code>to</code> — сами по себе проценты (0–100), а не доли какого-то
+  общего значения. Это обычные числа, поэтому порядок для них важен: они разбираются позиционно
+  (<code>from.to</code>), а не по ключевому слову, как <code>.top</code>/<code>.click</code> у
+  <code>v-tooltip</code>. Модификатор длительности при этом ищется среди всех модификаторов
+  отдельно и на позицию не завязан.
+</p>
+
+<style>
+  .progress-bar {
+    height: 10px;
+    border-radius: 999px;
+    background: var(--line);
+    overflow: hidden;
+  }
+  .progress-bar i {
+    display: block;
+    height: 100%;
+    background: var(--teal);
+    width: var(--youla-progress, 0%);
+    transition: var(--youla-progress-transition, none);
+  }
+  .progress-row {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+  .progress-row .progress-bar {
+    width: 100%;
+  }
+</style>
+
+<h2>Базовый пример</h2>
+
+<p>
+  <code>v-progress.20.90.800ms</code> анимирует от 20% к 90% за 800мс, как только полоса впервые
+  появляется в области видимости — прокрутите к ней, если она уже видна на экране.
+</p>
+
+<pre>
+&lt;div class=&quot;progress-bar&quot; v-progress.20.90.800ms&gt;
+  &lt;i&gt;&lt;/i&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data>
+  <div class="progress-bar" v-progress.20.90.800ms>
+    <i></i>
+  </div>
+</div>
+
+<h2>Реактивное значение</h2>
+
+<p>
+  Вместо модификатора <code>to</code> значение можно привязать к данным компонента — например,
+  <code>v-progress.0.600ms="percent"</code>. Первое появление полосы в области видимости всё так
+  же анимируется от <code>from</code> к текущему <code>percent</code>, а вот дальше директива
+  реактивна: любое изменение <code>percent</code> плавно перетягивает <code>--youla-progress</code>
+  к новому значению, без повторного ожидания попадания в область видимости.
+</p>
+
+<pre>
+&lt;div v-data=&quot;{ percent: 20 }&quot;&gt;
+  &lt;div class=&quot;progress-bar&quot; v-progress.0.600ms=&quot;percent&quot;&gt;
+    &lt;i&gt;&lt;/i&gt;
+  &lt;/div&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;percent = 20&quot;&gt;20%&lt;/button&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;percent = 55&quot;&gt;55%&lt;/button&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;percent = 90&quot;&gt;90%&lt;/button&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data="{ percent: 20 }">
+  <div class="progress-bar" v-progress.0.600ms="percent">
+    <i></i>
+  </div>
+  <p>
+    <button type="button" @click="percent = 20">20%</button>
+    <button type="button" @click="percent = 55">55%</button>
+    <button type="button" @click="percent = 90">90%</button>
+  </p>
+</div>
+
+<p>
+  Если привязанное значение не число (например, пока данные ещё не загружены), директива тихо
+  откатывается к модификатору <code>to</code> (или к его значению по умолчанию) вместо того, чтобы
+  сломать анимацию.
+</p>
+
+<h2>Значения по умолчанию</h2>
+
+<p>
+  Без модификаторов директива использует <code>from=0</code>, <code>to=100</code> и
+  <code>duration=0ms</code> — полоса мгновенно, без анимации, заполняется целиком.
+</p>
+
+<pre>
+&lt;div class=&quot;progress-bar&quot; v-progress&gt;
+  &lt;i&gt;&lt;/i&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data>
+  <div class="progress-bar" v-progress>
+    <i></i>
+  </div>
+</div>
+
+<h2>Частичный диапазон</h2>
+
+<p>
+  Модификаторы не обязаны покрывать весь диапазон — например, полоса ниже наполняется только до
+  45% и там же останавливается.
+</p>
+
+<pre>
+&lt;div class=&quot;progress-bar&quot; v-progress.0.45.600ms&gt;
+  &lt;i&gt;&lt;/i&gt;
+&lt;/div&gt;
+</pre>
+
+<div class="demo" v-data>
+  <div class="progress-bar" v-progress.0.45.600ms>
+    <i></i>
+  </div>
+</div>
+
+<h2>Несколько полос на одной странице</h2>
+
+<p>
+  У каждого элемента — собственный <code>IntersectionObserver</code>, поэтому анимация каждой
+  полосы запускается независимо, в момент её собственного появления в области видимости.
+</p>
+
+<pre>
+&lt;div class=&quot;progress-bar&quot; v-progress.0.30.500ms&gt;&lt;i&gt;&lt;/i&gt;&lt;/div&gt;
+&lt;div class=&quot;progress-bar&quot; v-progress.0.65.500ms&gt;&lt;i&gt;&lt;/i&gt;&lt;/div&gt;
+&lt;div class=&quot;progress-bar&quot; v-progress.0.90.500ms&gt;&lt;i&gt;&lt;/i&gt;&lt;/div&gt;
+</pre>
+
+<div class="demo progress-row" v-data>
+  <div class="progress-bar" v-progress.0.30.500ms><i></i></div>
+  <div class="progress-bar" v-progress.0.65.500ms><i></i></div>
+  <div class="progress-bar" v-progress.0.90.500ms><i></i></div>
+</div>
+
+<h2>Уважение к prefers-reduced-motion</h2>
+
+<p>
+  Если у пользователя в системе включено «уменьшить анимацию», директива пропускает переход и
+  сразу выставляет конечное значение — полоса просто появляется заполненной, без плавного
+  наполнения.
+</p>
+
+<%= _.template(require('./parts/footer.html').default)(data) %>

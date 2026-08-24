@@ -1,13 +1,13 @@
 import {
   closestDirective,
   domWalk,
-  getAttributes,
   setNestedObjectValue,
   getNestedObjectValue,
   saferEval,
   createMagicVariables,
   withMagicVariables
 } from './helpers';
+import { getAttributes } from './attributes';
 import { storage, isStorageModifier, getStorageType, castToType } from './storage';
 
 /**

@@ -1,5 +1,5 @@
 import Component from './component';
-import { debounce, domReady, eventCreate, hasDirective, pulsate } from './helpers';
+import { debounce, domReady, eventCreate, forceRefresh, hasDirective, pulsate, reactive } from './helpers';
 import { directive } from './directives';
 import { method } from './methods';
 import { data } from './data';
@@ -10,9 +10,11 @@ export const Youla = {
   debounce,
   directive,
   directives: {},
+  forceRefresh,
   method,
   methods: {},
   pulsate,
+  reactive,
   variable,
   variables: {},
 

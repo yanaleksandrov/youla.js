@@ -75,6 +75,23 @@ document.addEventListener('youla:init', ()=> {
   }));
 
   /**
+   * Code syntax highlight
+   *
+   * @since 1.0
+   */
+  Youla.directive('highlight', (el, output, { modifiers }) => {
+    const lang    = modifiers[0] || 'html';
+    const wrapper = document.createElement('code');
+
+    wrapper.className  = `language-${lang}`;
+    wrapper.innerHTML  = el.innerHTML;
+
+    el.classList.add('line-numbers');
+    el.setAttribute('data-lang', lang.toUpperCase());
+    el.replaceChildren(wrapper);
+  });
+
+  /**
    * Disable autofill, reliably — the readonly-until-focus trick stops
    * autofill from prefilling the field before the user interacts with it,
    * even when the browser ignores `autocomplete="off"`.
@@ -200,44 +217,57 @@ document.addEventListener('youla:init', ()=> {
   });
 
   /**
-   * Adapter for Drooltip — position and trigger come from the directive's
-   * modifiers (e.g. `v-tooltip.left.click`), content from its bound value.
-   * Requires Drooltip to be loaded; this project doesn't bundle it.
+   * Animates a progress indicator into view once when it enters the viewport.
+   * Sets `--youla-progress` and `--youla-progress-transition` CSS properties
+   * based on `from.to` (both percentages) and the shared `<number><unit>`
+   * duration modifier. Skips the transition when reduced motion is preferred.
+   *
+   * `to` can also come from the directive's bound value instead of the `to`
+   * modifier — e.g. `v-progress.0.600ms="percent"` — in which case it's
+   * reactive: once the initial reveal has played, every change to `percent`
+   * transitions `--youla-progress` straight to the new value.
    *
    * @since 1.0
    */
-  Youla.directive('tooltip', (el, output, { modifiers }) => {
-    const position = modifiers.find(m => ['top', 'right', 'bottom', 'left'].includes(m)) || 'top';
-    const trigger  = modifiers.find(m => ['hover', 'click'].includes(m)) || 'hover';
+  Youla.directive('progress', (el, output, { modifiers, duration, expression }) => {
+    const [rawFrom = 0, rawTo = 100] = modifiers;
 
-    try {
-      new Drooltip({
-        element: el,
-        trigger,
-        position,
-        background: '#fff',
-        color: '#1a1a1a',
-        animation: 'bounce',
-        content: output || null,
-        callback: null,
-      });
-    } catch {
-      console.warn('Youla.js: "Drooltip" is not defined — v-tooltip requires Drooltip.js to be loaded.');
+    const from = parseInt(rawFrom);
+
+    const bound = expression !== '' && !isNaN(parseFloat(output));
+    const to    = bound ? parseFloat(output) : parseInt(rawTo);
+
+    if (isNaN(from) || isNaN(to)) {
+      console.warn('Youla.js: "v-progress" requires numeric from/to modifiers as percentages (or a numeric bound value), e.g. v-progress.20.80.600ms.');
+      return;
     }
-  });
 
-  /**
-   * Animates a progress indicator into view once, the first time it
-   * scrolls into the viewport: sets `--youla-progress` (and
-   * `--youla-progress-transition`) as CSS custom properties, from
-   * `value.from.to.duration` modifiers — e.g. `v-progress.100.20.80.600ms`
-   * animates from 20% to 80% (of 100) over 600ms. Style the element's
-   * width (or similar) off `var(--youla-progress)` yourself.
-   *
-   * @since 1.0
-   */
-  Youla.directive('progress', (el, output, { modifiers }) => {
-    const [value = 100, from = 0, to = 100, duration = '0ms'] = modifiers;
+    const start = Math.min(Math.max(from, 0), 100);
+    const end   = Math.min(Math.max(to, 0), 100);
+
+    const transitionDuration = duration ? `${duration.value}${duration.unit}` : '0ms';
+    const reducedMotion      = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const apply = (percent, animate) => {
+      if (animate && !reducedMotion()) {
+        el.style.setProperty('--youla-progress-transition', `width ${transitionDuration}`);
+      }
+      el.style.setProperty('--youla-progress', `${percent}%`);
+    };
+
+    // Already revealed — this call is a reactive update to the bound value, not the initial mount.
+    if (el._x_progress?.revealed) {
+      el._x_progress.end = end;
+      apply(end, true);
+      return;
+    }
+
+    if (el._x_progress) {
+      el._x_progress.end = end;
+      return;
+    }
+
+    el._x_progress = { revealed: false, end };
 
     new IntersectionObserver(([entry], observer) => {
       if (!entry.isIntersecting) {
@@ -245,17 +275,16 @@ document.addEventListener('youla:init', ()=> {
       }
       observer.unobserve(el);
 
-      let start = Math.max(parseInt(from) / parseInt(value) * 100, 0);
-      let end   = Math.min(parseInt(to)   / parseInt(value) * 100, 100);
-      if (start > end) {
-        [start, end] = [end, start];
-      }
+      el._x_progress.revealed = true;
 
       el.style.setProperty('--youla-progress', `${start}%`);
-      setTimeout(() => {
-        el.style.setProperty('--youla-progress-transition', `width ${duration}`);
-        el.style.setProperty('--youla-progress', `${end}%`);
-      }, 500);
+
+      if (reducedMotion()) {
+        apply(el._x_progress.end, false);
+        return;
+      }
+
+      setTimeout(() => apply(el._x_progress.end, true), 500);
     }).observe(el);
   });
 
@@ -316,105 +345,32 @@ document.addEventListener('youla:init', ()=> {
   });
 
   /**
-   * Multi-step wizard: `v-step="condition"` marks a panel's completion
-   * state from the bound expression; `$step` (one state machine per wizard
-   * root, via a WeakMap) drives navigation — `$step.goNext()`,
-   * `$step.goBack()`, and the read-only helpers below. Panel visibility is
-   * toggled directly here rather than through a `v-show` expression,
-   * because `$step`'s methods (like any `Youla.method`) only reach `@event`
-   * expressions, never `v-show`/`:attribute` ones.
+   * Date picker with Datepicker.js
    *
-   * @since 1.0
-   * @see based on https://github.com/glhd/alpine-wizard
+   * @see     https://github.com/wwilsman/Datepicker.js
+   * @since   1.0
    */
-  Youla.directive('step', (el, output, attribute, component) => {
-    const step = getWizard(el, component).getStep(el);
+  Youla.directive('pickadate', (e, el) => options => {
+    try {
+      options = Object.assign( {}, {
+        inline: true,
+        multiple: false,
+        ranged: true,
+        time: true,
+        lang: 'ru',
+        months: 2,
+        timeAmPm: false,
+        within: false,
+        without: false,
+        yearRange: 5,
+        weekStart: 1,
+      }, options );
 
-    step.isComplete = !!output;
-    step.errors     = {};
+      new Datepicker(el,options);
+    } catch (e) {
+      console.error( 'Youla.js: "Datepicker" is not defined. Details: https:://github.com/text-mask/text-mask' );
+    }
   });
-  Youla.method('step', (e, el, component) => getWizard(el, component));
-
-  const wizards = new WeakMap();
-
-  function getWizard(el, { root }) {
-    if (!wizards.has(root)) {
-      wizards.set(root, {
-        steps: [],
-        currentIndex: 0,
-        progress() {
-          let current = 0, complete = 0;
-          const total = this.steps.length;
-
-          this.steps.forEach((step, index) => {
-            if (index <= this.currentIndex) {
-              current++;
-              if (step.isComplete) {
-                complete++;
-              }
-            }
-          });
-
-          return {
-            total, complete, current,
-            incomplete: total - complete,
-            progress: `${Math.floor(current / total * 100)}%`,
-            completion: `${Math.floor(complete / total * 100)}%`,
-            percentage: Math.floor(complete / total * 100),
-          };
-        },
-        current()  { return this.steps[this.currentIndex] || { el: null, title: null }; },
-        previous() { return this.steps[this.previousIndex()] || { el: null, title: null }; },
-        next()     { return this.steps[this.nextIndex()] || { el: null, title: null }; },
-        previousIndex() { return findNextIndex(this.steps, this.currentIndex, -1); },
-        nextIndex()     { return findNextIndex(this.steps, this.currentIndex, 1); },
-        isStep(index)   { return (Array.isArray(index) ? index : [index]).includes(this.currentIndex); },
-        isFirst()       { return this.previousIndex() === null; },
-        isNotFirst()    { return !this.isFirst(); },
-        isLast()        { return this.nextIndex() === null; },
-        isNotLast()     { return !this.isLast(); },
-        isCompleted()   { return this.current().isComplete && this.nextIndex() === null; },
-        isUncompleted() { return !this.isCompleted(); },
-        canGoNext()     { return this.current().isComplete && this.nextIndex() !== null; },
-        cannotGoNext()  { return !this.canGoNext(); },
-        canGoBack()     { return this.previousIndex() !== null; },
-        cannotGoBack()  { return !this.canGoBack(); },
-        goNext() { this.goto(this.nextIndex()); },
-        goBack() { this.goto(this.previousIndex()); },
-        goto(index) {
-          if (index !== null && this.steps[index] !== void 0) {
-            this.currentIndex = index;
-          }
-          this.render();
-          return this.current();
-        },
-        render() {
-          this.steps.forEach((step, index) => {
-            step.el.style.display = index === this.currentIndex ? '' : 'none';
-          });
-        },
-        getStep(el) {
-          let step = this.steps.find(step => step.el === el);
-          if (!step) {
-            step = { el, title: '', isComplete: true, errors: {} };
-            this.steps.push(step);
-            this.render();
-          }
-          return step;
-        },
-      });
-    }
-    return wizards.get(root);
-  }
-
-  function findNextIndex(steps, current, direction = 1) {
-    for (let index = current + direction; index >= 0 && index < steps.length; index += direction) {
-      if (steps[index]) {
-        return index;
-      }
-    }
-    return null;
-  }
 
   /**
    * Turns an element with a `data-src` audio URL into a click-to-play
@@ -509,22 +465,5 @@ document.addEventListener('youla:init', ()=> {
     el.classList.add(LISTEN_CLASS);
     el.prepend(icon);
     el.append(audio);
-  });
-
-  /**
-   * Code syntax highlight
-   *
-   * @since 1.0
-   */
-  Youla.directive('highlight', (el, output, { modifiers }) => {
-    const lang    = modifiers[0] || 'html';
-    const wrapper = document.createElement('code');
-
-    wrapper.className  = `language-${lang}`;
-    wrapper.innerHTML  = el.innerHTML;
-
-    el.classList.add('line-numbers');
-    el.setAttribute('data-lang', lang.toUpperCase());
-    el.replaceChildren(wrapper);
   });
 });

@@ -90,6 +90,92 @@ export function debounce(callback, wait) {
 }
 
 /**
+ * Wraps "data" (and, recursively, any nested object it contains) in a Proxy that intercepts
+ * writes: each successful "set" calls "onChange" with the changed property name. Reads pass
+ * a nested object result through the same wrapping, so a write anywhere in the tree is caught,
+ * not just at the top level.
+ *
+ * A DOM node is deliberately never wrapped, even when it's a value nested inside "data" (e.g. a
+ * `v-ref` element cached on some state) — the same reason `$el`/`$refs` never go through the
+ * dependency-tracking proxy in `Component#evaluate`: calling a native method on a wrapped node
+ * (`el.closest(...)`) invokes it with "this" bound to the Proxy instead of the real element,
+ * which throws "Illegal invocation".
+ *
+ * @param {object} data - The plain object to make observable.
+ * @param {(prop: string) => void} onChange - Called after each successful property write, with
+ *   the name of the property that changed.
+ * @returns {Proxy} The observable version of "data".
+ */
+export function makeObservable(data, onChange) {
+  const wrap = (target) => {
+    if (target === null || typeof target !== 'object' || target instanceof Node) {
+      return target;
+    }
+
+    return new Proxy(target, {
+      set: (obj, prop, value) => {
+        value = wrap(value);
+
+        if (Reflect.set(obj, prop, value)) {
+          onChange(prop);
+        }
+
+        return true;
+      },
+      get: (obj, prop) => wrap(obj[prop]),
+    });
+  };
+
+  return wrap(data);
+}
+
+/**
+ * Forces "root"'s component to re-run every binding unconditionally (see
+ * `Component#refresh(force)`), deferred with a 0ms timeout so several calls in the same tick
+ * still collapse into work the debounced `refresh()` already coalesces internally.
+ *
+ * @param {HTMLElement} root - The component's root element ("v-data"), whose `Component`
+ *   instance is stashed at "root.__x" by `componentInitialize` once it's fully constructed.
+ * @returns {void}
+ */
+export function forceRefresh(root) {
+  setTimeout(() => {
+    const component = root.__x;
+    if (component) {
+      component.refresh(true);
+    }
+  }, 0);
+}
+
+/**
+ * Makes a plain object reactive for state that lives outside a component's own `v-data` (e.g. a
+ * `Youla.variable()`'s instance, cached on its root element): every property write force-refreshes
+ * "root" (see `forceRefresh`), the same escape hatch a custom variable would otherwise have to
+ * hand-roll — nothing else would ever mark a binding reading that state as dirty, since it never
+ * goes through the component's own tracked data proxy.
+ *
+ * Writes are deduplicated per pending refresh, the same way `Component#concernedData` avoids
+ * scheduling redundant work for several writes in one tick.
+ *
+ * @param {object} data - The plain object to make reactive.
+ * @param {HTMLElement} root - The component's root element to force-refresh on every write.
+ * @returns {Proxy} The reactive version of "data".
+ */
+export function reactive(data, root) {
+  let pending = [];
+
+  return makeObservable(data, prop => {
+    if (!pending.includes(prop)) {
+      pending.push(prop);
+
+      forceRefresh(root);
+
+      setTimeout(() => pending = [], 0);
+    }
+  });
+}
+
+/**
  * Repeatedly invokes "callback" at the given interval, optionally once immediately first.
  *
  * @param {Function} callback - The function to be executed repeatedly.
@@ -220,49 +306,6 @@ export function saferEval(expression, dataContext, additionalHelperVariables = {
   return (new Function(['$data', ...Object.keys(additionalHelperVariables)], expression))(
     dataContext, ...Object.values(additionalHelperVariables)
   )
-}
-
-const ATTRIBUTE_PREFIX = /^(v-|@|:)/;
-
-/**
- * Classifies a single name/value pair into the shape Component dispatches on. Used both for
- * real DOM attributes and for a "v-bind" object's entries.
- *
- * @param {string} name - The raw attribute or object key, e.g. "v-each.lazy", "@click.prevent", ":class".
- * @param {*} value - The attribute's string value, or (for v-bind entries) any JS value.
- * @returns {{name: string, bind: boolean, directive: string, event: string, expression: *, modifiers: string[], literal: boolean}} The parsed attribute descriptor.
- */
-export function parseAttribute(name, value) {
-  const startsWith = (name.match(ATTRIBUTE_PREFIX) || [''])[0];
-  const root       = name.replace(startsWith, '');
-  const parts      = root.split('.');
-
-  return {
-    name,
-    // Attribute binding (":attr") is core syntax, not a pluggable directive,
-    // so it gets its own flag rather than being reported as a directive. See ./attributes.
-    bind: startsWith === ':',
-    directive: startsWith === 'v-' ? name.split('.')[0] : '',
-    event: startsWith === '@' ? parts[0] : '',
-    expression: value,
-    modifiers: root.split('.').slice(1),
-    // A v-bind entry whose value isn't a string (e.g. `disabled: true`) is
-    // already a final value, not an expression to run through saferEval.
-    literal: typeof value !== 'string'
-  }
-}
-
-/**
- * Collects every directive/event/binding attribute on an element (":attr", "@event", "v-*"),
- * already parsed via parseAttribute().
- *
- * @param {Element} el - The element to read attributes from.
- * @returns {object[]} The parsed attribute descriptors, in DOM attribute order.
- */
-export function getAttributes(el) {
-  return [...el.attributes]
-    .filter(({ name }) => ATTRIBUTE_PREFIX.test(name))
-    .map(({ name, value }) => parseAttribute(name, value));
 }
 
 /**

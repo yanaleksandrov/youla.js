@@ -1,5 +1,5 @@
-import { domWalk, debounce, getAttributes, getForData, parseAttribute, saferEval, eventCreate, getNextModifier, isKeyModifier, matchesKeyModifiers, createMagicVariables, withMagicVariables, splitMagicVariables } from './helpers';
-import { updateAttribute } from './attributes';
+import { domWalk, debounce, getForData, saferEval, eventCreate, getNextModifier, isKeyModifier, matchesKeyModifiers, createMagicVariables, withMagicVariables, splitMagicVariables, makeObservable } from './helpers';
+import { getAttributes, parseAttribute, updateAttribute } from './attributes';
 import { fetchProp, generateExpressionForProp } from './props';
 import { injectDataProviders } from './data';
 import { storage, isStorageModifier, getStorageType, computeExpires } from './storage';
@@ -222,35 +222,13 @@ export default class Component {
   wrapDataInObservable(data) {
     this.concernedData = [];
 
-    const makeObservable = (obj) => {
-      if (obj !== null && typeof obj === 'object') {
-        return new Proxy(obj, {
-          set: (target, prop, value) => {
-            if (typeof value === 'object' && value !== null) {
-              value = makeObservable(value);
-            }
-
-            if (Reflect.set(target, prop, value) && !this.concernedData.includes(prop)) {
-              this.concernedData.push(prop);
-              this.refresh();
-              this.persist();
-            }
-
-            return true;
-          },
-          get: (target, prop) => {
-            const value = target[prop];
-            if (typeof value === 'object' && value !== null) {
-              return makeObservable(value);
-            }
-            return value;
-          }
-        });
+    return makeObservable(data, prop => {
+      if (!this.concernedData.includes(prop)) {
+        this.concernedData.push(prop);
+        this.refresh();
+        this.persist();
       }
-      return obj;
-    };
-
-    return makeObservable(data);
+    });
   }
 
   /**
@@ -314,8 +292,14 @@ export default class Component {
    * Re-evaluates every element's bindings and re-runs only those whose
    * dependencies actually changed since the last flush — everything else is
    * left untouched. Clears "concernedData" once the pass completes.
+   *
+   * @param {boolean} [force] - When true, re-runs and re-applies every binding
+   *   unconditionally, ignoring "concernedData" — for state that lives outside
+   *   the reactive data entirely (nothing ever "sets" it through the tracked
+   *   proxy, so nothing would otherwise mark a binding reading it as dirty).
+   *   See `$step` in youla-methods.js for the motivating case.
    */
-  refresh() {
+  refresh(force = false) {
     const self = this;
 
     // Debounced (and deferred with a 0ms delay) so several data writes in the
@@ -343,7 +327,7 @@ export default class Component {
               } catch (error) {}
             }
 
-            if (self.concernedData.filter(i => deps.includes(i)).length > 0) {
+            if (force || self.concernedData.filter(i => deps.includes(i)).length > 0) {
               if (bind) {
                 updateAttribute(el, attribute.name.replace(':', ''), output);
               } else {

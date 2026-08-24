@@ -1,0 +1,232 @@
+<% var data = {
+  title: "Мастер форм (v-step)"
+}; %>
+<%= _.template(require('./parts/header.html').default)(data) %>
+
+<h1>Мастер форм (v-step)</h1>
+
+<p>
+  Директива <code>v-step</code> и метод <code>$step</code> вместе превращают обычную форму в
+  мастер из нескольких шагов: каждый шаг показывается по очереди, а переход к следующему
+  происходит только тогда, когда текущий шаг заполнен правильно.
+</p>
+
+<p>
+  <code>v-step="условие"</code> ставится на каждый шаг и определяет, когда он считается
+  завершённым, — обычно это проверка введённых данных. <code>$step</code> отвечает за само
+  перемещение между шагами (<code>$step.goNext()</code>, <code>$step.goBack()</code>) и за все
+  вопросы вроде «а можно ли идти дальше» (<code>$step.canGoNext()</code>). Пользоваться
+  <code>$step</code> можно где угодно в разметке — в <code>@click</code>, в <code>v-show</code>,
+  в <code>:disabled</code>, в тексте, — он всегда возвращает актуальное состояние мастера.
+</p>
+
+<h2>Методы $step вкратце</h2>
+
+<table>
+  <tbody>
+    <tr>
+      <th>Метод</th>
+      <th>Что делает</th>
+    </tr>
+    <tr>
+      <td><code>goNext()</code> / <code>goBack()</code></td>
+      <td>Переходит на шаг вперёд или назад, если такой шаг есть</td>
+    </tr>
+    <tr>
+      <td><code>goto(index)</code></td>
+      <td>Переходит сразу на шаг с указанным номером (нумерация с нуля), не проверяя завершённость промежуточных шагов</td>
+    </tr>
+    <tr>
+      <td><code>canGoNext()</code> / <code>canGoBack()</code></td>
+      <td><code>true</code>, если переход возможен. Для <code>canGoNext()</code> это ещё и означает, что текущий шаг завершён</td>
+    </tr>
+    <tr>
+      <td><code>isFirst()</code> / <code>isLast()</code></td>
+      <td><code>true</code> на первом или последнем шаге — без учёта того, завершён он или нет</td>
+    </tr>
+    <tr>
+      <td><code>isStep(n)</code></td>
+      <td><code>true</code>, если сейчас открыт шаг с номером <code>n</code>. Пригодится для подсветки текущего шага в списке или индикаторе</td>
+    </tr>
+    <tr>
+      <td><code>isCompleted()</code></td>
+      <td><code>true</code>, когда пользователь дошёл до последнего шага и он тоже завершён — то есть весь мастер пройден</td>
+    </tr>
+    <tr>
+      <td><code>progress()</code></td>
+      <td>Сводка по прогрессу: сколько шагов всего, сколько завершено, и готовые проценты для полосы загрузки</td>
+    </tr>
+    <tr>
+      <td><code>getState()</code></td>
+      <td>Все данные выше сразу, одним объектом — удобно для отладки или для передачи куда-то ещё</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  У каждого метода, начинающегося на <code>can</code>/<code>is</code>, есть противоположность:
+  <code>cannotGoNext()</code>, <code>cannotGoBack()</code>, <code>isNotFirst()</code>,
+  <code>isNotLast()</code>, <code>isUncompleted()</code>. Это просто ради читаемости — чтобы не
+  писать <code>!$step.canGoNext()</code> в разметке.
+</p>
+
+<h2>Прогресс, шаги-точки и полный снимок состояния</h2>
+
+<p>
+  Раз <code>$step</code> можно использовать в любом выражении, из него легко собрать что угодно:
+  полосу прогресса, кликабельные индикаторы шагов или просто вывести всё состояние целиком —
+  например, для отладки.
+</p>
+
+<pre>
+&lt;div v-data&gt;
+  &lt;div class=&quot;progress-bar&quot;&gt;
+    &lt;i :style=&quot;{ width: $step.progress().completion }&quot;&gt;&lt;/i&gt;
+  &lt;/div&gt;
+
+  &lt;ul class=&quot;dots&quot;&gt;
+    &lt;li v-each=&quot;n in 3&quot; :class=&quot;{ active: $step.isStep(n-1) }&quot; v-text=&quot;n&quot;&gt;&lt;/li&gt;
+  &lt;/ul&gt;
+
+  &lt;div v-step=&quot;name.trim().length &gt; 0&quot;&gt;
+    &lt;label&gt;Ваше имя&lt;/label&gt;
+    &lt;input v-prop=&quot;name&quot; placeholder=&quot;Иван&quot;&gt;
+  &lt;/div&gt;
+
+  &lt;div v-step=&quot;/.+@.+\..+/.test(email)&quot; hidden&gt;
+    &lt;label&gt;Email&lt;/label&gt;
+    &lt;input v-prop=&quot;email&quot; placeholder=&quot;ivan@example.com&quot;&gt;
+  &lt;/div&gt;
+
+  &lt;div v-step=&quot;true&quot; hidden&gt;
+    Готово! &lt;span v-text=&quot;name&quot;&gt;&lt;/span&gt;, мы отправим подтверждение на &lt;span v-text=&quot;email&quot;&gt;&lt;/span&gt;.
+    &lt;p&gt;Мастер завершён.&lt;/p&gt;
+  &lt;/div&gt;
+
+  &lt;p&gt;
+    &lt;button type=&quot;button&quot; :disabled=&quot;$step.cannotGoBack()&quot; @click=&quot;$step.goBack()&quot;&gt;Назад&lt;/button&gt;
+    &lt;button type=&quot;button&quot; :disabled=&quot;$step.cannotGoNext()&quot; @click=&quot;$step.goNext()&quot; v-show=&quot;$step.isNotLast()&quot;&gt;Далее&lt;/button&gt;
+  &lt;/p&gt;
+
+  &lt;pre v-text=&quot;JSON.stringify($step.getState(), null, 2)&quot;&gt;&lt;/pre&gt;
+&lt;/div&gt;
+</pre>
+
+<style>
+  #step-demo .dots {
+    display: flex;
+    gap: 0.5rem;
+    list-style: none;
+    padding: 0;
+    margin: 0 0 0.75rem;
+  }
+  #step-demo .dots li {
+    width: 1.75rem;
+    height: 1.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+  }
+  #step-demo .dots li.active {
+    background: var(--teal);
+    border-color: var(--teal);
+    color: var(--bg, #fff);
+  }
+  #step-demo .progress-bar {
+    height: 10px;
+    border-radius: 999px;
+    background: var(--line);
+    overflow: hidden;
+    margin-bottom: 0.75rem;
+  }
+  #step-demo .progress-bar i {
+    display: block;
+    height: 100%;
+    background: var(--teal);
+    transition: width 300ms;
+  }
+</style>
+
+<div class="demo" id="step-demo" v-data>
+  <div class="progress-bar">
+    <i :style="{ width: $step.progress().completion }"></i>
+  </div>
+
+  <ul class="dots">
+    <li v-each="n in 3" :class="{ active: $step.isStep(n-1) }" v-text="n"></li>
+  </ul>
+
+  <div v-step="name.trim().length > 0">
+    <label>Ваше имя</label>
+    <input v-prop="name" placeholder="Иван">
+  </div>
+
+  <div v-step="/.+@.+\..+/.test(email)" hidden>
+    <label>Email</label>
+    <input v-prop="email" placeholder="ivan@example.com">
+  </div>
+
+  <div v-step="true" hidden>
+    Готово! <span v-text="name"></span>, мы отправим подтверждение на <span v-text="email"></span>.
+    <p>Мастер завершён.</p>
+  </div>
+
+  <p>
+    <button type="button" :disabled="$step.cannotGoBack()" @click="$step.goBack()" disabled>Назад</button>
+    <button type="button" :disabled="$step.cannotGoNext()" @click="$step.goNext()" v-show="$step.isNotLast()" disabled>Далее</button>
+  </p>
+
+  <pre v-text="JSON.stringify($step.getState(), null, 2)"></pre>
+</div>
+
+<p>
+  Точки-индикаторы кликабельны и вызывают <code>$step.goto(n)</code> напрямую — в отличие от
+  кнопки «Далее», <code>goto()</code> не проверяет завершённость и позволяет перепрыгнуть сразу
+  на любой шаг, даже не заполненный.
+</p>
+
+<h2>Полезные советы</h2>
+
+<p>
+  <code>canGoBack()</code> и <code>isNotFirst()</code> всегда возвращают одно и то же — назад
+  можно перейти, если шаг просто не первый, без каких-либо условий. А вот
+  <code>canGoNext()</code> строже, чем <code>isNotLast()</code>: одного наличия следующего шага
+  недостаточно, текущий шаг должен быть ещё и завершён. Если нужно узнать, есть ли следующий шаг
+  вообще, независимо от завершённости, используйте <code>isNotLast()</code>.
+</p>
+
+<p>
+  Кнопку «Далее» имеет смысл одновременно и дизейблить через <code>:disabled="$step.cannotGoNext()"</code>,
+  и на всякий случай перепроверять условие в самом обработчике —
+  <code>@click="$step.canGoNext() &amp;&amp; $step.goNext()"</code>. Это простая и надёжная
+  привычка для любых похожих кнопок с условием.
+</p>
+
+<p>
+  Шаги нумеруются с нуля в порядке появления в разметке — первый <code>v-step</code> получает
+  номер <code>0</code>, следующий — <code>1</code>, и так далее. Именно этот номер используют
+  <code>goto(index)</code> и <code>isStep(n)</code>.
+</p>
+
+<p>
+  Пока страница только грузится и скрипт ещё не запустился, все шаги — это просто обычные
+  <code>&lt;div&gt;</code>, и браузер на мгновение покажет их все разом. Чтобы шаги, которые
+  должны быть скрыты изначально, не мелькали на экране, добавьте им обычный HTML-атрибут
+  <code>hidden</code> прямо в разметке — на первом шаге его, конечно, быть не должно:
+</p>
+
+<pre>
+&lt;div v-step=&quot;name.trim().length &gt; 0&quot;&gt;...&lt;/div&gt;
+&lt;div v-step=&quot;/.+@.+\..+/.test(email)&quot; hidden&gt;...&lt;/div&gt;
+&lt;div v-step=&quot;true&quot; hidden&gt;...&lt;/div&gt;
+</pre>
+
+<p>
+  Директива сама снимает и возвращает этот атрибут при каждом переходе, так что дальнейшая
+  навигация работает как обычно — <code>hidden</code> нужен только для самого первого рендера,
+  до того как страница вообще успеет что-то нарисовать.
+</p>
+
+<%= _.template(require('./parts/footer.html').default)(data) %>

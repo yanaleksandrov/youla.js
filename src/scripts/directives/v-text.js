@@ -130,7 +130,7 @@ function renderSegments(segments, data) {
  *
  * @param {HTMLElement} el - the element the directive is on.
  * @param {*} output - the directive attribute's expression, evaluated against the component's data.
- * @param {object} attribute - the parsed attribute descriptor (directive name, modifiers, raw expression, etc. — see parseAttribute in ../helpers).
+ * @param {object} attribute - the parsed attribute descriptor (directive name, modifiers, raw expression, etc. — see parseAttribute in ../attributes).
  * @param {Component} component - the owning component instance.
  */
 directive('text', (el, output, attribute, component) => {

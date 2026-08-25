@@ -23,14 +23,23 @@
   с HTML-тегом форматирования, вставленным прямо в значение этого свойства.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data="{ username: '<strong>Yan Aleksandrov</strong>' }">
+      Имя: <span v-html="username"></span>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-data=&quot;{ username: &#039;&lt;strong&gt;Yan Aleksandrov&lt;/strong&gt;&#039; }&quot;&gt;
   Имя: &lt;span v-html=&quot;username&quot;&gt;&lt;/span&gt;
 &lt;/div&gt;
 </pre>
-
-<div class="demo" v-data="{ username: '<strong>Yan Aleksandrov</strong>' }">
-  Имя: <span v-html="username"></span>
+  </div>
 </div>
 
 <h2>Живой предпросмотр</h2>
@@ -41,16 +50,25 @@
   для предпросмотра форматированного текста прямо во время ввода.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data="{ markup: '<strong>Привет!</strong> Это <em>живой</em> предпросмотр.' }">
+      <textarea v-prop="markup"></textarea>
+      <div v-html="markup"></div>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-data=&quot;{ markup: '&lt;strong&gt;Привет!&lt;/strong&gt; Это &lt;em&gt;живой&lt;/em&gt; предпросмотр.' }&quot;&gt;
   &lt;textarea v-prop=&quot;markup&quot;&gt;&lt;/textarea&gt;
   &lt;div v-html=&quot;markup&quot;&gt;&lt;/div&gt;
 &lt;/div&gt;
 </pre>
-
-<div class="demo" v-data="{ markup: '<strong>Привет!</strong> Это <em>живой</em> предпросмотр.' }">
-  <textarea v-prop="markup"></textarea>
-  <div v-html="markup"></div>
+  </div>
 </div>
 
 <h2>Любое выражение вместо простой переменной</h2>
@@ -60,7 +78,25 @@
   например, собрать разметку из нескольких полей объекта прямо в шаблоне страницы.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data="{
+  product: { name: 'Наушники', price: 4990, inStock: true }
+}">
+      <div v-html="`
+    <strong>${product.name}</strong>
+    <span style='color:${product.inStock ? 'green' : 'crimson'}'>
+      ${product.inStock ? 'В наличии' : 'Нет в наличии'}
+    </span> — ${product.price} ₽
+  `"></div>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-data=&quot;{
   product: { name: 'Наушники', price: 4990, inStock: true }
 }&quot;&gt;
@@ -72,16 +108,7 @@
   &#x60;&quot;&gt;&lt;/div&gt;
 &lt;/div&gt;
 </pre>
-
-<div class="demo" v-data="{
-  product: { name: 'Наушники', price: 4990, inStock: true }
-}">
-  <div v-html="`
-    <strong>${product.name}</strong>
-    <span style='color:${product.inStock ? 'green' : 'crimson'}'>
-      ${product.inStock ? 'В наличии' : 'Нет в наличии'}
-    </span> — ${product.price} ₽
-  `"></div>
+  </div>
 </div>
 
 <%= _.template(require('./parts/footer.html').default)(data) %>

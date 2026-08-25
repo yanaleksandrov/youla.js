@@ -15,7 +15,27 @@
   инициализировать, как это было бы при его добавлении и удалении из DOM.
 </p>
 
-<pre>
+<p>
+  Нажатие на кнопку «Переключить» меняет значение <code>open</code>, а <code>v-show</code>
+  показывает или скрывает блок вслед за ним, без перезагрузки страницы или лишнего JS-кода.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data="{ open: false }">
+      <button @click="open = ! open">Переключить</button>
+
+      <div v-show="open">
+        Контент...
+      </div>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-data=&quot;{ open: false }&quot;&gt;
   &lt;button @click=&quot;open = ! open&quot;&gt;Переключить&lt;/button&gt;
 
@@ -24,17 +44,6 @@
   &lt;/div&gt;
 &lt;/div&gt;
 </pre>
-
-<p>
-  Нажатие на кнопку «Переключить» меняет значение <code>open</code>, а <code>v-show</code>
-  показывает или скрывает блок вслед за ним, без перезагрузки страницы или лишнего JS-кода.
-</p>
-
-<div class="demo" v-data="{ open: false }">
-  <button @click="open = ! open">Переключить</button>
-
-  <div v-show="open">
-    Контент...
   </div>
 </div>
 
@@ -45,7 +54,22 @@
   оно будет вычислено и приведено к <code>true</code>/<code>false</code> при каждом обновлении данных.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data="{ cart: ['Book', 'Pen'] }">
+      <button @click="cart = [...cart, 'Book']">Добавить в корзину</button>
+      <button @click="cart = []">Очистить корзину</button>
+
+      <p v-show="cart.length > 0">Товаров в корзине: <strong v-text="cart.length"></strong></p>
+      <p v-show="cart.length === 0">Корзина пуста</p>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-data=&quot;{ cart: ['Book', 'Pen'] }&quot;&gt;
   &lt;button @click=&quot;cart = [...cart, 'Book']&quot;&gt;Добавить в корзину&lt;/button&gt;
   &lt;button @click=&quot;cart = []&quot;&gt;Очистить корзину&lt;/button&gt;
@@ -54,13 +78,7 @@
   &lt;p v-show=&quot;cart.length === 0&quot;&gt;Корзина пуста&lt;/p&gt;
 &lt;/div&gt;
 </pre>
-
-<div class="demo" v-data="{ cart: ['Book', 'Pen'] }">
-  <button @click="cart = [...cart, 'Book']">Добавить в корзину</button>
-  <button @click="cart = []">Очистить корзину</button>
-
-  <p v-show="cart.length > 0">Товаров в корзине: <strong v-text="cart.length"></strong></p>
-  <p v-show="cart.length === 0">Корзина пуста</p>
+  </div>
 </div>
 
 <h2>Переключение вкладок</h2>
@@ -70,7 +88,22 @@
   для реализации вкладок, аккордеонов и похожих интерфейсов на одной странице.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data="{ tab: 'profile' }">
+      <button @click="tab = 'profile'">Профиль</button>
+      <button @click="tab = 'settings'">Настройки</button>
+
+      <div v-show="tab === 'profile'">Здесь данные профиля.</div>
+      <div v-show="tab === 'settings'">Здесь настройки аккаунта.</div>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-data=&quot;{ tab: 'profile' }&quot;&gt;
   &lt;button @click=&quot;tab = 'profile'&quot;&gt;Профиль&lt;/button&gt;
   &lt;button @click=&quot;tab = 'settings'&quot;&gt;Настройки&lt;/button&gt;
@@ -79,13 +112,7 @@
   &lt;div v-show=&quot;tab === 'settings'&quot;&gt;Здесь настройки аккаунта.&lt;/div&gt;
 &lt;/div&gt;
 </pre>
-
-<div class="demo" v-data="{ tab: 'profile' }">
-  <button @click="tab = 'profile'">Профиль</button>
-  <button @click="tab = 'settings'">Настройки</button>
-
-  <div v-show="tab === 'profile'">Здесь данные профиля.</div>
-  <div v-show="tab === 'settings'">Здесь настройки аккаунта.</div>
+  </div>
 </div>
 
 <h2>Совместимость с flex, grid и другими значениями display</h2>
@@ -101,7 +128,23 @@
   и другие значения работают без лишнего CSS и <code>!important</code>.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data="{ open: true }">
+      <button @click="open = ! open">Переключить</button>
+
+      <div v-show="open" style="display: flex; gap: 8px;">
+        <span>Элемент 1</span>
+        <span>Элемент 2</span>
+      </div>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-data=&quot;{ open: true }&quot;&gt;
   &lt;button @click=&quot;open = ! open&quot;&gt;Переключить&lt;/button&gt;
 
@@ -111,17 +154,11 @@
   &lt;/div&gt;
 &lt;/div&gt;
 </pre>
-
-<div class="demo" v-data="{ open: true }">
-  <button @click="open = ! open">Переключить</button>
-
-  <div v-show="open" style="display: flex; gap: 8px;">
-    <span>Элемент 1</span>
-    <span>Элемент 2</span>
   </div>
 </div>
 
 <blockquote>
+  <p>Мерцание страницы</p>
   <p>
     Если элемент изначально скрыт (<code>v-show="false"</code> при загрузке), браузер может
     показать его на долю секунды раньше, чем Youla.js завершит инициализацию — этот эффект

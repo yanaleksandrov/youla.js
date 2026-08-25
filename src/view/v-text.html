@@ -11,18 +11,27 @@
   <code>&lt;</code> и <code>&gt;</code>. Это аналог свойства <code>textContent</code> в JavaScript.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data="{ username: 'Yan' }">
+      <button @click="username = 'Yan Aleksandrov'">Поменять на "Yan Aleksandrov"</button>
+
+      Имя: <strong v-text="username">Yan</strong>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-data=&quot;{ username: &#39;Yan&#39; }&quot;&gt;
   &lt;button @click=&quot;username = &#39;Yan Aleksandrov&#39;&quot;&gt;Поменять на &quot;Yan Aleksandrov&quot;&lt;/button&gt;
 
   Имя: &lt;strong v-text=&quot;username&quot;&gt;Yan&lt;/strong&gt;
 &lt;/div&gt;
 </pre>
-
-<div class="demo" v-data="{ username: 'Yan' }">
-  <button @click="username = 'Yan Aleksandrov'">Поменять на "Yan Aleksandrov"</button>
-
-  Имя: <strong v-text="username">Yan</strong>
+  </div>
 </div>
 
 <h2>Реактивное обновление</h2>
@@ -32,18 +41,27 @@
   обновлять вручную не нужно, изменения в данных сразу отражаются на экране.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data="{ count: 0 }">
+      <button @click="count++">Плюс</button>
+      <button @click="count--">Минус</button>
+      Значение: <strong v-text="count"></strong>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-data=&quot;{ count: 0 }&quot;&gt;
   &lt;button @click=&quot;count++&quot;&gt;Плюс&lt;/button&gt;
   &lt;button @click=&quot;count--&quot;&gt;Минус&lt;/button&gt;
   Значение: &lt;strong v-text=&quot;count&quot;&gt;&lt;/strong&gt;
 &lt;/div&gt;
 </pre>
-
-<div class="demo" v-data="{ count: 0 }">
-  <button @click="count++">Плюс</button>
-  <button @click="count--">Минус</button>
-  Значение: <strong v-text="count"></strong>
+  </div>
 </div>
 
 <h2>Безопасный вывод HTML-тегов как текста</h2>
@@ -54,14 +72,23 @@
   теги показываются как обычный текст, а не превращаются в реальные DOM-элементы.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data="{ comment: '<img src=x onerror=alert(1)> Отличная статья!' }">
+      <div v-text="comment"></div>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-data=&quot;{ comment: '&lt;img src=x onerror=alert(1)&gt; Отличная статья!' }&quot;&gt;
   &lt;div v-text=&quot;comment&quot;&gt;&lt;/div&gt;
 &lt;/div&gt;
 </pre>
-
-<div class="demo" v-data="{ comment: '<img src=x onerror=alert(1)> Отличная статья!' }">
-  <div v-text="comment"></div>
+  </div>
 </div>
 
 <h2>Любое выражение вместо простой переменной</h2>
@@ -71,14 +98,23 @@
   а не только имя переменной — например, отформатировать число или собрать строку из нескольких полей.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data="{ price: 4990 }">
+      Цена: <strong v-text="`${price.toLocaleString('ru-RU')} ₽`"></strong>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-data=&quot;{ price: 4990 }&quot;&gt;
   Цена: &lt;strong v-text=&quot;&#x60;${price.toLocaleString('ru-RU')} ₽&#x60;&quot;&gt;&lt;/strong&gt;
 &lt;/div&gt;
 </pre>
-
-<div class="demo" v-data="{ price: 4990 }">
-  Цена: <strong v-text="`${price.toLocaleString('ru-RU')} ₽`"></strong>
+  </div>
 </div>
 
 <blockquote>
@@ -106,16 +142,25 @@
   обновляется только оно, а остальной текст страницы остаётся нетронутым.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data="{ count: 5, amount: 1200 }">
+      <div v-text="{ count, amount }">У вас 5 товаров на сумму 1200 ₽</div>
+      <button type="button" @click="count++; amount += 240">Добавить в корзину</button>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-data=&quot;{ count: 5, amount: 1200 }&quot;&gt;
   &lt;div v-text=&quot;{ count, amount }&quot;&gt;У вас 5 товаров на сумму 1200 ₽&lt;/div&gt;
   &lt;button type=&quot;button&quot; @click=&quot;count++; amount += 240&quot;&gt;Добавить в корзину&lt;/button&gt;
 &lt;/div&gt;
 </pre>
-
-<div class="demo" v-data="{ count: 5, amount: 1200 }">
-  <div v-text="{ count, amount }">У вас 5 товаров на сумму 1200 ₽</div>
-  <button type="button" @click="count++; amount += 240">Добавить в корзину</button>
+  </div>
 </div>
 
 <p>

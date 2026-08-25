@@ -21,12 +21,21 @@
   фокуса атрибут снимается и поле ведёт себя как обычное.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data="{ login: '' }">
+      <input type="text" placeholder="Логин" v-noautofill>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;input type=&quot;text&quot; placeholder=&quot;Логин&quot; v-noautofill&gt;
 </pre>
-
-<div class="demo" v-data="{ login: '' }">
-  <input type="text" placeholder="Логин" v-noautofill>
+  </div>
 </div>
 
 <p>
@@ -71,14 +80,23 @@ Youla.data(&#39;user&#39;, () =&gt; ({
   элемент обычным текстом, без плеера.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data>
+      <span id="listen-demo" v-listen="true" data-start="0.5" data-end="1.5">Прослушать сигнал</span>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;span v-listen=&quot;true&quot; data-src=&quot;/sounds/click.mp3&quot; data-start=&quot;0.5&quot; data-end=&quot;1.5&quot;&gt;
   Прослушать
 &lt;/span&gt;
 </pre>
-
-<div class="demo" v-data>
-  <span id="listen-demo" v-listen="true" data-start="0.5" data-end="1.5">Прослушать сигнал</span>
+  </div>
 </div>
 
 <script>
@@ -125,16 +143,25 @@ Youla.data(&#39;user&#39;, () =&gt; ({
   поведением управляет само выражение атрибута.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data="{ open: false }">
+      <button type="button" @click="open = !open">Переключить</button>
+      <div v-collapse="open">Содержимое, которое плавно раскрывается и закрывается.</div>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-data=&quot;{ open: true }&quot;&gt;
   &lt;button type=&quot;button&quot; @click=&quot;open = !open&quot;&gt;Переключить&lt;/button&gt;
   &lt;div v-collapse=&quot;open&quot;&gt;Содержимое, которое плавно раскрывается и закрывается.&lt;/div&gt;
 &lt;/div&gt;
 </pre>
-
-<div class="demo" v-data="{ open: false }">
-  <button type="button" @click="open = !open">Переключить</button>
-  <div v-collapse="open">Содержимое, которое плавно раскрывается и закрывается.</div>
+  </div>
 </div>
 
 <h2>v-textarea: автовысота при вводе</h2>
@@ -151,12 +178,21 @@ Youla.data(&#39;user&#39;, () =&gt; ({
   значения используется лимит по умолчанию (99 строк).
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data>
+      <textarea v-textarea="6" rows="2" placeholder="Печатайте здесь — поле будет расти..."></textarea>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;textarea v-textarea=&quot;6&quot; rows=&quot;2&quot;&gt;&lt;/textarea&gt;
 </pre>
-
-<div class="demo" v-data>
-  <textarea v-textarea="6" rows="2" placeholder="Печатайте здесь — поле будет расти..."></textarea>
+  </div>
 </div>
 
 <h2>v-select: адаптер для SlimSelect</h2>
@@ -168,20 +204,29 @@ Youla.data(&#39;user&#39;, () =&gt; ({
   а значение атрибута, если оно задано, разбирается как JSON и добавляется в настройки библиотеки.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data>
+      <select v-select multiple>
+        <option value="js">JavaScript</option>
+        <option value="ts">TypeScript</option>
+        <option value="py">Python</option>
+      </select>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;select v-select multiple&gt;
   &lt;option value=&quot;js&quot;&gt;JavaScript&lt;/option&gt;
   &lt;option value=&quot;ts&quot;&gt;TypeScript&lt;/option&gt;
   &lt;option value=&quot;py&quot;&gt;Python&lt;/option&gt;
 &lt;/select&gt;
 </pre>
-
-<div class="demo" v-data>
-  <select v-select multiple>
-    <option value="js">JavaScript</option>
-    <option value="ts">TypeScript</option>
-    <option value="py">Python</option>
-  </select>
+  </div>
 </div>
 
 <p>
@@ -199,24 +244,33 @@ Youla.data(&#39;user&#39;, () =&gt; ({
   выше вьюпорта прокручивается внутри себя, а не съезжает за верх или низ экрана.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data style="position: relative; display: flex; gap: 1rem; align-items: flex-start;">
+      <div v-sticky style="width: 180px; padding: 0.75rem; border-radius: 0.4rem; border: 1px solid var(--line);">
+        Прокрутите страницу — я слежу за этой колонкой
+      </div>
+      <div style="flex: 1; line-height: 2.4;">
+        <p>Youla.js остаётся крошечной библиотекой — около 16kB, без сборки и виртуального DOM.</p>
+        <p>Реактивность строится на прокси над обычным объектом данных, без своего диалекта шаблонов.</p>
+        <p>Директивы читаются прямо из атрибутов разметки: <code>v-*</code>, <code>:attribute</code>, <code>@event</code>.</p>
+        <p>Пользовательские директивы и методы регистрируются через <code>Youla.directive()</code> и <code>Youla.method()</code>.</p>
+        <p>Эта колонка — просто заполнитель, чтобы страница стала достаточно длинной для прокрутки.</p>
+        <p>Прокрутите чуть ниже и обратно — левая колонка должна остаться на виду всё это время.</p>
+      </div>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div style=&quot;position: relative; display: flex; gap: 1rem;&quot;&gt;
   &lt;div v-sticky&gt;Слежу за колонкой&lt;/div&gt;
   &lt;div&gt;Длинная колонка содержимого...&lt;/div&gt;
 &lt;/div&gt;
 </pre>
-
-<div class="demo" v-data style="position: relative; display: flex; gap: 1rem; align-items: flex-start;">
-  <div v-sticky style="width: 180px; padding: 0.75rem; border-radius: 0.4rem; border: 1px solid var(--line);">
-    Прокрутите страницу — я слежу за этой колонкой
-  </div>
-  <div style="flex: 1; line-height: 2.4;">
-    <p>Youla.js остаётся крошечной библиотекой — около 16kB, без сборки и виртуального DOM.</p>
-    <p>Реактивность строится на прокси над обычным объектом данных, без своего диалекта шаблонов.</p>
-    <p>Директивы читаются прямо из атрибутов разметки: <code>v-*</code>, <code>:attribute</code>, <code>@event</code>.</p>
-    <p>Пользовательские директивы и методы регистрируются через <code>Youla.directive()</code> и <code>Youla.method()</code>.</p>
-    <p>Эта колонка — просто заполнитель, чтобы страница стала достаточно длинной для прокрутки.</p>
-    <p>Прокрутите чуть ниже и обратно — левая колонка должна остаться на виду всё это время.</p>
   </div>
 </div>
 

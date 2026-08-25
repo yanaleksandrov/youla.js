@@ -12,38 +12,49 @@
   почтовых клиентах и админ-панелях.
 </p>
 
-<pre>
-document.addEventListener('youla:init', () =&gt; {
-  Youla.data('table', () =&gt; ({
-    anchor: null,
-    trigger: {
-      '@change': 'selectAll($el, $root)',
-    },
-    item: {
-      '@click': 'selectItem($el, $root, $event)',
-    },
-    items(root) {
-      return [...root.querySelectorAll('[v-bind~="item"]')];
-    },
-    selectAll(el, root) {
-      this.items(root).forEach(input =&gt; input.checked = el.checked);
-    },
-    selectItem(el, root, event) {
-      let items   = this.items(root);
-      let index   = items.indexOf(el);
-      let checked = el.checked;
-      let start   = event.shiftKey &amp;&amp; this.anchor !== null ? this.anchor : index;
-
-      for (let i = Math.min(start, index); i &lt;= Math.max(start, index); i++) {
-        items[i].checked = checked;
-      }
-      this.anchor = index;
-    },
-  }));
-});
-</pre>
-
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+    <button type="button" class="example__tab" data-tab="js">JS</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo">
+      <table v-data="table">
+        <thead>
+          <tr>
+            <th><input type="checkbox" v-bind="trigger"></th>
+            <th>Имя</th>
+            <th>Email</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><input type="checkbox" v-bind="item"></td>
+            <td>Иван Петров</td>
+            <td>ivan@example.com</td>
+          </tr>
+          <tr>
+            <td><input type="checkbox" v-bind="item"></td>
+            <td>Мария Сидорова</td>
+            <td>maria@example.com</td>
+          </tr>
+          <tr>
+            <td><input type="checkbox" v-bind="item"></td>
+            <td>Алексей Смирнов</td>
+            <td>alexey@example.com</td>
+          </tr>
+          <tr>
+            <td><input type="checkbox" v-bind="item"></td>
+            <td>Ольга Кузнецова</td>
+            <td>olga@example.com</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;table v-data=&quot;table&quot;&gt;
   &lt;thead&gt;
     &lt;tr&gt;
@@ -76,39 +87,39 @@ document.addEventListener('youla:init', () =&gt; {
   &lt;/tbody&gt;
 &lt;/table&gt;
 </pre>
+  </div>
+  <div class="example__panel" data-panel="js">
+    <pre>
+document.addEventListener('youla:init', () =&gt; {
+  Youla.data('table', () =&gt; ({
+    anchor: null,
+    trigger: {
+      '@change': 'selectAll($el, $root)',
+    },
+    item: {
+      '@click': 'selectItem($el, $root, $event)',
+    },
+    items(root) {
+      return [...root.querySelectorAll('[v-bind~="item"]')];
+    },
+    selectAll(el, root) {
+      this.items(root).forEach(input =&gt; input.checked = el.checked);
+    },
+    selectItem(el, root, event) {
+      let items   = this.items(root);
+      let index   = items.indexOf(el);
+      let checked = el.checked;
+      let start   = event.shiftKey &amp;&amp; this.anchor !== null ? this.anchor : index;
 
-<div class="demo">
-  <table v-data="table">
-    <thead>
-      <tr>
-        <th><input type="checkbox" v-bind="trigger"></th>
-        <th>Имя</th>
-        <th>Email</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><input type="checkbox" v-bind="item"></td>
-        <td>Иван Петров</td>
-        <td>ivan@example.com</td>
-      </tr>
-      <tr>
-        <td><input type="checkbox" v-bind="item"></td>
-        <td>Мария Сидорова</td>
-        <td>maria@example.com</td>
-      </tr>
-      <tr>
-        <td><input type="checkbox" v-bind="item"></td>
-        <td>Алексей Смирнов</td>
-        <td>alexey@example.com</td>
-      </tr>
-      <tr>
-        <td><input type="checkbox" v-bind="item"></td>
-        <td>Ольга Кузнецова</td>
-        <td>olga@example.com</td>
-      </tr>
-    </tbody>
-  </table>
+      for (let i = Math.min(start, index); i &lt;= Math.max(start, index); i++) {
+        items[i].checked = checked;
+      }
+      this.anchor = index;
+    },
+  }));
+});
+</pre>
+  </div>
 </div>
 
 <h2>Как пользоваться</h2>

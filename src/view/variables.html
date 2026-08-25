@@ -28,14 +28,23 @@
   элемент, чей атрибут сейчас вычисляется. У каждого элемента своё значение <code>$el</code>.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data>
+      Тег этого элемента: <strong v-text="$el.tagName"></strong>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-data&gt;
   Тег этого элемента: &lt;strong v-text=&quot;$el.tagName&quot;&gt;&lt;/strong&gt;
 &lt;/div&gt;
 </pre>
-
-<div class="demo" v-data>
-  Тег этого элемента: <strong v-text="$el.tagName"></strong>
+  </div>
 </div>
 
 <p>
@@ -52,16 +61,25 @@
   обработчика события не существует, поэтому там она равна <code>undefined</code>.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data="{ lastKey: '' }">
+      <input @keyup="lastKey = $event.key" placeholder="Печатайте здесь">
+      <p>Последняя нажатая клавиша: <strong v-text="lastKey"></strong></p>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-data=&quot;{ lastKey: '' }&quot;&gt;
   &lt;input @keyup=&quot;lastKey = $event.key&quot; placeholder=&quot;Печатайте здесь&quot;&gt;
   &lt;p&gt;Последняя нажатая клавиша: &lt;strong v-text=&quot;lastKey&quot;&gt;&lt;/strong&gt;&lt;/p&gt;
 &lt;/div&gt;
 </pre>
-
-<div class="demo" v-data="{ lastKey: '' }">
-  <input @keyup="lastKey = $event.key" placeholder="Печатайте здесь">
-  <p>Последняя нажатая клавиша: <strong v-text="lastKey"></strong></p>
+  </div>
 </div>
 
 <p>
@@ -79,16 +97,25 @@
   в данных.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data>
+      <input v-ref="email" type="email" placeholder="you@example.com">
+      <button @click="$refs.email.focus()">Перейти к полю</button>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-data&gt;
   &lt;input v-ref=&quot;email&quot; type=&quot;email&quot; placeholder=&quot;you@example.com&quot;&gt;
   &lt;button @click=&quot;$refs.email.focus()&quot;&gt;Перейти к полю&lt;/button&gt;
 &lt;/div&gt;
 </pre>
-
-<div class="demo" v-data>
-  <input v-ref="email" type="email" placeholder="you@example.com">
-  <button @click="$refs.email.focus()">Перейти к полю</button>
+  </div>
 </div>
 
 <p>
@@ -105,7 +132,22 @@
   <code>v-ref</code> по всей разметке.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data>
+      <div>
+        <div>
+          <button @click="$root.style.background = '#fef3c7'">Подсветить компонент</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-data&gt;
   &lt;div&gt;
     &lt;div&gt;
@@ -114,12 +156,6 @@
   &lt;/div&gt;
 &lt;/div&gt;
 </pre>
-
-<div class="demo" v-data>
-  <div>
-    <div>
-      <button @click="$root.style.background = '#fef3c7'">Подсветить компонент</button>
-    </div>
   </div>
 </div>
 
@@ -137,7 +173,30 @@
   <code>$refs</code> и <code>$root</code> в метод аргументами вручную.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+    <button type="button" class="example__tab" data-tab="js">JS</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data="card">
+      <input v-ref="note" placeholder="Впишите что-нибудь">
+      <button @click="inspect()">Проверить переменные</button>
+      <p v-text="status"></p>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;div v-data=&quot;card&quot;&gt;
+  &lt;input v-ref=&quot;note&quot; placeholder=&quot;Впишите что-нибудь&quot;&gt;
+  &lt;button @click=&quot;inspect()&quot;&gt;Проверить переменные&lt;/button&gt;
+  &lt;p v-text=&quot;status&quot;&gt;&lt;/p&gt;
+&lt;/div&gt;
+</pre>
+  </div>
+  <div class="example__panel" data-panel="js">
+    <pre>
 Youla.data(&#39;card&#39;, () =&gt; ({
   status: &#39;Нажмите кнопку&#39;,
 
@@ -151,14 +210,8 @@ Youla.data(&#39;card&#39;, () =&gt; ({
   },
 }));
 </pre>
-
-<pre>
-&lt;div v-data=&quot;card&quot;&gt;
-  &lt;input v-ref=&quot;note&quot; placeholder=&quot;Впишите что-нибудь&quot;&gt;
-  &lt;button @click=&quot;inspect()&quot;&gt;Проверить переменные&lt;/button&gt;
-  &lt;p v-text=&quot;status&quot;&gt;&lt;/p&gt;
-&lt;/div&gt;
-</pre>
+  </div>
+</div>
 
 <script>
   document.addEventListener('youla:init', () => {
@@ -176,12 +229,6 @@ Youla.data(&#39;card&#39;, () =&gt; ({
     }));
   });
 </script>
-
-<div class="demo" v-data="card">
-  <input v-ref="note" placeholder="Впишите что-нибудь">
-  <button @click="inspect()">Проверить переменные</button>
-  <p v-text="status"></p>
-</div>
 
 <p>
   <code>this.$el</code> здесь — сама кнопка, а не корневой <code>&lt;div&gt;</code>, потому что

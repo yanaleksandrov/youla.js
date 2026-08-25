@@ -22,7 +22,42 @@
   <code>v-bind="имя"</code>.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+    <button type="button" class="example__tab" data-tab="js">JS</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo example-modal" v-data="modal" @keydown.esc.window="hide()">
+      <button type="button" @click="show()">Открыть модальное окно</button>
+
+      <div class="modal-backdrop" v-bind="backdrop">
+        <div class="modal-window" v-bind="panel">
+          <h3>Заголовок окна</h3>
+          <p>Закрыть можно кликом по фону, клавишей Escape или кнопкой ниже.</p>
+          <button type="button" @click="hide()">Закрыть</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;div v-data=&quot;modal&quot; @keydown.esc.window=&quot;hide()&quot;&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;show()&quot;&gt;Открыть модальное окно&lt;/button&gt;
+
+  &lt;div class=&quot;modal-backdrop&quot; v-bind=&quot;backdrop&quot;&gt;
+    &lt;div class=&quot;modal-window&quot; v-bind=&quot;panel&quot;&gt;
+      &lt;h3&gt;Заголовок окна&lt;/h3&gt;
+      &lt;p&gt;Закрыть можно кликом по фону, клавишей Escape или кнопкой ниже.&lt;/p&gt;
+      &lt;button type=&quot;button&quot; @click=&quot;hide()&quot;&gt;Закрыть&lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+</pre>
+  </div>
+  <div class="example__panel" data-panel="js">
+    <pre>
 document.addEventListener('youla:init', () =&gt; {
   Youla.data('modal', () =&gt; ({
     open: false,
@@ -49,20 +84,8 @@ document.addEventListener('youla:init', () =&gt; {
   }));
 });
 </pre>
-
-<pre>
-&lt;div v-data=&quot;modal&quot; @keydown.esc.window=&quot;hide()&quot;&gt;
-  &lt;button type=&quot;button&quot; @click=&quot;show()&quot;&gt;Открыть модальное окно&lt;/button&gt;
-
-  &lt;div class=&quot;modal-backdrop&quot; v-bind=&quot;backdrop&quot;&gt;
-    &lt;div class=&quot;modal-window&quot; v-bind=&quot;panel&quot;&gt;
-      &lt;h3&gt;Заголовок окна&lt;/h3&gt;
-      &lt;p&gt;Закрыть можно кликом по фону, клавишей Escape или кнопкой ниже.&lt;/p&gt;
-      &lt;button type=&quot;button&quot; @click=&quot;hide()&quot;&gt;Закрыть&lt;/button&gt;
-    &lt;/div&gt;
-  &lt;/div&gt;
-&lt;/div&gt;
-</pre>
+  </div>
+</div>
 
 <p>
   Модификатор <code>.esc</code> сам фильтрует нажатую клавишу и сочетается с <code>.window</code> в
@@ -121,18 +144,6 @@ document.addEventListener('youla:init', () =&gt; {
     }));
   });
 </script>
-
-<div class="demo example-modal" v-data="modal" @keydown.esc.window="hide()">
-  <button type="button" @click="show()">Открыть модальное окно</button>
-
-  <div class="modal-backdrop" v-bind="backdrop">
-    <div class="modal-window" v-bind="panel">
-      <h3>Заголовок окна</h3>
-      <p>Закрыть можно кликом по фону, клавишей Escape или кнопкой ниже.</p>
-      <button type="button" @click="hide()">Закрыть</button>
-    </div>
-  </div>
-</div>
 
 <p>
   <code>show()</code> и <code>hide()</code> — обычные методы: изменение <code>open</code> и работа

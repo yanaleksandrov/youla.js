@@ -10,7 +10,72 @@
   сохраняется в браузере автоматически. Ниже — весь код, который для этого нужен.
 </p>
 
-<pre>
+<p>
+  За сохранение списка отвечает модификатор <code>.local</code> в <code>v-data.local="todo"</code>:
+  он пишет данные в <code>localStorage</code> при каждом изменении и подставляет их обратно при
+  следующей загрузке страницы.
+</p>
+
+<p>
+  Сохранённые данные накладываются поверх начальных значений из <code>Youla.data</code> — так новые
+  поля, добавленные в фабрику позже, появятся даже у посетителей со старым <code>localStorage</code>.
+</p>
+
+<p>
+  Если данные должны быть доступны серверу, замените модификатор на <code>.cookie</code>. Если
+  персистентность не нужна, уберите модификатор — оставьте обычный <code>v-data="todo"</code>.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+    <button type="button" class="example__tab" data-tab="js">JS</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data.local="todo">
+      <p>Добавить задачу:</p>
+      <input placeholder="Введите новую задачу..." v-prop="value" v-bind="field" />
+      <button type="button" v-bind="adder">Добавить</button>
+
+      <div v-show="tasks.length" hidden>
+        <p>Список задач:</p>
+        <ul>
+          <li v-each="(task, index) in tasks">
+            <label>
+              <input type="checkbox" v-bind="checkbox"> <span v-bind="status"></span>
+            </label>
+            <button v-bind="remover">Удалить</button>
+          </li>
+        </ul>
+        <button v-bind="clearer">Очистить всё</button>
+      </div>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;div v-data.local=&quot;todo&quot;&gt;
+  &lt;p&gt;Добавить задачу:&lt;/p&gt;
+  &lt;input placeholder=&quot;Введите новую задачу...&quot; v-prop=&quot;value&quot; v-bind=&quot;field&quot; /&gt;
+  &lt;button type=&quot;button&quot; v-bind=&quot;adder&quot;&gt;Добавить&lt;/button&gt;
+
+  &lt;div v-show=&quot;tasks.length&quot; hidden&gt;
+    &lt;p&gt;Список задач:&lt;/p&gt;
+    &lt;ul&gt;
+      &lt;li v-each=&quot;(task, index) in tasks&quot;&gt;
+        &lt;label&gt;
+          &lt;input type=&quot;checkbox&quot; v-bind=&quot;checkbox&quot;&gt; &lt;span v-bind=&quot;status&quot;&gt;&lt;/span&gt;
+        &lt;/label&gt;
+        &lt;button v-bind=&quot;remover&quot;&gt;Удалить&lt;/button&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+    &lt;button v-bind=&quot;clearer&quot;&gt;Очистить всё&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+</pre>
+  </div>
+  <div class="example__panel" data-panel="js">
+    <pre>
 document.addEventListener('youla:init', () =&gt; {
   Youla.data('todo', () =&gt; ({
     value: '',
@@ -39,43 +104,8 @@ document.addEventListener('youla:init', () =&gt; {
   }));
 });
 </pre>
-
-<pre>
-&lt;div v-data.local=&quot;todo&quot;&gt;
-  &lt;p&gt;Добавить задачу:&lt;/p&gt;
-  &lt;input placeholder=&quot;Введите новую задачу...&quot; v-prop=&quot;value&quot; v-bind=&quot;field&quot; /&gt;
-  &lt;button type=&quot;button&quot; v-bind=&quot;adder&quot;&gt;Добавить&lt;/button&gt;
-
-  &lt;div v-show=&quot;tasks.length&quot; hidden&gt;
-    &lt;p&gt;Список задач:&lt;/p&gt;
-    &lt;ul&gt;
-      &lt;li v-each=&quot;(task, index) in tasks&quot;&gt;
-        &lt;label&gt;
-          &lt;input type=&quot;checkbox&quot; v-bind=&quot;checkbox&quot;&gt; &lt;span v-bind=&quot;status&quot;&gt;&lt;/span&gt;
-        &lt;/label&gt;
-        &lt;button v-bind=&quot;remover&quot;&gt;Удалить&lt;/button&gt;
-      &lt;/li&gt;
-    &lt;/ul&gt;
-    &lt;button v-bind=&quot;clearer&quot;&gt;Очистить всё&lt;/button&gt;
-  &lt;/div&gt;
-&lt;/div&gt;
-</pre>
-
-<p>
-  За сохранение списка отвечает модификатор <code>.local</code> в <code>v-data.local="todo"</code>:
-  он пишет данные в <code>localStorage</code> при каждом изменении и подставляет их обратно при
-  следующей загрузке страницы.
-</p>
-
-<p>
-  Сохранённые данные накладываются поверх начальных значений из <code>Youla.data</code> — так новые
-  поля, добавленные в фабрику позже, появятся даже у посетителей со старым <code>localStorage</code>.
-</p>
-
-<p>
-  Если данные должны быть доступны серверу, замените модификатор на <code>.cookie</code>. Если
-  персистентность не нужна, уберите модификатор — оставьте обычный <code>v-data="todo"</code>.
-</p>
+  </div>
+</div>
 
 <script>
   document.addEventListener('youla:init', () => {
@@ -106,24 +136,5 @@ document.addEventListener('youla:init', () =&gt; {
     }));
   });
 </script>
-
-<div class="demo" v-data.local="todo">
-  <p>Добавить задачу:</p>
-  <input placeholder="Введите новую задачу..." v-prop="value" v-bind="field" />
-  <button type="button" v-bind="adder">Добавить</button>
-
-  <div v-show="tasks.length" hidden>
-    <p>Список задач:</p>
-    <ul>
-      <li v-each="(task, index) in tasks">
-        <label>
-          <input type="checkbox" v-bind="checkbox"> <span v-bind="status"></span>
-        </label>
-        <button v-bind="remover">Удалить</button>
-      </li>
-    </ul>
-    <button v-bind="clearer">Очистить всё</button>
-  </div>
-</div>
 
 <%= _.template(require('./parts/footer.html').default)(data) %>

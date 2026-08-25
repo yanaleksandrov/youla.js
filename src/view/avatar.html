@@ -11,7 +11,42 @@
   пользователя.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+    <button type="button" class="example__tab" data-tab="js">JS</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo example-avatar" v-data="avatar">
+      <div class="avatar-circle" v-bind="picture">
+        <span v-bind="initials" hidden></span>
+      </div>
+
+      <input type="text" placeholder="Введите имя" v-bind="field">
+
+      <input type="file" accept="image/*" v-bind="uploader">
+
+      <button type="button" v-bind="remover" hidden>Удалить</button>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;div class=&quot;demo example-avatar&quot; v-data=&quot;avatar&quot;&gt;
+  &lt;div class=&quot;avatar-circle&quot; v-bind=&quot;picture&quot;&gt;
+    &lt;span v-bind=&quot;initials&quot; hidden&gt;&lt;/span&gt;
+  &lt;/div&gt;
+
+  &lt;input type=&quot;text&quot; placeholder=&quot;Введите имя&quot; v-bind=&quot;field&quot;&gt;
+
+  &lt;input type=&quot;file&quot; accept=&quot;image/*&quot; v-bind=&quot;uploader&quot;&gt;
+
+  &lt;button type=&quot;button&quot; v-bind=&quot;remover&quot; hidden&gt;Удалить&lt;/button&gt;
+&lt;/div&gt;
+</pre>
+  </div>
+  <div class="example__panel" data-panel="js">
+    <pre>
 Youla.data(&#39;avatar&#39;, () =&gt; ({
   name: &#39;&#39;,
   image: &#39;&#39;,
@@ -50,20 +85,8 @@ Youla.data(&#39;avatar&#39;, () =&gt; ({
   },
 }))
 </pre>
-
-<pre>
-&lt;div class=&quot;demo example-avatar&quot; v-data=&quot;avatar&quot;&gt;
-  &lt;div class=&quot;avatar-circle&quot; v-bind=&quot;picture&quot;&gt;
-    &lt;span v-bind=&quot;initials&quot; hidden&gt;&lt;/span&gt;
-  &lt;/div&gt;
-
-  &lt;input type=&quot;text&quot; placeholder=&quot;Введите имя&quot; v-bind=&quot;field&quot;&gt;
-
-  &lt;input type=&quot;file&quot; accept=&quot;image/*&quot; v-bind=&quot;uploader&quot;&gt;
-
-  &lt;button type=&quot;button&quot; v-bind=&quot;remover&quot; hidden&gt;Удалить&lt;/button&gt;
-&lt;/div&gt;
-</pre>
+  </div>
+</div>
 
 <style>
   .example-avatar {
@@ -87,18 +110,6 @@ Youla.data(&#39;avatar&#39;, () =&gt; ({
     font-weight: 600;
   }
 </style>
-
-<div class="demo example-avatar" v-data="avatar">
-  <div class="avatar-circle" v-bind="picture">
-    <span v-bind="initials" hidden></span>
-  </div>
-
-  <input type="text" placeholder="Введите имя" v-bind="field">
-
-  <input type="file" accept="image/*" v-bind="uploader">
-
-  <button type="button" v-bind="remover" hidden>Удалить</button>
-</div>
 
 <p>
   <code>image</code> хранит выбранный файл как <code>data:image/*</code> — этого достаточно для

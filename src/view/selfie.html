@@ -24,7 +24,30 @@
   читать прямо в <code>v-show</code>, чтобы показать причину, по которой камера не заработала.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo example-stream" v-data>
+      <video v-ref="video" autoplay playsinline muted></video>
+      <img v-ref="image" alt="Селфи">
+
+      <p class="example-stream__error" v-show="$stream.error" hidden>
+        <span v-show="$stream.error === 'denied'">Доступ к камере запрещён — разрешите его в настройках браузера.</span>
+        <span v-show="$stream.error === 'unavailable'">Не удалось получить доступ к камере.</span>
+        <span v-show="$stream.error === 'unsupported'">Браузер не поддерживает камеру.</span>
+      </p>
+
+      <div class="example-stream__actions">
+        <button type="button" @click="$stream.snap()">Сделать снимок</button>
+        <button type="button" @click="$stream.stop()">Остановить камеру</button>
+      </div>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-data&gt;
   &lt;video v-ref=&quot;video&quot; autoplay playsinline muted&gt;&lt;/video&gt;
   &lt;img v-ref=&quot;image&quot; alt=&quot;Селфи&quot;&gt;
@@ -39,6 +62,8 @@
   &lt;button type=&quot;button&quot; @click=&quot;$stream.stop()&quot;&gt;Остановить камеру&lt;/button&gt;
 &lt;/div&gt;
 </pre>
+  </div>
+</div>
 
 <style>
   .example-stream {
@@ -65,22 +90,6 @@
     color: #d64545;
   }
 </style>
-
-<div class="demo example-stream" v-data>
-  <video v-ref="video" autoplay playsinline muted></video>
-  <img v-ref="image" alt="Селфи">
-
-  <p class="example-stream__error" v-show="$stream.error" hidden>
-    <span v-show="$stream.error === 'denied'">Доступ к камере запрещён — разрешите его в настройках браузера.</span>
-    <span v-show="$stream.error === 'unavailable'">Не удалось получить доступ к камере.</span>
-    <span v-show="$stream.error === 'unsupported'">Браузер не поддерживает камеру.</span>
-  </p>
-
-  <div class="example-stream__actions">
-    <button type="button" @click="$stream.snap()">Сделать снимок</button>
-    <button type="button" @click="$stream.stop()">Остановить камеру</button>
-  </div>
-</div>
 
 <p>
   При первом клике на «Сделать снимок» браузер спросит разрешение на доступ к камере — это

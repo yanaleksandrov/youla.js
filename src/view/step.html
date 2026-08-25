@@ -78,7 +78,46 @@
   например, для отладки.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" id="step-demo" v-data>
+      <div class="progress-bar">
+        <i :style="{ width: $step.progress().completion }"></i>
+      </div>
+
+      <ul class="dots">
+        <li v-each="n in 3" :class="{ active: $step.isStep(n-1) }" v-text="n"></li>
+      </ul>
+
+      <div v-step="name.trim().length > 0">
+        <label>Ваше имя</label>
+        <input v-prop="name" placeholder="Иван">
+      </div>
+
+      <div v-step="/.+@.+\..+/.test(email)" hidden>
+        <label>Email</label>
+        <input v-prop="email" placeholder="ivan@example.com">
+      </div>
+
+      <div v-step="true" hidden>
+        Готово! <span v-text="name"></span>, мы отправим подтверждение на <span v-text="email"></span>.
+        <p>Мастер завершён.</p>
+      </div>
+
+      <p>
+        <button type="button" :disabled="$step.cannotGoBack()" @click="$step.goBack()" disabled>Назад</button>
+        <button type="button" :disabled="$step.cannotGoNext()" @click="$step.goNext()" v-show="$step.isNotLast()" disabled>Далее</button>
+      </p>
+
+      <pre v-text="JSON.stringify($step.getState(), null, 2)"></pre>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-data&gt;
   &lt;div class=&quot;progress-bar&quot;&gt;
     &lt;i :style=&quot;{ width: $step.progress().completion }&quot;&gt;&lt;/i&gt;
@@ -111,6 +150,8 @@
   &lt;pre v-text=&quot;JSON.stringify($step.getState(), null, 2)&quot;&gt;&lt;/pre&gt;
 &lt;/div&gt;
 </pre>
+  </div>
+</div>
 
 <style>
   #step-demo .dots {
@@ -148,38 +189,6 @@
     transition: width 300ms;
   }
 </style>
-
-<div class="demo" id="step-demo" v-data>
-  <div class="progress-bar">
-    <i :style="{ width: $step.progress().completion }"></i>
-  </div>
-
-  <ul class="dots">
-    <li v-each="n in 3" :class="{ active: $step.isStep(n-1) }" v-text="n"></li>
-  </ul>
-
-  <div v-step="name.trim().length > 0">
-    <label>Ваше имя</label>
-    <input v-prop="name" placeholder="Иван">
-  </div>
-
-  <div v-step="/.+@.+\..+/.test(email)" hidden>
-    <label>Email</label>
-    <input v-prop="email" placeholder="ivan@example.com">
-  </div>
-
-  <div v-step="true" hidden>
-    Готово! <span v-text="name"></span>, мы отправим подтверждение на <span v-text="email"></span>.
-    <p>Мастер завершён.</p>
-  </div>
-
-  <p>
-    <button type="button" :disabled="$step.cannotGoBack()" @click="$step.goBack()" disabled>Назад</button>
-    <button type="button" :disabled="$step.cannotGoNext()" @click="$step.goNext()" v-show="$step.isNotLast()" disabled>Далее</button>
-  </p>
-
-  <pre v-text="JSON.stringify($step.getState(), null, 2)"></pre>
-</div>
 
 <p>
   Точки-индикаторы кликабельны и вызывают <code>$step.goto(n)</code> напрямую — в отличие от

@@ -7,6 +7,20 @@
         link.classList.add('document__menu-link--active');
       }
     });
+
+    document.addEventListener('click', event => {
+      const tab = event.target.closest('.example__tab');
+      if (!tab) {
+        return;
+      }
+
+      const example = tab.closest('.example');
+      const panel   = tab.dataset.tab;
+
+      example.querySelectorAll('.example__tab').forEach(el => el.classList.toggle('is-active', el === tab));
+      example.querySelectorAll('.example__panel').forEach(el => el.classList.toggle('is-active', el.dataset.panel === panel));
+    });
+
   </script>
 </body>
 </html>

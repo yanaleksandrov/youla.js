@@ -17,16 +17,25 @@
   JS-выражение — это обычная строка-имя, под которым элемент становится доступен в <code>$refs</code>.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data>
+      <input v-ref="email" type="email" placeholder="you@example.com">
+      <button @click="$refs.email.focus()">Перейти к полю</button>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-data&gt;
   &lt;input v-ref=&quot;email&quot; type=&quot;email&quot; placeholder=&quot;you@example.com&quot;&gt;
   &lt;button @click=&quot;$refs.email.focus()&quot;&gt;Перейти к полю&lt;/button&gt;
 &lt;/div&gt;
 </pre>
-
-<div class="demo" v-data>
-  <input v-ref="email" type="email" placeholder="you@example.com">
-  <button @click="$refs.email.focus()">Перейти к полю</button>
+  </div>
 </div>
 
 <p>
@@ -51,14 +60,23 @@
   директивой — он ничего не меняет в её работе, просто добавляет элементу имя:
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data="{ label: 'Обычный текст' }">
+      <div v-text="label" v-ref="labelEl"></div>
+      <button @click="console.log($refs.labelEl)">Показать элемент в консоли</button>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-text=&quot;label&quot; v-ref=&quot;labelEl&quot;&gt;&lt;/div&gt;
 &lt;button @click=&quot;console.log($refs.labelEl)&quot;&gt;Показать элемент в консоли&lt;/button&gt;
 </pre>
-
-<div class="demo" v-data="{ label: 'Обычный текст' }">
-  <div v-text="label" v-ref="labelEl"></div>
-  <button @click="console.log($refs.labelEl)">Показать элемент в консоли</button>
+  </div>
 </div>
 
 <h2>Динамические имена через v-bind</h2>
@@ -69,7 +87,35 @@
   цикла <a href="/v-each"><code>v-each</code></a> своё уникальное имя.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+    <button type="button" class="example__tab" data-tab="js">JS</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data="taskList">
+      <ul>
+        <li v-each="task in tasks" v-bind="row(task)">
+          <span v-text="task.title"></span>
+        </li>
+      </ul>
+      <button type="button" @click="highlight(2)">Показать вторую задачу</button>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;ul v-data=&quot;taskList&quot;&gt;
+  &lt;li v-each=&quot;task in tasks&quot; v-bind=&quot;row(task)&quot;&gt;
+    &lt;span v-text=&quot;task.title&quot;&gt;&lt;/span&gt;
+  &lt;/li&gt;
+
+  &lt;button @click=&quot;highlight(2)&quot;&gt;Показать вторую задачу&lt;/button&gt;
+&lt;/ul&gt;
+</pre>
+  </div>
+  <div class="example__panel" data-panel="js">
+    <pre>
 Youla.data(&#39;taskList&#39;, () =&gt; ({
   tasks: [
     { id: 1, title: &#39;Написать отчёт&#39; },
@@ -87,16 +133,8 @@ Youla.data(&#39;taskList&#39;, () =&gt; ({
   },
 }))
 </pre>
-
-<pre>
-&lt;ul v-data=&quot;taskList&quot;&gt;
-  &lt;li v-each=&quot;task in tasks&quot; v-bind=&quot;row(task)&quot;&gt;
-    &lt;span v-text=&quot;task.title&quot;&gt;&lt;/span&gt;
-  &lt;/li&gt;
-
-  &lt;button @click=&quot;highlight(2)&quot;&gt;Показать вторую задачу&lt;/button&gt;
-&lt;/ul&gt;
-</pre>
+  </div>
+</div>
 
 <script>
   document.addEventListener('youla:init', () => {
@@ -117,15 +155,6 @@ Youla.data(&#39;taskList&#39;, () =&gt; ({
     }));
   });
 </script>
-
-<div class="demo" v-data="taskList">
-  <ul>
-    <li v-each="task in tasks" v-bind="row(task)">
-      <span v-text="task.title"></span>
-    </li>
-  </ul>
-  <button type="button" @click="highlight(2)">Показать вторую задачу</button>
-</div>
 
 <p>
   <code>highlight()</code> обращается к <code>this.$refs</code> напрямую, поэтому click-выражение

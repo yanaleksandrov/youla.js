@@ -40,6 +40,11 @@ document.addEventListener('youla:init', ()=> {
       return this.labels[this.level()];
     },
     check(value) {
+      // Whitespace isn't part of any charset above and would otherwise count toward length for free.
+      if (/\s/.test(value)) {
+        value = this.value = value.replace(/\s/g, '');
+      }
+
       let matchCount = 0;
       // One point per character class plus one for the length rule — fixed, unlike the old
       // per-call total, which only counted the length rule's point when it passed. That let a
@@ -168,6 +173,45 @@ document.addEventListener('youla:init', ()=> {
       this.anchor = index;
     },
   }));
+
+  /**
+   * Custom fields builder.
+   *
+   * @since 1.0
+   */
+  Youla.data('builder', () => {
+    // Shared by addRule()/removeRule(): replaces group "key"'s rules with whatever "transform"
+    // returns, leaving every other group untouched. Reassigning "groups" wholesale (not the
+    // group/its rules in place) is what makes v-each notice the change and re-render.
+    const updateRules = (groups, key, transform) => groups.map((group, index) => index !== key ? group : {
+      ...group,
+      rules: transform(group.rules),
+    });
+
+    return {
+      default: {
+        field: 'post',
+        operator: '===',
+        value: '',
+      },
+      groups: [],
+      addGroup() {
+        this.groups = [ ...this.groups, { rules: [ { ...this.default } ] } ];
+      },
+      removeGroup(index) {
+        this.groups = this.groups.filter((group, key) => key !== index);
+      },
+      addRule(key) {
+        this.groups = updateRules(this.groups, key, rules => [ ...rules, { ...this.default } ]);
+      },
+      removeRule(key, index) {
+        this.groups = updateRules(this.groups, key, rules => rules.filter((rule, ruleIndex) => ruleIndex !== index));
+      },
+      submit() {
+        console.log(JSON.parse(JSON.stringify(this.groups)));
+      },
+    };
+  });
 
   /**
    * Code syntax highlight

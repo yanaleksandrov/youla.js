@@ -1,0 +1,222 @@
+<% var data = {
+  title: "Условия отображения (builder)"
+}; %>
+<%= _.template(require('./parts/header.html').default)(data) %>
+
+<h1>Условия отображения (builder)</h1>
+
+<p>
+  <code>builder</code> — конструктор условной логики: группы правил, где группы объединены через
+  <strong>ИЛИ</strong>, а правила внутри одной группы — через <strong>И</strong>. Ровно та же схема,
+  что в условной логике ACF или Gravity Forms: «показать поле, если (условие 1 И условие 2) ИЛИ
+  (условие 3)».
+</p>
+
+<p>
+  Каждое правило — это <code>{ field, operator, value }</code>: что сравнивать, каким оператором
+  и с каким значением. Сама структура ни к чему не привязана — <code>submit()</code> просто отдаёт
+  готовый JSON, который дальше можно отправить на сервер, например через
+  <a href="/ajax"><code>$ajax</code></a>.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo example-builder" v-data="builder">
+      <div class="builder-toolbar">
+        <button type="button" @click="addGroup()">+ Группа (ИЛИ)</button>
+        <button type="button" @click="submit()">Сохранить</button>
+      </div>
+
+      <div v-each="(group, key) in groups" class="builder-group">
+        <div class="builder-group__header">
+          <span class="builder-group__title" v-text="key === 0 ? 'Если' : 'Или, если'"></span>
+          <button type="button" @click="addRule(key)">+ Правило (И)</button>
+          <button type="button" class="is-ghost" @click="removeGroup(key)">Удалить группу</button>
+        </div>
+
+        <div v-each="(rule, index) in group.rules" class="builder-rule">
+          <select :value="rule.field" @change="rule.field = $el.value">
+            <option value="post">Тип записи</option>
+            <option value="post_status">Статус записи</option>
+            <option value="user_role">Роль пользователя</option>
+            <option value="page_template">Шаблон страницы</option>
+          </select>
+          <select :value="rule.operator" @change="rule.operator = $el.value">
+            <option value="===">равно</option>
+            <option value="!=">не равно</option>
+            <option value="contains">содержит</option>
+          </select>
+          <input type="text" :value="rule.value" @input="rule.value = $el.value" placeholder="Значение">
+          <button type="button" class="builder-rule__remove" @click="removeRule(key, index)">×</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;div class=&quot;demo example-builder&quot; v-data=&quot;builder&quot;&gt;
+  &lt;div class=&quot;builder-toolbar&quot;&gt;
+    &lt;button type=&quot;button&quot; @click=&quot;addGroup()&quot;&gt;+ Группа (ИЛИ)&lt;/button&gt;
+    &lt;button type=&quot;button&quot; @click=&quot;submit()&quot;&gt;Сохранить&lt;/button&gt;
+  &lt;/div&gt;
+
+  &lt;div v-each=&quot;(group, key) in groups&quot; class=&quot;builder-group&quot;&gt;
+    &lt;div class=&quot;builder-group__header&quot;&gt;
+      &lt;span class=&quot;builder-group__title&quot; v-text=&quot;key === 0 ? &#39;Если&#39; : &#39;Или, если&#39;&quot;&gt;&lt;/span&gt;
+      &lt;button type=&quot;button&quot; @click=&quot;addRule(key)&quot;&gt;+ Правило (И)&lt;/button&gt;
+      &lt;button type=&quot;button&quot; class=&quot;is-ghost&quot; @click=&quot;removeGroup(key)&quot;&gt;Удалить группу&lt;/button&gt;
+    &lt;/div&gt;
+
+    &lt;div v-each=&quot;(rule, index) in group.rules&quot; class=&quot;builder-rule&quot;&gt;
+      &lt;select :value=&quot;rule.field&quot; @change=&quot;rule.field = $el.value&quot;&gt;
+        &lt;option value=&quot;post&quot;&gt;Тип записи&lt;/option&gt;
+        &lt;option value=&quot;post_status&quot;&gt;Статус записи&lt;/option&gt;
+        &lt;option value=&quot;user_role&quot;&gt;Роль пользователя&lt;/option&gt;
+        &lt;option value=&quot;page_template&quot;&gt;Шаблон страницы&lt;/option&gt;
+      &lt;/select&gt;
+      &lt;select :value=&quot;rule.operator&quot; @change=&quot;rule.operator = $el.value&quot;&gt;
+        &lt;option value=&quot;===&quot;&gt;равно&lt;/option&gt;
+        &lt;option value=&quot;!=&quot;&gt;не равно&lt;/option&gt;
+        &lt;option value=&quot;contains&quot;&gt;содержит&lt;/option&gt;
+      &lt;/select&gt;
+      &lt;input type=&quot;text&quot; :value=&quot;rule.value&quot; @input=&quot;rule.value = $el.value&quot; placeholder=&quot;Значение&quot;&gt;
+      &lt;button type=&quot;button&quot; class=&quot;builder-rule__remove&quot; @click=&quot;removeRule(key, index)&quot;&gt;×&lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+</pre>
+  </div>
+</div>
+
+<style>
+  /* The toolbar sits before the v-each block in the DOM (see the note below), but "order"
+     displays it last, matching where it visually belongs. */
+  .example-builder { display: flex; flex-direction: column; }
+  .example-builder .builder-toolbar { order: 2; display: flex; gap: .5rem; margin-top: 1rem; }
+  .example-builder .builder-group {
+    order: 1;
+    padding: .8rem;
+    margin-bottom: .8rem;
+    border: 1px solid var(--line);
+    border-radius: .35rem;
+    background: var(--paper);
+  }
+  .example-builder .builder-group__header { display: flex; align-items: center; gap: .5rem; margin-bottom: .6rem; }
+  .example-builder .builder-group__title { flex: 1; font-weight: 600; font-size: var(--fs-sm); }
+  .example-builder .builder-group button.is-ghost { background: none; border-color: var(--line); color: var(--ink-muted); }
+  .example-builder .builder-rule { display: flex; gap: .4rem; margin-bottom: .4rem; }
+  .example-builder .builder-rule__remove { flex: none; border: 0; background: none; cursor: pointer; font-size: 1rem; }
+</style>
+
+<p>
+  Важно при переносе разметки под свой дизайн: не ставьте кнопки «+ Группа» / «Сохранить» <em>после</em>
+  списка групп (и «+ Правило» / «Удалить группу» — после списка правил внутри группы). Они должны идти
+  раньше самого <code>v-each</code>, иначе пропадут при первом же рендере. В примере панель действий
+  всё равно показана внизу, под группами — это сделано через CSS (<code>order</code> у flex-контейнера),
+  а не через порядок в разметке.
+</p>
+
+<h2>Как подключить в своём проекте</h2>
+
+<p>
+  Скопируйте разметку из вкладки HTML и повесьте <code>v-data="builder"</code> на общий контейнер —
+  дальше конструктор работает сам, без дополнительного JS. Поля выбора — обычные
+  <code>&lt;select&gt;</code>/<code>&lt;input&gt;</code>, так что набор условий (<code>field</code>)
+  и операторов (<code>operator</code>) под свой проект меняется прямо в разметке — добавьте или
+  замените <code>&lt;option&gt;</code>, ничего в самом компоненте трогать не нужно.
+</p>
+
+<p>
+  Шаблон нового правила (какие значения ставятся по умолчанию при «+ Группа» / «+ Правило») задаётся
+  в <code>default</code> — измените его значения в исходнике компонента под свои условия и операторы,
+  если стандартные (<code>post</code>/<code>===</code>) не подходят.
+</p>
+
+<h2>Что делать с результатом</h2>
+
+<p>
+  <code>submit()</code> в примере просто печатает итоговый <code>groups</code> в консоль — в реальном
+  проекте замените его тело на отправку этих данных на сервер, например через
+  <a href="/ajax"><code>$ajax</code></a>. Сам конструктор ничего не проверяет и не применяет условия —
+  он только собирает их в JSON такого вида:
+</p>
+
+<pre>
+[
+  { "rules": [
+    { "field": "post_status", "operator": "!=", "value": "contributor" },
+    { "field": "user_role", "operator": "===", "value": "editor" }
+  ] },
+  { "rules": [
+    { "field": "page_template", "operator": "contains", "value": "landing" }
+  ] }
+]
+</pre>
+
+<p>
+  Применять условия — задача вашего проекта (на сервере или в браузере). Группы объединяются через
+  ИЛИ, правила внутри группы — через И, так что проверка обычно выглядит так:
+</p>
+
+<pre>
+function matches(groups, context) {
+  return groups.some(group =>
+    group.rules.every(rule => {
+      const actual = context[rule.field];
+
+      switch (rule.operator) {
+        case '===':     return actual === rule.value;
+        case '!=':      return actual !== rule.value;
+        case 'contains': return String(actual).includes(rule.value);
+      }
+    })
+  );
+}
+
+// matches(groups, { post_status: 'draft', user_role: 'editor' }) → true
+</pre>
+
+<h2>Свойства и методы builder вкратце</h2>
+
+<table>
+  <tbody>
+    <tr>
+      <th>Имя</th>
+      <th>Когда использовать</th>
+    </tr>
+    <tr>
+      <td><code>groups</code></td>
+      <td>Массив групп правил (ИЛИ между группами). У каждой группы — свой <code>rules</code> (И внутри группы)</td>
+    </tr>
+    <tr>
+      <td><code>default</code></td>
+      <td>Заготовка нового правила — <code>{ field, operator, value }</code>. Копируется при добавлении новой группы/правила</td>
+    </tr>
+    <tr>
+      <td><code>addGroup()</code></td>
+      <td>Добавляет новую группу с одним правилом по умолчанию</td>
+    </tr>
+    <tr>
+      <td><code>removeGroup(index)</code></td>
+      <td>Удаляет группу по индексу</td>
+    </tr>
+    <tr>
+      <td><code>addRule(key)</code></td>
+      <td>Добавляет правило по умолчанию в группу <code>key</code></td>
+    </tr>
+    <tr>
+      <td><code>removeRule(key, index)</code></td>
+      <td>Удаляет правило <code>index</code> из группы <code>key</code></td>
+    </tr>
+    <tr>
+      <td><code>submit()</code></td>
+      <td>Отдаёт итоговую структуру условий — в этом примере просто в консоль, в реальном проекте замените на отправку на сервер</td>
+    </tr>
+  </tbody>
+</table>
+
+<%= _.template(require('./parts/footer.html').default)(data) %>

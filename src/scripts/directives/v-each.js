@@ -70,7 +70,12 @@ directive('each', (el, output, attribute, component, additionalHelperVariables =
     clone.removeAttribute('v-each');
 
     (async () => {
-      clone.__x_for_data = {...otherVariables, [item]: dataItem, [index]: +key || key};
+      // "+key || key" would wrongly fall back to the string "0" for the very first entry — 0 is
+      // itself falsy, so only fall back when the key genuinely isn't numeric (e.g. an object
+      // keyed by non-numeric strings), not just when it converts to a falsy number.
+      const numericKey = +key;
+
+      clone.__x_for_data = {...otherVariables, [item]: dataItem, [index]: Number.isNaN(numericKey) ? key : numericKey};
 
       await component.initialize(clone);
 

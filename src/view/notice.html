@@ -1,0 +1,143 @@
+<% var data = {
+  title: "Уведомления (notice)"
+}; %>
+<%= _.template(require('./parts/header.html').default)(data) %>
+
+<h1>Уведомления (notice)</h1>
+
+<p>
+  <code>notice</code> — готовая очередь toast-уведомлений: пять типов (<code>info</code>,
+  <code>success</code>, <code>warning</code>, <code>error</code>, <code>loading</code>), кольцевой
+  индикатор обратного отсчёта на каждой карточке и закрытие как по таймеру, так и кликом. Наведите
+  курсор на уведомление — таймер автозакрытия приостановится, пока вы читаете сообщение.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data>
+      <button type="button" @click="$notice.info('Форма сохранена')">Info</button>
+      <button type="button" @click="$notice.success('Изменения применены')">Success</button>
+      <button type="button" @click="$notice.warning('Проверьте заполненные поля')">Warning</button>
+      <button type="button" @click="$notice.error('Не удалось сохранить')">Error</button>
+      <button type="button" @click="$notice.loading('Загрузка данных…')">Loading</button>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;div v-data&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;$notice.info('Форма сохранена')&quot;&gt;Info&lt;/button&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;$notice.success('Изменения применены')&quot;&gt;Success&lt;/button&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;$notice.warning('Проверьте заполненные поля')&quot;&gt;Warning&lt;/button&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;$notice.error('Не удалось сохранить')&quot;&gt;Error&lt;/button&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;$notice.loading('Загрузка данных…')&quot;&gt;Loading&lt;/button&gt;
+&lt;/div&gt;
+
+&lt;!-- это в footer --&gt;
+&lt;div class=&quot;notice-root&quot; v-data=&quot;notice&quot; @mouseenter=&quot;pause()&quot; @mouseleave=&quot;resume()&quot;&gt;
+  &lt;div v-each=&quot;(item, id) in items&quot; class=&quot;notice__item&quot; :class=&quot;item.classes()&quot;&gt;
+    &lt;svg class=&quot;notice__spinner&quot; viewBox=&quot;0 0 24 24&quot; width=&quot;24&quot; height=&quot;24&quot;&gt;
+      &lt;circle cx=&quot;12&quot; cy=&quot;12&quot; r=&quot;11&quot; v-countdown=&quot;item&quot;&gt;&lt;/circle&gt;
+    &lt;/svg&gt;
+    &lt;span class=&quot;notice__message&quot; v-text=&quot;item.message&quot;&gt;&lt;/span&gt;
+    &lt;button type=&quot;button&quot; class=&quot;notice__close&quot; v-show=&quot;item.closable&quot; @click=&quot;close(id)&quot;&gt;×&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+</pre>
+  </div>
+</div>
+
+<p>
+  Уведомления появятся в правом нижнем углу страницы — там же, где они будут появляться в реальном
+  приложении. Контейнер <code>v-data</code> в примере ни при чём — он просто даёт кнопкам, внутри
+  которых можно писать <code>@click</code>; <code>$notice</code> работает одинаково из любого
+  места страницы, а не только отсюда.
+</p>
+
+<h2>Как использовать в своём проекте</h2>
+
+<p>
+  Никакой настройки не требуется — просто вызывайте нужный метод там, где у вас в коде происходит
+  событие, о котором должен узнать пользователь: в <code>@click</code>, в обработчике ответа
+  <a href="/ajax"><code>$ajax</code></a>-запроса или в любом другом методе компонента на странице.
+</p>
+
+<table>
+  <tbody>
+    <tr>
+      <th>Метод</th>
+      <th>Когда вызывать</th>
+    </tr>
+    <tr>
+      <td><code>$notice.info(message)</code></td>
+      <td>Обычное уведомление</td>
+    </tr>
+    <tr>
+      <td><code>$notice.success(message)</code></td>
+      <td>После успешного действия — сохранили, отправили, обновили</td>
+    </tr>
+    <tr>
+      <td><code>$notice.warning(message)</code></td>
+      <td>Предупреждение, не требующее остановки процесса</td>
+    </tr>
+    <tr>
+      <td><code>$notice.error(message)</code></td>
+      <td>Ошибка</td>
+    </tr>
+    <tr>
+      <td><code>$notice.loading(message)</code></td>
+      <td>Процесс идёт — например, ожидание ответа сервера</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  Настроить можно немногое, и всё — простыми присвоениями или вызовами. Разметку самих карточек и
+  их стили можно менять полностью под свой дизайн — они лежат в <code>parts/footer.html</code>
+  (общем шаблоне сайта, см. пример выше) и <code>styles.scss</code>, классы
+  <code>notice-root</code> и <code>notice__*</code>.
+</p>
+
+<table>
+  <tbody>
+    <tr>
+      <th>Свойство / метод</th>
+      <th>Что делает</th>
+    </tr>
+    <tr>
+      <td><code>$notice.duration = 5000</code></td>
+      <td>Через сколько миллисекунд уведомление закрывается само (по умолчанию 7000). Действует на уведомления, показанные после изменения</td>
+    </tr>
+    <tr>
+      <td><code>$notice.close(id)</code></td>
+      <td>Закрыть конкретное уведомление раньше времени — тот же вызов, что уже стоит на кнопке «×» в карточке</td>
+    </tr>
+    <tr>
+      <td><code>$notice.items</code></td>
+      <td>Текущая очередь уведомлений — пригодится, если нужно вывести её (или счётчик) где-то ещё на странице</td>
+    </tr>
+    <tr>
+      <td><code>$notice.add(message, type)</code></td>
+      <td>Показывает уведомление с типом, переданным строкой — на нём построены пять методов выше. Пригодится, если тип определяется динамически</td>
+    </tr>
+    <tr>
+      <td><code>item.classes()</code></td>
+      <td>Готовая строка классов для карточки уведомления (<code>notice__item--info</code>, <code>--success</code> и т.д.) — подключайте через <code>:class</code>, если переписываете разметку карточки</td>
+    </tr>
+  </tbody>
+</table>
+
+<blockquote>
+  <p>Что нельзя убирать при кастомизации разметки</p>
+  <p>
+    Меняя разметку карточки, сохраните перебор <code>v-each="(item, id) in items"</code>, вызов
+    <code>close(id)</code> на кнопке закрытия и атрибуты <code>@mouseenter="pause()"</code> /
+    <code>@mouseleave="resume()"</code> на контейнере — без них уведомления перестанут закрываться
+    (и по кнопке, и по таймеру), а пауза при наведении курсора не будет работать.
+  </p>
+</blockquote>
+
+<%= _.template(require('./parts/footer.html').default)(data) %>

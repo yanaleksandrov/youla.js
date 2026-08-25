@@ -225,7 +225,9 @@ export default class Component {
     } else if (!literal) {
       try {
         ({ output, deps } = this.evaluate(expression, additionalHelperVariables));
-      } catch (error) {}
+      } catch (error) {
+        output = undefined;
+      }
     }
 
     return { output, deps };

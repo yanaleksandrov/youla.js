@@ -1,6 +1,17 @@
 
     </div>
   </div>
+
+  <div class="notice-root" v-data="notice" @mouseenter="pause()" @mouseleave="resume()">
+    <div v-each="(item, id) in items" class="notice__item" :class="item.classes()">
+      <svg class="notice__spinner" viewBox="0 0 24 24" width="24" height="24">
+        <circle cx="12" cy="12" r="11" v-countdown="item"></circle>
+      </svg>
+      <span class="notice__message" v-text="item.message"></span>
+      <button type="button" class="notice__close" v-show="item.closable" @click="close(id)">×</button>
+    </div>
+  </div>
+
   <script>
     document.querySelectorAll('.document__menu-link').forEach(function (link) {
       if (link.getAttribute('href') === window.location.pathname) {

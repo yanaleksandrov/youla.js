@@ -442,107 +442,131 @@ document.addEventListener('youla:init', ()=> {
   });
 
   /**
-   * Notifications system
+   * Notifications system: a single `v-data="notice"` container, rendered once in
+   * parts/footer.html, holds the real queue. `$notice` (registered below as a `Youla.variable()`
+   * rather than a `Youla.method()`, so it's reachable from any expression — not just `@event`
+   * ones) always resolves to *that* container's own reactive data, no matter which component the
+   * calling expression happens to live in — so `$notice.info('Saved')` works from literally any
+   * `v-data` on the page, not just from inside the notice container itself.
    *
    * @since 1.0
    */
-  Youla.method( 'notice', (e, el) => {
-    return {
-      items: [],
-      add(message) {
-        this.items.push({ id: e.timeStamp, type: e.detail.type, message });
-      },
-      remove(notification) {
-        console.log(notification)
-        console.log(this.items)
-        this.items = this.items.filter(i => i.id !== notification.id);
-      },
-    }
-  })
+  Youla.variable('notice', () => document.querySelector('[v-data="notice"]')?.__x?.data);
+
   Youla.data('notice', () => ({
     items: {},
-    duration: 4000,
+    duration: 7000,
+    hovering: false,
     info( message ) {
-      this.notify( message, 'info' );
+      this.add( message, 'info' );
     },
     success( message ) {
-      this.notify( message, 'success' );
+      this.add( message, 'success' );
     },
     warning( message ) {
-      this.notify( message, 'warning' );
+      this.add( message, 'warning' );
     },
     error( message ) {
-      this.notify( message, 'error' );
+      this.add( message, 'error' );
     },
     loading( message ) {
-      this.notify( message, 'loading' );
+      this.add( message, 'loading' );
+    },
+    // @mouseenter on the container: freezes every item's countdown where it stood, so hovering
+    // in to read one doesn't lose the others to a timer race either.
+    pause() {
+      this.hovering = true;
+
+      Object.values(this.items).forEach(item => {
+        if ( item.timer ) {
+          clearTimeout( item.timer );
+          item.timer     = null;
+          item.remaining = Math.max( 0, item.remaining - ( Date.now() - item.startedAt ) );
+        }
+      });
+    },
+    // @mouseleave: picks every countdown back up from where pause() froze it (including any
+    // item that arrived while hovering and was never scheduled in the first place).
+    resume() {
+      this.hovering = false;
+
+      Object.keys(this.items).forEach( id => this.schedule(id) );
+    },
+    schedule( id ) {
+      let item = this.items[id];
+      if ( item && !item.timer ) {
+        item.startedAt = Date.now();
+        item.timer     = setTimeout( () => this.close(id), item.remaining );
+      }
+    },
+    elapsed( item ) {
+      return ( item.duration - item.remaining ) + ( item.timer ? Date.now() - item.startedAt : 0 );
     },
     close( id ) {
-      if ( typeof this.items[id] !== 'undefined' ) {
-        this.items[id].selectors.push( 'hide' );
+      let item = this.items[id];
+      if ( typeof item !== 'undefined' ) {
+        clearTimeout( item.timer );
 
-        setTimeout( () => delete this.items[id], 1000 )
+        // v-each only re-renders when "items" itself is reassigned (see toasts.html's demo for
+        // the same pattern) — mutating a nested key in place never marks it as changed.
+        this.items = { ...this.items, [id]: { ...item, selectors: [ ...item.selectors, 'hide' ] } };
+
+        setTimeout( () => {
+          let { [id]: omit, ...rest } = this.items;
+          this.items = rest;
+        }, 1000 )
       }
     },
     add( message, type ) {
       if ( message ) {
-        let animationName = Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 5),
-          timestamp     = Date.now();
-        this.items[timestamp] = {
-          anim: `url("data:image/svg+xml;charset=UTF-8,%3csvg width='24' height='24' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3cstyle%3ecircle %7b animation: ${this.duration}ms ${animationName} linear;%7d%40keyframes ${animationName} %7bfrom%7bstroke-dasharray:0 70%7dto%7bstroke-dasharray:70 0%7d%7d%3c/style%3e%3ccircle cx='12' cy='12' r='11' stroke='%23000' stroke-opacity='.2' stroke-width='2'/%3e%3c/svg%3e")`,
+        let timestamp = Date.now();
+
+        // No per-item spinner markup here on purpose: it's a real inline <svg> in the template
+        // (see parts/footer.html), animated in CSS off "duration" — a real DOM animation, unlike
+        // a background-image SVG, can actually be paused (see the ":hover" rule in styles.scss).
+        this.items = { ...this.items, [timestamp]: {
           message: message,
           closable: true,
           selectors: [ type || 'info' ],
+          duration: this.duration,
+          remaining: this.duration,
+          startedAt: Date.now(),
+          timer: null,
           classes() {
             return this.selectors.map( x => 'notice__item--' + x ).join(' ')
           },
+        } };
+
+        if ( !this.hovering ) {
+          this.schedule(timestamp);
         }
-        setTimeout( () => this.close(timestamp), this.duration );
       }
     },
   }));
 
   /**
-   * Custom fields builder.
+   * Seeds a notice card's countdown-ring animation exactly once, right when its <circle> is
+   * created — bound to the bare loop item (not to any of its properties: `elapsed()`'s reads of
+   * `item.remaining`/`item.timer`/`item.startedAt` happen inside this directive's own plain JS,
+   * not inside a tracked expression), so it's never re-run by a later, unrelated refresh.
+   *
+   * That matters because a real DOM element's own CSS animation clock already tracks elapsed
+   * time on its own once started. pause()/resume() write item.timer/remaining on every item to
+   * freeze/resume its countdown — if this were a normal reactive `:style` binding instead, those
+   * writes would make Youla.js recompute and reapply a fresh "animation-delay" to every card's
+   * *already playing* animation, fighting the browser's own clock and making the ring visibly
+   * jump. Binding to the bare item means this directive's tracked reads are empty, so none of
+   * that ever marks it dirty — it only ever runs via the unconditional first render.
    *
    * @since 1.0
    */
-  Youla.data('builder', () => ({
-    default: {
-      location: 'post',
-      operator: '===',
-      value: 'editor',
-    },
-    groups: [
-      {
-        rules: [
-          {
-            location: 'post_status',
-            operator: '!=',
-            value: 'contributor',
-          },
-        ]
-      },
-    ],
-    addGroup() {
-      let pattern = JSON.parse(JSON.stringify(this.default));
-      this.groups.push({
-        rules: [ pattern ]
-      });
-    },
-    removeGroup(index) {
-      this.groups.splice(index, 1);
-    },
-    addRule(key) {
-      let pattern = JSON.parse(JSON.stringify(this.default));
-      this.groups[key].rules.push(pattern);
-    },
-    removeRule(key,index) {
-      this.groups[key].rules.splice(index, 1);
-    },
-    submit() {
-      let groups = JSON.parse(JSON.stringify(this.groups));
-      console.log(groups);
-    },
-  }));
+  Youla.directive('countdown', (el, item, attribute, component) => {
+    if (el._x_countdown) {
+      return;
+    }
+    el._x_countdown = true;
+
+    el.style.animationDuration = `${item.duration}ms`;
+    el.style.animationDelay    = `-${component.data.elapsed(item)}ms`;
+  });
 });

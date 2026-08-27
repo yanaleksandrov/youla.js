@@ -44,13 +44,17 @@ export default class Component {
     // Modifiers only ever live in the attribute's own name (e.g. "v-data.local"), never in its value, so find the entry by directive root instead of assuming it's literally named "v-data".
     const { expression, modifiers } = getAttributes(el).find(({ directive }) => directive === 'v-data') || { expression: '{}', modifiers: [] };
 
+    // v-data="object as o" gives the whole data object a local alias
+    const [, dataExpression, alias] = expression.trim().match(/^([\s\S]+?)\s+as\s+([A-Za-z_$][\w$]*)$/) || [];
+
     this.root          = el;
-    this.name          = expression.trim();
+    this.name          = (dataExpression ?? expression).trim();
+    this.alias         = alias || null;
     this.storageType   = isStorageModifier(modifiers) ? getStorageType(modifiers) : null;
     // A duration modifier (e.g. "v-data.cookie.30d") sits right after "cookie"/"local" in the modifier list, same convention as "v-prop"; omitting it means a session cookie or no expiration at all.
     this.storageExpire = this.storageType ? getNextModifier(modifiers, this.storageType) : null;
 
-    this.rawData = saferEval(expression || '{}', dataProviderContext);
+    this.rawData = saferEval(this.name || '{}', dataProviderContext);
     this.rawData = hydrateProps(el, this.rawData);
 
     // Rehydrate from whatever was persisted last time, on top of the fresh factory defaults, so new keys added later still show up for visitors with stale storage.
@@ -135,7 +139,7 @@ export default class Component {
    */
   resolveAttributes(el) {
     const self = this;
-    const additionalHelperVariables = {...getForData(el), ...this.getMagicVariables(el)};
+    const additionalHelperVariables = {...getForData(el), ...this.getAliasVariables(), ...this.getMagicVariables(el)};
 
     return getAttributes(el).flatMap(attribute => {
       if (attribute.directive !== 'v-bind') {
@@ -263,7 +267,7 @@ export default class Component {
     const self = this;
 
     domWalk(root, el => {
-      const additionalHelperVariables = {...getForData(el), ...self.getMagicVariables(el)};
+      const additionalHelperVariables = {...getForData(el), ...self.getAliasVariables(), ...self.getMagicVariables(el)};
 
       self.resolveAttributes(el).forEach(attribute => {
         let {directive, event, expression, modifiers, bind} = attribute;
@@ -312,7 +316,7 @@ export default class Component {
     debounce(() => {
       domWalk(self.root, el => {
         // An element inside a "v-each" clone only carries its loop variables on "__x_for_data", so resolve them here too or bindings referencing them stop updating after the first render.
-        const additionalHelperVariables = {...getForData(el), ...self.getMagicVariables(el)};
+        const additionalHelperVariables = {...getForData(el), ...self.getAliasVariables(), ...self.getMagicVariables(el)};
 
         self.resolveAttributes(el).forEach(attribute => {
           const { directive, bind } = attribute;
@@ -455,9 +459,22 @@ export default class Component {
     const data = getForData(target);
 
     saferEval(expression, contextData, {
+      ...this.getAliasVariables(),
       ...methods,
       ...data
     }, true);
+  }
+
+  /**
+   * Returns the component's local data alias (from "v-data="notice as n""), if any, keyed the
+   * way "v-each" loop variables are — so it's tracked for reactivity the same way bare
+   * properties are (see the "trackedHelperVariables" comment in evaluate()), unlike magic
+   * variables such as "$el", which skip tracking entirely.
+   *
+   * @returns {object} "{ [alias]: this.data }", or "{}" when "v-data" carries no alias.
+   */
+  getAliasVariables() {
+    return this.alias ? { [this.alias]: this.data } : {};
   }
 
   /**

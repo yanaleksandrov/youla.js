@@ -30,14 +30,23 @@
   <code>:style</code> пересчитывается заново при каждом изменении связанного с ним булевого флага.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data="{isRed: false}">
+      <button @click="isRed = !isRed" :style="isRed && {color: 'red'}">Toggle Color</button>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div class=&quot;demo&quot; v-data=&quot;{isRed: false}&quot;&gt;
   &lt;button @click=&quot;isRed = !isRed&quot; :style=&quot;isRed &amp;&amp; {color: &#039;red&#039;}&quot;&gt;Toggle Color&lt;/button&gt;
 &lt;/div&gt;
 </pre>
-
-<div class="demo" v-data="{isRed: false}">
-  <button @click="isRed = !isRed" :style="isRed && {color: 'red'}">Toggle Color</button>
+  </div>
 </div>
 
 <p>
@@ -59,7 +68,21 @@
   атрибутом в любом случае.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data>
+      <label>
+        <input type="checkbox" v-prop="agree"> Я согласен с условиями
+      </label>
+      <button :disabled="!agree" disabled>Продолжить</button>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-data&gt;
   &lt;label&gt;
     &lt;input type=&quot;checkbox&quot; v-prop=&quot;agree&quot;&gt; Я согласен с условиями
@@ -67,12 +90,7 @@
   &lt;button :disabled=&quot;!agree&quot; disabled&gt;Продолжить&lt;/button&gt;
 &lt;/div&gt;
 </pre>
-
-<div class="demo" v-data>
-  <label>
-    <input type="checkbox" v-prop="agree"> Я согласен с условиями
-  </label>
-  <button :disabled="!agree" disabled>Продолжить</button>
+  </div>
 </div>
 
 <h2>Классы (:class)</h2>
@@ -83,18 +101,27 @@
   переключения активного пункта меню или вкладки.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo">
+      <ul class="attr-tabs" v-data="{ tab: 'profile' }">
+        <li :class="{ active: tab === 'profile' }" @click="tab = 'profile'">Профиль</li>
+        <li :class="{ active: tab === 'settings' }" @click="tab = 'settings'">Настройки</li>
+      </ul>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;ul v-data=&quot;{ tab: 'profile' }&quot;&gt;
   &lt;li :class=&quot;{ active: tab === 'profile' }&quot; @click=&quot;tab = 'profile'&quot;&gt;Профиль&lt;/li&gt;
   &lt;li :class=&quot;{ active: tab === 'settings' }&quot; @click=&quot;tab = 'settings'&quot;&gt;Настройки&lt;/li&gt;
 &lt;/ul&gt;
 </pre>
-
-<div class="demo">
-  <ul class="attr-tabs" v-data="{ tab: 'profile' }">
-    <li :class="{ active: tab === 'profile' }" @click="tab = 'profile'">Профиль</li>
-    <li :class="{ active: tab === 'settings' }" @click="tab = 'settings'">Настройки</li>
-  </ul>
+  </div>
 </div>
 
 <p>
@@ -102,16 +129,25 @@
   удобны, когда список классов уже готов и не требует условной логики.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data="{ size: 'card--small' }">
+      <div :class="['card', size]" v-text="'Массив'"></div>
+      <div :class="'card ' + size" v-text="'Строка'"></div>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-data=&quot;{ size: 'card--small' }&quot;&gt;
   &lt;div :class=&quot;['card', size]&quot; v-text=&quot;'Массив'&quot;&gt;&lt;/div&gt;
   &lt;div :class=&quot;'card ' + size&quot; v-text=&quot;'Строка'&quot;&gt;&lt;/div&gt;
 &lt;/div&gt;
 </pre>
-
-<div class="demo" v-data="{ size: 'card--small' }">
-  <div :class="['card', size]" v-text="'Массив'"></div>
-  <div :class="'card ' + size" v-text="'Строка'"></div>
+  </div>
 </div>
 
 <h2>Стили (:style)</h2>
@@ -122,7 +158,21 @@
   <code>--</code>) передаются как есть.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data="{ size: 24, color: '#0e7a6b' }">
+      <button @click="size += 4">Увеличить</button>
+      <p :style="{ fontSize: `${size}px`, '--accent': color, color: 'var(--accent)' }">
+        Пример текста
+      </p>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-data=&quot;{ size: 24, color: '#0e7a6b' }&quot;&gt;
   &lt;button @click=&quot;size += 4&quot;&gt;Увеличить&lt;/button&gt;
   &lt;p :style=&quot;{ fontSize: &#x60;${size}px&#x60;, '--accent': color, color: 'var(--accent)' }&quot;&gt;
@@ -130,12 +180,7 @@
   &lt;/p&gt;
 &lt;/div&gt;
 </pre>
-
-<div class="demo" v-data="{ size: 24, color: '#0e7a6b' }">
-  <button @click="size += 4">Увеличить</button>
-  <p :style="{ fontSize: `${size}px`, '--accent': color, color: 'var(--accent)' }">
-    Пример текста
-  </p>
+  </div>
 </div>
 
 <h2>Произвольные и data-/aria-атрибуты</h2>
@@ -145,18 +190,27 @@
   точно так же. Это удобно для передачи состояния сторонним скриптам или для доступности.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data="{ open: false }">
+      <button @click="open = !open" :aria-expanded="open" :data-state="open ? 'expanded' : 'collapsed'">
+        Подробнее
+      </button>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-data=&quot;{ open: false }&quot;&gt;
   &lt;button @click=&quot;open = !open&quot; :aria-expanded=&quot;open&quot; :data-state=&quot;open ? 'expanded' : 'collapsed'&quot;&gt;
     Подробнее
   &lt;/button&gt;
 &lt;/div&gt;
 </pre>
-
-<div class="demo" v-data="{ open: false }">
-  <button @click="open = !open" :aria-expanded="open" :data-state="open ? 'expanded' : 'collapsed'">
-    Подробнее
-  </button>
+  </div>
 </div>
 
 <h2>Несколько атрибутов на одном элементе</h2>
@@ -167,7 +221,24 @@
   от состояния формы.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data="{ saving: false }">
+      <button
+        @click="saving = true"
+        :disabled="saving"
+        :class="{ 'is-loading': saving }"
+        :title="saving ? 'Идёт сохранение…' : 'Сохранить изменения'"
+        v-text="saving ? 'Сохранение…' : 'Сохранить'"
+      >Сохранить</button>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-data=&quot;{ saving: false }&quot;&gt;
   &lt;button
     @click=&quot;saving = true&quot;
@@ -178,15 +249,7 @@
   &gt;Сохранить&lt;/button&gt;
 &lt;/div&gt;
 </pre>
-
-<div class="demo" v-data="{ saving: false }">
-  <button
-    @click="saving = true"
-    :disabled="saving"
-    :class="{ 'is-loading': saving }"
-    :title="saving ? 'Идёт сохранение…' : 'Сохранить изменения'"
-    v-text="saving ? 'Сохранение…' : 'Сохранить'"
-  >Сохранить</button>
+  </div>
 </div>
 
 <h2>Внутри v-each</h2>
@@ -196,7 +259,29 @@
   обращаясь к текущему элементу итерации — например, чтобы раскрасить бейджи приоритета задач.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <ul class="demo" v-data="{
+      tasks: [
+        { title: 'Написать отчёт', priority: 'high' },
+        { title: 'Проверить почту', priority: 'low' },
+        { title: 'Согласовать бюджет', priority: 'medium' },
+      ]
+    }">
+      <li v-each="task in tasks">
+        <span :style="{
+          color: task.priority === 'high' ? 'crimson' : (task.priority === 'medium' ? 'darkorange' : 'seagreen')
+        }" v-text="task.priority"></span>
+        <span v-text="task.title"></span>
+      </li>
+    </ul>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;ul v-data=&quot;{
   tasks: [
     { title: 'Написать отчёт', priority: 'high' },
@@ -212,21 +297,8 @@
   &lt;/li&gt;
 &lt;/ul&gt;
 </pre>
-
-<ul class="demo" v-data="{
-  tasks: [
-    { title: 'Написать отчёт', priority: 'high' },
-    { title: 'Проверить почту', priority: 'low' },
-    { title: 'Согласовать бюджет', priority: 'medium' },
-  ]
-}">
-  <li v-each="task in tasks">
-    <span :style="{
-      color: task.priority === 'high' ? 'crimson' : (task.priority === 'medium' ? 'darkorange' : 'seagreen')
-    }" v-text="task.priority"></span>
-    <span v-text="task.title"></span>
-  </li>
-</ul>
+  </div>
+</div>
 
 <p>
   Когда на одном элементе накапливается сразу несколько таких атрибутов вместе с директивами и

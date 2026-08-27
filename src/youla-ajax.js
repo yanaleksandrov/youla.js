@@ -281,9 +281,9 @@ document.addEventListener('youla:init', () => {
       case 'remove':
         target.remove();
         break;
+      case 'before':
       case 'prepend':
       case 'append':
-      case 'before':
       case 'after':
         target.insertAdjacentHTML({
           before: 'beforebegin',

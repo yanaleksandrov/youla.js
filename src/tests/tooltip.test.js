@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { TooltipInstance, PLACEMENTS, TRIGGERS, computePosition } from './tooltip';
+import { TooltipInstance, PLACEMENTS, TRIGGERS, computePosition } from '../scripts/tooltip';
 
 /**
  * Mirrors the `Youla.directive('tooltip', ...)` callback in ../youla-tooltip.js.

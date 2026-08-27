@@ -16,7 +16,32 @@
   элемента. Подробнее — на странице <a href="/events">События</a>.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+    <button type="button" class="example__tab" data-tab="js">JS</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data="countdown" @load="start()">
+      <span v-text="day"></span> дн.
+      <span v-text="hour"></span> ч.
+      <span v-text="min"></span> мин.
+      <span v-text="sec"></span> сек.
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;div v-data=&quot;countdown&quot; @load=&quot;start()&quot;&gt;
+  &lt;span v-text=&quot;day&quot;&gt;&lt;/span&gt; дн.
+  &lt;span v-text=&quot;hour&quot;&gt;&lt;/span&gt; ч.
+  &lt;span v-text=&quot;min&quot;&gt;&lt;/span&gt; мин.
+  &lt;span v-text=&quot;sec&quot;&gt;&lt;/span&gt; сек.
+&lt;/div&gt;
+</pre>
+  </div>
+  <div class="example__panel" data-panel="js">
+    <pre>
 document.addEventListener('youla:init', () =&gt; {
   Youla.data('countdown', () =&gt; ({
     end: new Date(Date.now() + 65 * 1000).toISOString(),
@@ -43,15 +68,8 @@ document.addEventListener('youla:init', () =&gt; {
   }));
 });
 </pre>
-
-<pre>
-&lt;div v-data=&quot;countdown&quot; @load=&quot;start()&quot;&gt;
-  &lt;span v-text=&quot;day&quot;&gt;&lt;/span&gt; дн.
-  &lt;span v-text=&quot;hour&quot;&gt;&lt;/span&gt; ч.
-  &lt;span v-text=&quot;min&quot;&gt;&lt;/span&gt; мин.
-  &lt;span v-text=&quot;sec&quot;&gt;&lt;/span&gt; сек.
-&lt;/div&gt;
-</pre>
+  </div>
+</div>
 
 <script>
   document.addEventListener('youla:init', () => {
@@ -80,13 +98,6 @@ document.addEventListener('youla:init', () =&gt; {
     }));
   });
 </script>
-
-<div class="demo" v-data="countdown" @load="start()">
-  <span v-text="day"></span> дн.
-  <span v-text="hour"></span> ч.
-  <span v-text="min"></span> мин.
-  <span v-text="sec"></span> сек.
-</div>
 
 <p>
   В примере обратный отсчёт настроен всего на 65 секунд, чтобы можно было увидеть его завершение,

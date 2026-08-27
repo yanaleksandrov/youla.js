@@ -101,7 +101,21 @@ title: "v-data"
   очистит его сам — как и раньше.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data.local.30d="{ theme: 'light' }">
+      <button type="button" @click="theme = theme === 'light' ? 'dark' : 'light'">
+        Переключить тему
+      </button>
+      <p>Тема: <span v-text="theme"></span> — хранится в localStorage 30 дней.</p>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-data.local.30d=&quot;{ theme: 'light' }&quot;&gt;
   &lt;button type=&quot;button&quot; @click=&quot;theme = theme === 'light' ? 'dark' : 'light'&quot;&gt;
     Переключить тему
@@ -109,15 +123,24 @@ title: "v-data"
   &lt;p&gt;Тема: &lt;span v-text=&quot;theme&quot;&gt;&lt;/span&gt; — хранится в localStorage 30 дней.&lt;/p&gt;
 &lt;/div&gt;
 </pre>
-
-<div class="demo" v-data.local.30d="{ theme: 'light' }">
-  <button type="button" @click="theme = theme === 'light' ? 'dark' : 'light'">
-    Переключить тему
-  </button>
-  <p>Тема: <span v-text="theme"></span> — хранится в localStorage 30 дней.</p>
+  </div>
 </div>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data.cookie.1y="{ locale: 'ru' }">
+      <button type="button" @click="locale = locale === 'ru' ? 'en' : 'ru'">
+        Сменить язык
+      </button>
+      <p>Язык: <span v-text="locale"></span> — хранится в cookie год, сервер тоже его увидит.</p>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-data.cookie.1y=&quot;{ locale: 'ru' }&quot;&gt;
   &lt;button type=&quot;button&quot; @click=&quot;locale = locale === 'ru' ? 'en' : 'ru'&quot;&gt;
     Сменить язык
@@ -125,12 +148,7 @@ title: "v-data"
   &lt;p&gt;Язык: &lt;span v-text=&quot;locale&quot;&gt;&lt;/span&gt; — хранится в cookie год, сервер тоже его увидит.&lt;/p&gt;
 &lt;/div&gt;
 </pre>
-
-<div class="demo" v-data.cookie.1y="{ locale: 'ru' }">
-  <button type="button" @click="locale = locale === 'ru' ? 'en' : 'ru'">
-    Сменить язык
-  </button>
-  <p>Язык: <span v-text="locale"></span> — хранится в cookie год, сервер тоже его увидит.</p>
+  </div>
 </div>
 
 <blockquote>
@@ -158,7 +176,24 @@ title: "v-data"
   после нажатия кнопки "Ок, принято" Youla.js запомнит выбор пользователя и не будет отображать его.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data="{popup: false}">
+      <div v-prop.cookie="popup" v-show="!popup" hidden>
+        <span>We use cookie!</span>
+        <button type="button" @click="popup = !popup">Ок, принято</button>
+      </div>
+      <p v-show="popup">
+        Модальное окно уже было показано
+      </p>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-data=&quot;{popup: false}&quot;&gt;
   &lt;div v-prop.cookie=&quot;popup&quot; v-show=&quot;!popup&quot; hidden&gt;
     &lt;span&gt;We use cookie!&lt;/span&gt;
@@ -169,18 +204,34 @@ title: "v-data"
   &lt;/p&gt;
 &lt;/div&gt;
 </pre>
-
-<div class="demo" v-data="{popup: false}">
-  <div v-prop.cookie="popup" v-show="!popup" hidden>
-    <span>We use cookie!</span>
-    <button type="button" @click="popup = !popup">Ок, принято</button>
   </div>
-  <p v-show="popup">
-    Модальное окно уже было показано
-  </p>
 </div>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data="{voices: 1000, voted: false}">
+      <h3>Голосование без повторов</h3>
+      <p>
+        Youla.js сохраняет отметку о голосе в localStorage, поэтому перезагрузка страницы не позволит проголосовать ещё раз.
+      </p>
+      <div v-prop.local="voices" v-prop.local="voted">
+        <button type="button" @click="--voices; voted = true" :disabled="voted">
+          <i class="ph ph-thumbs-down"></i>
+        </button>
+        <span v-text="voices"></span>
+        <button type="button" @click="++voices; voted = true" :disabled="voted">
+          <i class="ph ph-thumbs-up"></i>
+        </button>
+        <span class="hidden" @click="voices = 1000; voted = false" v-show="voted">Reset</span>
+      </div>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-data=&quot;{voices: 1000, voted: false}&quot;&gt;
   &lt;h3&gt;Голосование без повторов&lt;/h3&gt;
   &lt;p&gt;
@@ -198,25 +249,34 @@ title: "v-data"
   &lt;/div&gt;
 &lt;/div&gt;
 </pre>
-
-<div class="demo" v-data="{voices: 1000, voted: false}">
-  <h3>Голосование без повторов</h3>
-  <p>
-    Youla.js сохраняет отметку о голосе в localStorage, поэтому перезагрузка страницы не позволит проголосовать ещё раз.
-  </p>
-  <div v-prop.local="voices" v-prop.local="voted">
-    <button type="button" @click="--voices; voted = true" :disabled="voted">
-      <i class="ph ph-thumbs-down"></i>
-    </button>
-    <span v-text="voices"></span>
-    <button type="button" @click="++voices; voted = true" :disabled="voted">
-      <i class="ph ph-thumbs-up"></i>
-    </button>
-    <span class="hidden" @click="voices = 1000; voted = false" v-show="voted">Reset</span>
   </div>
 </div>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data>
+      <h3>Запоминание момента просмотра</h3>
+      <p>
+        Youla.js сохраняет время просмотра в cookie, и при следующей загрузке страницы предложит продолжить с того же места.
+      </p>
+      <div>
+        <input type="hidden" v-prop.cookie="time">
+        <video v-ref="video" @play="$el.ontimeupdate = () => time = $el.currentTime" width="640px" height="267px" controls muted>
+          <source src="https://vjs.zencdn.net/v/oceans.mp4" type='video/mp4' />
+        </video>
+        <div v-show="time > 0">
+          Start playback from <span v-text="parseInt(time, 10)"></span> seconds?
+          <button type="button" @click="$refs.video.currentTime = time; $refs.video.play()">Yes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-data&gt;
   &lt;h3&gt;Запоминание момента просмотра&lt;/h3&gt;
   &lt;p&gt;
@@ -234,25 +294,42 @@ title: "v-data"
   &lt;/div&gt;
 &lt;/div&gt;
 </pre>
-
-<div class="demo" v-data>
-  <h3>Запоминание момента просмотра</h3>
-  <p>
-    Youla.js сохраняет время просмотра в cookie, и при следующей загрузке страницы предложит продолжить с того же места.
-  </p>
-  <div>
-    <input type="hidden" v-prop.cookie="time">
-    <video v-ref="video" @play="$el.ontimeupdate = () => time = $el.currentTime" width="640px" height="267px" controls muted>
-      <source src="https://vjs.zencdn.net/v/oceans.mp4" type='video/mp4' />
-    </video>
-    <div v-show="time > 0">
-      Start playback from <span v-text="parseInt(time, 10)"></span> seconds?
-      <button type="button" @click="$refs.video.currentTime = time; $refs.video.play()">Yes</button>
-    </div>
   </div>
 </div>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo test test--content" v-data :class="dark && 'dark'">
+      <h3>Переключатель тёмной темы</h3>
+      <p>
+        Кнопка переключает тему и сохраняет выбор в localStorage — он останется в силе после перезагрузки страницы.
+      </p>
+      <button type="button" v-prop.local="dark" @click="dark = !dark">
+        <i class="ph ph-sun" :class="{ 'ph-sun': !dark, 'ph-moon': dark }"></i>
+      </button>
+      <style>
+			:root {
+				--text-color: #000000;
+			}
+
+			.dark {
+				--background-color: #000000;
+				--text-color: #ffffff;
+			}
+
+			div {
+				background-color: var(--background-color);
+				color: var(--text-color);
+			}
+      </style>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-data class=&quot;test test--content&quot; :class=&quot;dark &amp;&amp; 'dark'&quot;&gt;
   &lt;h3&gt;Переключатель тёмной темы&lt;/h3&gt;
   &lt;p&gt;
@@ -278,30 +355,7 @@ title: "v-data"
   &lt;/style&gt;
 &lt;/div&gt;
 </pre>
-
-<div class="demo test test--content" v-data :class="dark && 'dark'">
-  <h3>Переключатель тёмной темы</h3>
-  <p>
-    Кнопка переключает тему и сохраняет выбор в localStorage — он останется в силе после перезагрузки страницы.
-  </p>
-  <button type="button" v-prop.local="dark" @click="dark = !dark">
-    <i class="ph ph-sun" :class="{ 'ph-sun': !dark, 'ph-moon': dark }"></i>
-  </button>
-  <style>
-		:root {
-			--text-color: #000000;
-		}
-
-		.dark {
-			--background-color: #000000;
-			--text-color: #ffffff;
-		}
-
-		div {
-			background-color: var(--background-color);
-			color: var(--text-color);
-		}
-  </style>
+  </div>
 </div>
 
 <%= _.template(require('./parts/footer.html').default)(data) %>

@@ -11,6 +11,10 @@
 	--teal-soft: #e3f1ee;
 	--amber: #a85417;
 	--amber-soft: #fbead9;
+	--red: #b3261e;
+	--red-soft: #fbe9e9;
+	--blue: #1c5fb0;
+	--blue-soft: #e7effc;
 	--code-bg: #0f1a1c;
 	--code-ink: #d7e8e5;
 	--font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -36,6 +40,10 @@
 		--teal-soft: #12302b;
 		--amber: #f0a15c;
 		--amber-soft: #33230f;
+		--red: #e5675f;
+		--red-soft: #331614;
+		--blue: #5b9bea;
+		--blue-soft: #14243a;
 		--code-bg: #060d0e;
 		--code-ink: #cfe7e2;
 	}
@@ -51,6 +59,10 @@
 	--teal-soft: #12302b;
 	--amber: #f0a15c;
 	--amber-soft: #33230f;
+	--red: #e5675f;
+	--red-soft: #331614;
+	--blue: #5b9bea;
+	--blue-soft: #14243a;
 	--code-bg: #060d0e;
 	--code-ink: #cfe7e2;
 }
@@ -168,7 +180,6 @@ pre {
 	padding: 1.1rem 1.3rem;
 	margin: 1rem 0;
 	white-space: pre-wrap;
-	user-select: all;
 
 	code {
 		background: none;
@@ -178,11 +189,20 @@ pre {
 }
 
 blockquote {
-	background-color: var(--teal-soft);
-	border-left: 4px solid var(--teal);
+	background-color: var(--amber-soft);
+	border: 1px solid color-mix(in srgb, var(--amber) 35%, var(--line));
 	width: 100%;
 	margin: 1rem 0;
 	padding: 1.25rem;
+
+	p:first-child {
+		font-family: var(--mono);
+		font-size: var(--fs-2xs);
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--amber);
+		margin-bottom: 0.4rem;
+	}
 }
 
 ul {
@@ -249,6 +269,85 @@ table {
 	display: none !important;
 }
 
+.notice-root {
+	position: fixed;
+	z-index: 1000;
+	right: 1rem;
+	bottom: 1rem;
+	display: flex;
+	flex-direction: column;
+	gap: .5rem;
+	width: min(320px, calc(100vw - 2rem));
+}
+
+.notice__item {
+	display: flex;
+	align-items: center;
+	gap: .6rem;
+	padding: .6rem .8rem;
+	border: 1px solid var(--line);
+	border-radius: .35rem;
+	background: var(--surface);
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+	transition: opacity .8s ease, transform .8s ease;
+
+	&--hide {
+		opacity: 0;
+		transform: translateX(8px);
+	}
+
+	&--info { border-color: var(--blue); background: var(--blue-soft); }
+	&--success { border-color: var(--teal); background: var(--teal-soft); }
+	&--warning { border-color: var(--amber); background: var(--amber-soft); }
+	&--error { border-color: var(--red); background: var(--red-soft); }
+	&--loading { border-color: var(--ink-muted); background: var(--paper); }
+}
+
+.notice__spinner {
+	flex: none;
+	width: 1.2rem;
+	height: 1.2rem;
+
+	circle {
+		fill: none;
+		stroke: currentColor;
+		stroke-opacity: .2;
+		stroke-width: 2;
+		stroke-dasharray: 69;
+		stroke-dashoffset: 69;
+		animation-name: notice-countdown;
+		animation-timing-function: linear;
+		animation-fill-mode: forwards;
+	}
+}
+
+// A real DOM animation (unlike the background-image data URI this used to be) can actually be
+// paused — matches the JS pause()/resume() the container's @mouseenter/@mouseleave call.
+.notice-root:hover .notice__spinner circle {
+	animation-play-state: paused;
+}
+
+@keyframes notice-countdown {
+	to { stroke-dashoffset: 0; }
+}
+
+.notice__message {
+	flex: 1;
+	font-size: var(--fs-sm);
+	color: var(--ink);
+}
+
+.notice__close {
+	flex: none;
+	border: 0;
+	background: none;
+	cursor: pointer;
+	font-size: 1rem;
+	line-height: 1;
+	padding: 0 .2rem;
+	color: var(--ink-muted);
+}
+
 .demo {
 	margin: 0;
 	padding: 1rem;
@@ -270,6 +369,71 @@ table {
 		line-height: 1;
 		color: var(--ink-muted);
 		font-family: var(--mono);
+	}
+}
+
+.example {
+	margin: 1rem 0;
+	border: 1px solid var(--line);
+	background-color: var(--surface);
+
+	&__tabs {
+		display: flex;
+		background-color: var(--paper);
+		border-bottom: 1px solid var(--line);
+	}
+
+	&__tab {
+		appearance: none;
+		border: none;
+		border-right: 1px solid var(--line);
+		background: none;
+		cursor: pointer;
+		padding: 8px 16px;
+		font-family: var(--mono);
+		font-size: var(--fs-2xs);
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		line-height: 1;
+		color: var(--ink-muted);
+		transition: background-color 0.3s, color 0.3s;
+
+		&:last-child {
+			border-right: none;
+		}
+
+		&:hover {
+			color: var(--teal);
+			background-color: var(--teal-soft);
+		}
+
+		&.is-active {
+			color: var(--ink);
+			background-color: var(--surface);
+			box-shadow: inset 0 -2px 0 var(--teal);
+		}
+	}
+
+	&__panel {
+		display: none;
+
+		&.is-active {
+			display: block;
+		}
+
+		.demo {
+			margin: 0;
+			border: none;
+
+			&:before {
+				content: none;
+			}
+		}
+
+		pre {
+			margin: 0;
+			border: none;
+		}
 	}
 }
 

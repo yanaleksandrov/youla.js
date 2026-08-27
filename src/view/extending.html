@@ -1,9 +1,9 @@
 <% var data = {
-  title: "Extending"
+  title: "Расширение"
 }; %>
 <%= _.template(require('./parts/header.html').default)(data) %>
 
-<h1>Extending</h1>
+<h1>Расширение</h1>
 
 <p>
   Youla.js не ограничивается встроенными директивами и специальными переменными — можно
@@ -61,20 +61,36 @@ document.addEventListener(&#39;youla:init&#39;, () =&gt; {
   </tbody>
 </table>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+    <button type="button" class="example__tab" data-tab="js">JS</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data>
+      <input v-prop="name" />
+      <p v-uppercase="name"></p>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;div v-data&gt;
+  &lt;input v-prop=&quot;name&quot; /&gt;
+  &lt;p v-uppercase=&quot;name&quot;&gt;&lt;/p&gt;
+&lt;/div&gt;
+</pre>
+  </div>
+  <div class="example__panel" data-panel="js">
+    <pre>
 document.addEventListener(&#39;youla:init&#39;, () =&gt; {
   Youla.directive(&#39;uppercase&#39;, (el, output) =&gt; {
     el.textContent = String(output).toUpperCase();
   });
 });
 </pre>
-
-<pre>
-&lt;div v-data&gt;
-  &lt;input v-prop=&quot;name&quot; /&gt;
-  &lt;p v-uppercase=&quot;name&quot;&gt;&lt;/p&gt;
-&lt;/div&gt;
-</pre>
+  </div>
+</div>
 
 <script>
   document.addEventListener('youla:init', () => {
@@ -83,11 +99,6 @@ document.addEventListener(&#39;youla:init&#39;, () =&gt; {
     });
   });
 </script>
-
-<div class="demo" v-data>
-  <input v-prop="name" />
-  <p v-uppercase="name"></p>
-</div>
 
 <p>
   Директива вызывается заново по тем же правилам, что и встроенные: Youla.js сам следит, какие
@@ -135,29 +146,40 @@ document.addEventListener(&#39;youla:init&#39;, () =&gt; {
   </tbody>
 </table>
 
-<pre>
-document.addEventListener(&#39;youla:init&#39;, () =&gt; {
-  Youla.method(&#39;roll&#39;, () =&gt; () =&gt; Math.ceil(Math.random() * 6));
-});
-</pre>
-
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+    <button type="button" class="example__tab" data-tab="js">JS</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data="{ value: 1 }">
+      <button type="button" @click="value = $roll()">Бросить кубик</button>
+      <span v-text="value"></span>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-data=&quot;{ value: 1 }&quot;&gt;
   &lt;button type=&quot;button&quot; @click=&quot;value = $roll()&quot;&gt;Бросить кубик&lt;/button&gt;
   &lt;span v-text=&quot;value&quot;&gt;&lt;/span&gt;
 &lt;/div&gt;
 </pre>
+  </div>
+  <div class="example__panel" data-panel="js">
+    <pre>
+document.addEventListener(&#39;youla:init&#39;, () =&gt; {
+  Youla.method(&#39;roll&#39;, () =&gt; () =&gt; Math.ceil(Math.random() * 6));
+});
+</pre>
+  </div>
+</div>
 
 <script>
   document.addEventListener('youla:init', () => {
     Youla.method('roll', () => () => Math.ceil(Math.random() * 6));
   });
 </script>
-
-<div class="demo" v-data="{ value: 1 }">
-  <button type="button" @click="value = $roll()">Бросить кубик</button>
-  <span v-text="value"></span>
-</div>
 
 <p>
   Как и с директивами, имя, которое уже занято, повторно зарегистрировать нельзя — Youla.js
@@ -200,29 +222,40 @@ document.addEventListener(&#39;youla:init&#39;, () =&gt; {
   </tbody>
 </table>
 
-<pre>
-document.addEventListener(&#39;youla:init&#39;, () =&gt; {
-  Youla.variable(&#39;now&#39;, () =&gt; new Date().toLocaleTimeString());
-});
-</pre>
-
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+    <button type="button" class="example__tab" data-tab="js">JS</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data="{ tick: 0 }">
+      <button @click="tick++">Обновить время</button>
+      <p>Сейчас: <strong v-text="`${$now} (обновлений: ${tick})`"></strong></p>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-data=&quot;{ tick: 0 }&quot;&gt;
   &lt;button @click=&quot;tick++&quot;&gt;Обновить время&lt;/button&gt;
   &lt;p&gt;Сейчас: &lt;strong v-text=&quot;&#x60;${$now} (обновлений: ${tick})&#x60;&quot;&gt;&lt;/strong&gt;&lt;/p&gt;
 &lt;/div&gt;
 </pre>
+  </div>
+  <div class="example__panel" data-panel="js">
+    <pre>
+document.addEventListener(&#39;youla:init&#39;, () =&gt; {
+  Youla.variable(&#39;now&#39;, () =&gt; new Date().toLocaleTimeString());
+});
+</pre>
+  </div>
+</div>
 
 <script>
   document.addEventListener('youla:init', () => {
     Youla.variable('now', () => new Date().toLocaleTimeString());
   });
 </script>
-
-<div class="demo" v-data="{ tick: 0 }">
-  <button @click="tick++">Обновить время</button>
-  <p>Сейчас: <strong v-text="`${$now} (обновлений: ${tick})`"></strong></p>
-</div>
 
 <p>
   <code>$now</code> не хранится в данных компонента и не отслеживается как зависимость — он

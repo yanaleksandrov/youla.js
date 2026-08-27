@@ -1,5 +1,8 @@
 import Component from './component';
-import { debounce, domReady, eventCreate, forceRefresh, hasDirective, pulsate, reactive } from './helpers';
+import { domReady, hasDirective } from './dom';
+import { debounce, pulsate } from './timing';
+import { forceRefresh, reactive } from './reactivity';
+import { createEvent } from './events';
 import { directive } from './directives';
 import { method } from './methods';
 import { data } from './data';
@@ -9,32 +12,27 @@ export const Youla = {
   data,
   debounce,
   directive,
-  directives: {},
   forceRefresh,
   method,
-  methods: {},
   pulsate,
   reactive,
   variable,
-  variables: {},
 
   /**
-   * Boots Youla.js: fires the `youla:init` event (the hook user code uses to
-   * register directives/methods/data-providers before anything is
-   * initialized), waits for the DOM to be ready, then discovers and
-   * initializes every `v-data` element already on the page before watching
-   * for components added later.
+   * Boots Youla.js: fires the `youla:init` event (the hook user code uses to register
+   * directives/methods/data-providers), waits for the DOM to be ready, then discovers and
+   * initializes every `v-data` element on the page before watching for components added later.
    *
    * @returns {Promise<void>}
    */
   start: async function () {
-    document.dispatchEvent(eventCreate('youla:init'));
+    document.dispatchEvent(createEvent('youla:init'));
 
     await domReady();
 
     this.componentDiscover(el => this.componentInitialize(el));
 
-    this.componentListenUninitializedAtRunTime(el => this.componentInitialize(el));
+    this.componentWatch(el => this.componentInitialize(el));
   },
 
   /**
@@ -56,7 +54,7 @@ export const Youla = {
    * @param {Function} callback - Called once per newly-added `v-data` element.
    * @returns {void}
    */
-  componentListenUninitializedAtRunTime: callback => {
+  componentWatch: callback => {
     let observer = new MutationObserver(mutations =>
       mutations.forEach(mutation =>
         Array.from(mutation.addedNodes)

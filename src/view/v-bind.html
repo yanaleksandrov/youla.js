@@ -6,6 +6,13 @@
 <h1>v-bind</h1>
 
 <p>
+  Пока состояние компонента — пара плоских свойств, объектный литерал прямо в атрибуте
+  <code>v-data="{...}"</code> остаётся самым коротким и понятным путём.
+  Но как только в задаче появляется повторяющаяся логика, сложные проверки, или богатый функционал, расписывать её в каждом выражении
+  - становится многословно и хрупко: любое изменение поведения приходится аккуратно повторять во всех местах, где она встречается.
+</p>
+
+<p>
   Директива <code>v-bind</code> собирает несколько <code>v-*</code>, <code>@</code> и <code>:</code>
   атрибутов элемента в один именованный набор — обычный объект внутри <a href="/v-data"><code>v-data</code></a>.
   Так поведение элемента переезжает из разметки в JS.
@@ -40,7 +47,36 @@
   верхнем уровне.
 </p>
 
-<pre>
+<p>
+  В разметке остаётся только ссылка на нужное свойство — <code>trigger</code> и
+  <code>dialogue</code> объявлять в <code>v-data</code> отдельно не нужно, они уже часть данных
+  компонента, возвращённых callback:
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+    <button type="button" class="example__tab" data-tab="js">JS</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data="dropdown">
+      <button v-bind="trigger">Открыть меню</button>
+
+      <span v-bind="dialogue">Содержимое меню</span>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;div v-data=&quot;dropdown&quot;&gt;
+  &lt;button v-bind=&quot;trigger&quot;&gt;Открыть меню&lt;/button&gt;
+
+  &lt;span v-bind=&quot;dialogue&quot;&gt;Содержимое меню&lt;/span&gt;
+&lt;/div&gt;
+</pre>
+  </div>
+  <div class="example__panel" data-panel="js">
+    <pre>
 Youla.data(&#039;dropdown&#039;, () =&gt; ({
   open: false,
   trigger: {
@@ -58,20 +94,8 @@ Youla.data(&#039;dropdown&#039;, () =&gt; ({
   },
 }))
 </pre>
-
-<p>
-  В разметке остаётся только ссылка на нужное свойство — <code>trigger</code> и
-  <code>dialogue</code> объявлять в <code>v-data</code> отдельно не нужно, они уже часть данных
-  компонента, возвращённых callback:
-</p>
-
-<pre>
-&lt;div v-data=&quot;dropdown&quot;&gt;
-  &lt;button v-bind=&quot;trigger&quot;&gt;Открыть меню&lt;/button&gt;
-
-  &lt;span v-bind=&quot;dialogue&quot;&gt;Содержимое меню&lt;/span&gt;
-&lt;/div&gt;
-</pre>
+  </div>
+</div>
 
 <script>
   document.addEventListener('youla:init', () => {
@@ -93,12 +117,6 @@ Youla.data(&#039;dropdown&#039;, () =&gt; ({
     }));
   });
 </script>
-
-<div class="demo" v-data="dropdown">
-  <button v-bind="trigger">Открыть меню</button>
-
-  <span v-bind="dialogue">Содержимое меню</span>
-</div>
 
 <p>
   Каждый ключ в наборе биндингов обрабатывается так же, как если бы он был написан в разметке
@@ -170,7 +188,26 @@ Youla.data(&#039;dropdown&#039;, () =&gt; ({
   данных ровно так же, как и метод.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+    <button type="button" class="example__tab" data-tab="js">JS</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data="saveButton">
+      <button type="button" v-bind="action">Сохранить</button>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;div v-data=&quot;saveButton&quot;&gt;
+  &lt;button type=&quot;button&quot; v-bind=&quot;action&quot;&gt;Сохранить&lt;/button&gt;
+&lt;/div&gt;
+</pre>
+  </div>
+  <div class="example__panel" data-panel="js">
+    <pre>
 Youla.data(&#39;saveButton&#39;, () =&gt; ({
   saving: false,
 
@@ -181,12 +218,8 @@ Youla.data(&#39;saveButton&#39;, () =&gt; ({
   },
 }))
 </pre>
-
-<pre>
-&lt;div v-data=&quot;saveButton&quot;&gt;
-  &lt;button type=&quot;button&quot; v-bind=&quot;action&quot;&gt;Сохранить&lt;/button&gt;
-&lt;/div&gt;
-</pre>
+  </div>
+</div>
 
 <script>
   document.addEventListener('youla:init', () => {
@@ -202,10 +235,6 @@ Youla.data(&#39;saveButton&#39;, () =&gt; ({
   });
 </script>
 
-<div class="demo" v-data="saveButton">
-  <button type="button" v-bind="action">Сохранить</button>
-</div>
-
 <h2>Параметризованные определения</h2>
 
 <p>
@@ -219,7 +248,30 @@ Youla.data(&#39;saveButton&#39;, () =&gt; ({
   переданным значением — удобно для вкладок и похожих переключателей.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+    <button type="button" class="example__tab" data-tab="js">JS</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo">
+      <ul class="attr-tabs" v-data="tabs">
+        <li v-bind="tabButton('profile')">Профиль</li>
+        <li v-bind="tabButton('settings')">Настройки</li>
+      </ul>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;ul v-data=&quot;tabs&quot;&gt;
+  &lt;li v-bind=&quot;tabButton(&#039;profile&#039;)&quot;&gt;Профиль&lt;/li&gt;
+  &lt;li v-bind=&quot;tabButton(&#039;settings&#039;)&quot;&gt;Настройки&lt;/li&gt;
+&lt;/ul&gt;
+</pre>
+  </div>
+  <div class="example__panel" data-panel="js">
+    <pre>
 Youla.data(&#39;tabs&#39;, () =&gt; ({
   tab: &#39;profile&#39;,
 
@@ -231,13 +283,8 @@ Youla.data(&#39;tabs&#39;, () =&gt; ({
   },
 }))
 </pre>
-
-<pre>
-&lt;ul v-data=&quot;tabs&quot;&gt;
-  &lt;li v-bind=&quot;tabButton(&#039;profile&#039;)&quot;&gt;Профиль&lt;/li&gt;
-  &lt;li v-bind=&quot;tabButton(&#039;settings&#039;)&quot;&gt;Настройки&lt;/li&gt;
-&lt;/ul&gt;
-</pre>
+  </div>
+</div>
 
 <style>
   .attr-tabs { display: flex; gap: 0.5rem; list-style: none; padding: 0; }
@@ -260,13 +307,6 @@ Youla.data(&#39;tabs&#39;, () =&gt; ({
   });
 </script>
 
-<div class="demo">
-  <ul class="attr-tabs" v-data="tabs">
-    <li v-bind="tabButton('profile')">Профиль</li>
-    <li v-bind="tabButton('settings')">Настройки</li>
-  </ul>
-</div>
-
 <p>
   <code>tabButton</code> подставляет <code>name</code> в строки выражений через шаблонную
   строку — это происходит один раз, в момент вызова метода, а не при каждом обновлении данных.
@@ -285,7 +325,32 @@ Youla.data(&#39;tabs&#39;, () =&gt; ({
   странице <a href="/v-each">v-each</a>.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+    <button type="button" class="example__tab" data-tab="js">JS</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <ul class="demo" v-data="priorityList">
+      <li v-each="task in tasks">
+        <span v-bind="badge"></span>
+        <span v-text="task.title"></span>
+      </li>
+    </ul>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;ul v-data=&quot;priorityList&quot;&gt;
+  &lt;li v-each=&quot;task in tasks&quot;&gt;
+    &lt;span v-bind=&quot;badge&quot;&gt;&lt;/span&gt;
+    &lt;span v-text=&quot;task.title&quot;&gt;&lt;/span&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+</pre>
+  </div>
+  <div class="example__panel" data-panel="js">
+    <pre>
 Youla.data(&#39;priorityList&#39;, () =&gt; ({
   tasks: [
     { title: &#39;Написать отчёт&#39;, priority: &#39;high&#39; },
@@ -299,15 +364,8 @@ Youla.data(&#39;priorityList&#39;, () =&gt; ({
   },
 }))
 </pre>
-
-<pre>
-&lt;ul v-data=&quot;priorityList&quot;&gt;
-  &lt;li v-each=&quot;task in tasks&quot;&gt;
-    &lt;span v-bind=&quot;badge&quot;&gt;&lt;/span&gt;
-    &lt;span v-text=&quot;task.title&quot;&gt;&lt;/span&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
-</pre>
+  </div>
+</div>
 
 <script>
   document.addEventListener('youla:init', () => {
@@ -325,13 +383,6 @@ Youla.data(&#39;priorityList&#39;, () =&gt; ({
     }));
   });
 </script>
-
-<ul class="demo" v-data="priorityList">
-  <li v-each="task in tasks">
-    <span v-bind="badge"></span>
-    <span v-text="task.title"></span>
-  </li>
-</ul>
 
 <p>
   Ключ <code>badge</code> — обычное свойство <code>v-data</code>, а не метод, поэтому у него нет

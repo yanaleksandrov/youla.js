@@ -39,12 +39,9 @@ function findIsolatedOccurrences(text, needle) {
 }
 
 /**
- * Turns already-rendered text plus the values that produced it into a reusable
- * template: locates each value once, splits the text around it, and remembers
- * the static parts. A key is skipped (with a console warning) when its value
- * can't be matched exactly once, or when its match collides with another
- * key's — the text around a skipped key stays untouched on every future
- * update instead of being guessed at.
+ * Turns already-rendered text plus the values that produced it into a reusable template:
+ * locates each value once, splits the text around it, and remembers the static parts. A key is
+ * skipped (with a console warning) when its value can't be matched exactly once, or collides.
  *
  * @param {HTMLElement} el - the element being compiled, used only for warning messages.
  * @param {string} text - the element's currently-rendered text content.
@@ -122,11 +119,9 @@ function renderSegments(segments, data) {
 }
 
 /**
- * Sets the element's text content from the bound expression. If the
- * expression evaluates to a plain object instead of a string or number, each
- * property's value is matched against a substring already present in the
- * element's rendered text and tracked as an independent placeholder that
- * updates on its own when that property changes (see compilePlaceholders).
+ * Sets the element's text content from the bound expression. If the expression evaluates to a
+ * plain object instead of a string or number, each property is matched against a substring
+ * already in the element's rendered text and tracked as an independent placeholder.
  *
  * @param {HTMLElement} el - the element the directive is on.
  * @param {*} output - the directive attribute's expression, evaluated against the component's data.
@@ -135,9 +130,7 @@ function renderSegments(segments, data) {
  */
 directive('text', (el, output, attribute, component) => {
   if (isPlainObject(output)) {
-    // First pass: compile placeholders from whatever is already rendered — that
-    // text already matches the current data by construction, so there's nothing
-    // to write yet (no flicker, no layout shift).
+    // First pass: compile placeholders from whatever is already rendered, since it already matches the current data by construction (no flicker, no layout shift).
     if (!el._x_text_segments) {
       el._x_text_segments = compilePlaceholders(el, el.textContent, output);
       el._x_text = el.textContent;
@@ -149,8 +142,7 @@ directive('text', (el, output, attribute, component) => {
 
   output = output ?? '';
 
-  // textContent is layout-independent (unlike innerText, which forces a
-  // reflow and varies across browsers for hidden elements).
+  // textContent is layout-independent (unlike innerText, which forces a reflow and varies across browsers for hidden elements).
   if (el._x_text === output) {
     return;
   }

@@ -16,18 +16,27 @@
   автоматически, по одному на каждый цвет из исходного массива данных.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data="{ colors: ['Red', 'Orange', 'Yellow'] }">
+      <ul>
+        <li v-each="color in colors" v-text="color"></li>
+      </ul>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-data=&quot;{ colors: ['Red', 'Orange', 'Yellow'] }&quot;&gt;
   &lt;ul&gt;
     &lt;li v-each=&quot;color in colors&quot; v-text=&quot;color&quot;&gt;&lt;/li&gt;
   &lt;/ul&gt;
 &lt;/div&gt;
 </pre>
-
-<div class="demo" v-data="{ colors: ['Red', 'Orange', 'Yellow'] }">
-  <ul>
-    <li v-each="color in colors" v-text="color"></li>
-  </ul>
+  </div>
 </div>
 
 <p>
@@ -45,19 +54,28 @@
   ключ и значение каждого свойства прямо внутри шаблона списка.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <ul class="demo" v-data="{ cars: { make: 'Jeep', model: 'Grand Cherokee', color: 'Black' } }">
+      <li v-each="(car, key) in cars">
+        <span v-text="key"></span>: <span v-text="car"></span>
+      </li>
+    </ul>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
   &lt;ul v-data=&quot;{ cars: { make: 'Jeep', model: 'Grand Cherokee', color: 'Black' } }&quot;&gt;
     &lt;li v-each=&quot;(car, key) in cars&quot;&gt;
       &lt;span v-text=&quot;key&quot;&gt;&lt;/span&gt;: &lt;span v-text=&quot;car&quot;&gt;&lt;/span&gt;
     &lt;/li&gt;
   &lt;/ul&gt;
 </pre>
-
-<ul class="demo" v-data="{ cars: { make: 'Jeep', model: 'Grand Cherokee', color: 'Black' } }">
-  <li v-each="(car, key) in cars">
-    <span v-text="key"></span>: <span v-text="car"></span>
-  </li>
-</ul>
+  </div>
+</div>
 
 <h2>Массив объектов</h2>
 
@@ -66,7 +84,26 @@
   шаблоне через точечную нотацию, без дополнительной настройки.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <ul class="demo" v-data="{
+      users: [
+        { name: 'Ian', role: 'Admin' },
+        { name: 'Olga', role: 'Editor' },
+        { name: 'Denis', role: 'Viewer' },
+      ]
+    }">
+      <li v-each="user in users">
+        <strong v-text="user.name"></strong> — <span v-text="user.role"></span>
+      </li>
+    </ul>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;ul v-data=&quot;{
   users: [
     { name: &#039;Ian&#039;, role: &#039;Admin&#039; },
@@ -79,25 +116,53 @@
   &lt;/li&gt;
 &lt;/ul&gt;
 </pre>
-
-<ul class="demo" v-data="{
-  users: [
-    { name: 'Ian', role: 'Admin' },
-    { name: 'Olga', role: 'Editor' },
-    { name: 'Denis', role: 'Viewer' },
-  ]
-}">
-  <li v-each="user in users">
-    <strong v-text="user.name"></strong> — <span v-text="user.role"></span>
-  </li>
-</ul>
+  </div>
+</div>
 
 <p>
   А также создавать вложенные циклы с неограниченной глубиной — например, категории товаров, где
   у каждой категории свой список товаров и их характеристик.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data="{
+      categories: [
+        {
+          name: 'Category 1',
+          products: [
+            { name: 'Product 1' },
+            { name: 'Product 2' },
+          ]
+        },
+        {
+          name: 'Category 2',
+          products: [
+            { name: 'Product 3', attributes: ['10x50mm', 'Yellow'] },
+            { name: 'Product 4', attributes: ['30x40mm', 'White'] },
+            { name: 'Product 5', attributes: ['20x20mm', 'Black'] },
+          ]
+        }
+      ]
+    }">
+      <div v-each="(category, index) in categories">
+        <h3 v-text="category.name"></h3>
+        <ul>
+          <li v-each="product in category.products">
+            <strong v-text="product.name"></strong>
+            Attributes:
+            <em v-each="attribute in product.attributes join ', '" v-text="attribute"></em>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-data=&quot;{
   categories: [
     {
@@ -129,35 +194,6 @@
   &lt;/div&gt;
 &lt;/div&gt;
 </pre>
-
-<div class="demo" v-data="{
-  categories: [
-    {
-      name: 'Category 1',
-      products: [
-        { name: 'Product 1' },
-        { name: 'Product 2' },
-      ]
-    },
-    {
-      name: 'Category 2',
-      products: [
-        { name: 'Product 3', attributes: ['10x50mm', 'Yellow'] },
-        { name: 'Product 4', attributes: ['30x40mm', 'White'] },
-        { name: 'Product 5', attributes: ['20x20mm', 'Black'] },
-      ]
-    }
-  ]
-}">
-  <div v-each="(category, index) in categories">
-    <h3 v-text="category.name"></h3>
-    <ul>
-      <li v-each="product in category.products">
-        <strong v-text="product.name"></strong>
-        Attributes:
-        <em v-each="attribute in product.attributes join ', '" v-text="attribute"></em>
-      </li>
-    </ul>
   </div>
 </div>
 
@@ -174,7 +210,22 @@
   использовать одинаковые имена, например <code>item</code>, без конфликтов.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <ul class="demo" v-data="{ fruits: ['Apple', 'Banana'] }">
+      <li v-each="item in fruits" v-text="item"></li>
+    </ul>
+
+    <ul class="demo" v-data="{ tools: ['Hammer', 'Wrench'] }">
+      <li v-each="item in tools" v-text="item"></li>
+    </ul>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;ul v-data=&quot;{ fruits: ['Apple', 'Banana'] }&quot;&gt;
   &lt;li v-each=&quot;item in fruits&quot; v-text=&quot;item&quot;&gt;&lt;/li&gt;
 &lt;/ul&gt;
@@ -183,14 +234,8 @@
   &lt;li v-each=&quot;item in tools&quot; v-text=&quot;item&quot;&gt;&lt;/li&gt;
 &lt;/ul&gt;
 </pre>
-
-<ul class="demo" v-data="{ fruits: ['Apple', 'Banana'] }">
-  <li v-each="item in fruits" v-text="item"></li>
-</ul>
-
-<ul class="demo" v-data="{ tools: ['Hammer', 'Wrench'] }">
-  <li v-each="item in tools" v-text="item"></li>
-</ul>
+  </div>
+</div>
 
 <h2>Добавление разделителя</h2>
 
@@ -199,15 +244,24 @@
   запятую или пробел — без ручной проверки, последний ли это элемент списка.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <p class="demo" v-data="{ attributes: ['White', '20x30mm', 'Google LLC'] }">
+      Характеристики: <i v-each="attribute in attributes join ', '" v-text="attribute"></i>
+    </p>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;p v-data=&quot;{ attributes: [&#039;White&#039;, &#039;20x30mm&#039;, &#039;Google LLC&#039;] }&quot;&gt;
   Характеристики: &lt;i v-each=&quot;attribute in attributes join &#039;, &#039;&quot; v-text=&quot;attribute&quot;&gt;&lt;/i&gt;
 &lt;/p&gt;
 </pre>
-
-<p class="demo" v-data="{ attributes: ['White', '20x30mm', 'Google LLC'] }">
-  Характеристики: <i v-each="attribute in attributes join ', '" v-text="attribute"></i>
-</p>
+  </div>
+</div>
 
 <h2>Доступ к индексам</h2>
 
@@ -217,19 +271,28 @@
   значением.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <ul class="demo" v-data="{ names: ['Ivan', 'Yulia', 'Evgeny'] }">
+      <li v-each="(name, index) in names">
+        <span v-text="`${++index}: ${name}`"></span>
+      </li>
+    </ul>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;ul v-data=&quot;{ names: ['Ivan', 'Yulia', 'Evgeny'] }&quot;&gt;
   &lt;li v-each=&quot;(name, index) in names&quot;&gt;
     &lt;span v-text=&quot;&#x60;${++index}: ${name}&#x60;&quot;&gt;&lt;/span&gt;
   &lt;/li&gt;
 &lt;/ul&gt;
 </pre>
-
-<ul class="demo" v-data="{ names: ['Ivan', 'Yulia', 'Evgeny'] }">
-  <li v-each="(name, index) in names">
-    <span v-text="`${++index}: ${name}`"></span>
-  </li>
-</ul>
+  </div>
+</div>
 
 <h2>Динамическое обновление списка</h2>
 
@@ -244,7 +307,22 @@
   реактивности отслеживает именно присваивание.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data="{ fruits: ['Apple', 'Banana'] }">
+      <button type="button" @click="fruits = [...fruits, 'Cherry']">Добавить</button>
+      <button type="button" @click="fruits = fruits.slice(0, -1)">Удалить последний</button>
+      <ul>
+        <li v-each="fruit in fruits" v-text="fruit"></li>
+      </ul>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-data=&quot;{ fruits: ['Apple', 'Banana'] }&quot;&gt;
   &lt;button type=&quot;button&quot; @click=&quot;fruits = [...fruits, 'Cherry']&quot;&gt;Добавить&lt;/button&gt;
   &lt;button type=&quot;button&quot; @click=&quot;fruits = fruits.slice(0, -1)&quot;&gt;Удалить последний&lt;/button&gt;
@@ -253,13 +331,7 @@
   &lt;/ul&gt;
 &lt;/div&gt;
 </pre>
-
-<div class="demo" v-data="{ fruits: ['Apple', 'Banana'] }">
-  <button type="button" @click="fruits = [...fruits, 'Cherry']">Добавить</button>
-  <button type="button" @click="fruits = fruits.slice(0, -1)">Удалить последний</button>
-  <ul>
-    <li v-each="fruit in fruits" v-text="fruit"></li>
-  </ul>
+  </div>
 </div>
 
 <h2>Итерация по диапазону</h2>
@@ -269,16 +341,25 @@
   данных — удобно для рейтингов, шагов мастера и похожих счётчиков.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data>
+      Рейтинг:
+      <span v-each="i in 5">⭐</span>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-data&gt;
   Рейтинг:
   &lt;span v-each=&quot;i in 5&quot;&gt;⭐&lt;/span&gt;
 &lt;/div&gt;
 </pre>
-
-<div class="demo" v-data>
-  Рейтинг:
-  <span v-each="i in 5">⭐</span>
+  </div>
 </div>
 
 <p>
@@ -307,7 +388,23 @@
   </p>
 </blockquote>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data="{devices: []}">
+      <button type="button" @click="devices = ['Headphones', 'VR Glasses']">Обновить список</button>
+      <ul>
+        <li v-each.lazy="device in devices" v-text="device"></li>
+        <li>Phones</li>
+        <li>Laptops</li>
+      </ul>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-data=&quot;{devices: []}&quot;&gt;
   &lt;button type=&quot;button&quot; @click=&quot;devices = [&#039;Headphones&#039;, &#039;VR Glasses&#039;]&quot;&gt;Обновить список&lt;/button&gt;
   &lt;ul&gt;
@@ -317,14 +414,7 @@
   &lt;/ul&gt;
 &lt;/div&gt;
 </pre>
-
-<div class="demo" v-data="{devices: []}">
-  <button type="button" @click="devices = ['Headphones', 'VR Glasses']">Обновить список</button>
-  <ul>
-    <li v-each.lazy="device in devices" v-text="device"></li>
-    <li>Phones</li>
-    <li>Laptops</li>
-  </ul>
+  </div>
 </div>
 
 <p>

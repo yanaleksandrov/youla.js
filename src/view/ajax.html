@@ -261,18 +261,27 @@ $ajax(route, payload, onProgress, options)
   саму кнопку.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo example-ajax" v-data>
+      <button type="button" id="like-button" @click="$ajax('/demo/like')">
+        <span id="like-count">★ 42</span> Нравится
+      </button>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-data=&quot;{}&quot;&gt;
   &lt;button type=&quot;button&quot; id=&quot;like-button&quot; @click=&quot;$ajax('/demo/like')&quot;&gt;
     &lt;span id=&quot;like-count&quot;&gt;★ 42&lt;/span&gt; Нравится
   &lt;/button&gt;
 &lt;/div&gt;
 </pre>
-
-<div class="demo example-ajax" v-data>
-  <button type="button" id="like-button" @click="$ajax('/demo/like')">
-    <span id="like-count">★ 42</span> Нравится
-  </button>
+  </div>
 </div>
 
 <h2>Сценарий 2: прогресс загрузки файла</h2>
@@ -282,7 +291,23 @@ $ajax(route, payload, onProgress, options)
   загрузки, чем удобно управлять элементом <code>&lt;progress&gt;</code>.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo example-ajax" v-data="{ percent: 0 }">
+      <form @submit.prevent="$ajax('/demo/upload', {}, p => percent = p.percent).then(() => percent = 0)">
+        <input type="file" name="file">
+        <button type="submit">Загрузить</button>
+        <progress :value="percent" max="100"></progress>
+      </form>
+      <div id="upload-result"></div>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-data=&quot;{ percent: 0 }&quot;&gt;
   &lt;form @submit.prevent=&quot;
     $ajax('/demo/upload', {}, p =&gt; percent = p.percent)
@@ -295,14 +320,7 @@ $ajax(route, payload, onProgress, options)
   &lt;div id=&quot;upload-result&quot;&gt;&lt;/div&gt;
 &lt;/div&gt;
 </pre>
-
-<div class="demo example-ajax" v-data="{ percent: 0 }">
-  <form @submit.prevent="$ajax('/demo/upload', {}, p => percent = p.percent).then(() => percent = 0)">
-    <input type="file" name="file">
-    <button type="submit">Загрузить</button>
-    <progress :value="percent" max="100"></progress>
-  </form>
-  <div id="upload-result"></div>
+  </div>
 </div>
 
 <h2>Сценарий 3: форма, список и уведомление в одном ответе</h2>
@@ -319,19 +337,31 @@ $ajax(route, payload, onProgress, options)
   <code>.document</code>, как обычное DOM-событие.
 </p>
 
-<pre>
-Youla.data('ajaxToasts', () =&gt; ({
-  items: [],
-  counter: 0,
-  onNotify(message) {
-    const id = ++this.counter;
-    this.items = [...this.items, { id, message }];
-    setTimeout(() =&gt; this.items = this.items.filter(item =&gt; item.id !== id), 3000);
-  },
-}));
-</pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+    <button type="button" class="example__tab" data-tab="js">JS</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo example-ajax">
+      <div v-data="{ text: '' }">
+        <form @submit.prevent="$ajax('/demo/comment')">
+          <input id="comment-input" v-prop="text" name="text" placeholder="Комментарий...">
+          <button type="submit">Отправить</button>
+        </form>
+      </div>
+      <ul id="comment-list"></ul>
 
-<pre>
+      <div @ajax:notify.document="onNotify($event.detail)" v-data="ajaxToasts">
+        <div v-each="item in items" class="ajax-toast">
+          <span v-text="item.message"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-data=&quot;{ text: '' }&quot;&gt;
   &lt;form @submit.prevent=&quot;$ajax('/demo/comment')&quot;&gt;
     &lt;input id=&quot;comment-input&quot; v-prop=&quot;text&quot; name=&quot;text&quot; placeholder=&quot;Комментарий...&quot;&gt;
@@ -346,20 +376,19 @@ Youla.data('ajaxToasts', () =&gt; ({
   &lt;/div&gt;
 &lt;/div&gt;
 </pre>
-
-<div class="demo example-ajax">
-  <div v-data="{ text: '' }">
-    <form @submit.prevent="$ajax('/demo/comment')">
-      <input id="comment-input" v-prop="text" name="text" placeholder="Комментарий...">
-      <button type="submit">Отправить</button>
-    </form>
   </div>
-  <ul id="comment-list"></ul>
-
-  <div @ajax:notify.document="onNotify($event.detail)" v-data="ajaxToasts">
-    <div v-each="item in items" class="ajax-toast">
-      <span v-text="item.message"></span>
-    </div>
+  <div class="example__panel" data-panel="js">
+    <pre>
+Youla.data('ajaxToasts', () =&gt; ({
+  items: [],
+  counter: 0,
+  onNotify(message) {
+    const id = ++this.counter;
+    this.items = [...this.items, { id, message }];
+    setTimeout(() =&gt; this.items = this.items.filter(item =&gt; item.id !== id), 3000);
+  },
+}));
+</pre>
   </div>
 </div>
 
@@ -373,14 +402,20 @@ Youla.data('ajaxToasts', () =&gt; ({
   раньше, чем это сделает сам метод.
 </p>
 
-<pre>
-// где-то ещё на странице, до клика:
-document.addEventListener('ajax:/demo/echo', ({ detail }) =&gt; {
-  detail.resolve(`перехвачено: «${detail.data}»`);
-});
-</pre>
-
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+    <button type="button" class="example__tab" data-tab="js">JS</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo example-ajax" v-data="{ outcome: '' }">
+      <button type="button" @click="$ajax('/demo/echo').then(value => outcome = value)">Отправить</button>
+      <div v-text="outcome"></div>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-data=&quot;{ outcome: '' }&quot;&gt;
   &lt;button type=&quot;button&quot; @click=&quot;$ajax('/demo/echo').then(value =&gt; outcome = value)&quot;&gt;
     Отправить
@@ -388,10 +423,15 @@ document.addEventListener('ajax:/demo/echo', ({ detail }) =&gt; {
   &lt;div v-text=&quot;outcome&quot;&gt;&lt;/div&gt;
 &lt;/div&gt;
 </pre>
-
-<div class="demo example-ajax" v-data="{ outcome: '' }">
-  <button type="button" @click="$ajax('/demo/echo').then(value => outcome = value)">Отправить</button>
-  <div v-text="outcome"></div>
+  </div>
+  <div class="example__panel" data-panel="js">
+    <pre>
+// где-то ещё на странице, до клика:
+document.addEventListener('ajax:/demo/echo', ({ detail }) =&gt; {
+  detail.resolve(`перехвачено: «${detail.data}»`);
+});
+</pre>
+  </div>
 </div>
 
 <p>

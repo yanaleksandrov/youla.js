@@ -328,108 +328,6 @@ document.addEventListener('youla:init', ()=> {
     return root._x_stream;
   });
 
-  /**
-   * Password
-   *
-   * @since 1.0
-   */
-  Youla.method('password', () => {
-    return {
-      min: {
-        lowercase: 2,
-        uppercase: 2,
-        special: 2,
-        digit: 2,
-        length: 12
-      },
-      valid: {
-        lowercase: false,
-        uppercase: false,
-        special: false,
-        digit: false,
-        length: false
-      },
-      charsets: {
-        lowercase: 'abcdefghijklmnopqrstuvwxyz',
-        uppercase: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-        special: '!@#$%^&*(){|}~',
-        digit: '0123456789'
-      },
-      switch(value) {
-        return !(!!value);
-      },
-      check(value) {
-        let matchCount = 0;
-        let totalCount = 0;
-
-        for (const charset in this.charsets) {
-          let requiredCount = this.min[charset],
-            charsetRegex  = new RegExp(`[${this.charsets[charset]}]`, 'g'),
-            charsetCount  = (value.match(charsetRegex) || []).length;
-
-          matchCount += Math.min(charsetCount, requiredCount);
-          totalCount += requiredCount;
-
-          this.valid[charset] = charsetCount >= requiredCount;
-        }
-
-        if (value.length >= this.min.length) {
-          matchCount += 1;
-          totalCount += 1;
-          this.valid.length = value.length >= this.min.length;
-        }
-
-        return Object.assign(
-          {
-            progress: totalCount === 0 ? totalCount : (matchCount / totalCount) * 100,
-          },
-          this.valid
-        )
-      },
-      generate() {
-        let password = '',
-          types    = Object.keys(this.charsets);
-
-        types.forEach(type => {
-          let count   = Math.max(this.min[type], 0),
-            charset = this.charsets[type];
-
-          for (let i = 0; i < count; i++) {
-            let randomIndex = Math.floor(Math.random() * charset.length);
-            password += charset[randomIndex];
-          }
-        });
-
-        while (password.length < this.min.length) {
-          let randomIndex = Math.floor(Math.random() * types.length),
-            charType    = types[randomIndex],
-            charset     = this.charsets[charType],
-            randomCharIndex = Math.floor(Math.random() * charset.length);
-          password += charset[randomCharIndex];
-        }
-        this.check(password);
-
-        return this.shuffle(password);
-      },
-      shuffle(password) {
-        let array = password.split('');
-        let currentIndex = array.length;
-        let temporaryValue, randomIndex;
-
-        while (currentIndex !== 0) {
-          randomIndex = Math.floor(Math.random() * currentIndex);
-          currentIndex -= 1;
-
-          temporaryValue = array[currentIndex];
-          array[currentIndex] = array[randomIndex];
-          array[randomIndex] = temporaryValue;
-        }
-
-        return array.join('');
-      },
-    }
-  });
-
   Youla.method('mask', (e, el) => mask =>  {
     if( typeof mask === 'undefined' ) {
       let type = el.getAttribute( 'type' );
@@ -544,107 +442,105 @@ document.addEventListener('youla:init', ()=> {
   });
 
   /**
-   * Notifications system
+   * Notifications system: a single `v-data="notice"` container, rendered once in
+   * parts/footer.html, holds the real queue. `$notice` (registered below as a `Youla.variable()`
+   * rather than a `Youla.method()`, so it's reachable from any expression — not just `@event`
+   * ones) always resolves to *that* container's own reactive data, no matter which component the
+   * calling expression happens to live in — so `$notice.info('Saved')` works from literally any
+   * `v-data` on the page, not just from inside the notice container itself.
    *
    * @since 1.0
    */
-  Youla.method( 'notice', (e, el) => {
-    return {
-      items: [],
-      add(message) {
-        this.items.push({ id: e.timeStamp, type: e.detail.type, message });
-      },
-      remove(notification) {
-        console.log(notification)
-        console.log(this.items)
-        this.items = this.items.filter(i => i.id !== notification.id);
-      },
-    }
-  })
+  Youla.variable('notice', () => document.querySelector('[v-data="notice"]')?.__x?.data);
+
   Youla.data('notice', () => ({
     items: {},
-    duration: 4000,
+    duration: 7000,
+    hovering: false,
     info( message ) {
-      this.notify( message, 'info' );
+      this.add( message, 'info' );
     },
     success( message ) {
-      this.notify( message, 'success' );
+      this.add( message, 'success' );
     },
     warning( message ) {
-      this.notify( message, 'warning' );
+      this.add( message, 'warning' );
     },
     error( message ) {
-      this.notify( message, 'error' );
+      this.add( message, 'error' );
     },
     loading( message ) {
-      this.notify( message, 'loading' );
+      this.add( message, 'loading' );
+    },
+    // @mouseenter on the container: freezes every item's countdown where it stood, so hovering
+    // in to read one doesn't lose the others to a timer race either.
+    pause() {
+      this.hovering = true;
+
+      Object.values(this.items).forEach(item => {
+        if ( item.timer ) {
+          clearTimeout( item.timer );
+          item.timer     = null;
+          item.remaining = Math.max( 0, item.remaining - ( Date.now() - item.startedAt ) );
+        }
+      });
+    },
+    // @mouseleave: picks every countdown back up from where pause() froze it (including any
+    // item that arrived while hovering and was never scheduled in the first place).
+    resume() {
+      this.hovering = false;
+
+      Object.keys(this.items).forEach( id => this.schedule(id) );
+    },
+    schedule( id ) {
+      let item = this.items[id];
+      if ( item && !item.timer ) {
+        item.startedAt = Date.now();
+        item.timer     = setTimeout( () => this.close(id), item.remaining );
+      }
+    },
+    elapsed( item ) {
+      return ( item.duration - item.remaining ) + ( item.timer ? Date.now() - item.startedAt : 0 );
     },
     close( id ) {
-      if ( typeof this.items[id] !== 'undefined' ) {
-        this.items[id].selectors.push( 'hide' );
+      let item = this.items[id];
+      if ( typeof item !== 'undefined' ) {
+        clearTimeout( item.timer );
 
-        setTimeout( () => delete this.items[id], 1000 )
+        // v-each only re-renders when "items" itself is reassigned (see toasts.html's demo for
+        // the same pattern) — mutating a nested key in place never marks it as changed.
+        this.items = { ...this.items, [id]: { ...item, selectors: [ ...item.selectors, 'hide' ] } };
+
+        setTimeout( () => {
+          let { [id]: omit, ...rest } = this.items;
+          this.items = rest;
+        }, 1000 )
       }
     },
     add( message, type ) {
       if ( message ) {
-        let animationName = Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 5),
-          timestamp     = Date.now();
-        this.items[timestamp] = {
-          anim: `url("data:image/svg+xml;charset=UTF-8,%3csvg width='24' height='24' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3cstyle%3ecircle %7b animation: ${this.duration}ms ${animationName} linear;%7d%40keyframes ${animationName} %7bfrom%7bstroke-dasharray:0 70%7dto%7bstroke-dasharray:70 0%7d%7d%3c/style%3e%3ccircle cx='12' cy='12' r='11' stroke='%23000' stroke-opacity='.2' stroke-width='2'/%3e%3c/svg%3e")`,
+        let timestamp = Date.now();
+
+        // No per-item spinner markup here on purpose: it's a real inline <svg> in the template
+        // (see parts/footer.html), animated in CSS off "duration" — a real DOM animation, unlike
+        // a background-image SVG, can actually be paused (see the ":hover" rule in styles.scss).
+        this.items = { ...this.items, [timestamp]: {
           message: message,
           closable: true,
           selectors: [ type || 'info' ],
+          duration: this.duration,
+          remaining: this.duration,
+          startedAt: Date.now(),
+          timer: null,
           classes() {
             return this.selectors.map( x => 'notice__item--' + x ).join(' ')
           },
-        }
-        setTimeout( () => this.close(timestamp), this.duration );
-      }
-    },
-  }));
+        } };
 
-  /**
-   * Custom fields builder.
-   *
-   * @since 1.0
-   */
-  Youla.data('builder', () => ({
-    default: {
-      location: 'post',
-      operator: '===',
-      value: 'editor',
-    },
-    groups: [
-      {
-        rules: [
-          {
-            location: 'post_status',
-            operator: '!=',
-            value: 'contributor',
-          },
-        ]
-      },
-    ],
-    addGroup() {
-      let pattern = JSON.parse(JSON.stringify(this.default));
-      this.groups.push({
-        rules: [ pattern ]
-      });
-    },
-    removeGroup(index) {
-      this.groups.splice(index, 1);
-    },
-    addRule(key) {
-      let pattern = JSON.parse(JSON.stringify(this.default));
-      this.groups[key].rules.push(pattern);
-    },
-    removeRule(key,index) {
-      this.groups[key].rules.splice(index, 1);
-    },
-    submit() {
-      let groups = JSON.parse(JSON.stringify(this.groups));
-      console.log(groups);
+        if ( !this.hovering ) {
+          this.schedule(timestamp);
+        }
+      }
     },
   }));
 });

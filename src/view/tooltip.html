@@ -52,11 +52,24 @@
   и подсказка с той стороны, где больше места (<code>auto</code>).
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data>
+      <div v-tooltip="'Простая подсказка'" class="tooltip-anchor">Наведите курсор</div>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-tooltip=&quot;&#39;Простая подсказка&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;
   Наведите курсор
 &lt;/div&gt;
 </pre>
+  </div>
+</div>
 
 <style>
   .tooltip-anchor {
@@ -80,10 +93,6 @@
   .tooltip-scroller .tooltip-anchor { flex: 0 0 auto; }
 </style>
 
-<div class="demo" v-data>
-  <div v-tooltip="'Простая подсказка'" class="tooltip-anchor">Наведите курсор</div>
-</div>
-
 <h2>HTML в содержимом</h2>
 
 <p>
@@ -91,20 +100,29 @@
   без экранирования и очистки: разметка внутри подсказки должна быть доверенной.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo tooltip-row" v-data>
+      <div v-tooltip="'<strong>Заголовок</strong><br><span>Описание</span>'" class="tooltip-anchor">
+        Подсказка с разметкой
+      </div>
+      <div v-tooltip="'Список пунктов:<ul><li>Первый</li><li>Второй</li><li>Третий</li></ul>'" class="tooltip-anchor">
+        Подсказка со списком
+      </div>
+      <div v-tooltip="''" class="tooltip-anchor">Пустая подсказка (не появится)</div>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-tooltip=&quot;&#39;&lt;strong&gt;Заголовок&lt;/strong&gt;&lt;br&gt;&lt;span&gt;Описание&lt;/span&gt;&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;
   Подсказка с разметкой
 &lt;/div&gt;
 </pre>
-
-<div class="demo tooltip-row" v-data>
-  <div v-tooltip="'<strong>Заголовок</strong><br><span>Описание</span>'" class="tooltip-anchor">
-    Подсказка с разметкой
   </div>
-  <div v-tooltip="'Список пунктов:<ul><li>Первый</li><li>Второй</li><li>Третий</li></ul>'" class="tooltip-anchor">
-    Подсказка со списком
-  </div>
-  <div v-tooltip="''" class="tooltip-anchor">Пустая подсказка (не появится)</div>
 </div>
 
 <h2>Позиционирование</h2>
@@ -116,20 +134,29 @@
   подсказка открыта.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo tooltip-row" v-data>
+      <div v-tooltip.top="'Сверху'" class="tooltip-anchor">top</div>
+      <div v-tooltip.bottom="'Снизу'" class="tooltip-anchor">bottom</div>
+      <div v-tooltip.left="'Слева'" class="tooltip-anchor">left</div>
+      <div v-tooltip.right="'Справа'" class="tooltip-anchor">right</div>
+      <div v-tooltip.auto="'Авто — сама выбирает сторону'" class="tooltip-anchor">auto</div>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-tooltip.top=&quot;&#39;Сверху&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;top&lt;/div&gt;
 &lt;div v-tooltip.bottom=&quot;&#39;Снизу&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;bottom&lt;/div&gt;
 &lt;div v-tooltip.left=&quot;&#39;Слева&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;left&lt;/div&gt;
 &lt;div v-tooltip.right=&quot;&#39;Справа&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;right&lt;/div&gt;
 &lt;div v-tooltip.auto=&quot;&#39;Авто&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;auto&lt;/div&gt;
 </pre>
-
-<div class="demo tooltip-row" v-data>
-  <div v-tooltip.top="'Сверху'" class="tooltip-anchor">top</div>
-  <div v-tooltip.bottom="'Снизу'" class="tooltip-anchor">bottom</div>
-  <div v-tooltip.left="'Слева'" class="tooltip-anchor">left</div>
-  <div v-tooltip.right="'Справа'" class="tooltip-anchor">right</div>
-  <div v-tooltip.auto="'Авто — сама выбирает сторону'" class="tooltip-anchor">auto</div>
+  </div>
 </div>
 
 <h2>Триггеры</h2>
@@ -148,16 +175,25 @@
   не существует.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo tooltip-row" v-data>
+      <div v-tooltip.hover="'Показывается по наведению'" class="tooltip-anchor">hover</div>
+      <button type="button" v-tooltip.click="'Показывается по клику, закрывается по Escape или клику снаружи'" class="tooltip-anchor">click</button>
+      <input v-tooltip.focus="'Показывается только по фокусу, наведение курсора мышью ни на что не влияет'" placeholder="focus" class="tooltip-anchor">
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-tooltip.hover=&quot;&#39;Показывается по наведению&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;hover&lt;/div&gt;
 &lt;button type=&quot;button&quot; v-tooltip.click=&quot;&#39;Показывается по клику&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;click&lt;/button&gt;
 &lt;input v-tooltip.focus=&quot;&#39;Показывается только по фокусу&#39;&quot; placeholder=&quot;focus&quot; class=&quot;tooltip-anchor&quot;&gt;
 </pre>
-
-<div class="demo tooltip-row" v-data>
-  <div v-tooltip.hover="'Показывается по наведению'" class="tooltip-anchor">hover</div>
-  <button type="button" v-tooltip.click="'Показывается по клику, закрывается по Escape или клику снаружи'" class="tooltip-anchor">click</button>
-  <input v-tooltip.focus="'Показывается только по фокусу, наведение курсора мышью ни на что не влияет'" placeholder="focus" class="tooltip-anchor">
+  </div>
 </div>
 
 <h2>Особые случаи</h2>
@@ -167,19 +203,28 @@
   её в одну строку через весь экран.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data>
+      <div
+        v-tooltip="'Очень длинный текст подсказки, который не помещается в одну строку и должен корректно переноситься внутри ограниченной по ширине подсказки, не растягиваясь на весь экран.'"
+        class="tooltip-anchor"
+      >
+        Длинная подсказка
+      </div>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-tooltip=&quot;&#39;Очень длинный текст подсказки, который не помещается в одну строку и должен
 корректно переноситься внутри ограниченной по ширине подсказки, не растягиваясь на весь экран.&#39;&quot;&gt;
   Длинная подсказка
 &lt;/div&gt;
 </pre>
-
-<div class="demo" v-data>
-  <div
-    v-tooltip="'Очень длинный текст подсказки, который не помещается в одну строку и должен корректно переноситься внутри ограниченной по ширине подсказки, не растягиваясь на весь экран.'"
-    class="tooltip-anchor"
-  >
-    Длинная подсказка
   </div>
 </div>
 
@@ -190,18 +235,27 @@
   компонента, а сама её DOM-нода при этом не пересоздаётся.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data="{ count: 0 }">
+      <button type="button" @click="count++" v-tooltip="`Кликов: ${count}`" class="tooltip-anchor">
+        Кликните, затем наведите курсор
+      </button>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
 &lt;div v-data=&quot;{ count: 0 }&quot;&gt;
   &lt;button type=&quot;button&quot; @click=&quot;count++&quot; v-tooltip=&quot;&#96;Кликов: ${count}&#96;&quot;&gt;
     Наведите после клика
   &lt;/button&gt;
 &lt;/div&gt;
 </pre>
-
-<div class="demo" v-data="{ count: 0 }">
-  <button type="button" @click="count++" v-tooltip="`Кликов: ${count}`" class="tooltip-anchor">
-    Кликните, затем наведите курсор
-  </button>
+  </div>
 </div>
 
 <h3>Ошибка валидации поля</h3>
@@ -212,7 +266,26 @@
   подсказкой выше.
 </p>
 
-<pre>
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+    <button type="button" class="example__tab" data-tab="js">JS</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data="validation">
+      <input type="email" placeholder="you@example.com" v-bind="field" class="tooltip-anchor">
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;div v-data=&quot;validation&quot;&gt;
+  &lt;input type=&quot;email&quot; placeholder=&quot;you@example.com&quot; v-bind=&quot;field&quot;&gt;
+&lt;/div&gt;
+</pre>
+  </div>
+  <div class="example__panel" data-panel="js">
+    <pre>
 document.addEventListener(&#39;youla:init&#39;, () =&gt; {
   Youla.data(&#39;validation&#39;, () =&gt; ({
     email: &#39;&#39;,
@@ -233,12 +306,8 @@ document.addEventListener(&#39;youla:init&#39;, () =&gt; {
   }));
 });
 </pre>
-
-<pre>
-&lt;div v-data=&quot;validation&quot;&gt;
-  &lt;input type=&quot;email&quot; placeholder=&quot;you@example.com&quot; v-bind=&quot;field&quot;&gt;
-&lt;/div&gt;
-</pre>
+  </div>
+</div>
 
 <style>
   .tooltip-anchor--invalid { border-color: #c0392b; }
@@ -265,10 +334,6 @@ document.addEventListener('youla:init', () => {
   }));
 });
 </script>
-
-<div class="demo" v-data="validation">
-  <input type="email" placeholder="you@example.com" v-bind="field" class="tooltip-anchor">
-</div>
 
 <p>
   <code>.focus</code> здесь принципиален: подсказка не появляется от наведения курсора мышью на

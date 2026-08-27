@@ -543,4 +543,304 @@ document.addEventListener('youla:init', ()=> {
       }
     },
   }));
+
+
+
+  /**
+   * Code syntax highlight
+   *
+   * @since 1.0
+   */
+  Youla.directive('highlight', (el, output, { modifiers }) => {
+    const lang    = modifiers[0] || 'html';
+    const wrapper = document.createElement('code');
+
+    wrapper.className = `language-${lang}`;
+    wrapper.append(...el.childNodes);
+
+    el.classList.add('line-numbers');
+    el.setAttribute('data-lang', lang.toUpperCase());
+    el.replaceChildren(wrapper);
+  });
+
+  /**
+   * Disable autofill, reliably — the readonly-until-focus trick stops
+   * autofill from prefilling the field before the user interacts with it,
+   * even when the browser ignores `autocomplete="off"`.
+   *
+   * @since 1.0
+   */
+  Youla.directive('noautofill', (el) => {
+    const lock = () => el.readOnly = true;
+
+    lock();
+
+    el.addEventListener('focus', () => requestAnimationFrame(() => el.readOnly = false));
+    el.addEventListener('blur', lock);
+  });
+
+  /**
+   * Pins a sidebar in place while its `position: relative` parent scrolls
+   * past, keeping it inside the parent's own bounds rather than just
+   * sticking to the viewport — for a sidebar taller than the viewport, it
+   * scrolls internally instead of overflowing off the top or bottom.
+   *
+   * @since 1.0
+   */
+  Youla.directive('sticky', el => {
+    const parent = el.parentElement;
+    if (getComputedStyle(parent).position !== 'relative') {
+      console.warn('Youla.js: "v-sticky" requires its parent to have position: relative.');
+      return;
+    }
+
+    const paddingTop    = parseInt(getComputedStyle(parent).paddingTop) + 42;
+    const paddingBottom = parseInt(getComputedStyle(parent).paddingBottom);
+
+    let top        = paddingTop;
+    let lastScroll = window.scrollY;
+
+    // Recomputed on every call (not cached) so a resize is picked up for free.
+    const reposition = () => {
+      const rect     = el.getBoundingClientRect();
+      const overflow = rect.height - window.innerHeight;
+      const delta    = window.scrollY - lastScroll;
+      lastScroll     = window.scrollY;
+
+      // Only slide while actually stuck — rect.top runs ahead of "top" both
+      // before engaging (still in flow) and after releasing at the bottom.
+      if (overflow <= 0 || rect.top > top) {
+        return;
+      }
+
+      top = Math.min(paddingTop, Math.max(-overflow - paddingBottom, top - delta));
+      el.style.top = `${top}px`;
+    };
+
+    el.style.position = 'sticky';
+    el.style.top      = `${paddingTop}px`;
+
+    ['load', 'scroll', 'resize'].forEach(event => window.addEventListener(event, reposition));
+  });
+
+  /**
+   * Expands or collapses an element with a smooth slide animation, driven
+   * by the directive's own truthiness (`v-collapse="open"`) rather than a
+   * CSS class — so it works with any bound boolean expression.
+   *
+   * @since 1.0
+   */
+  Youla.directive('collapse', (el, output) => {
+    const isOpen   = !!output;
+    const duration = 200;
+    const props    = ['height', 'paddingTop', 'paddingBottom', 'marginTop', 'marginBottom'];
+
+    el.style.overflow = 'hidden';
+    if (isOpen) {
+      el.style.display = 'block';
+    }
+
+    const from = Object.fromEntries(props.map(prop => [prop, parseFloat(getComputedStyle(el)[prop])]));
+
+    let start;
+    function step(timestamp) {
+      start ??= timestamp;
+
+      const elapsed = Math.min(timestamp - start, duration);
+      const ratio   = isOpen ? elapsed / duration : 1 - elapsed / duration;
+
+      props.forEach(prop => el.style[prop] = `${from[prop] * ratio}px`);
+
+      if (elapsed < duration) {
+        requestAnimationFrame(step);
+      } else {
+        if (!isOpen) {
+          el.style.display = 'none';
+        }
+        [...props, 'overflow'].forEach(prop => el.style[prop] = '');
+      }
+    }
+    requestAnimationFrame(step);
+  });
+
+  /**
+   * Grows a <textarea> to fit its content as the user types, up to a
+   * maximum number of rows (`v-textarea="6"`) — past that, it stops
+   * growing and scrolls internally instead.
+   *
+   * @since 1.0
+   */
+  Youla.directive('textarea', (el, output) => {
+    if (el.tagName !== 'TEXTAREA') {
+      return;
+    }
+
+    el.addEventListener('input', () => {
+      const maxRows = parseInt(output) || 99;
+      if (el.value.split(/\r\n|\r|\n/).length > maxRows) {
+        return;
+      }
+
+      const border = parseInt(getComputedStyle(el).borderWidth) * 4;
+
+      el.style.height = 'auto';
+      el.style.height = `${el.scrollHeight + border + 4}px`;
+    });
+  });
+
+  /**
+   * Animates a progress indicator into view once when it enters the viewport.
+   * Sets `--youla-progress` and `--youla-progress-transition` CSS properties
+   * based on `from.to` (both percentages) and the shared `<number><unit>`
+   * duration modifier. Skips the transition when reduced motion is preferred.
+   *
+   * `to` can also come from the directive's bound value instead of the `to`
+   * modifier — e.g. `v-progress.0.600ms="percent"` — in which case it's
+   * reactive: once the initial reveal has played, every change to `percent`
+   * transitions `--youla-progress` straight to the new value.
+   *
+   * @since 1.0
+   */
+  Youla.directive('progress', (el, output, { modifiers, duration, expression }) => {
+    const [rawFrom = 0, rawTo = 100] = modifiers;
+
+    const from = parseInt(rawFrom);
+
+    const bound = expression !== '' && !isNaN(parseFloat(output));
+    const to    = bound ? parseFloat(output) : parseInt(rawTo);
+
+    if (isNaN(from) || isNaN(to)) {
+      console.warn('Youla.js: "v-progress" requires numeric from/to modifiers as percentages (or a numeric bound value), e.g. v-progress.20.80.600ms.');
+      return;
+    }
+
+    const start = Math.min(Math.max(from, 0), 100);
+    const end   = Math.min(Math.max(to, 0), 100);
+
+    const transitionDuration = duration ? `${duration.value}${duration.unit}` : '0ms';
+    const reducedMotion      = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const apply = (percent, animate) => {
+      if (animate && !reducedMotion()) {
+        el.style.setProperty('--youla-progress-transition', `width ${transitionDuration}`);
+      }
+      el.style.setProperty('--youla-progress', `${percent}%`);
+    };
+
+    // Already revealed — this call is a reactive update to the bound value, not the initial mount.
+    if (el._x_progress?.revealed) {
+      el._x_progress.end = end;
+      apply(end, true);
+      return;
+    }
+
+    if (el._x_progress) {
+      el._x_progress.end = end;
+      return;
+    }
+
+    el._x_progress = { revealed: false, end };
+
+    new IntersectionObserver(([entry], observer) => {
+      if (!entry.isIntersecting) {
+        return;
+      }
+      observer.unobserve(el);
+
+      el._x_progress.revealed = true;
+
+      el.style.setProperty('--youla-progress', `${start}%`);
+
+      if (reducedMotion()) {
+        apply(el._x_progress.end, false);
+        return;
+      }
+
+      setTimeout(() => apply(el._x_progress.end, true), 500);
+    }).observe(el);
+  });
+
+  /**
+   * Adapter for SlimSelect — turns `<option>`s (with optional
+   * data-image/data-icon/data-description attributes) and optgroups into
+   * SlimSelect's data format. The directive's bound value, if given, is
+   * parsed as JSON and merged into SlimSelect's settings. Requires
+   * SlimSelect to be loaded; this project doesn't bundle it.
+   *
+   * @see   https://github.com/brianvoe/slim-select
+   * @since 1.0
+   */
+  Youla.directive('select', (el, output) => {
+    const settings = { showSearch: false, hideSelected: false, closeOnSelect: true };
+
+    if (el.hasAttribute('multiple')) {
+      settings.hideSelected  = true;
+      settings.closeOnSelect = false;
+    }
+
+    Object.assign(settings, JSON.parse(output || '{}'));
+
+    const data = Array.from(el.options).reduce((acc, option) => {
+      const image       = option.getAttribute('data-image');
+      const icon        = option.getAttribute('data-icon');
+      const description = option.getAttribute('data-description') || '';
+
+      const html =
+        `${image ? `<img src="${image}" alt />` : ''}${icon ? `<i class="${icon}"></i>` : ''}` +
+        `<span class="ss-text">${option.text}${description ? `<span class="ss-description">${description}</span>` : ''}</span>`;
+
+      const optionData = {
+        text: option.text, value: option.value, html, selected: option.selected,
+        display: true, disabled: false, mandatory: false, placeholder: false,
+        class: '', style: '', data: {},
+      };
+
+      if (option.parentElement.tagName === 'OPTGROUP') {
+        const label = option.parentElement.getAttribute('label');
+        let group   = acc.find(item => item.label === label);
+        if (!group) {
+          group = { label, options: [] };
+          acc.push(group);
+        }
+        group.options.push(optionData);
+      } else {
+        acc.push(optionData);
+      }
+      return acc;
+    }, []);
+
+    try {
+      new SlimSelect({ settings, select: el, data });
+    } catch {
+      console.error('Youla.js: "SlimSelect" is not defined — v-select requires SlimSelect to be loaded.');
+    }
+  });
+
+  /**
+   * Date picker with Datepicker.js
+   *
+   * @see     https://github.com/wwilsman/Datepicker.js
+   * @since   1.0
+   */
+  Youla.directive('pickadate', (e, el) => options => {
+    try {
+      options = Object.assign( {}, {
+        inline: true,
+        multiple: false,
+        ranged: true,
+        time: true,
+        lang: 'ru',
+        months: 2,
+        timeAmPm: false,
+        within: false,
+        without: false,
+        yearRange: 5,
+        weekStart: 1,
+      }, options );
+
+      new Datepicker(el,options);
+    } catch (e) {
+      console.error( 'Youla.js: "Datepicker" is not defined. Details: https:://github.com/text-mask/text-mask' );
+    }
+  });
 });

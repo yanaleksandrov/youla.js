@@ -40,7 +40,7 @@
 &lt;div class=&quot;notice-root&quot; v-data=&quot;notice&quot; @mouseenter=&quot;pause()&quot; @mouseleave=&quot;resume()&quot;&gt;
   &lt;div v-each=&quot;(item, id) in items&quot; class=&quot;notice__item&quot; :class=&quot;item.classes()&quot;&gt;
     &lt;svg class=&quot;notice__spinner&quot; viewBox=&quot;0 0 24 24&quot; width=&quot;24&quot; height=&quot;24&quot;&gt;
-      &lt;circle cx=&quot;12&quot; cy=&quot;12&quot; r=&quot;11&quot; v-countdown=&quot;item&quot;&gt;&lt;/circle&gt;
+      &lt;circle cx=&quot;12&quot; cy=&quot;12&quot; r=&quot;11&quot; @load=&quot;$el.style.animationDuration = item.duration + 'ms'; $el.style.animationDelay = '-' + elapsed(item) + 'ms'&quot;&gt;&lt;/circle&gt;
     &lt;/svg&gt;
     &lt;span class=&quot;notice__message&quot; v-text=&quot;item.message&quot;&gt;&lt;/span&gt;
     &lt;button type=&quot;button&quot; class=&quot;notice__close&quot; v-show=&quot;item.closable&quot; @click=&quot;close(id)&quot;&gt;×&lt;/button&gt;

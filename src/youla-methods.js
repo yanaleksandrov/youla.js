@@ -543,30 +543,4 @@ document.addEventListener('youla:init', ()=> {
       }
     },
   }));
-
-  /**
-   * Seeds a notice card's countdown-ring animation exactly once, right when its <circle> is
-   * created — bound to the bare loop item (not to any of its properties: `elapsed()`'s reads of
-   * `item.remaining`/`item.timer`/`item.startedAt` happen inside this directive's own plain JS,
-   * not inside a tracked expression), so it's never re-run by a later, unrelated refresh.
-   *
-   * That matters because a real DOM element's own CSS animation clock already tracks elapsed
-   * time on its own once started. pause()/resume() write item.timer/remaining on every item to
-   * freeze/resume its countdown — if this were a normal reactive `:style` binding instead, those
-   * writes would make Youla.js recompute and reapply a fresh "animation-delay" to every card's
-   * *already playing* animation, fighting the browser's own clock and making the ring visibly
-   * jump. Binding to the bare item means this directive's tracked reads are empty, so none of
-   * that ever marks it dirty — it only ever runs via the unconditional first render.
-   *
-   * @since 1.0
-   */
-  Youla.directive('countdown', (el, item, attribute, component) => {
-    if (el._x_countdown) {
-      return;
-    }
-    el._x_countdown = true;
-
-    el.style.animationDuration = `${item.duration}ms`;
-    el.style.animationDelay    = `-${component.data.elapsed(item)}ms`;
-  });
 });

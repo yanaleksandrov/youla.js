@@ -10,6 +10,151 @@ title: "v-data"
   в компонент и задаёт его реактивные данные, доступные во всех дочерних выражениях.
 </p>
 
+<p>
+  Передайте объект с начальным состоянием — его свойства и методы сразу доступны во всех дочерних
+  выражениях по имени, без какого-либо префикса.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data="{ count: 0 }">
+      <button type="button" @click="count++">+1</button>
+      <span v-text="count"></span>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;div v-data=&quot;{ count: 0 }&quot;&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;count++&quot;&gt;+1&lt;/button&gt;
+  &lt;span v-text=&quot;count&quot;&gt;&lt;/span&gt;
+&lt;/div&gt;
+</pre>
+  </div>
+</div>
+
+<h2>Локальный псевдоним: <code>as</code></h2>
+
+<p>
+  Внутри компонента к его данным и методам обычно обращаются без префикса — просто по имени:
+  <code>count</code>, <code>pause()</code>. Коротко, но по одному имени не всегда понятно, чьё
+  оно — своё для компонента или откуда-то ещё, особенно когда кода много.
+</p>
+
+<p>
+  <code>v-data="выражение as имя"</code> даёт данным ещё и явное локальное имя — например,
+  <code>counter.count</code> вместо просто <code>count</code>. Так на пару символов длиннее, зато
+  сразу видно, какому объекту принадлежит значение или вызов — связь между частями компонента
+  явная, а не подразумевается. Беспрефиксный доступ никуда не девается, псевдоним — просто ещё
+  один способ обратиться к тем же данным.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data="{ count: 0 } as counter">
+      <button type="button" @click="counter.count++">+1</button>
+      <span v-text="counter.count"></span>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;div v-data=&quot;{ count: 0 } as counter&quot;&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;counter.count++&quot;&gt;+1&lt;/button&gt;
+  &lt;span v-text=&quot;counter.count&quot;&gt;&lt;/span&gt;
+&lt;/div&gt;
+</pre>
+  </div>
+</div>
+
+<p>
+  Псевдоним и без него доступ работают одинаково реактивно — <code>v-show</code>, <code>:class</code>,
+  <code>v-each</code> и остальные директивы реагируют на изменения в обоих случаях. Про то, почему
+  псевдоним не пересекается с другими компонентами на странице, — в следующем разделе.
+</p>
+
+<h2>Вложенные <code>v-data</code></h2>
+
+<p>
+  Каждый элемент с <code>v-data</code> — самостоятельный компонент, даже если он лежит внутри
+  другого <code>v-data</code>. У вложенного компонента свои данные: он не видит данные родителя,
+  а родитель не видит его — поэтому можно без опаски использовать одинаковые имена свойств на
+  разных уровнях вложенности, конфликтов не будет.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data="{ count: 0 }">
+      Внешний счётчик: <span v-text="count"></span>
+      <button type="button" @click="count++">+1</button>
+
+      <div v-data="{ count: 100 }">
+        Внутренний счётчик: <span v-text="count"></span>
+        <button type="button" @click="count++">+1</button>
+      </div>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;div v-data=&quot;{ count: 0 }&quot;&gt;
+  Внешний счётчик: &lt;span v-text=&quot;count&quot;&gt;&lt;/span&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;count++&quot;&gt;+1&lt;/button&gt;
+
+  &lt;div v-data=&quot;{ count: 100 }&quot;&gt;
+    Внутренний счётчик: &lt;span v-text=&quot;count&quot;&gt;&lt;/span&gt;
+    &lt;button type=&quot;button&quot; @click=&quot;count++&quot;&gt;+1&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+</pre>
+  </div>
+</div>
+
+<p>
+  Если вложенным компонентам всё же нужно расшарить состояние — например, форма и её отдельная
+  секция должны знать об одних и тех же данных, — не полагайтесь на вложенность саму по себе.
+  Зарегистрируйте состояние как именованный провайдер через <code>Youla.data(имя, callback)</code>
+  и обращайтесь к нему как <code>$имя</code> из любого места на странице, независимо от того,
+  насколько глубоко оно вложено (подробнее — на странице <a href="/variables">Переменные</a>).
+</p>
+
+<h2>Компонент без данных</h2>
+
+<p>
+  Данные в <code>v-data</code> не обязательны. Если нужен просто рабочий компонент — чтобы
+  повесить обработчик <code>@событие</code>, обратиться к <code>$el</code> или использовать
+  <code>v-ref</code> — пишите директиву без значения. Это частый случай для небольших изолированных
+  виджетов вроде переключателя или аккордеона, которым не нужно собственное состояние.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data @click="$el.classList.toggle('is-open')">
+      Нажмите, чтобы переключить класс <code>is-open</code> на этом блоке
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;div v-data @click=&quot;$el.classList.toggle('is-open')&quot;&gt;
+  Нажмите, чтобы переключить класс &lt;code&gt;is-open&lt;/code&gt; на этом блоке
+&lt;/div&gt;
+</pre>
+  </div>
+</div>
+
 <h2>Модификаторы</h2>
 
 <p><code>.local</code> и <code>.cookie</code></p>

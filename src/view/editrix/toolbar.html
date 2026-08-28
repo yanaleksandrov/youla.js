@@ -15,17 +15,19 @@
   <div class="editrix-toolbar-page">
     Page
 
-    <details class="editrix-details" @click.outside="$el.open = false">
-      <summary class="editrix-details-summary" v-text="zoom + '%'">100%</summary>
-      <div class="editrix-details-items">
-        <div class="editrix-details-item" @click="zoom = 75 , $el.closest('details').open = false" :class="zoom === 75 && 'active'">
-          Zoom to 75%
-        </div>
-        <div class="editrix-details-item" @click="zoom = 100, $el.closest('details').open = false" :class="zoom === 100 && 'active'">
-          Zoom to 100%
-        </div>
-        <div class="editrix-details-item" @click="zoom = 125, $el.closest('details').open = false" :class="zoom === 125 && 'active'">
-          Zoom to 125%
+    <details class="editrix-details" v-bind="e.detailsAutoClose">
+      <summary class="editrix-details-summary" v-bind="e.zoomSummary">100%</summary>
+      <div class="editrix-details-content">
+        <div class="editrix-list">
+          <div class="editrix-list-item" v-bind="e.zoomOption(75)">
+            Zoom to 75%
+          </div>
+          <div class="editrix-list-item" v-bind="e.zoomOption(100)">
+            Zoom to 100%
+          </div>
+          <div class="editrix-list-item" v-bind="e.zoomOption(125)">
+            Zoom to 125%
+          </div>
         </div>
       </div>
     </details>

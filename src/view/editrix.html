@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Home Page</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <link rel="shortcut icon" href="images/favicon.ico" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+  <style>
+		body{
+			font-family: "Inter", sustem-ui, sans-serif !important;
+		}
+  </style>
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css" />
+</head>
+<body>
+  <div class="editrix" v-data="editrix as e">
+    <%= _.template(require('./editrix/toolbar.html').default)(data) %>
+
+    <%= _.template(require('./editrix/sidebar.html').default)(data) %>
+
+    <div class="editrix-preview" v-bind="e.canvas"></div>
+
+    <div class="editrix-toolbox">
+      <%= _.template(require('./editrix/toolbox.html').default)(data) %>
+    </div>
+  </div>
+
+  <!-- Stands in for what a backend would render here: the option lists behind the "Page" panel's
+       Status/Visibility/Discussion/Authors controls. youla-editrix.js reads this at boot instead
+       of hardcoding them. -->
+  <script type="application/json" id="editrix-data">
+    {
+      "statuses": [
+        {
+          "value": "published",
+          "label": "Published",
+          "icon": "ph ph-pen",
+          "caption": "Visible to everyone"
+        },
+        {
+          "value": "draft",
+          "label": "Draft",
+          "icon": "ph ph-text-t-slash",
+          "caption": "Not ready to publish"
+        },
+        {
+          "value": "pending",
+          "label": "Pending",
+          "icon": "ph ph-spinner-gap",
+          "caption": "Waiting for review before publishing"
+        },
+        {
+          "value": "scheduled",
+          "label": "Scheduled",
+          "icon": "ph ph-hourglass-medium",
+          "caption": "Publish automatically on a chosen date"
+        },
+        {
+          "value": "private",
+          "label": "Private",
+          "icon": "ph ph-detective",
+          "caption": "Only visible to site admins and editors"
+        }
+      ],
+      "visibilities": [
+        {
+          "value": "protected",
+          "label": "Password protected",
+          "icon": "ph ph-password",
+          "caption": "Only visible to those who know the password"
+        }
+      ],
+      "discussions": [
+        {
+          "value": "open",
+          "label": "Open",
+          "icon": "ph ph-eye",
+          "caption": "Visitors can add new comments and replies"
+        },
+        {
+          "value": "closed",
+          "label": "Closed",
+          "icon": "ph ph-eye-closed",
+          "caption": "Visitors can't add comments, but existing ones stay visible"
+        }
+      ],
+      "authors": [
+        {
+          "name": "John Doe",
+          "email": "john@gmail.com"
+        },
+        {
+          "name": "Nina Kovalski",
+          "email": "kovalski@gmail.com"
+        }
+      ]
+    }
+  </script>
+</body>
+</html>

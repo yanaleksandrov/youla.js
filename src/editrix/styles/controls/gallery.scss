@@ -81,6 +81,13 @@
 			border-color: rgba(0, 0, 0, 0.5);
 			color: rgba(0, 0, 0, 0.75);
 		}
+
+		input[type="file"] {
+			position: absolute;
+			inset: 0;
+			opacity: 0;
+			cursor: pointer;
+		}
 	}
 
 	&-image {
@@ -89,5 +96,9 @@
 		width: auto;
 		height: 100%;
 		min-width: 100%;
+		// draggable="false" (markup) is the real fix; this just backstops Safari, which still
+		// lets an <img> start its own native drag without it.
+		-webkit-user-drag: none;
+		user-drag: none;
 	}
 }

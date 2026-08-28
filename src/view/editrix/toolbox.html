@@ -25,60 +25,6 @@
 
     <div class="editrix-control">
       <div class="editrix-inputs">
-        <div class="editrix-inputs-label">Status</div>
-
-        <details class="editrix-details" v-bind="e.detailsAutoClose">
-          <summary class="editrix-details-summary" v-bind="e.statusSummary">Published</summary>
-          <div class="editrix-details-content">
-            <div class="editrix-list">
-              <label v-each="stat in statuses" class="editrix-list-item" v-bind="e.statusOption">
-                <input type="radio" v-prop="status" :value="stat.value">
-                <i :class="stat.icon"></i> <span v-text="stat.label"></span>
-                <span class="editrix-list-caption" v-text="stat.caption"></span>
-              </label>
-            </div>
-            <div class="editrix-section" v-show="stat.value !== 'scheduled'">
-              <div class="editrix-inputs">
-                <div class="editrix-inputs-item">
-                  <div class="editrix-inputs-label">Time</div>
-                  <div class="editrix-inputs-box">
-                    <input type="time" value="11:44">
-                  </div>
-                </div>
-                <div class="editrix-inputs-item">
-                  <div class="editrix-inputs-label">Date</div>
-                  <div class="editrix-inputs-box">
-                    <input type="date" value="2025-03-15" />
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="editrix-list">
-              <label v-each="vision in visibilities" class="editrix-list-item" v-bind="e.visibilityOption">
-                <input type="checkbox" v-prop="visibility" :class="vision.icon"> <span v-text="vision.label"></span>
-                <span class="editrix-list-caption" v-text="vision.caption"></span>
-              </label>
-            </div>
-            <div class="editrix-section" v-show="vision.value">
-              <div class="editrix-inputs">
-                <div class="editrix-inputs-item">
-                  <div class="editrix-inputs-label">Password</div>
-                  <div class="editrix-inputs-box">
-                    <input type="text" placeholder="Use a secure password">
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </details>
-      </div>
-
-      <div class="editrix-inputs" x-init="console.log(visibility)">
-        <div class="editrix-inputs-label">Published from</div>
-        <input type="date" value="2025-03-15" />
-      </div>
-
-      <div class="editrix-inputs">
         <div class="editrix-inputs-label">Authors</div>
         <details class="editrix-details" v-bind="e.detailsAutoClose">
           <summary class="editrix-details-summary" v-bind="e.authorSummary">John Doe</summary>
@@ -113,13 +59,65 @@
           <div class="editrix-details-content">
             <div class="editrix-list">
               <label v-each="discussion in discussions" class="editrix-list-item" v-bind="e.discussionOption">
-                <input type="radio" v-prop="status" :value="discussion.value">
+                <input type="radio" :value="discussion.value" v-prop="discussionStatus">
                 <i :class="discussion.icon"></i> <span v-text="discussion.label"></span>
                 <span class="editrix-list-caption" v-text="discussion.caption"></span>
               </label>
             </div>
           </div>
         </details>
+      </div>
+
+      <div class="editrix-inputs">
+        <div class="editrix-inputs-label">Visibility</div>
+
+        <details class="editrix-details" v-bind="e.detailsAutoClose">
+          <summary class="editrix-details-summary" v-bind="e.visibilitySummary">Public</summary>
+          <div class="editrix-details-content">
+            <div class="editrix-list editrix-list--visibility">
+              <label v-each="vision in visibilities" class="editrix-list-item" v-bind="e.visibilityOption">
+                <input type="radio" :value="vision.value" v-prop="visibility">
+                <i :class="vision.icon"></i> <span v-text="vision.label"></span>
+                <span class="editrix-list-caption" v-text="vision.caption"></span>
+              </label>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <div class="editrix-section" v-show="visibility === 'protected'" hidden>
+        <div class="editrix-inputs">
+          <div class="editrix-inputs-item">
+            <div class="editrix-inputs-label">Password</div>
+            <div class="editrix-inputs-box">
+              <input type="password" v-prop="password" placeholder="Use a secure password">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="editrix-inputs">
+        <div class="editrix-inputs-label">Status</div>
+
+        <details class="editrix-details" v-bind="e.detailsAutoClose">
+          <summary class="editrix-details-summary" v-bind="e.statusSummary">Published</summary>
+          <div class="editrix-details-content">
+            <div class="editrix-list editrix-list--status">
+              <label v-each="stat in selectableStatuses" class="editrix-list-item" v-bind="e.statusOption">
+                <input type="radio" :value="stat.value" v-prop="status">
+                <i :class="stat.icon"></i> <span v-text="stat.label"></span>
+                <span class="editrix-list-caption" v-text="stat.caption"></span>
+              </label>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <div class="editrix-inputs">
+        <div class="editrix-inputs-label">Published At</div>
+        <div class="editrix-inputs-box">
+          <input type="datetime-local" v-bind="e.publishedAtInput">
+        </div>
       </div>
     </div>
   </div>

@@ -58,7 +58,8 @@
     </div>
   </div>
   <div class="editrix-blocks" v-bind="e.sidebarPanel('content')" hidden>
-    <div class="editrix-fields" v-bind="e.contentFields"></div>
+    <div class="editrix-blocks-empty" v-show="!activeBlock">Select a block on the canvas to edit its settings.</div>
+    <div class="editrix-fields" v-show="activeBlock" v-bind="e.contentFields"></div>
 
     <template id="editrix-field-template">
       <div class="editrix-control">
@@ -112,10 +113,12 @@
     </template>
 
     <template id="editrix-control-slider">
-      <input type="range" data-part="range">
-      <div class="editrix-field-inline">
-        <input type="number" class="editrix-inputs-box" data-part="size">
-        <select class="editrix-inputs-box" data-part="unit">
+      <div class="editrix-slider">
+        <input type="range" data-part="range">
+        <span class="editrix-slider-affix" data-part="prefix"></span>
+        <input type="number" class="editrix-inputs-box editrix-slider-input" data-part="size">
+        <span class="editrix-slider-affix" data-part="suffix"></span>
+        <select class="editrix-inputs-box editrix-slider-unit" data-part="unit">
           <option v-each="unit in units" :value="unit" v-text="unit"></option>
         </select>
       </div>

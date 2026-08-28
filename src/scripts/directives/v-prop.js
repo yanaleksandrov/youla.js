@@ -14,7 +14,17 @@ import { storage, isStorageModifier, getStorageType, computeExpires } from '../s
  * @param {Component} component - the owning component instance.
  */
 directive('prop', (el, output, attribute, component) => {
-  updateAttribute(el, 'value', output);
+  // Own logic, not updateAttribute()'s generic "value" case: a radio/checkbox's own distinguishing
+  // value (e.g. a plain static `value="..."` attribute, or a `:value="stat.value"` bind on a
+  // v-each-rendered option) is set independently of v-prop — v-prop only ever needs to check/
+  // uncheck this element by comparing its current value against the bound property.
+  if (el.type === 'radio') {
+    el.checked = el.value === output;
+  } else if (el.type === 'checkbox') {
+    el.checked = Array.isArray(output) ? output.some((val) => val === el.value) : !!output;
+  } else {
+    updateAttribute(el, 'value', output);
+  }
 
   // update storage if value changed
   if (isStorageModifier(attribute.modifiers)) {

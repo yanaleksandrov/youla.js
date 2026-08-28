@@ -101,12 +101,12 @@ const DRAG_CLASSES = {
 
 const CONTAINER_TOOLS_HTML = `
   <ul class="editrix-container-tools">
-    <li class="editrix-container-tools-item" title="Edit Container">
+    <li class="editrix-container-tools-item" data-action="edit" title="Edit Container">
       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 256 256">
         <path d="M76 92a16 16 0 1 1-16-16 16 16 0 0 1 16 16Zm52-16a16 16 0 1 0 16 16 16 16 0 0 0-16-16Zm68 32a16 16 0 1 0-16-16 16 16 0 0 0 16 16ZM60 148a16 16 0 1 0 16 16 16 16 0 0 0-16-16Zm68 0a16 16 0 1 0 16 16 16 16 0 0 0-16-16Zm68 0a16 16 0 1 0 16 16 16 16 0 0 0-16-16Z"/>
       </svg>
     </li>
-    <li class="editrix-container-tools-item" title="Delete Container">
+    <li class="editrix-container-tools-item" data-action="delete" title="Delete Container">
       <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 256 256">
         <path d="M208 192a12 12 0 0 1-17 17l-63-64-64 63a12 12 0 0 1-17-17l64-63-63-64a12 12 0 0 1 17-17l63 64 64-64a12 12 0 0 1 17 17l-64 64Z"/>
       </svg>
@@ -114,10 +114,48 @@ const CONTAINER_TOOLS_HTML = `
   </ul>
 `;
 
+// The lone child every block gets, right above its own content — see blockTitle()/readBlockSettings()
+// below. Its "title"/"show_title" values come from CONTENT_FIELDS like any other setting; this is
+// just the one spot on the canvas (as opposed to the sidebar's Content tab) that renders them.
+const BLOCK_TITLE_HTML = '<div class="editrix-block-title"></div>';
+
+// Every CONTENT_FIELDS default, flattened to a plain "{ name: default }" map — the baseline a
+// block's own settings are read against on the canvas (readBlockSettings() below) before it's ever
+// been selected/edited, so a freshly dropped block already shows "Untitled", left-aligned, etc.
+// instead of blank/zeroed fields. Controls/base.js's own getValue() has its own (per-control, not
+// per-block) fallback to `def.default` for exactly the same reason, on the sidebar side.
+const DEFAULT_BLOCK_SETTINGS = Object.fromEntries(
+  CONTENT_FIELDS.flatMap(({ fields }) => fields).map(({ name, options }) => [name, options.default]),
+);
+
 // The block currently being dragged, or the palette item about to spawn one — deliberately kept
 // outside the reactive data: it's rebuilt on every drag and never rendered, so tracking it would
 // only cost refreshes for no benefit. One drag runs at a time, so one shared session is enough.
 let dragSession = null;
+
+// Every block dropped/rendered gets a stable "data-blockId" the first time its container() @load
+// fires — see container() below — so its own settings (settings[blockId], scoped independently of
+// whichever block the sidebar's Content tab currently has active) can be found again later, by
+// itself or by any other block.
+let blockIdSeq = 0;
+function nextBlockId() {
+  return `block-${++blockIdSeq}`;
+}
+
+/**
+ * Reads block "id"'s own settings, merged over DEFAULT_BLOCK_SETTINGS so a field that was never
+ * touched still reads its declared default — used by the canvas-facing bindings (a block's own
+ * ":style"/blockTitle) that must reflect *that* block's settings regardless of which block (if
+ * any) the sidebar currently has active; getValue()/setValue() (controls/base.js) stay the right
+ * choice for the sidebar's own fields, which always mean "the active block".
+ *
+ * @param {Object} component - The reactive `this` from whichever binding is reading.
+ * @param {string} [id] - A block's `dataset.blockId`.
+ * @returns {Object}
+ */
+function readBlockSettings(component, id) {
+  return { ...DEFAULT_BLOCK_SETTINGS, ...(id ? component.settings[id] : null) };
+}
 
 /**
  * Runs "mutate" (a synchronous DOM reorder — e.g. insertBefore) and smoothly animates every
@@ -247,6 +285,27 @@ function placeDroppedBlock(component, canvasEl, anchor, after) {
   if (session.blockType) {
     component.$root.__x.initialize(element);
   }
+}
+
+/**
+ * Removes "el" from the canvas — dropping its own settings bucket along with it, and clearing
+ * "activeBlock" first if it was the block being deleted (otherwise the Content tab would keep
+ * showing/writing settings for a block that no longer exists). The "Delete Container" tool
+ * (CONTAINER_TOOLS_HTML) is this function's one caller.
+ *
+ * @param {Object} component - The reactive `this` from whichever v-bind handler is deleting.
+ * @param {HTMLElement} el - The block being removed.
+ */
+function deleteBlock(component, el) {
+  const id = el.dataset.blockId;
+
+  if (component.activeBlock === id) {
+    component.activeBlock = null;
+  }
+  delete component.settings[id];
+
+  component.blocks = component.blocks.filter((block) => block !== el);
+  el.remove();
 }
 
 /**
@@ -431,6 +490,12 @@ document.addEventListener('youla:init', () => {
       '@drop.prevent'() {
         placeDroppedBlock(this, this.$el);
       },
+      // A block's own "@click.stop" (container(), below) keeps this from firing when the click
+      // actually landed on a block — so this only ever means "the canvas' empty background was
+      // clicked", i.e. deselect.
+      '@click'() {
+        this.activeBlock = null;
+      },
     },
 
     // Toolbar > zoom dropdown (sections/toolbar.html) — v-bind="e.zoomSummary" on the <summary>,
@@ -472,9 +537,31 @@ document.addEventListener('youla:init', () => {
     container(scheme) {
       return {
         ':draggable': 'true',
+        // Only "align"/"accent_color" apply here — "width"/"padding" (also CONTENT_FIELDS
+        // settings, so still stored and editable) have no safe target yet: this element's own
+        // "padding" is what centers it into an 800px column (see editor.scss's $max-width), so
+        // writing either as a literal CSS value here would fight that rather than complement it.
+        ':style'() {
+          const settings = readBlockSettings(this, this.$el.dataset.blockId);
+
+          return {
+            textAlign: settings.align,
+            '--editrix-accent': settings.accent_color,
+          };
+        },
         '@load'() {
           if (!this.blocks.includes(this.$el)) {
             this.blocks = [...this.blocks, this.$el];
+          }
+          if (!this.$el.dataset.blockId) {
+            this.$el.dataset.blockId = nextBlockId();
+          }
+          if (!this.$el.querySelector(':scope > .editrix-block-title')) {
+            this.$el.insertAdjacentHTML('afterbegin', BLOCK_TITLE_HTML);
+
+            const title = this.$el.querySelector(':scope > .editrix-block-title');
+            title.setAttribute('v-bind', 'e.blockTitle');
+            this.$root.__x.initialize(title);
           }
           if (scheme !== undefined) {
             mountEditor(this.$el, scheme);
@@ -512,20 +599,49 @@ document.addEventListener('youla:init', () => {
           dragSession = null;
         },
         '@mouseenter'() {
-          if (!this.$el.querySelector(':scope > .editrix-container-tools')) {
-            this.$el.insertAdjacentHTML('afterbegin', CONTAINER_TOOLS_HTML);
+          if (this.$el.querySelector(':scope > .editrix-container-tools')) {
+            return;
           }
+          this.$el.insertAdjacentHTML('afterbegin', CONTAINER_TOOLS_HTML);
+
+          const tools = this.$el.querySelector(':scope > .editrix-container-tools');
+          tools.querySelector('[data-action="edit"]').addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.activeBlock = this.$el.dataset.blockId;
+            this.tab = 'content';
+          });
+          tools.querySelector('[data-action="delete"]').addEventListener('click', (e) => {
+            e.stopPropagation();
+            deleteBlock(this, this.$el);
+          });
         },
         '@mouseleave'() {
           this.$el.querySelector(':scope > .editrix-container-tools')?.remove();
         },
-        '@click'() {
+        // ".stop" keeps this from also reaching canvas()'s own "@click" above, which would
+        // otherwise immediately undo the selection this just made (deselecting on any click is
+        // exactly what that handler is for — see its own comment).
+        '@click.stop'() {
+          this.activeBlock = this.$el.dataset.blockId;
           this.tab = 'content';
         },
         '@contextmenu.prevent'() {
           this.tab = 'blocks';
         },
       };
+    },
+
+    // The ".editrix-block-title" every container() @load prepends to its own block (see
+    // BLOCK_TITLE_HTML) — reads straight off that block's own "dataset.blockId" (found via
+    // closest(), since this element itself carries no id) rather than "activeBlock"/getValue(), so
+    // every block shows its own title regardless of which one (if any) is currently selected.
+    blockTitle: {
+      'v-show'() {
+        return readBlockSettings(this, this.$el.closest('.editrix-container')?.dataset.blockId).show_title;
+      },
+      'v-text'() {
+        return readBlockSettings(this, this.$el.closest('.editrix-container')?.dataset.blockId).title;
+      },
     },
 
     // Sidebar > Content tab (sections/sidebar.html) — v-bind="e.contentFields" on the panel's
@@ -627,8 +743,26 @@ document.addEventListener('youla:init', () => {
     // Page > Status / visibility / discussion
     status: 'published',
     statuses: STATUSES,
-    visibility: '',
+    // The Status dropdown (toolbox.html) never lists "scheduled" as something to pick directly —
+    // matching WordPress, it's set automatically by publishedAtInput() below whenever "Published
+    // At" is moved into the future. Kept out of the rendered list but still in "statuses" itself,
+    // so statusSummary()'s lookup above still finds its label once that happens.
+    selectableStatuses: STATUSES.filter((stat) => stat.value !== 'scheduled'),
+    // Page > Published At — a single datetime-local input (toolbox.html) driving both when the
+    // post goes out and, via publishedAtInput() below, whether "status" reads as published or
+    // scheduled.
+    publishedAt: '2025-03-15T11:44',
+    // Independent of "status" above — matches WordPress's own Status/Visibility split: "public"
+    // (default)/"protected"/"private" is its own mutually-exclusive choice, orthogonal to
+    // published/draft/pending/scheduled. toolbox.html's password field (shown only while
+    // visibility === 'protected') is the one place this and "status" still meet.
+    visibility: 'public',
     visibilities: VISIBILITIES,
+    password: '',
+    // Named "discussionStatus", not "discussion" — toolbox.html's own discussion radios read
+    // `v-each="discussion in discussions"`, and that loop variable would shadow a same-named
+    // top-level field inside discussionOption()'s bare "discussion.value" reference below.
+    discussionStatus: DISCUSSIONS[0]?.value || '',
     discussions: DISCUSSIONS,
 
     // Page > Authors
@@ -683,7 +817,26 @@ document.addEventListener('youla:init', () => {
     // Page > Status/Authors/Discussion — the 3rd .editrix-control in toolbox.html
     statusSummary: {
       'v-text'() {
-        return this.status;
+        return this.statuses.find((stat) => stat.value === this.status)?.label || this.status;
+      },
+    },
+    // v-bind="e.publishedAtInput" on the "Published At" datetime-local input (toolbox.html) — a
+    // plain two-way binding like v-prop's own, plus the one side effect v-prop can't express:
+    // flipping "status" to/from "scheduled" depending on whether the chosen moment is still in the
+    // future — matching WordPress, where "Scheduled" is never picked directly, only implied by a
+    // future publish date.
+    publishedAtInput: {
+      ':value'() {
+        return this.publishedAt;
+      },
+      '@input'(e) {
+        this.publishedAt = e.target.value;
+
+        if (this.publishedAt && new Date(this.publishedAt) > new Date()) {
+          this.status = 'scheduled';
+        } else if (this.status === 'scheduled') {
+          this.status = 'published';
+        }
       },
     },
     // One entry per iteration of `v-each="stat in statuses"`, so :class needs "stat" in scope —
@@ -692,8 +845,19 @@ document.addEventListener('youla:init', () => {
       '@click': "$el.closest('details').open = false",
       ':class': "status === stat.value && 'active'",
     },
+    // Its own <details> now (toolbox.html), separate from Status — same shape as statusSummary()
+    // above.
+    visibilitySummary: {
+      'v-text'() {
+        return this.visibilities.find((vision) => vision.value === this.visibility)?.label || this.visibility;
+      },
+    },
+    // One entry per iteration of `v-each="vision in visibilities"` — same shape as statusOption()
+    // above, now that visibility is its own mutually-exclusive radio choice rather than a single
+    // "protected" checkbox.
     visibilityOption: {
-      ':class': "vision.value && 'checked'",
+      '@click': "$el.closest('details').open = false",
+      ':class': "visibility === vision.value && 'active'",
     },
     authorSummary: {
       'v-text'() {
@@ -710,13 +874,12 @@ document.addEventListener('youla:init', () => {
     },
     discussionSummary: {
       'v-text'() {
-        // Bound to "status", not a "discussion" field — matches the existing (pre-existing) markup.
-        return this.status;
+        return this.discussionStatus;
       },
     },
     discussionOption: {
       '@click': "$el.closest('details').open = false",
-      ':class': "status === stat.value && 'active'",
+      ':class': "discussionStatus === discussion.value && 'active'",
     },
 
     // Page > Categories — the .editrix-control in toolbox.html's "Categories" section. Checking a

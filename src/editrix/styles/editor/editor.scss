@@ -11,6 +11,20 @@
 		border: 1px solid $tools-color;
 	}
 
+	button,
+	a {
+		color: var(--editrix-accent, inherit);
+	}
+
+	&-title {
+		font-size: 0.6875rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.02em;
+		color: var(--editrix-accent, #8e8e8e);
+		margin-bottom: 0.25rem;
+	}
+
 	&.editrix-dragging-start {
 		opacity: 0.4;
 

@@ -30,10 +30,13 @@ export function createControlsBase() {
     // read-only; go through getValue()/setValue()/isConditionMet() instead of reading it directly.
     _controls: {},
 
-    // Every control's current value, keyed by name — Elementor calls this "settings". A
-    // responsive control's entry is itself keyed by device ({desktop, tablet, mobile}); use
-    // getValue()/setValue() rather than reading/writing this directly, so callers never need to
-    // care whether a given control happens to be responsive.
+    // Every block's current control values, keyed first by block id (youla-editrix.js's
+    // `container()` stamps one onto every `.editrix-container`, read via `this.activeBlock` —
+    // whichever block was last clicked on the canvas) and then by control name — Elementor calls
+    // the inner object "settings". A responsive control's entry is itself keyed by device
+    // ({desktop, tablet, mobile}); use getValue()/setValue() rather than reading/writing this
+    // directly, so callers never need to care whether a given control happens to be responsive,
+    // and never need to know which block is currently active.
     settings: {},
 
     // Which breakpoint a `responsive: true` control currently reads/writes — matches Elementor's
@@ -46,6 +49,24 @@ export function createControlsBase() {
     // sections/sidebar.html's field template library), so unitSelect() and its markup share one
     // source of truth.
     units: CONTROL_UNITS,
+
+    // Which block's settings the Content tab currently reads/writes — set by `container()`'s
+    // `@click` (youla-editrix.js) to whichever `.editrix-container` was last clicked. `null` until
+    // a block has ever been selected, in which case blockSettings() below falls back to a shared
+    // "__page__" bucket so a control rendered with nothing selected still has somewhere to write.
+    activeBlock: null,
+
+    /**
+     * The active block's own settings object — `settings[activeBlock]`, created on first use.
+     * getValue()/setValue()/registerControl() go through this rather than "settings" directly, so
+     * none of them need to know a block is even involved.
+     *
+     * @returns {Object}
+     */
+    blockSettings() {
+      const key = this.activeBlock || '__page__';
+      return this.settings[key] || (this.settings[key] = {});
+    },
 
     /**
      * Registers/refreshes "name"'s control definition, and seeds its value's default the first
@@ -75,21 +96,23 @@ export function createControlsBase() {
         this._controls[name] = def;
       }
 
-      if (this.settings[name] === undefined) {
-        this.settings[name] = def.responsive ? {} : def.default;
+      const bucket = this.blockSettings();
+      if (bucket[name] === undefined) {
+        bucket[name] = def.responsive ? {} : def.default;
       }
       return def;
     },
 
     /**
-     * Reads a control's current value, resolving the active device first if it's responsive.
+     * Reads a control's current value on the active block, resolving the active device first if
+     * it's responsive.
      *
      * @param {string} name
      * @returns {*}
      */
     getValue(name) {
       const def = this._controls[name];
-      const raw = this.settings[name];
+      const raw = this.blockSettings()[name];
 
       if (def?.responsive) {
         const value = (raw || {})[this.responsiveDevice];
@@ -99,18 +122,20 @@ export function createControlsBase() {
     },
 
     /**
-     * Writes a control's current value, scoped to the active device first if it's responsive.
+     * Writes a control's current value on the active block, scoped to the active device first if
+     * it's responsive.
      *
      * @param {string} name
      * @param {*} value
      */
     setValue(name, value) {
       const def = this._controls[name];
+      const bucket = this.blockSettings();
 
       if (def?.responsive) {
-        this.settings[name] = { ...(this.settings[name] || {}), [this.responsiveDevice]: value };
+        bucket[name] = { ...(bucket[name] || {}), [this.responsiveDevice]: value };
       } else {
-        this.settings[name] = value;
+        bucket[name] = value;
       }
     },
 
@@ -216,6 +241,21 @@ export function createControlsBase() {
         },
         'v-text'() {
           return this._controls[name]?.description;
+        },
+      };
+    },
+
+    // v-bind="e.fieldAffix('price', 'prefix')" / "...'suffix')" on a small static-text span glued
+    // to one side of a control's own input (e.g. slider() — controls/render.js) — a control opts
+    // in by adding a "prefix"/"suffix" string to its own definition (`{ type: 'slider', prefix:
+    // '$' }`); hidden entirely when that key isn't set, so both stay optional per field.
+    fieldAffix(name, key) {
+      return {
+        'v-show'() {
+          return !!this._controls[name]?.[key];
+        },
+        'v-text'() {
+          return this._controls[name]?.[key] || '';
         },
       };
     },

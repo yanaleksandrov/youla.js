@@ -36,7 +36,11 @@ export function createUnitControls() {
         ':step'() {
           return this._controls[name]?.step ?? 1;
         },
-        'v-ranger': '',
+        // Ranger's floating value label and tick scale (youla-ranger.js), both on by default, are
+        // built for a full-size standalone slider — this control is a compact sidebar row with its
+        // own numeric input right next to the track (controls/render.js's slider() renderer), so
+        // only the bare track+thumb belong here.
+        'v-ranger': '{ labelIsVisible: false, scaleTicksCount: 0 }',
       };
     },
   };

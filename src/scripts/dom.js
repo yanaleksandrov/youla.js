@@ -51,9 +51,15 @@ export function closestDirective(el, name) {
 export function domWalk(el, callback) {
   callback(el);
 
-  let node = el.firstElementChild;
+  // Snapshotted up front, not chased live via "nextElementSibling": a directive applied to one
+  // child (e.g. "v-ranger" wrapping/cloning its own <input>) can rearrange the DOM around that
+  // child as a side effect of "callback(node)" below. Re-reading a live "nextElementSibling"
+  // afterwards would then follow whatever the directive just built instead of "el"'s real
+  // remaining children — wandering into that internal markup and, once it dead-ends, never
+  // reaching "el"'s later siblings at all.
+  const children = Array.from(el.children);
 
-  while (node) {
+  for (const node of children) {
     if (hasDirective(node, 'v-data')) {
       return;
     }
@@ -64,7 +70,5 @@ export function domWalk(el, callback) {
     } else {
       domWalk(node, callback);
     }
-
-    node = node.nextElementSibling;
   }
 }

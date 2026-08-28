@@ -1,0 +1,859 @@
+<% var data = {
+  title: "Слайдер диапазона (v-ranger)"
+}; %>
+<%= _.template(require('./parts/header.html').default)(data) %>
+
+<h1>Слайдер диапазона (v-ranger)</h1>
+
+<p>
+  Директива <code>v-ranger</code> превращает обычный <code>&lt;input type="range"&gt;</code> в
+  оформленный слайдер: заполненный трек, плавающая подпись значения над ручкой и шкала делений под
+  треком. Если на том же поле стоит атрибут <code>data-points</code>, слайдер автоматически
+  становится диапазонным — появляется вторая ручка, а поле начинает возвращать пару значений.
+  Атрибут <code>data-points</code> задаёт стартовое значение верхней ручки (список через запятую,
+  сегодня используется только первое значение).
+</p>
+
+<p>
+  <code>min</code>, <code>max</code>, <code>step</code> и стартовое <code>value</code> — обычные
+  HTML-атрибуты поля, как и всегда. Значение директивы — необязательный объект опций,
+  который передаётся напрямую конструктору <code>Ranger</code>.
+</p>
+
+<h2>Опции вкратце</h2>
+
+<table>
+  <tbody>
+    <tr>
+      <th>Опция</th>
+      <th>Описание</th>
+      <th>По умолчанию</th>
+    </tr>
+    <tr>
+      <td><code>scaleTicksCount</code></td>
+      <td>Число делений шкалы под треком; <code>0</code> отключает шкалу целиком.</td>
+      <td><code>10</code></td>
+    </tr>
+    <tr>
+      <td><code>scaleMinorTicksCount</code></td>
+      <td>Промежуточные деления без подписи между каждой парой основных.</td>
+      <td><code>0</code></td>
+    </tr>
+    <tr>
+      <td><code>scaleAnimatedTicksCount</code></td>
+      <td>Радиус (в делениях) дуги живого CSS-свойства <code>--ranger-scale</code> с каждой стороны
+        от ручки — на нём можно анимировать деления, как полосы графического эквалайзера.</td>
+      <td><code>1</code></td>
+    </tr>
+    <tr>
+      <td><code>labelIsVisible</code>, <code>labelOnDragOnly</code></td>
+      <td>Показывать ли плавающую подпись значения и показывать ли её только во время перетаскивания.</td>
+      <td><code>true</code>, <code>false</code></td>
+    </tr>
+    <tr>
+      <td><code>format</code></td>
+      <td>Функция <code>(value) =&gt; string</code>, которой форматируется значение везде, где оно
+        показывается: в подписи, в делениях шкалы, в <code>aria-valuetext</code>. Может вернуть и
+        HTML-разметку — подпись отрендерит её, а не покажет как экранированный текст.</td>
+      <td><code>null</code></td>
+    </tr>
+    <tr>
+      <td><code>values</code></td>
+      <td>Массив отображаемых значений («S», «M», «L», даты и т.п.) — <code>min</code>/<code>max</code>/<code>step</code> при этом высчитываются автоматически по их числу.</td>
+      <td><code>null</code></td>
+    </tr>
+    <tr>
+      <td><code>logScale</code></td>
+      <td>Отображает значение по экспоненциальной шкале между <code>min</code> и <code>max</code>,
+        хотя перемещение ручки при этом остаётся линейным — для цены товара, где нужна точность и
+        в дешёвом, и в дорогом сегменте одновременно.</td>
+      <td><code>false</code></td>
+    </tr>
+    <tr>
+      <td><code>minValue</code>, <code>maxValue</code></td>
+      <td>Ограничивают выбор поддиапазоном <code>[minValue, maxValue]</code>, не трогая нативные
+        <code>min</code>/<code>max</code> — шкала и деления по-прежнему показывают весь диапазон, но
+        ручка останавливается на границах.</td>
+      <td><code>null</code>, <code>null</code></td>
+    </tr>
+    <tr>
+      <td><code>snapPoints</code>, <code>snapThreshold</code></td>
+      <td>Значения, к которым ручка магнитится, оказавшись достаточно близко.</td>
+      <td><code>[]</code>, <code>0.02</code></td>
+    </tr>
+    <tr>
+      <td><code>fineStep</code></td>
+      <td>Шаг для <strong>Shift</strong> + стрелка — точная подстройка вместо обычного <code>step</code>.</td>
+      <td>по умолчанию <code>step / 10</code></td>
+    </tr>
+    <tr>
+      <td><code>minGap</code></td>
+      <td>Минимальное расстояние между ручками в диапазонном режиме.</td>
+      <td><code>0</code></td>
+    </tr>
+    <tr>
+      <td><code>fixedRange</code></td>
+      <td>В диапазонном режиме фиксирует расстояние между ручками — перетаскивание одной двигает
+        весь диапазон целиком, а не сжимает его.</td>
+      <td><code>false</code></td>
+    </tr>
+    <tr>
+      <td><code>marks</code></td>
+      <td>Точки (<code>{ value }</code>) или зоны (<code>{ from, to }</code>) на треке, независимые
+        от шкалы делений; у любой можно указать свой <code>className</code>.</td>
+      <td><code>[]</code></td>
+    </tr>
+    <tr>
+      <td><code>fillGradient</code></td>
+      <td>CSS-фон (например, <code>linear-gradient</code>), которым закрашивается заливка вместо
+        одного сплошного <code>accentColor</code>.</td>
+      <td><code>null</code></td>
+    </tr>
+    <tr>
+      <td><code>fromInput</code>, <code>toInput</code></td>
+      <td>Внешние <code>&lt;input&gt;</code>-элементы, которые держатся синхронными с нижней/единственной
+        и верхней ручками.</td>
+      <td><code>null</code></td>
+    </tr>
+    <tr>
+      <td><code>classes</code></td>
+      <td>Переопределение CSS-классов внутренних элементов слайдера — например, чтобы навесить свой
+        класс на деления шкалы.</td>
+      <td>см. <code>Ranger.DEFAULTS.classes</code></td>
+    </tr>
+    <tr>
+      <td><code>disabled</code></td>
+      <td>Блокирует слайдер — стоит продублировать нативным атрибутом <code>disabled</code> на самом поле.</td>
+      <td><code>false</code></td>
+    </tr>
+    <tr>
+      <td><code>onStart</code>, <code>onChange</code>, <code>onEnd</code></td>
+      <td>Коллбэки <code>(value, slider)</code>; в диапазонном режиме <code>value</code> — пара <code>[from, to]</code>.</td>
+      <td><code>null</code></td>
+    </tr>
+    <tr>
+      <td><code>onFocus</code>, <code>onBlur</code></td>
+      <td>Коллбэки <code>(value, slider)</code>, срабатывающие при получении и потере фокуса ручкой.</td>
+      <td><code>null</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Громкость, яркость и недоступный фильтр</h2>
+
+<p>
+  Три базовых состояния: обычный ползунок громкости плеера; компактный ползунок яркости экрана
+  без шкалы и всплывающей подписи (<code>scaleTicksCount: 0</code>, <code>labelIsVisible: false</code>)
+  — для панели быстрых настроек; диапазонный фильтр цены, отключённый через <code>disabled</code>,
+  потому что по текущим условиям поиска нет подходящих товаров.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data>
+      <input type="range" min="0" max="100" step="1" value="40" v-ranger="{ labelSuffix: '%' }">
+      <input type="range" min="0" max="10" step="1" value="4" v-ranger="{ scaleTicksCount: 0, labelIsVisible: false }">
+      <input type="range" min="0" max="1000" step="10" value="200" data-points="800" disabled v-ranger="{ disabled: true, labelPrefix: '$' }">
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;input type=&quot;range&quot; min=&quot;0&quot; max=&quot;100&quot; step=&quot;1&quot; value=&quot;40&quot;
+  v-ranger=&quot;{ labelSuffix: &#39;%&#39; }&quot;&gt;
+
+&lt;input type=&quot;range&quot; min=&quot;0&quot; max=&quot;10&quot; step=&quot;1&quot; value=&quot;4&quot;
+  v-ranger=&quot;{ scaleTicksCount: 0, labelIsVisible: false }&quot;&gt;
+
+&lt;input type=&quot;range&quot; min=&quot;0&quot; max=&quot;1000&quot; step=&quot;10&quot; value=&quot;200&quot; data-points=&quot;800&quot; disabled
+  v-ranger=&quot;{ disabled: true, labelPrefix: &#39;$&#39; }&quot;&gt;
+</pre>
+  </div>
+</div>
+
+<h2>Отрицательные и дробные значения: компенсация экспозиции</h2>
+
+<p>
+  Произвольный <code>step</code>, отрицательный <code>min</code>, суффикс у меток и делений —
+  как регулятор компенсации экспозиции в камере или фоторедакторе, где нужен шаг в десятые доли
+  ступени в обе стороны от нуля.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data>
+      <input type="range" min="-2" max="2" step="0.1" value="-0.3" v-ranger="{ scaleTicksCount: 8, scaleTickSuffix: ' EV', labelSuffix: ' EV' }">
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;input type=&quot;range&quot; min=&quot;-2&quot; max=&quot;2&quot; step=&quot;0.1&quot; value=&quot;-0.3&quot;
+  v-ranger=&quot;{ scaleTicksCount: 8, scaleTickSuffix: &#39; EV&#39;, labelSuffix: &#39; EV&#39; }&quot;&gt;
+</pre>
+  </div>
+</div>
+
+<h2>Диапазон зарплат, синхронизированный с полями</h2>
+
+<p>
+  Два ползунка через <code>data-points</code> задают вилку зарплаты в вакансии, значения
+  дублируются в числовые поля ниже через <code>fromInput</code>/<code>toInput</code> — оба
+  найдены через <a href="/v-ref"><code>v-ref</code></a> и <code>$refs</code>, без единой строчки
+  собственного JS, — а <code>minGap</code> не даёт вилке схлопнуться меньше чем на $1000.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data>
+      <p>
+        <label>От <input type="number" v-ref="salaryFrom" min="0" max="50000" value="2000"></label>
+        <label>До <input type="number" v-ref="salaryTo" min="0" max="50000" value="35000"></label>
+      </p>
+      <input
+        type="range"
+        min="0"
+        max="50000"
+        step="1"
+        value="2000"
+        data-points="35000"
+        v-ranger="{ fromInput: $refs.salaryFrom, toInput: $refs.salaryTo, scaleTicksCount: 5, minGap: 1000, format: value => '$' + value.toLocaleString() }"
+      >
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;div v-data&gt;
+  &lt;label&gt;От &lt;input type=&quot;number&quot; v-ref=&quot;salaryFrom&quot; min=&quot;0&quot; max=&quot;50000&quot; value=&quot;2000&quot;&gt;&lt;/label&gt;
+  &lt;label&gt;До &lt;input type=&quot;number&quot; v-ref=&quot;salaryTo&quot; min=&quot;0&quot; max=&quot;50000&quot; value=&quot;35000&quot;&gt;&lt;/label&gt;
+
+  &lt;input
+    type=&quot;range&quot; min=&quot;0&quot; max=&quot;50000&quot; step=&quot;1&quot; value=&quot;2000&quot; data-points=&quot;35000&quot;
+    v-ranger=&quot;{
+      fromInput: $refs.salaryFrom,
+      toInput: $refs.salaryTo,
+      scaleTicksCount: 5,
+      minGap: 1000,
+      format: value =&gt; &#39;$&#39; + value.toLocaleString(),
+    }&quot;
+  &gt;
+&lt;/div&gt;
+</pre>
+  </div>
+</div>
+
+<h2>Слипшиеся ползунки и точки привязки: диапазон скидки</h2>
+
+<p>
+  Проверка объединения меток при столкновении (ползунки стартуют на расстоянии 4% в диапазоне
+  0–100%), а <code>snapPoints</code> магнитом притягивает любой из них к стандартным уровням
+  скидки 25%, 50% или 75%, как только он оказывается в пределах <code>snapThreshold</code> от
+  одного из них.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data>
+      <input type="range" min="0" max="100" step="1" value="48" data-points="52" v-ranger="{ snapPoints: [25, 50, 75], labelSuffix: '%', scaleTickSuffix: '%' }">
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;input type=&quot;range&quot; min=&quot;0&quot; max=&quot;100&quot; step=&quot;1&quot; value=&quot;48&quot; data-points=&quot;52&quot;
+  v-ranger=&quot;{ snapPoints: [25, 50, 75], labelSuffix: &#39;%&#39;, scaleTickSuffix: &#39;%&#39; }&quot;&gt;
+</pre>
+  </div>
+</div>
+
+<h2>Эквалайзер: анимированные деления шкалы</h2>
+
+<p>
+  Каждое деление — основное или промежуточное — содержит живое CSS-свойство <code>--ranger-scale</code>
+  (0–1) — дугу с пиком 1 прямо у ручки и плавным (не линейным) спадом к 0 на дальнем краю
+  радиуса, — поэтому анимировать его можно обычным CSS, как подсветку полосы графического
+  эквалайзера; за саму анимацию отвечает готовый модификатор класса <code>ranger-scale-tick--animated</code>
+  из <code>ranger.scss</code>, подключённый здесь через опцию <code>classes</code>.
+  <code>scaleMinorTicksCount</code> добавляет промежуточные деления без подписи между
+  каждой парой основных, а <code>scaleAnimatedTicksCount</code> задаёт радиус этой дуги с
+  <em>каждой</em> стороны от ручки — а диапазонный слайдер ниже подсвечивает деления рядом с
+  <em>любым</em> из двух ползунков независимо, отмечая полосу пропускания фильтра.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data>
+      <input
+        type="range"
+        min="0"
+        max="100"
+        step="1"
+        value="50"
+        v-ranger="{
+          scaleTicksCount: 10,
+          scaleMinorTicksCount: 9,
+          scaleAnimatedTicksCount: 3,
+          labelSuffix: '%',
+          scaleTickSuffix: '%',
+          classes: {
+            scaleTick: 'ranger-scale-tick ranger-scale-tick--animated',
+            scaleMinorTick: 'ranger-scale-tick ranger-scale-tick--minor ranger-scale-tick--animated',
+          },
+        }"
+      >
+      <input
+        type="range"
+        min="0"
+        max="100"
+        step="1"
+        value="20"
+        data-points="80"
+        v-ranger="{
+          scaleTicksCount: 10,
+          scaleMinorTicksCount: 4,
+          scaleAnimatedTicksCount: 2,
+          labelSuffix: '%',
+          scaleTickSuffix: '%',
+          classes: {
+            scaleTick: 'ranger-scale-tick ranger-scale-tick--animated',
+            scaleMinorTick: 'ranger-scale-tick ranger-scale-tick--minor ranger-scale-tick--animated',
+          },
+        }"
+      >
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;input
+  type=&quot;range&quot; min=&quot;0&quot; max=&quot;100&quot; step=&quot;1&quot; value=&quot;50&quot;
+  v-ranger=&quot;{
+    scaleTicksCount: 10,
+    scaleMinorTicksCount: 9,
+    scaleAnimatedTicksCount: 3,
+    labelSuffix: &#39;%&#39;,
+    scaleTickSuffix: &#39;%&#39;,
+    classes: {
+      scaleTick: &#39;ranger-scale-tick ranger-scale-tick--animated&#39;,
+      scaleMinorTick: &#39;ranger-scale-tick ranger-scale-tick--minor ranger-scale-tick--animated&#39;,
+    },
+  }&quot;
+&gt;
+
+&lt;input
+  type=&quot;range&quot; min=&quot;0&quot; max=&quot;100&quot; step=&quot;1&quot; value=&quot;20&quot; data-points=&quot;80&quot;
+  v-ranger=&quot;{
+    scaleTicksCount: 10,
+    scaleMinorTicksCount: 4,
+    scaleAnimatedTicksCount: 2,
+    labelSuffix: &#39;%&#39;,
+    scaleTickSuffix: &#39;%&#39;,
+    classes: {
+      scaleTick: &#39;ranger-scale-tick ranger-scale-tick--animated&#39;,
+      scaleMinorTick: &#39;ranger-scale-tick ranger-scale-tick--minor ranger-scale-tick--animated&#39;,
+    },
+  }&quot;
+&gt;
+</pre>
+  </div>
+</div>
+
+<h2>Дискретные значения: размер одежды и даты бронирования</h2>
+
+<p>
+  <code>values</code> превращает слайдер в выбор индекса по массиву собственных отображаемых
+  значений — <code>min</code>/<code>max</code>/<code>step</code> вычисляются автоматически, как в
+  выборе размера одежды на карточке товара. Массив может содержать что угодно, вплоть до объектов
+  <code>Date</code>: второй слайдер ниже — диапазонный выбор дат для бронирования номера, где сам
+  массив (все дни с 1 по 30 июня 2026) задаёт шкалу целиком, а <code>format</code> отображает
+  значения в читаемом виде. <code>minValue</code>/<code>maxValue</code> при этом ограничивают
+  выбор датами с 5 по 23 июня, когда номер свободен, — шкала по-прежнему показывает весь месяц, но
+  перетащить ручку за эти границы нельзя, она просто останавливается на них. Массив дат и функция
+  форматирования вынесены в <code>Youla.data('bookingDates', ...)</code> — так выражение прямо в
+  <code>v-ranger</code> остаётся коротким.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+    <button type="button" class="example__tab" data-tab="js">JS</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data>
+      <input type="range" value="2" v-ranger="{ values: ['XS', 'S', 'M', 'L', 'XL', 'XXL'] }">
+    </div>
+    <div class="demo" v-data="bookingDates">
+      <input type="range" value="8" data-points="18" v-ranger="{ values: dateValues, minValue: 4, maxValue: 22, format: formatBookingDate }">
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;input type=&quot;range&quot; value=&quot;2&quot; v-ranger=&quot;{ values: [&#39;XS&#39;, &#39;S&#39;, &#39;M&#39;, &#39;L&#39;, &#39;XL&#39;, &#39;XXL&#39;] }&quot;&gt;
+
+&lt;div v-data=&quot;bookingDates&quot;&gt;
+  &lt;input
+    type=&quot;range&quot; value=&quot;8&quot; data-points=&quot;18&quot;
+    v-ranger=&quot;{ values: dateValues, minValue: 4, maxValue: 22, format: formatBookingDate }&quot;
+  &gt;
+&lt;/div&gt;
+</pre>
+  </div>
+  <div class="example__panel" data-panel="js">
+    <pre>
+Youla.data(&#39;bookingDates&#39;, () =&gt; {
+  // 1–30 June 2026 — the array&#39;s own bounds are the slider&#39;s date limits.
+  const dateValues = Array.from({ length: 30 }, (_, i) =&gt; {
+    const date = new Date(2026, 5, 1);
+    date.setDate(date.getDate() + i);
+    return date;
+  });
+
+  return {
+    dateValues,
+    // A closure over dateValues, not `this` — Ranger calls format() as its own method, so `this` inside it is the Ranger instance, not this component&#39;s data.
+    formatBookingDate: (index) =&gt; dateValues[Math.round(index)].toLocaleDateString(&#39;ru-RU&#39;, { day: &#39;numeric&#39;, month: &#39;short&#39; }),
+  };
+});
+</pre>
+  </div>
+</div>
+
+<h2>Пользовательское форматирование: тариф облачного хранилища</h2>
+
+<p>
+  Функция <code>format(value)</code> полностью заменяет <code>labelPrefix</code>/<code>labelSuffix</code>
+  (и аналогичные параметры для делений шкалы) везде, где отображается значение — здесь она
+  подбирает единицу измерения сама, показывая гигабайты до 1000 и переходя на терабайты после,
+  как в выборе тарифа облачного хранилища.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data>
+      <input
+        type="range"
+        min="0"
+        max="5000"
+        step="50"
+        value="1250"
+        v-ranger="{ scaleTicksCount: 5, format: value => value >= 1000 ? (value / 1000).toFixed(2) + ' ТБ' : value + ' ГБ' }"
+      >
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;input
+  type=&quot;range&quot; min=&quot;0&quot; max=&quot;5000&quot; step=&quot;50&quot; value=&quot;1250&quot;
+  v-ranger=&quot;{ scaleTicksCount: 5, format: value =&gt; value &gt;= 1000 ? (value / 1000).toFixed(2) + &#39; ТБ&#39; : value + &#39; ГБ&#39; }&quot;
+&gt;
+</pre>
+  </div>
+</div>
+
+<h2>Логарифмическая шкала: цена товара</h2>
+
+<p>
+  <code>logScale</code> оставляет перемещение ручки линейным, но отображает значение по
+  экспоненциальной шкале между <code>min</code> и <code>max</code> — то, что нужно фильтру цены
+  в каталоге, где товары стоят и от 10 центов, и до $10&nbsp;000: больше точности в частом нижнем
+  сегменте цен, а не только у дорогих редких позиций. Обратите внимание, как значения делений
+  сгущаются слева. Начальный <code>value="10"</code> ниже — это цена в $10, а не позиция ручки:
+  Ranger сам вычисляет нужную позицию при инициализации. Опция <code>format</code> здесь заменяет
+  дефолтную экспоненциальную развёртку своей — она пересчитывает позицию в цену сама, чтобы заодно
+  добавить <code>$</code> и убрать копейки там, где они уже не важны.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data>
+      <input
+        type="range"
+        min="0.1"
+        max="10000"
+        step="1"
+        value="10"
+        v-ranger="{
+          logScale: true,
+          scaleTicksCount: 6,
+          format: position => {
+            const min = 0.1, max = 10000;
+            const price = min * Math.pow(max / min, (position - min) / (max - min));
+            return price < 10 ? '$' + price.toFixed(2) : '$' + Math.round(price).toLocaleString();
+          },
+        }"
+      >
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;input
+  type=&quot;range&quot; min=&quot;0.1&quot; max=&quot;10000&quot; step=&quot;1&quot; value=&quot;10&quot;
+  v-ranger=&quot;{
+    logScale: true,
+    scaleTicksCount: 6,
+    format: position =&gt; {
+      const min = 0.1, max = 10000;
+      const price = min * Math.pow(max / min, (position - min) / (max - min));
+      return price &lt; 10 ? &#39;$&#39; + price.toFixed(2) : &#39;$&#39; + Math.round(price).toLocaleString();
+    },
+  }&quot;
+&gt;
+</pre>
+  </div>
+</div>
+
+<h2>Перетаскивание диапазона: цикл воспроизведения и запись на приём</h2>
+
+<p>
+  Схватите саму закрашенную полосу (не ручку) и потяните — оба ползунка двигаются вместе,
+  сохраняя длину, как перемещение окна цикла воспроизведения по треку без изменения его
+  длительности. Работает автоматически на любом диапазонном слайдере, включая первый ниже, где
+  границы цикла по-прежнему можно тянуть и по отдельности, меняя его длину. Второй слайдер —
+  часовой слот записи на приём с <code>fixedRange</code>: за какую бы ручку его ни тянуть, длина
+  не меняется — его можно только передвинуть на другое время.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data>
+      <input
+        type="range"
+        min="0"
+        max="180"
+        step="1"
+        value="30"
+        data-points="90"
+        v-ranger="{ scaleTicksCount: 6, format: seconds => `${Math.floor(seconds / 60)}:${String(Math.round(seconds % 60)).padStart(2, '0')}` }"
+      >
+      <input
+        type="range"
+        min="480"
+        max="1080"
+        step="15"
+        value="540"
+        data-points="600"
+        v-ranger="{ fixedRange: true, scaleTicksCount: 4, format: minutes => `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}` }"
+      >
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;input
+  type=&quot;range&quot; min=&quot;0&quot; max=&quot;180&quot; step=&quot;1&quot; value=&quot;30&quot; data-points=&quot;90&quot;
+  v-ranger=&quot;{ scaleTicksCount: 6, format: seconds =&gt; `${Math.floor(seconds / 60)}:${String(Math.round(seconds % 60)).padStart(2, &#39;0&#39;)}` }&quot;
+&gt;
+
+&lt;input
+  type=&quot;range&quot; min=&quot;480&quot; max=&quot;1080&quot; step=&quot;15&quot; value=&quot;540&quot; data-points=&quot;600&quot;
+  v-ranger=&quot;{ fixedRange: true, scaleTicksCount: 4, format: minutes =&gt; `${String(Math.floor(minutes / 60)).padStart(2, &#39;0&#39;)}:${String(minutes % 60).padStart(2, &#39;0&#39;)}` }&quot;
+&gt;
+</pre>
+  </div>
+</div>
+
+<h2>Точный шаг, сброс и метка только при перетаскивании: масштаб</h2>
+
+<p>
+  Наведите фокус на ручку: стрелки меняют масштаб на 10% (обычный <code>step</code>),
+  <strong>Shift</strong> + стрелка — на 1% (<code>fineStep</code>), как точная подстройка зума в
+  графическом редакторе или на карте. Двойной клик по ручке сбрасывает масштаб к 100% —
+  встроенное поведение, без единой строчки своего кода. <code>labelOnDragOnly</code> при этом
+  скрывает всплывающую подпись, пока ручку не начинают двигать — зажмите или перетащите её, чтобы
+  увидеть текущий процент.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data>
+      <input type="range" min="50" max="200" step="10" value="100" v-ranger="{ fineStep: 1, labelOnDragOnly: true, labelSuffix: '%', scaleTickSuffix: '%' }">
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;input
+  type=&quot;range&quot; min=&quot;50&quot; max=&quot;200&quot; step=&quot;10&quot; value=&quot;100&quot;
+  v-ranger=&quot;{ fineStep: 1, labelOnDragOnly: true, labelSuffix: &#39;%&#39;, scaleTickSuffix: &#39;%&#39; }&quot;
+&gt;
+</pre>
+  </div>
+</div>
+
+<h2>Градиент заливки: риск портфеля и сложность пароля</h2>
+
+<p>
+  <code>fillGradient</code> заменяет один сплошной <code>accent-color</code> CSS-градиентом —
+  здесь зелёный→жёлтый→красный на шкале риска инвестиционного портфеля. В диапазонном режиме
+  градиент растягивается на выбранный поддиапазон, а не на постоянную позицию по всей дорожке.
+  Второй слайдер использует тот же приём для пяти чётких зон — как индикатор сложности пароля
+  (слабый / так себе / хороший / сильный / очень сильный).
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data>
+      <input type="range" min="0" max="100" step="1" value="40" v-ranger="{ fillGradient: 'linear-gradient(to right, #22c55e, #eab308, #ef4444)' }">
+      <input
+        type="range"
+        min="0"
+        max="100"
+        step="1"
+        value="40"
+        v-ranger="{ fillGradient: 'linear-gradient(to right, #00a651 0 calc(20% - 1px), var(--ranger-bg) calc(20% - 1px) 20%, #7cb342 20% calc(40% - 1px), var(--ranger-bg) calc(40% - 1px) 40%, #fdd835 40% calc(60% - 1px), var(--ranger-bg) calc(60% - 1px) 60%, #fb8c00 60% calc(80% - 1px), var(--ranger-bg) calc(80% - 1px) 80%, #e53935 80% 100%)' }"
+      >
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;input
+  type=&quot;range&quot; min=&quot;0&quot; max=&quot;100&quot; step=&quot;1&quot; value=&quot;40&quot;
+  v-ranger=&quot;{ fillGradient: &#39;linear-gradient(to right, #22c55e, #eab308, #ef4444)&#39; }&quot;
+&gt;
+
+&lt;input
+  type=&quot;range&quot; min=&quot;0&quot; max=&quot;100&quot; step=&quot;1&quot; value=&quot;40&quot;
+  v-ranger=&quot;{
+    fillGradient: &#39;linear-gradient(to right,
+      #00a651 0 calc(20% - 1px), var(--ranger-bg) calc(20% - 1px) 20%,
+      #7cb342 20% calc(40% - 1px), var(--ranger-bg) calc(40% - 1px) 40%,
+      #fdd835 40% calc(60% - 1px), var(--ranger-bg) calc(60% - 1px) 60%,
+      #fb8c00 60% calc(80% - 1px), var(--ranger-bg) calc(80% - 1px) 80%,
+      #e53935 80% 100%)&#39;,
+  }&quot;
+&gt;
+</pre>
+  </div>
+</div>
+
+<h2>Метки, зоны и HTML-подпись: недельный бюджет на продукты</h2>
+
+<p>
+  <code>marks</code> добавляет фиксированные точки и зоны на дорожку независимо от шкалы делений —
+  здесь отмечены типичный бюджет на продукты (300), рекомендованный (700, выделен своим
+  <code>className</code>) и «комфортная зона» 200–500 через <code>{ from, to }</code>. <code>format</code>
+  при этом возвращает HTML — всплывающая подпись рендерит его как разметку, а не показывает как
+  экранированный текст.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data>
+      <input
+        type="range"
+        min="0"
+        max="1000"
+        step="10"
+        value="450"
+        v-ranger="{
+          scaleTicksCount: 5,
+          marks: [
+            { value: 300, label: 'Типично' },
+            { value: 700, label: 'Рекомендовано', className: 'ranger-mark--highlight' },
+            { from: 200, to: 500, label: 'Комфортная зона' },
+          ],
+          format: value => '<strong>$' + value.toLocaleString() + '</strong>',
+        }"
+      >
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;input
+  type=&quot;range&quot; min=&quot;0&quot; max=&quot;1000&quot; step=&quot;10&quot; value=&quot;450&quot;
+  v-ranger=&quot;{
+    scaleTicksCount: 5,
+    marks: [
+      { value: 300, label: &#39;Типично&#39; },
+      { value: 700, label: &#39;Рекомендовано&#39;, className: &#39;ranger-mark--highlight&#39; },
+      { from: 200, to: 500, label: &#39;Комфортная зона&#39; },
+    ],
+    format: value =&gt; &#39;&lt;strong&gt;$&#39; + value.toLocaleString() + &#39;&lt;/strong&gt;&#39;,
+  }&quot;
+&gt;
+</pre>
+  </div>
+</div>
+
+<h2>Программное управление: пресеты фильтров</h2>
+
+<p>
+  <code>setValue</code>/<code>setRange</code> двигают ручки в обход перетаскивания — через тот же
+  конвейер, что и обычное взаимодействие, как клик по готовому пресету в интерфейсе.
+  <code>update(options)</code> меняет опции уже смонтированного слайдера: «Скрыть фильтры»
+  переключает <code>disabled</code>, «Увеличить лимит» удваивает <code>max</code> у обоих
+  слайдеров ниже и перестраивает их шкалу. Сам экземпляр <code>Ranger</code> директива кладёт на
+  DOM-элемент как <code>el._x_ranger</code>, поэтому до него легко добраться через
+  <a href="/v-ref"><code>v-ref</code></a> и <code>$refs</code>, без отдельной переменной в
+  <code>v-data</code>.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" v-data>
+      <input type="range" min="0" max="100" step="1" value="50" v-ref="presetVolume" v-ranger="{ labelSuffix: '%' }">
+      <input type="range" min="0" max="100" step="1" value="20" data-points="60" v-ref="presetPrice" v-ranger="{ labelPrefix: '$' }">
+      <p>
+        <button type="button" @click="$refs.presetVolume._x_ranger.setValue(80)">Комфортный уровень</button>
+        <button type="button" @click="$refs.presetPrice._x_ranger.setRange(30, 70)">Средний сегмент</button>
+        <button type="button" @click="$refs.presetVolume._x_ranger.update({ disabled: !$refs.presetVolume._x_ranger.disabled }); $refs.presetPrice._x_ranger.update({ disabled: !$refs.presetPrice._x_ranger.disabled })">Скрыть фильтры</button>
+        <button type="button" @click="$refs.presetVolume._x_ranger.update({ max: Number($refs.presetVolume._x_ranger.fromSlider.max) * 2 }); $refs.presetPrice._x_ranger.update({ max: Number($refs.presetPrice._x_ranger.fromSlider.max) * 2 })">Увеличить лимит</button>
+      </p>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;div v-data&gt;
+  &lt;input type=&quot;range&quot; min=&quot;0&quot; max=&quot;100&quot; step=&quot;1&quot; value=&quot;50&quot; v-ref=&quot;presetVolume&quot; v-ranger=&quot;{ labelSuffix: &#39;%&#39; }&quot;&gt;
+  &lt;input type=&quot;range&quot; min=&quot;0&quot; max=&quot;100&quot; step=&quot;1&quot; value=&quot;20&quot; data-points=&quot;60&quot; v-ref=&quot;presetPrice&quot; v-ranger=&quot;{ labelPrefix: &#39;$&#39; }&quot;&gt;
+
+  &lt;button type=&quot;button&quot; @click=&quot;$refs.presetVolume._x_ranger.setValue(80)&quot;&gt;
+    Комфортный уровень
+  &lt;/button&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;$refs.presetPrice._x_ranger.setRange(30, 70)&quot;&gt;
+    Средний сегмент
+  &lt;/button&gt;
+  &lt;button
+    type=&quot;button&quot;
+    @click=&quot;
+      $refs.presetVolume._x_ranger.update({ disabled: !$refs.presetVolume._x_ranger.disabled });
+      $refs.presetPrice._x_ranger.update({ disabled: !$refs.presetPrice._x_ranger.disabled })
+    &quot;
+  &gt;
+    Скрыть фильтры
+  &lt;/button&gt;
+  &lt;button
+    type=&quot;button&quot;
+    @click=&quot;
+      $refs.presetVolume._x_ranger.update({ max: Number($refs.presetVolume._x_ranger.fromSlider.max) * 2 });
+      $refs.presetPrice._x_ranger.update({ max: Number($refs.presetPrice._x_ranger.fromSlider.max) * 2 })
+    &quot;
+  &gt;
+    Увеличить лимит
+  &lt;/button&gt;
+&lt;/div&gt;
+</pre>
+  </div>
+</div>
+
+<h2 dir="rtl">Callback-и и поддержка RTL: громкость в арабском интерфейсе</h2>
+
+<p>
+  Потяните или сфокусируйте ручку клавиатурой — каждое событие (<code>onStart</code>,
+  <code>onChange</code>, <code>onEnd</code>, <code>onFocus</code>, <code>onBlur</code>) логируется
+  ниже. Контейнер также имеет <code>dir="rtl"</code> — шкала, заливка, всплывающая подпись и
+  перетаскивание (в т.ч. клик по дорожке и перетаскивание всего диапазона) отражаются
+  автоматически, без какой-либо отдельной настройки, — как регулятор громкости в интерфейсе,
+  локализованном на арабский или иврит.
+</p>
+
+<div class="example" dir="rtl">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" dir="rtl" v-data="{ logText: '' }">
+      <input
+        type="range"
+        min="0"
+        max="100"
+        step="1"
+        value="50"
+        v-ranger="{
+          scaleTicksCount: 10,
+          labelSuffix: '%',
+          onStart: value => logText = 'onStart: ' + value + '\n' + logText,
+          onChange: value => logText = 'onChange: ' + value + '\n' + logText,
+          onEnd: value => logText = 'onEnd: ' + value + '\n' + logText,
+          onFocus: value => logText = 'onFocus: ' + value + '\n' + logText,
+          onBlur: value => logText = 'onBlur: ' + value + '\n' + logText,
+        }"
+      >
+      <pre v-text="logText" style="max-height: 160px; overflow-y: auto;"></pre>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;div dir=&quot;rtl&quot; v-data=&quot;{ logText: &#39;&#39; }&quot;&gt;
+  &lt;input
+    type=&quot;range&quot; min=&quot;0&quot; max=&quot;100&quot; step=&quot;1&quot; value=&quot;50&quot;
+    v-ranger=&quot;{
+      scaleTicksCount: 10,
+      labelSuffix: &#39;%&#39;,
+      onStart: value =&gt; logText = &#39;onStart: &#39; + value + &#39;\n&#39; + logText,
+      onChange: value =&gt; logText = &#39;onChange: &#39; + value + &#39;\n&#39; + logText,
+      onEnd: value =&gt; logText = &#39;onEnd: &#39; + value + &#39;\n&#39; + logText,
+      onFocus: value =&gt; logText = &#39;onFocus: &#39; + value + &#39;\n&#39; + logText,
+      onBlur: value =&gt; logText = &#39;onBlur: &#39; + value + &#39;\n&#39; + logText,
+    }&quot;
+  &gt;
+  &lt;pre v-text=&quot;logText&quot;&gt;&lt;/pre&gt;
+&lt;/div&gt;
+</pre>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('youla:init', () => {
+    Youla.data('bookingDates', () => {
+      // 1–30 June 2026 — the array's own bounds are the slider's date limits.
+      const dateValues = Array.from({ length: 30 }, (_, i) => {
+        const date = new Date(2026, 5, 1);
+        date.setDate(date.getDate() + i);
+        return date;
+      });
+
+      return {
+        dateValues,
+        // A closure over dateValues, not `this` — Ranger calls format() as its own method, so `this` inside it is the Ranger instance, not this component's data.
+        formatBookingDate: (index) => dateValues[Math.round(index)].toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }),
+      };
+    });
+  });
+</script>
+
+<%= _.template(require('./parts/footer.html').default)(data) %>

@@ -22,6 +22,15 @@
 
     <%= _.template(require('./editrix/sidebar.html').default)(data) %>
 
+    <!-- The "fill" control's own <template>s (plugins/editrix/controls/fill.js) — kept in their
+         own partial rather than nested inside sidebar.html's own require() the way sidebar.html
+         itself is nested here: html-webpack-plugin only wires up require() for the templates it
+         compiles directly (this file), not for a second level of require() inside an
+         already-required partial's own text. Where they sit in the document doesn't matter
+         (document.getElementById() finds them either way) — this is the one place in the page
+         that can actually require() a further-nested partial. -->
+    <%= _.template(require('./editrix/controls/fill.html').default)(data) %>
+
     <div class="editrix-preview" v-bind="e.canvas"></div>
 
     <div class="editrix-toolbox">

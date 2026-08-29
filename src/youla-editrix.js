@@ -89,6 +89,22 @@ const CONTENT_FIELDS = [
       },
     ],
   },
+  {
+    heading: 'Fill controls',
+    fields: [
+      {
+        name: 'background_fill', title: 'Background', tooltip: 'Figma-style: layer solid colors and images, each with its own opacity',
+        options: {
+          type: 'fill',
+          default: [
+            { type: 'solid', visible: true, opacity: 100, color: '#1069fb' },
+            { type: 'image', visible: false, opacity: 100, image: { url: '' } },
+          ],
+          description: 'Click a fill to edit it; drag to reorder',
+        },
+      },
+    ],
+  },
 ];
 
 // Classes toggled on a canvas container while something is being dragged over/from it.

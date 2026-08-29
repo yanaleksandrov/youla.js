@@ -1,0 +1,61 @@
+<!-- The "fill" control's own markup (plugins/editrix/controls/fill.js) — kept in its own partial,
+     included once from sidebar.html's field template library, so this control's markup never has
+     to live mixed into that file's own <template> list. Every part a script needs to find/wire is
+     marked with "data-part" (createFillItem()/renderFillControl() in fill.js). -->
+
+<template id="editrix-control-fill">
+  <div class="editrix-fill">
+    <div class="editrix-fill-list" data-part="list"></div>
+
+    <details class="editrix-details editrix-fill-add" data-part="add-toggle">
+      <summary class="editrix-details-summary editrix-buttons-item" title="Add fill">
+        <i class="ph ph-plus"></i>
+      </summary>
+      <div class="editrix-details-content">
+        <div class="editrix-list" data-part="add-menu"></div>
+      </div>
+    </details>
+  </div>
+</template>
+
+<template id="editrix-fill-item-template">
+  <details class="editrix-details editrix-fill-item" data-fill-item>
+    <summary class="editrix-details-summary editrix-fill-item__summary">
+      <i class="ph ph-dots-six-vertical editrix-fill-item__handle" title="Drag to reorder"></i>
+      <span class="editrix-fill-item__preview" data-part="preview"></span>
+      <span class="editrix-fill-item__label" data-part="summary"></span>
+      <i class="ph ph-eye editrix-fill-item__visibility" data-part="visibility" title="Toggle visibility"></i>
+      <i class="ph ph-trash editrix-fill-item__remove" data-part="remove" title="Remove fill"></i>
+    </summary>
+
+    <div class="editrix-details-content editrix-fill-popover">
+      <div class="editrix-buttons-items editrix-fill-popover__types" data-part="types"></div>
+
+      <div class="editrix-field-row" data-part="solid">
+        <div class="editrix-field-inline">
+          <div class="editrix-field-preview">
+            <input type="color" data-part="color">
+          </div>
+          <input type="text" class="editrix-inputs-box" placeholder="#000000" maxlength="7" data-part="hex">
+        </div>
+        <div class="editrix-slider">
+          <input type="range" min="0" max="100" step="1" data-part="opacity-range">
+          <input type="number" min="0" max="100" step="1" class="editrix-inputs-box editrix-slider-input" data-part="opacity-number">
+          <span class="editrix-slider-affix">%</span>
+        </div>
+      </div>
+
+      <div class="editrix-field-row" data-part="image">
+        <div class="editrix-field-inline">
+          <div class="editrix-field-preview" data-part="image-preview"></div>
+          <input type="text" class="editrix-inputs-box" placeholder="https://…" data-part="image-url">
+        </div>
+        <div class="editrix-slider">
+          <input type="range" min="0" max="100" step="1" data-part="image-opacity-range">
+          <input type="number" min="0" max="100" step="1" class="editrix-inputs-box editrix-slider-input" data-part="image-opacity-number">
+          <span class="editrix-slider-affix">%</span>
+        </div>
+      </div>
+    </div>
+  </details>
+</template>

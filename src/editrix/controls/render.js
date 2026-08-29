@@ -13,6 +13,8 @@
  * means adding its <template> plus one entry below; nothing else changes.
  */
 
+import { renderFillControl } from './fill';
+
 /**
  * Clones a <template>'s content by id.
  *
@@ -31,7 +33,7 @@ function cloneTemplate(id) {
 // Control types whose own markup reads better stacked in its own column (url/media/slider) rather
 // than sharing the title's row (text/switcher/select/color/dimensions) — see fields.scss's
 // ".editrix-field-row" rule.
-const ROW_TYPES = new Set(['url', 'media', 'slider']);
+const ROW_TYPES = new Set(['url', 'media', 'slider', 'fill']);
 
 // One renderer per control type — each returns that type's own markup (a clone of its own
 // <template>, fully wired via setAttribute()), so renderField() below never needs to know a
@@ -97,6 +99,13 @@ const CONTROL_RENDERERS = {
     el.querySelector('[data-part="unit"]').setAttribute('v-bind', `e.unitSelect(${JSON.stringify(name)})`);
     el.querySelector('.editrix-borders-values').setAttribute('data-title', title);
     return el;
+  },
+
+  // The "fill" control's own markup/wiring is involved enough (a repeater of popovers, each with
+  // its own type-switch tabs) to live in its own module — see controls/fill.js's header comment
+  // for why it's built imperatively rather than the way every renderer above builds a fixed shape.
+  fill(name) {
+    return renderFillControl(name);
   },
 };
 

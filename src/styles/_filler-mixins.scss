@@ -1,0 +1,69 @@
+@mixin filler-checkerboard {
+	background-image:
+		conic-gradient(
+			#d8d8d8 90deg, #ffffff 90deg 180deg,
+			#d8d8d8 180deg 270deg, #ffffff 270deg
+		);
+	background-size: 8px 8px;
+}
+
+// Visual chrome only — position/z-index/width live on the light-DOM shadow host instead (see
+// Filler#attachFloating and Filler#createShadowPanel), since that's the element actually
+// positioned in the page and appended to <body>; this fills whatever box the host gives it.
+@mixin filler-panel-chrome {
+	background: #fff;
+	border: 1px solid #dfe2e3;
+	border-radius: 6px;
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+	font-size: 12px;
+}
+
+// A track fill drawn from the filter's own neutral value out to the thumb, colored by which side
+// of it the thumb is on. The *moving* end always lands exactly on the thumb's center — not its
+// edge — since a plain 0%-100% gradient runs edge-to-edge of the track, but the native thumb's
+// center only travels from half its own width to (100% minus half its own width), inset on each
+// side; `$thumb-pos` is the same thumb-inset formula the browser itself uses to place the thumb,
+// so painting the fill's moving stop there keeps it pixel-exact at every width.
+//
+// The *anchor* end (the filter's neutral value) is deliberately NOT run through that same inset
+// formula: for a range centered on its neutral value (brightness, hue-rotate, ...) the anchor
+// sits mid-track, where the inset formula also happens to land exactly on 50% either way. But for
+// a plain 0-max range (grayscale, blur, ...) the neutral value IS the track's own edge — insetting
+// it by half the thumb width would leave a visible sliver of bare track before the fill ever
+// starts, even though the fill is meant to read as flush against that edge. `$anchor-pos` is the
+// same fraction with no inset, so it lands exactly on 0%/50%/100% as appropriate.
+//
+// `--percent` and `--center` (Filler.setSliderPercent, set once at slider build time) are unitless
+// 0-1 fractions of the value range, not percentages, precisely so they plug into calc() directly.
+// `--filler-slider-thumb` (declared once on the input, shared with its own thumb rules) is the
+// single source of truth for the thumb's width. Zero width on both color stops when the thumb
+// sits on `--center` means the whole track just renders as `$track`.
+//
+// A genuinely rounded cap at that moving end (matching the pill-shaped track around it) was
+// attempted via two dynamically-sized/positioned SVG "pill" background-images instead of this
+// gradient's hard color-stop, but `background-position` percentages resolve as
+// `(container - image) * percent`, not `container * percent` — even in the `left <percent>`
+// edge-offset form — so a percentage position is inherently coupled to the image's own size and
+// can't express "start exactly at this fraction of the track" for a dynamically-sized image
+// without knowing the track's pixel width as a constant, which it isn't here. A real, separately
+// positioned element (`left`/`width`/`border-radius` have no such coupling) — the same approach
+// Ranger's own fill already uses — is the way to get a true rounded cap here; a background-image
+// is a dead end for a segment whose size changes.
+@mixin filler-slider-fill($track: #f5f5f5, $negative: #ff6f59, $positive: #4c9ffe) {
+	$thumb: var(--filler-slider-thumb, 16px);
+	$thumb-pos: calc(#{$thumb} / 2 + var(--percent, 0.5) * (100% - #{$thumb}));
+	$anchor-pos: calc(var(--center, 0.5) * 100%);
+
+	background:
+		linear-gradient(
+			to right,
+			#{$track} 0%,
+			#{$track} min(#{$anchor-pos}, #{$thumb-pos}),
+			#{$negative} min(#{$anchor-pos}, #{$thumb-pos}),
+			#{$negative} #{$anchor-pos},
+			#{$positive} #{$anchor-pos},
+			#{$positive} max(#{$anchor-pos}, #{$thumb-pos}),
+			#{$track} max(#{$anchor-pos}, #{$thumb-pos}),
+			#{$track} 100%
+		);
+}

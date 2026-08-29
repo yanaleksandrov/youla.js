@@ -1,3 +1,7 @@
+// Compiled CSS for the dropdown/dialog panels, injected into their shadow root — never the
+// global stylesheet (see Filler#createShadowPanel and styles/filler-panel.scss).
+import PANEL_CSS from './styles/filler-panel.scss?inline';
+
 // Library-list swatches for the dropdown, sorted by name at render time.
 const PALETTE = [
   { name: 'Black', hex: '#000000' },
@@ -14,42 +18,79 @@ const PALETTE = [
   { name: 'Yellow', hex: '#FFEB3B' },
 ];
 
+// Expands `{ key: suffix, ... }` into `{ key: suffix ? `${prefix}-${suffix}` : prefix, ... }`, so a
+// shared base like 'filler-dialog-image' is spelled out once per group instead of once per class
+// (see Filler.DEFAULTS.classes) — an empty suffix ('') maps a key to the bare prefix itself.
+const classNames = (prefix, suffixes) => Object.fromEntries(
+  Object.entries(suffixes).map(([key, suffix]) => [key, suffix ? `${prefix}-${suffix}` : prefix]),
+);
+
 class Filler {
   static DEFAULTS = {
     classes: {
-      container: 'filler',
-      swatch: 'filler-swatch',
-      swatchColor: 'filler-swatch-color',
-      swatchColorOpaque: 'filler-swatch-color-opaque',
-      input: 'filler-input',
-      alpha: 'filler-alpha',
-      alphaInput: 'filler-alpha-input',
-      suffix: 'filler-suffix',
+      ...classNames('filler', {
+        container: '',
+        input: 'input',
+        alpha: 'alpha',
+        alphaInput: 'alpha-input',
+        suffix: 'suffix',
+        swatch: 'swatch',
+        swatchColor: 'swatch-color',
+        swatchColorOpaque: 'swatch-color-opaque',
+        dropdown: 'dropdown',
+      }),
 
-      dropdown: 'filler-dropdown',
-      paletteSection: 'filler-palette-section',
-      paletteTitle: 'filler-palette-title',
-      paletteRow: 'filler-palette-row',
-      paletteSwatch: 'filler-palette-swatch',
-      paletteChip: 'filler-palette-chip',
-      paletteLabel: 'filler-palette-label',
-      paletteHex: 'filler-palette-hex',
-      paletteRemove: 'filler-palette-remove',
-      paletteAdd: 'filler-palette-add',
+      ...classNames('filler-palette', {
+        paletteSection: 'section',
+        paletteTitle: 'title',
+        paletteRow: 'row',
+        paletteSwatch: 'swatch',
+        paletteChip: 'chip',
+        paletteLabel: 'label',
+        paletteHex: 'hex',
+        paletteRemove: 'remove',
+        paletteAdd: 'add',
+      }),
 
-      dialog: 'filler-dialog',
-      dialogArea: 'filler-dialog-area',
-      dialogAreaHandle: 'filler-dialog-area-handle',
-      dialogHue: 'filler-dialog-hue',
-      dialogAlpha: 'filler-dialog-alpha',
-      dialogAlphaGradient: 'filler-dialog-alpha-gradient',
-      dialogHandle: 'filler-dialog-handle',
-      dialogTabs: 'filler-dialog-tabs',
-      dialogTab: 'filler-dialog-tab',
-      dialogCopy: 'filler-dialog-copy',
-      dialogFields: 'filler-dialog-fields',
-      dialogField: 'filler-dialog-field',
-      dialogFieldLabel: 'filler-dialog-field-label',
+      ...classNames('filler-dialog', {
+        dialog: '',
+        dialogArea: 'area',
+        dialogAreaHandle: 'area-handle',
+        dialogHue: 'hue',
+        dialogAlpha: 'alpha',
+        dialogAlphaGradient: 'alpha-gradient',
+        dialogHandle: 'handle',
+        dialogTabs: 'tabs',
+        dialogTab: 'tab',
+        dialogCopy: 'copy',
+        dialogFields: 'fields',
+        dialogField: 'field',
+        dialogFieldLabel: 'field-label',
+        dialogSources: 'sources',
+        dialogSource: 'source',
+        dialogSolid: 'solid',
+      }),
+
+      ...classNames('filler-dialog-image', {
+        dialogImage: '',
+        dialogImageToolbar: 'toolbar',
+        dialogImageFit: 'fit',
+        dialogImageRotate: 'rotate',
+        dialogImageUpload: 'upload',
+        dialogImageUploadInput: 'upload-input',
+        dialogImagePreview: 'preview',
+        dialogImagePreviewImg: 'preview-img',
+        dialogImagePlaceholder: 'placeholder',
+        dialogImageRemove: 'remove',
+        dialogImageReset: 'reset',
+        dialogImageSlidersTitle: 'sliders-title',
+        dialogImageSliders: 'sliders',
+        dialogImageSlider: 'slider',
+        dialogImageSliderHead: 'slider-head',
+        dialogImageSliderLabel: 'slider-label',
+        dialogImageSliderValue: 'slider-value',
+        dialogImageSliderInput: 'slider-input',
+      }),
     },
     // Dialog's color format ('hex'/'rgb'/'hsl'); the field next to the swatch always shows HEX regardless.
     format: 'hex',
@@ -57,6 +98,9 @@ class Filler {
     alpha: null,
     // {name, hex}[] shown in the dropdown's library list, sorted by name.
     palette: PALETTE,
+    // Which source-type buttons show above the dialog's color area — 'solid' and/or 'image'. A
+    // single entry hides the button row outright and locks the dialog to that source.
+    sources: ['solid', 'image'],
     // localStorage key the user's custom swatches are persisted under; set null to disable persistence.
     customPaletteKey: 'youla-filler-palette',
     disabled: false,
@@ -71,16 +115,112 @@ class Filler {
       addCurrentColor: 'Добавить текущий цвет',
       libraryTitle: 'Библиотека',
       copyValue: 'Скопировать значение',
+
+      solidSource: 'Заливка',
+      imageSource: 'Изображение',
+      uploadImage: 'Выбрать изображение',
+      removeImage: 'Удалить изображение',
+      rotateImage: 'Повернуть на 90°',
+      adjustments: 'Коррекция',
+      resetAdjustments: 'Сбросить',
+      objectFit: {
+        cover: 'Заполнение',
+        contain: 'Вписать',
+        fill: 'Растянуть',
+        none: 'Без изменений',
+        'scale-down': 'Уменьшение',
+      },
+      // One entry per Filler.IMAGE_FILTERS key — the slider labels for the image adjustments.
+      filters: {
+        brightness: 'Яркость',
+        contrast: 'Контраст',
+        saturate: 'Насыщенность',
+        grayscale: 'Оттенки серого',
+        sepia: 'Сепия',
+        hueRotate: 'Поворот тона',
+        invert: 'Инверсия',
+        blur: 'Размытие',
+      },
     },
   };
+
+  // Source-type button icons (Phosphor "image" / "paint-brush-broad"), keyed like `sources`.
+  static SOURCE_ICONS = {
+    solid: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256"><path d="M234.53 139.07a8 8 0 0 0 3.13-13.24L122.17 10.34a8 8 0 0 0-11.31 0L70.25 51l-24.6-24.66a8 8 0 0 0-11.31 11.32l24.6 24.6L15 106.17a24 24 0 0 0 0 33.94L99.89 225a24 24 0 0 0 33.94 0l78.49-78.49Zm-32.19-5.24-79.83 79.83a8 8 0 0 1-11.31 0L26.34 128.8a8 8 0 0 1 0-11.31l43.91-43.92 29.12 29.12a28 28 0 1 0 11.31-11.32L81.57 62.26l35-34.95L217.19 128l-11.72 3.9a8 8 0 0 0-3.13 1.93m-86.83-26.31a13.26 13.26 0 1 1-.05.06s.05-.05.05-.06m123.15 56a8 8 0 0 0-13.32 0C223.57 166.23 208 190.09 208 208a24 24 0 0 0 48 0c0-17.91-15.57-41.77-17.34-44.44ZM232 216a8 8 0 0 1-8-8c0-6.8 4-16.32 8-24.08 4 7.76 8 17.34 8 24.08a8 8 0 0 1-8 8"/></svg>',
+    image: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256"><path d="M208 32H48a16 16 0 0 0-16 16v160a16 16 0 0 0 16 16h160a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16M48 48h160v77l-25-24a16 16 0 0 0-22 0L53 208h-5Zm160 160H76l96-96 36 36zM96 120a24 24 0 1 0-24-24 24 24 0 0 0 24 24m0-32a8 8 0 1 1-8 8 8 8 0 0 1 8 8"/></svg>',
+  };
+
+  // Adjustment sliders shown under the image upload field, in display order — each maps to exactly
+  // one CSS `filter` function argument, with no derived/blended concepts on top, and the slider's
+  // own min/max never lets the user reach a value that function rejects. Label text lives in
+  // `labels.filters` (see DEFAULTS.labels), keyed the same way, for localization.
+  //
+  // Per the CSS Filter Effects spec, brightness/contrast/saturate/grayscale/sepia/invert/blur all
+  // reject negative input outright — grayscale/sepia/invert's `default: 0` is their true minimum
+  // (0% = no effect, 100% = full effect), so their range is a plain 0-100 with no center to speak
+  // of; blur's `default: 0` is likewise its minimum (a length can't be negative). brightness/
+  // contrast/saturate are the exception: 0 is only their floor, not their neutral value (100% —
+  // unchanged input — is), so their range is centered on 100 for a meaningful two-way slider, with
+  // 200% as a generous but arbitrary practical ceiling (the spec itself leaves them unbounded
+  // above). hue-rotate is the only one signed values make sense for — `hue-rotate(-90deg)` is a
+  // real, different angle from `hue-rotate(90deg)`, not a rejected one — so its range is centered
+  // on the only spec-neutral value, 0deg, spanning -180..180 (a full turn with no redundant angles).
+  //
+  // The slider fill draws from `default`'s own position, not a hardcoded midpoint — see `--center`
+  // in filler-panel.scss — so a 0-100 range with `default: 0` renders as an ordinary edge-anchored
+  // fill, and a centered range renders as the two-tone center-out fill, from the same CSS.
+  static IMAGE_FILTERS = [
+    { key: 'brightness', css: 'brightness', min: 0, max: 200, default: 100, step: 1, unit: '%' },
+    { key: 'contrast', css: 'contrast', min: 0, max: 200, default: 100, step: 1, unit: '%' },
+    { key: 'saturate', css: 'saturate', min: 0, max: 200, default: 100, step: 1, unit: '%' },
+    { key: 'hueRotate', css: 'hue-rotate', min: -180, max: 180, default: 0, step: 1, unit: 'deg' },
+    { key: 'grayscale', css: 'grayscale', min: 0, max: 100, default: 0, step: 1, unit: '%' },
+    { key: 'sepia', css: 'sepia', min: 0, max: 100, default: 0, step: 1, unit: '%' },
+    { key: 'invert', css: 'invert', min: 0, max: 100, default: 0, step: 1, unit: '%' },
+    { key: 'blur', css: 'blur', min: 0, max: 20, default: 0, step: 1, unit: 'px' },
+  ];
+
+  // The unit shown next to a slider's live value — same as the CSS unit, except degrees get the
+  // "°" glyph instead of a literal "deg".
+  static filterDisplayUnit(key) {
+    const unit = Filler.IMAGE_FILTERS.find((f) => f.key === key).unit;
+    return unit === 'deg' ? '°' : unit;
+  }
+
+  // Builds the CSS `filter` value straight from IMAGE_FILTERS' current values — one function call
+  // per entry, in order. No clamping needed here: every slider's own min/max already keeps its
+  // value inside what the corresponding CSS function accepts.
+  static computeImageFilter(image) {
+    return Filler.IMAGE_FILTERS.map(({ key, css, unit }) => `${css}(${image[key]}${unit})`).join(' ');
+  }
 
   static clamp(value, min, max) {
     return Math.min(max, Math.max(min, value));
   }
 
   /** Builds an element and assigns own properties onto it in one step (className, type, textContent, ...). */
-  static el(tag, props = {}) {
-    return Object.assign(document.createElement(tag), props);
+  // Mirrors `className` into the `part` attribute (harmless outside a shadow root), so anything
+  // rendered inside a shadow-hosted panel stays reachable from outside via `::part(<class-name>)`
+  // — including a name overridden through the `classes` option, since `part` just tracks it.
+  // `part: false` opts an element out of the mirroring (see the slider value span in
+  // buildImagePanel, which repaints on every drag tick and has no need to be its own ::part()).
+  static el(tag, { part, ...props } = {}) {
+    const el = Object.assign(document.createElement(tag), props);
+    if (part !== false && props.className) {
+      el.setAttribute('part', props.className);
+    }
+    return el;
+  }
+
+  // One CSSStyleSheet, parsed once and shared (via `adoptedStyleSheets`) by every instance's
+  // dropdown/dialog shadow root, instead of re-parsing the same CSS text per panel.
+  static getPanelStylesheet() {
+    if (!Filler._panelStylesheet) {
+      const sheet = new CSSStyleSheet();
+      sheet.replaceSync(PANEL_CSS);
+      Filler._panelStylesheet = sheet;
+    }
+    return Filler._panelStylesheet;
   }
 
   /** Normalizes "abc"/"#abc"/"aabbcc"/"#AABBCC" into "#AABBCC", or null if not a valid hex color. */
@@ -217,13 +357,17 @@ class Filler {
     return { r: (r + m) * 255, g: (g + m) * 255, b: (b + m) * 255 };
   }
 
-  // Below-anchor, left-aligned, flipped above when there isn't room, clamped inside the viewport.
+  // Left-aligned, placed below or above the anchor — whichever side actually has more room in the
+  // viewport, not just "below unless it doesn't fit" — then clamped so it never runs off-screen.
   static computePosition(anchorRect, size, viewport, offset = 6) {
-    let top = anchorRect.bottom + offset;
-    if (top + size.height > viewport.height && anchorRect.top - size.height - offset >= 0) {
-      top = anchorRect.top - size.height - offset;
-    }
+    const spaceBelow = viewport.height - anchorRect.bottom;
+    const spaceAbove = anchorRect.top;
 
+    const top = Filler.clamp(
+      spaceBelow >= spaceAbove ? anchorRect.bottom + offset : anchorRect.top - size.height - offset,
+      4,
+      Math.max(viewport.height - size.height - 4, 4),
+    );
     const left = Filler.clamp(anchorRect.left, 4, Math.max(viewport.width - size.width - 4, 4));
 
     return { top, left };
@@ -241,6 +385,7 @@ class Filler {
       classes: { ...Filler.DEFAULTS.classes, ...options.classes },
       labels: { ...Filler.DEFAULTS.labels, ...options.labels },
       palette: options.palette ? [...options.palette] : [...Filler.DEFAULTS.palette],
+      sources: options.sources?.length ? [...options.sources] : [...Filler.DEFAULTS.sources],
     });
 
     this.disabled = options.disabled ?? el.disabled;
@@ -248,6 +393,15 @@ class Filler {
     const initialHex = Filler.normalizeHex(el.value) || '#000000';
     const initialAlpha = Filler.clamp(options.alpha ?? parseFloat(el.dataset.alpha ?? '100'), 0, 100);
     this.hsva = { ...Filler.rgbToHsv(Filler.hexToRgb(initialHex)), a: initialAlpha };
+
+    // Which panel the dialog shows — 'solid' (HSV picker) or 'image' (upload + adjustments).
+    this.source = this.sources[0];
+    this.image = {
+      dataUrl: null,
+      fit: 'cover',
+      rotation: 0,
+      ...Object.fromEntries(Filler.IMAGE_FILTERS.map(({ key, default: value }) => [key, value])),
+    };
 
     this.customPalette = this.loadCustomPalette();
     this.dropdownOpen = false;
@@ -296,9 +450,10 @@ class Filler {
 
   addListeners() {
     const { el, alphaInput } = this;
-    el.addEventListener('focus', () => this.openDropdown());
+    // An image fill has no hex to type/pick — open the full editor instead of the hex/palette dropdown.
+    el.addEventListener('focus', () => (this.source === 'image' ? this.openDialog() : this.openDropdown()));
     el.addEventListener('input', () => this.handleHexInput());
-    el.addEventListener('blur', () => { el.value = this.hex; });
+    el.addEventListener('blur', () => this.renderSwatch());
     el.addEventListener('paste', (event) => this.handleHexPaste(event));
 
     alphaInput.addEventListener('input', () => {
@@ -345,6 +500,7 @@ class Filler {
   }
 
   // Applies once the typed text is a complete hex color (3-digit shorthand included); normalized on blur.
+  // The field is read-only while an image fill is active, so this only ever fires in 'solid' mode.
   handleHexInput() {
     const rgb = Filler.hexToRgb(this.el.value);
     if (!rgb) {
@@ -357,6 +513,10 @@ class Filler {
 
   // Applies any recognizable pasted color (alpha included); anything else falls through to a normal paste.
   handleHexPaste(event) {
+    if (this.source === 'image') {
+      return;
+    }
+
     const color = Filler.parseCssColor(event.clipboardData?.getData('text'));
     if (!color) {
       return;
@@ -392,28 +552,15 @@ class Filler {
 
   // Repaints everything derived from `hsva`; `skipHexInput` avoids clobbering the caret while typing.
   render({ skipHexInput = false } = {}) {
-    const { el, hsva, alphaInput, swatch, swatchColor, swatchColorOpaque } = this;
+    const { el, hsva, alphaInput } = this;
     const hex = this.hex;
-    if (!skipHexInput) {
-      el.value = hex;
-    }
 
     const alphaRounded = Math.round(hsva.a);
     if (document.activeElement !== alphaInput) {
       alphaInput.value = alphaRounded;
     }
 
-    const rgb = Filler.hsvToRgb(hsva);
-    const rgbTriplet = `${Math.round(rgb.r)}, ${Math.round(rgb.g)}, ${Math.round(rgb.b)}`;
-    const hasAlpha = hsva.a < 100;
-
-    // Split while transparent: left shows the opaque color, right the actual one over the checkerboard.
-    swatchColor.style.backgroundColor = `rgba(${rgbTriplet}, ${hsva.a / 100})`;
-    swatchColorOpaque.style.backgroundColor = `rgb(${rgbTriplet})`;
-    swatch.classList.toggle('has-alpha', hasAlpha);
-
-    // No border except for white/near-white, which would otherwise blend into the page.
-    swatch.style.border = Filler.isNearWhite(rgb) ? '1px solid #dfe2e3' : 'none';
+    this.renderSwatch({ skipHexInput });
 
     if (this.dialogOpen) {
       this.renderDialog();
@@ -422,6 +569,54 @@ class Filler {
     this.onChange?.(hex, alphaRounded);
     // "change", not "input" — firing "input" here would recurse into handleHexInput.
     el.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  // Repaints the swatch button and the field's displayed text for the active fill type ('solid'
+  // paints hsva as usual; 'image' shows the uploaded image — cropped to cover, like Figma's own
+  // fill thumbnails — with the field showing localized "Image" text instead of a hex value).
+  renderSwatch({ skipHexInput = false } = {}) {
+    const { el, hsva, swatch, swatchColor, swatchColorOpaque, labels } = this;
+    const isImage = this.source === 'image';
+
+    swatch.classList.toggle('is-image', isImage);
+    el.classList.toggle('is-image-value', isImage);
+    el.readOnly = isImage;
+
+    if (isImage) {
+      const { dataUrl, rotation } = this.image;
+      if (!skipHexInput) {
+        el.value = labels.imageSource;
+      }
+
+      swatchColor.style.backgroundColor = '';
+      swatchColor.style.backgroundImage = dataUrl ? `url("${dataUrl}")` : '';
+      swatchColor.style.transform = dataUrl ? `rotate(${rotation}deg)` : '';
+      swatchColor.style.opacity = hsva.a / 100;
+      swatch.classList.remove('has-alpha');
+      swatch.style.border = 'none';
+
+      this.applyImageFilter();
+      return;
+    }
+
+    if (!skipHexInput) {
+      el.value = this.hex;
+    }
+
+    const rgb = Filler.hsvToRgb(hsva);
+    const rgbTriplet = `${Math.round(rgb.r)}, ${Math.round(rgb.g)}, ${Math.round(rgb.b)}`;
+    const hasAlpha = hsva.a < 100;
+
+    swatchColor.style.backgroundImage = '';
+    swatchColor.style.transform = '';
+    swatchColor.style.opacity = '';
+    // Split while transparent: left shows the opaque color, right the actual one over the checkerboard.
+    swatchColor.style.backgroundColor = `rgba(${rgbTriplet}, ${hsva.a / 100})`;
+    swatchColorOpaque.style.backgroundColor = `rgb(${rgbTriplet})`;
+    swatch.classList.toggle('has-alpha', hasAlpha);
+
+    // No border except for white/near-white, which would otherwise blend into the page.
+    swatch.style.border = Filler.isNearWhite(rgb) ? '1px solid #dfe2e3' : 'none';
   }
 
   // Current color as a string in the dialog's active format, for the copy-to-clipboard button.
@@ -460,9 +655,36 @@ class Filler {
     });
   }
 
-  // Anchors `panel` to `this.wrapper` (not whatever was clicked), width clamped to [200, 280]; returns a teardown.
+  // A shadow-hosted panel: `host` is the plain, unstyled light-DOM element `attachFloating`
+  // positions and appends to `document.body`; `root` is the actual `<div class="{className}">`
+  // rendered inside its shadow tree, carrying the panel's own chrome (border/shadow/etc. from the
+  // `filler-panel-chrome` mixin) and everything built onto it (dialogArea, dropdown rows, ...).
+  // This is how the dropdown/dialog get real style isolation: page CSS can't reach `root`'s
+  // subtree, and `root`'s own rules (from filler-panel.scss, shared as one CSSStyleSheet across
+  // every instance) can't leak back out onto the page. `classes`-based overrides keep working
+  // as before; a consumer restyles from outside via `::part(<class-name>)` instead of a plain
+  // selector, since every element in here carries a `part` mirroring its class (see Filler.el).
+  createShadowPanel(className) {
+    const host = Filler.el('div');
+    const shadow = host.attachShadow({ mode: 'open' });
+
+    if ('adoptedStyleSheets' in shadow) {
+      shadow.adoptedStyleSheets = [Filler.getPanelStylesheet()];
+    } else {
+      shadow.appendChild(Filler.el('style', { textContent: PANEL_CSS }));
+    }
+
+    const root = Filler.el('div', { className });
+    shadow.appendChild(root);
+
+    return { host, root };
+  }
+
+  // Anchors `panel` (a shadow-panel host, see createShadowPanel) to `this.wrapper` (not whatever
+  // was clicked), width clamped to [200, 280]; returns a teardown.
   attachFloating(panel, onClose) {
     const { wrapper } = this;
+    Object.assign(panel.style, { position: 'fixed', zIndex: 999999, top: 0, left: 0 });
     document.body.appendChild(panel);
 
     // Hidden while sized/positioned so nothing flashes unstyled first.
@@ -513,13 +735,15 @@ class Filler {
     this.closeDialog();
 
     if (!this.dropdownBody) {
-      this.dropdownBody = Filler.el('div', { className: this.classes.dropdown });
+      const { host, root } = this.createShadowPanel(this.classes.dropdown);
+      this.dropdownHost = host;
+      this.dropdownBody = root;
     }
     this.renderDropdown();
 
     this.dropdownOpen = true;
     this.wrapper.classList.add('is-open');
-    this.detachDropdown = this.attachFloating(this.dropdownBody, () => this.closeDropdown());
+    this.detachDropdown = this.attachFloating(this.dropdownHost, () => this.closeDropdown());
   }
 
   closeDropdown() {
@@ -643,10 +867,11 @@ class Filler {
     this.renderDialogFields();
     this.syncDialogTabs();
     this.renderDialog();
+    this.syncSourceUI();
 
     this.dialogOpen = true;
     this.wrapper.classList.add('is-open');
-    this.detachDialog = this.attachFloating(this.dialog, () => this.closeDialog());
+    this.detachDialog = this.attachFloating(this.dialogHost, () => this.closeDialog());
   }
 
   closeDialog() {
@@ -699,8 +924,16 @@ class Filler {
 
     const fields = Filler.el('div', { className: classes.dialogFields });
 
-    const dialog = this.dialog = Filler.el('div', { className: classes.dialog });
-    dialog.append(area, hue, alpha, tabs, fields);
+    const solidPanel = Filler.el('div', { className: classes.dialogSolid });
+    solidPanel.append(area, hue, alpha, tabs, fields);
+
+    const sourceButtons = this.buildSourceButtons();
+    const imagePanel = this.buildImagePanel();
+
+    const { host, root: dialog } = this.createShadowPanel(classes.dialog);
+    this.dialogHost = host;
+    this.dialog = dialog;
+    dialog.append(sourceButtons, solidPanel, imagePanel);
 
     Object.assign(this, {
       dialogArea: area,
@@ -713,7 +946,272 @@ class Filler {
       dialogTabs: tabs,
       dialogFields: fields,
       dialogFieldInputs: [],
+      dialogSolidPanel: solidPanel,
+      dialogImagePanel: imagePanel,
     });
+
+    this.syncSourceUI();
+  }
+
+  // Row of source-type buttons ('Solid Color' / 'Image') shown above the color area; hidden
+  // outright once fewer than two sources are configured, since there'd be nothing to switch.
+  // Icon-only buttons — the localized label lives in `title` (a tooltip), not as visible text.
+  buildSourceButtons() {
+    const { classes } = this;
+    const row = this.dialogSources = Filler.el('div', { className: classes.dialogSources });
+
+    this.dialogSourceButtons = {};
+    ['solid', 'image'].forEach((type) => {
+      const button = Filler.el('button', {
+        type: 'button', className: classes.dialogSource, innerHTML: Filler.SOURCE_ICONS[type],
+      });
+      button.addEventListener('click', () => this.setSource(type));
+
+      this.dialogSourceButtons[type] = button;
+      row.appendChild(button);
+    });
+
+    this.syncSourceLabels();
+
+    return row;
+  }
+
+  // (Re)applies the localized `title` tooltips onto the source buttons — split out from
+  // buildSourceButtons so `update({ labels })` can refresh them without rebuilding the dialog.
+  syncSourceLabels() {
+    const { dialogSourceButtons, labels } = this;
+    if (!dialogSourceButtons) {
+      return;
+    }
+
+    dialogSourceButtons.solid.title = labels.solidSource;
+    dialogSourceButtons.image.title = labels.imageSource;
+  }
+
+  setSource(type) {
+    if (this.disabled || type === this.source || !this.sources.includes(type)) {
+      return;
+    }
+    this.source = type;
+    this.syncSourceUI();
+    this.renderSwatch();
+  }
+
+  // Shows/hides the source buttons and the solid/image panels for the current `sources` option
+  // and active `this.source`.
+  syncSourceUI() {
+    const { dialogSources, dialogSourceButtons, dialogSolidPanel, dialogImagePanel, sources, source } = this;
+    if (!dialogSources) {
+      return;
+    }
+
+    Object.entries(dialogSourceButtons).forEach(([type, button]) => {
+      button.hidden = !sources.includes(type);
+      button.classList.toggle('is-active', type === source);
+    });
+    dialogSources.hidden = sources.length < 2;
+
+    dialogSolidPanel.hidden = source !== 'solid';
+    dialogImagePanel.hidden = source !== 'image';
+  }
+
+  // The 'Image' panel: object-fit + rotate toolbar, a single-image upload field, and one slider
+  // per Filler.IMAGE_FILTERS entry (brightness/contrast/saturate/grayscale/sepia/hue-rotate/
+  // invert/blur/drop-shadow).
+  buildImagePanel() {
+    const { classes, labels, image } = this;
+
+    const fitSelect = this.dialogImageFit = Filler.el('select', { className: classes.dialogImageFit });
+    Object.entries(labels.objectFit).forEach(([value, text]) => {
+      fitSelect.appendChild(Filler.el('option', { value, textContent: text, selected: value === image.fit }));
+    });
+    fitSelect.addEventListener('change', () => {
+      this.image.fit = fitSelect.value;
+      this.renderImagePreview();
+    });
+
+    const rotateButton = Filler.el('button', {
+      type: 'button', className: classes.dialogImageRotate, title: labels.rotateImage, textContent: '⤾',
+    });
+    rotateButton.addEventListener('click', () => {
+      this.image.rotation = (this.image.rotation + 90) % 360;
+      this.renderImagePreview();
+    });
+
+    const toolbar = Filler.el('div', { className: classes.dialogImageToolbar });
+    toolbar.append(fitSelect, rotateButton);
+
+    const uploadInput = this.dialogImageUploadInput = Filler.el('input', {
+      type: 'file', accept: 'image/*', className: classes.dialogImageUploadInput,
+    });
+    uploadInput.addEventListener('change', () => this.handleImageUpload(uploadInput.files?.[0]));
+
+    const previewImg = this.dialogImagePreviewImg = Filler.el('img', { className: classes.dialogImagePreviewImg });
+    const placeholder = this.dialogImagePlaceholder = Filler.el('span', {
+      className: classes.dialogImagePlaceholder, textContent: labels.uploadImage,
+    });
+    const removeButton = this.dialogImageRemoveButton = Filler.el('button', {
+      type: 'button', className: classes.dialogImageRemove, title: labels.removeImage, textContent: '×',
+    });
+    removeButton.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      this.clearImage();
+    });
+
+    // Square, top-left — mirrors `removeButton`'s top-right placement. Only shown (see
+    // filler-panel.scss) while the field is hovered *and* some slider has moved off its default,
+    // so it isn't competing for attention the rest of the time.
+    const resetButton = this.dialogImageResetButton = Filler.el('button', {
+      type: 'button', className: classes.dialogImageReset, title: labels.resetAdjustments, textContent: '↺',
+    });
+    resetButton.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      this.resetImageAdjustments();
+    });
+
+    const preview = this.dialogImagePreview = Filler.el('span', { className: classes.dialogImagePreview });
+    preview.append(previewImg, placeholder, resetButton, removeButton);
+
+    const upload = this.dialogImageUpload = Filler.el('label', { className: classes.dialogImageUpload });
+    upload.append(uploadInput, preview);
+
+    const slidersTitle = Filler.el('span', { className: classes.dialogImageSlidersTitle, textContent: labels.adjustments });
+
+    const sliders = Filler.el('div', { className: classes.dialogImageSliders });
+    this.dialogImageSliderInputs = {};
+    this.dialogImageSliderValues = {};
+
+    Filler.IMAGE_FILTERS.forEach(({ key, min, max, step, default: def }) => {
+      const displayUnit = Filler.filterDisplayUnit(key);
+      // `part: false` — this repaints on every drag tick and isn't meant to be its own ::part().
+      const valueEl = Filler.el('span', {
+        className: classes.dialogImageSliderValue, part: false, textContent: `${image[key]}${displayUnit}`,
+      });
+      const head = Filler.el('span', { className: classes.dialogImageSliderHead });
+      head.append(Filler.el('span', { className: classes.dialogImageSliderLabel, textContent: labels.filters[key] }), valueEl);
+
+      const input = Filler.el('input', {
+        type: 'range', className: classes.dialogImageSliderInput, min, max, step, value: image[key],
+      });
+      // Where the fill/tick mark treat "center" — the filter's own neutral value, not the track's
+      // midpoint, so a 0-max range (grayscale, blur, ...) fills from the edge instead of splitting.
+      // Unitless (0-1), not a percentage — filler-slider-fill's calc() needs a plain number to
+      // multiply a length by.
+      input.style.setProperty('--center', (def - min) / (max - min));
+      Filler.setSliderPercent(input);
+      input.addEventListener('input', () => {
+        this.image[key] = +input.value;
+        valueEl.textContent = `${input.value}${displayUnit}`;
+        Filler.setSliderPercent(input);
+        this.applyImageFilter();
+        this.syncImageAdjustmentsState();
+      });
+      this.dialogImageSliderInputs[key] = input;
+      this.dialogImageSliderValues[key] = valueEl;
+
+      const row = Filler.el('label', { className: classes.dialogImageSlider });
+      row.append(head, input);
+      sliders.appendChild(row);
+    });
+
+    const panel = Filler.el('div', { className: classes.dialogImage });
+    panel.append(toolbar, upload, slidersTitle, sliders);
+
+    this.renderImagePreview();
+    this.syncImageAdjustmentsState();
+
+    return panel;
+  }
+
+  // The slider fill (see filler-panel.scss) is drawn from `--center` outward to `--percent`, so it
+  // needs the current value's position along the track — kept on the input itself via a custom
+  // property rather than in JS state, since the fill is pure CSS driven off `--percent`/`--center`.
+  // Unitless (0-1), not a percentage — see filler-slider-fill's calc().
+  static setSliderPercent(input) {
+    const min = +input.min;
+    const max = +input.max;
+    input.style.setProperty('--percent', (+input.value - min) / (max - min));
+  }
+
+  // Whether any image-adjustment slider has moved off its neutral default — gates the reset
+  // button's visibility (see filler-panel.scss's `.has-adjustments:hover` rule).
+  hasImageAdjustments() {
+    return Filler.IMAGE_FILTERS.some(({ key, default: value }) => this.image[key] !== value);
+  }
+
+  syncImageAdjustmentsState() {
+    this.dialogImageUpload.classList.toggle('has-adjustments', this.hasImageAdjustments());
+  }
+
+  handleImageUpload(file) {
+    if (!file || !file.type.startsWith('image/')) {
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.image.dataUrl = reader.result;
+      this.image.rotation = 0;
+      this.renderImagePreview();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  clearImage() {
+    this.image.dataUrl = null;
+    this.image.rotation = 0;
+    this.dialogImageUploadInput.value = '';
+    this.renderImagePreview();
+  }
+
+  // Restores every filter to its neutral default (100% for brightness/contrast/saturate, 0
+  // otherwise), mirroring Figma's "Reset" action on an image fill's adjustments — the image
+  // itself is left untouched.
+  resetImageAdjustments() {
+    Filler.IMAGE_FILTERS.forEach(({ key, default: value }) => {
+      this.image[key] = value;
+
+      const input = this.dialogImageSliderInputs[key];
+      input.value = value;
+      Filler.setSliderPercent(input);
+      this.dialogImageSliderValues[key].textContent = `${value}${Filler.filterDisplayUnit(key)}`;
+    });
+    this.syncImageAdjustmentsState();
+    this.renderSwatch();
+  }
+
+  // Repaints the upload field's preview/placeholder and the image itself (object-fit, rotation,
+  // adjustment filter) from `this.image`.
+  renderImagePreview() {
+    const { dataUrl, fit, rotation } = this.image;
+    const { dialogImagePreviewImg: img, dialogImagePlaceholder: placeholder, dialogImageUpload: upload, dialogImageRemoveButton: removeButton } = this;
+
+    upload.classList.toggle('has-image', !!dataUrl);
+    placeholder.hidden = !!dataUrl;
+    removeButton.hidden = !dataUrl;
+
+    if (dataUrl) {
+      img.src = dataUrl;
+      img.style.objectFit = fit;
+      img.style.transform = `rotate(${rotation}deg)`;
+    }
+
+    // Also applies the adjustment filter and, while 'image' is active, syncs the compact swatch.
+    this.renderSwatch();
+  }
+
+  // Applies the computed adjustment filter to the dialog's preview and, while 'image' is the
+  // active source, the compact swatch — both may not exist yet (dialog built lazily on first open).
+  applyImageFilter() {
+    const filter = Filler.computeImageFilter(this.image);
+    if (this.dialogImagePreviewImg) {
+      this.dialogImagePreviewImg.style.filter = filter;
+    }
+    if (this.source === 'image' && this.swatchColor) {
+      this.swatchColor.style.filter = filter;
+    }
   }
 
   // Shared drag handling for the 1D hue/alpha tracks: reports the pointer's 0-1 ratio along the track.
@@ -864,7 +1362,10 @@ class Filler {
     }
 
     dialogFieldInputs.forEach((input, index) => {
-      if (document.activeElement !== input) {
+      // `input` lives inside the dialog's shadow root, where `document.activeElement` only ever
+      // reports the shadow host — ask its own root (the ShadowRoot) instead, which works the same
+      // way `document.activeElement` would for a plain, non-shadow tree.
+      if (input.getRootNode().activeElement !== input) {
         input.value = values[index];
       }
     });
@@ -892,11 +1393,14 @@ class Filler {
   // Applies an options patch after mount, following the same el._x_filler-cached-instance pattern
   update(options = {}) {
     const paletteChanged = 'palette' in options;
+    const sourcesChanged = 'sources' in options;
+    const labelsChanged = 'labels' in options;
 
     Object.assign(this, options, {
       classes: options.classes ? { ...this.classes, ...options.classes } : this.classes,
       labels: options.labels ? { ...this.labels, ...options.labels } : this.labels,
       palette: options.palette ? [...options.palette] : this.palette,
+      sources: options.sources?.length ? [...options.sources] : this.sources,
     });
 
     if ('disabled' in options) {
@@ -912,6 +1416,20 @@ class Filler {
 
     if (paletteChanged && this.dropdownOpen) {
       this.renderDropdown();
+    }
+
+    if (sourcesChanged) {
+      if (!this.sources.includes(this.source)) {
+        this.source = this.sources[0];
+      }
+      this.syncSourceUI();
+    }
+
+    if (labelsChanged) {
+      this.syncSourceLabels();
+      if (this.source === 'image') {
+        this.renderSwatch();
+      }
     }
   }
 }

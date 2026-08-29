@@ -1,0 +1,603 @@
+@import 'filler-mixins';
+
+// Injected into a shadow root (see Filler#getPanelStylesheet), not the global stylesheet — the
+// dropdown/dialog markup lives inside the shadow root, so page CSS can no longer reach these
+// rules and these rules can no longer leak out onto the page. External restyling still works,
+// just via `::part(<class-name>)` from outside the field's wrapper instead of a plain selector —
+// every element created for these panels gets a `part` attribute mirroring its class (see
+// Filler.el), including any name overridden through the `classes` option.
+
+// The HEX dropdown: custom-palette + library lists.
+.filler-dropdown {
+	@include filler-panel-chrome;
+	max-height: 320px;
+	overflow-y: auto;
+	overflow-x: hidden;
+	padding: 8px;
+}
+
+.filler-palette-section + .filler-palette-section {
+	margin-top: 10px;
+}
+
+.filler-palette-title {
+	margin-bottom: 6px;
+	font-size: 10px;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	color: #8a8f93;
+}
+
+// A vertical list — each row shows the color and its name together, per-name width stays legible.
+.filler-palette-row {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+}
+
+.filler-palette-swatch {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	padding: 5px 6px;
+	border: none;
+	border-radius: 4px;
+	background: none;
+	text-align: left;
+	cursor: pointer;
+
+	&:hover {
+		background: rgba(0, 0, 0, 0.05);
+	}
+
+	&:hover .filler-palette-remove {
+		opacity: 1;
+	}
+}
+
+.filler-palette-chip {
+	flex: none;
+	width: 16px;
+	height: 16px;
+	border-radius: 3px;
+	border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.filler-palette-label {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: #1a1a1a;
+}
+
+// A named library entry's hex, alongside its name; never truncated — the name ellipsizes first.
+.filler-palette-hex {
+	flex: none;
+	font-family: var(--mono, ui-monospace, monospace);
+	font-size: 10px;
+	color: #8a8f93;
+}
+
+.filler-palette-remove {
+	flex: none;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	opacity: 0;
+	width: 16px;
+	height: 16px;
+	border-radius: 50%;
+	background: #fff;
+	border: 1px solid #dfe2e3;
+	color: #8a8f93;
+	font-size: 9px;
+	line-height: 1;
+}
+
+.filler-palette-add {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	padding: 5px 6px;
+	border: none;
+	border-radius: 4px;
+	background: none;
+	color: #8a8f93;
+	cursor: pointer;
+
+	&:hover {
+		background: rgba(0, 0, 0, 0.05);
+	}
+
+	.filler-palette-chip {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border: 1px dashed #dfe2e3;
+		line-height: 1;
+	}
+}
+
+// The HSV + alpha dialog.
+.filler-dialog {
+	@include filler-panel-chrome;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	padding: 12px;
+}
+
+.filler-dialog-area {
+	position: relative;
+	width: 100%;
+	height: 140px;
+	border-radius: 4px;
+	cursor: crosshair;
+	touch-action: none;
+	background-image:
+		linear-gradient(to top, #000, transparent),
+		linear-gradient(to right, #fff, transparent);
+}
+
+.filler-dialog-area-handle {
+	position: absolute;
+	width: 12px;
+	height: 12px;
+	border-radius: 50%;
+	border: 2px solid #fff;
+	box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
+	transform: translate(-50%, -50%);
+	pointer-events: none;
+}
+
+.filler-dialog-hue,
+.filler-dialog-alpha {
+	position: relative;
+	height: 12px;
+	border-radius: 6px;
+	cursor: pointer;
+	touch-action: none;
+}
+
+.filler-dialog-hue {
+	background-image: linear-gradient(to right, red, yellow, lime, cyan, blue, magenta, red);
+}
+
+.filler-dialog-alpha {
+	@include filler-checkerboard;
+}
+
+.filler-dialog-alpha-gradient {
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+}
+
+.filler-dialog-handle {
+	position: absolute;
+	top: 50%;
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	border: 2px solid #fff;
+	box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
+	transform: translate(-50%, -50%);
+	pointer-events: none;
+}
+
+.filler-dialog-tabs {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	padding-bottom: 6px;
+	border-bottom: 1px solid #dfe2e3;
+}
+
+.filler-dialog-tab {
+	padding: 3px 8px;
+	border: none;
+	border-radius: 4px;
+	background: none;
+	font-size: 10px;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	color: #8a8f93;
+	cursor: pointer;
+
+	&.is-active {
+		color: #1a1a1a;
+		background: rgba(0, 0, 0, 0.06);
+	}
+}
+
+.filler-dialog-copy {
+	margin-left: auto;
+	flex: none;
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	border: none;
+	border-radius: 4px;
+	background: none;
+	color: #8a8f93;
+	cursor: pointer;
+
+	&:hover {
+		background: rgba(0, 0, 0, 0.06);
+		color: #1a1a1a;
+	}
+
+	&.is-copied {
+		color: #2ecc71;
+	}
+}
+
+.filler-dialog-fields {
+	display: flex;
+	gap: 6px;
+}
+
+.filler-dialog-field {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column-reverse;
+	align-items: center;
+	gap: 2px;
+
+	input {
+		width: 100%;
+		min-width: 0;
+		padding: 4px;
+		border: 1px solid #dfe2e3;
+		border-radius: 4px;
+		outline: none;
+		text-align: center;
+		font-family: var(--mono, ui-monospace, monospace);
+		color: #1a1a1a;
+
+		&:focus {
+			border-color: #4c9ffe;
+		}
+	}
+}
+
+.filler-dialog-field-label {
+	font-size: 9px;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	color: #8a8f93;
+}
+
+// Source-type buttons ('Solid Color' / 'Image'), above the color area/image panel.
+// `&[hidden]` is needed because `display` set here would otherwise outrank the UA stylesheet's
+// own `[hidden] { display: none }` rule (author styles always win over UA ones, specificity aside).
+.filler-dialog-sources {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	padding-bottom: 6px;
+	margin-bottom: 4px;
+	border-bottom: 1px solid #dfe2e3;
+
+	&[hidden] {
+		display: none;
+	}
+}
+
+// Icon-only — the localized label lives in the `title` tooltip, not as visible text (see Filler#buildSourceButtons).
+.filler-dialog-source {
+	flex: none;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 26px;
+	height: 26px;
+	padding: 0;
+	border: none;
+	border-radius: 4px;
+	background: none;
+	color: #8a8f93;
+	cursor: pointer;
+
+	svg {
+		display: block;
+		fill: currentColor;
+	}
+
+	&:hover {
+		background: rgba(0, 0, 0, 0.05);
+	}
+
+	&.is-active {
+		color: #1a1a1a;
+		background: rgba(0, 0, 0, 0.06);
+	}
+}
+
+.filler-dialog-solid {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+
+	&[hidden] {
+		display: none;
+	}
+}
+
+// The 'Image' panel: object-fit + rotate toolbar, upload field, adjustment sliders.
+.filler-dialog-image {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+
+	&[hidden] {
+		display: none;
+	}
+}
+
+.filler-dialog-image-toolbar {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.filler-dialog-image-fit {
+	flex: 1;
+	min-width: 0;
+	padding: 4px 6px;
+	border: 1px solid #dfe2e3;
+	border-radius: 4px;
+	background: #fff;
+	outline: none;
+	font-size: 11px;
+	color: #1a1a1a;
+	cursor: pointer;
+
+	&:focus {
+		border-color: #4c9ffe;
+	}
+}
+
+.filler-dialog-image-rotate {
+	flex: none;
+	width: 26px;
+	height: 26px;
+	padding: 0;
+	border: 1px solid #dfe2e3;
+	border-radius: 4px;
+	background: #fff;
+	font-size: 13px;
+	line-height: 1;
+	color: #1a1a1a;
+	cursor: pointer;
+
+	&:hover {
+		background: rgba(0, 0, 0, 0.05);
+	}
+}
+
+.filler-dialog-image-upload {
+	position: relative;
+	display: block;
+	aspect-ratio: 2 / 1;
+	border: 1px dashed #dfe2e3;
+	border-radius: 4px;
+	overflow: hidden;
+	cursor: pointer;
+	width: 100%;
+	@include filler-checkerboard;
+
+	&:hover {
+		border-color: #4c9ffe;
+	}
+
+	&.has-image {
+		border-style: solid;
+	}
+}
+
+// Left clickable everywhere the label covers (including once an image is loaded) so clicking the
+// thumbnail reopens the file picker to replace it — same as Figma's click-to-replace on the fill
+// swatch. The remove ("×") button below sits on top and handles its own click instead.
+.filler-dialog-image-upload-input {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	opacity: 0;
+	cursor: pointer;
+}
+
+.filler-dialog-image-preview {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.filler-dialog-image-preview-img {
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+}
+
+.filler-dialog-image-placeholder {
+	padding: 4px 8px;
+	font-size: 11px;
+	text-align: center;
+	color: #8a8f93;
+	position: absolute;
+	background-color: rgb(255 255 255 / 75%);
+	box-shadow: 0 0 0 100px rgb(0 0 0 / 10%);
+}
+
+.filler-dialog-image-remove {
+	position: absolute;
+	top: 4px;
+	right: 4px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 18px;
+	height: 18px;
+	padding: 0;
+	border: 1px solid #dfe2e3;
+	border-radius: 50%;
+	background: #fff;
+	color: #8a8f93;
+	font-size: 11px;
+	line-height: 1;
+	cursor: pointer;
+
+	&:hover {
+		color: #1a1a1a;
+	}
+
+	&[hidden] {
+		display: none;
+	}
+}
+
+// Square (vs. the round remove button) and top-left (vs. its top-right) — only surfaces once
+// there's something to reset *and* the field is actually being looked at, so it doesn't sit there
+// competing with the remove button the rest of the time.
+.filler-dialog-image-reset {
+	display: none;
+	position: absolute;
+	top: 4px;
+	left: 4px;
+	align-items: center;
+	justify-content: center;
+	width: 18px;
+	height: 18px;
+	padding: 0;
+	border: 1px solid #dfe2e3;
+	border-radius: 4px;
+	background: #fff;
+	color: #8a8f93;
+	font-size: 11px;
+	line-height: 1;
+	cursor: pointer;
+
+	&:hover {
+		color: #1a1a1a;
+	}
+
+	.filler-dialog-image-upload.has-adjustments:hover & {
+		display: flex;
+	}
+}
+
+.filler-dialog-image-sliders {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.filler-dialog-image-sliders-title {
+	font-size: 9px;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	color: #8a8f93;
+}
+
+.filler-dialog-image-slider {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+}
+
+.filler-dialog-image-slider-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.filler-dialog-image-slider-label {
+	font-size: 11px;
+	color: #1a1a1a;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	max-width: 96px;
+	overflow: hidden;
+}
+
+.filler-dialog-image-slider-value {
+	font-size: 10px;
+	font-family: var(--mono, ui-monospace, monospace);
+	color: #8a8f93;
+	margin-inline-start: 4px;
+}
+
+// Native range input, styled to match the rest of the dialog (same accent, thumb size as the
+// hue/alpha handles). `--filler-slider-thumb` is declared once here — read by both the thumb
+// rules below and the fill's alignment math in filler-slider-fill, so they can't drift apart.
+// The track's radius is a deliberately oversized `9999px` rather than matching its own height, so
+// it stays a full pill regardless of that height (see filler-slider-fill for why the fill's
+// alignment no longer depends on a fixed-pixel margin trick that would fight a resized track).
+.filler-dialog-image-slider-input {
+	--filler-slider-thumb: 16px;
+	appearance: none;
+	width: 100%;
+	max-width: 80px;
+	height: var(--filler-slider-thumb);
+	background: none;
+	cursor: pointer;
+	margin: 0 0 0 auto;
+
+	&::-webkit-slider-runnable-track {
+		height: var(--filler-slider-thumb);
+		border-radius: 9999px;
+		outline: 1px solid rgb(0 0 0 / 20%);
+		outline-offset: -1px;
+
+		@include filler-slider-fill;
+	}
+
+	&::-moz-range-track {
+		height: var(--filler-slider-thumb);
+		border-radius: 9999px;
+		outline: 1px solid rgb(0 0 0 / 20%);
+		outline-offset: -1px;
+
+		@include filler-slider-fill;
+	}
+
+	&::-webkit-slider-thumb {
+		appearance: none;
+		width: var(--filler-slider-thumb);
+		height: var(--filler-slider-thumb);
+		margin: 0;
+		border-radius: 50%;
+		border: 1px solid #b1b1b1;
+		box-shadow: 0 1px 3px 0 #0000001a, 0 5px 12px 0 #00000021, 0 0 .5px 0 #00000026;
+		background: #fff;
+	}
+
+	&::-moz-range-thumb {
+		width: var(--filler-slider-thumb);
+		height: var(--filler-slider-thumb);
+		margin: 0;
+		border-radius: 50%;
+		border: 1px solid #b1b1b1;
+		box-shadow: 0 1px 3px 0 #0000001a, 0 5px 12px 0 #00000021, 0 0 .5px 0 #00000026;
+		background: #fff;
+	}
+
+	&:focus-visible::-webkit-slider-thumb {
+		outline: 2px solid #4c9ffe;
+		outline-offset: 2px;
+	}
+
+	&:focus-visible::-moz-range-thumb {
+		outline: 2px solid #4c9ffe;
+		outline-offset: 2px;
+	}
+}

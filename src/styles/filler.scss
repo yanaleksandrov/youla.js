@@ -1,30 +1,8 @@
-@mixin filler-checkerboard {
-	background-image:
-		conic-gradient(
-			#d8d8d8 90deg, #ffffff 90deg 180deg,
-			#d8d8d8 180deg 270deg, #ffffff 270deg
-		);
-	background-size: 8px 8px;
-}
+@import 'filler-mixins';
 
-@mixin filler-panel-chrome {
-	position: fixed;
-	top: 0;
-	left: 0;
-	z-index: 999999;
-	// JS always sets an exact width (see Filler#attachFloating), clamped to [200px, 280px].
-	background: #fff;
-	border: 1px solid #dfe2e3;
-	border-radius: 6px;
-	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
-	font-size: 12px;
-}
-
-// Scoping is by naming convention (`.filler-*`) rather than `@scope`: this project's own
-// browserslist ("last 4 versions", "> 0.5%", "Firefox ESR") resolves to browsers — Chrome 109,
-// Opera Mini, KaiOS, UC/QQ Browser — that don't implement `@scope`, and a single unsupported
-// at-rule drops its entire block per the CSS spec's forward-compatible parsing, not just the
-// isolation behavior. That took out all of this component's styling in those browsers.
+// Scoping is by naming convention (`.filler-*`), same as the rest of this file — the dropdown/
+// dialog panels themselves are isolated properly via a shadow root instead (see styles/filler-
+// panel.scss and Filler#getPanelStylesheet); this file only ever styles light-DOM elements.
 
 // The field itself: swatch, hex input, alpha input.
 .filler {
@@ -102,6 +80,12 @@ input[v-filler]:not(.filler-input) {
 .filler-swatch-color {
 	position: absolute;
 	inset: 0;
+
+	// An image fill's thumbnail: cropped to cover, like Figma's own compact fill swatches.
+	.filler-swatch.is-image & {
+		background-size: cover;
+		background-position: center;
+	}
 }
 
 // The opaque left half, shown only over transparency (see ".has-alpha") so the fully opaque color
@@ -128,6 +112,14 @@ input[v-filler]:not(.filler-input) {
 	font-family: var(--mono, ui-monospace, monospace);
 	color: #1a1a1a;
 	text-transform: uppercase;
+
+	// Shows the localized "Image" label instead of a hex value while an image fill is active —
+	// sentence case (not the hex field's all-caps) and non-interactive, since it's read-only.
+	&.is-image-value {
+		font-family: inherit;
+		text-transform: none;
+		cursor: default;
+	}
 }
 
 .filler-alpha {
@@ -156,271 +148,4 @@ input[v-filler]:not(.filler-input) {
 	font-size: 10px;
 	user-select: none;
 	line-height: 23px;
-}
-
-// The HEX dropdown: custom-palette + library lists.
-.filler-dropdown {
-	@include filler-panel-chrome;
-	max-height: 320px;
-	overflow-y: auto;
-	overflow-x: hidden;
-	padding: 8px;
-}
-
-.filler-palette-section + .filler-palette-section {
-	margin-top: 10px;
-}
-
-.filler-palette-title {
-	margin-bottom: 6px;
-	font-size: 10px;
-	letter-spacing: 0.05em;
-	text-transform: uppercase;
-	color: #8a8f93;
-}
-
-// A vertical list — each row shows the color and its name together, per-name width stays legible.
-.filler-palette-row {
-	display: flex;
-	flex-direction: column;
-	gap: 1px;
-}
-
-.filler-palette-swatch {
-	position: relative;
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	width: 100%;
-	padding: 5px 6px;
-	border: none;
-	border-radius: 4px;
-	background: none;
-	text-align: left;
-	cursor: pointer;
-
-	&:hover {
-		background: rgba(0, 0, 0, 0.05);
-	}
-
-	&:hover .filler-palette-remove {
-		opacity: 1;
-	}
-}
-
-.filler-palette-chip {
-	flex: none;
-	width: 16px;
-	height: 16px;
-	border-radius: 3px;
-	border: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-.filler-palette-label {
-	flex: 1;
-	min-width: 0;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-	color: #1a1a1a;
-}
-
-// A named library entry's hex, alongside its name; never truncated — the name ellipsizes first.
-.filler-palette-hex {
-	flex: none;
-	font-family: var(--mono, ui-monospace, monospace);
-	font-size: 10px;
-	color: #8a8f93;
-}
-
-.filler-palette-remove {
-	flex: none;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	opacity: 0;
-	width: 16px;
-	height: 16px;
-	border-radius: 50%;
-	background: #fff;
-	border: 1px solid #dfe2e3;
-	color: #8a8f93;
-	font-size: 9px;
-	line-height: 1;
-}
-
-.filler-palette-add {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	width: 100%;
-	padding: 5px 6px;
-	border: none;
-	border-radius: 4px;
-	background: none;
-	color: #8a8f93;
-	cursor: pointer;
-
-	&:hover {
-		background: rgba(0, 0, 0, 0.05);
-	}
-
-	.filler-palette-chip {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		border: 1px dashed #dfe2e3;
-		line-height: 1;
-	}
-}
-
-// The HSV + alpha dialog.
-.filler-dialog {
-	@include filler-panel-chrome;
-	display: flex;
-	flex-direction: column;
-	gap: 10px;
-	padding: 12px;
-}
-
-.filler-dialog-area {
-	position: relative;
-	width: 100%;
-	height: 140px;
-	border-radius: 4px;
-	cursor: crosshair;
-	touch-action: none;
-	background-image:
-		linear-gradient(to top, #000, transparent),
-		linear-gradient(to right, #fff, transparent);
-}
-
-.filler-dialog-area-handle {
-	position: absolute;
-	width: 12px;
-	height: 12px;
-	border-radius: 50%;
-	border: 2px solid #fff;
-	box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
-	transform: translate(-50%, -50%);
-	pointer-events: none;
-}
-
-.filler-dialog-hue,
-.filler-dialog-alpha {
-	position: relative;
-	height: 12px;
-	border-radius: 6px;
-	cursor: pointer;
-	touch-action: none;
-}
-
-.filler-dialog-hue {
-	background-image: linear-gradient(to right, red, yellow, lime, cyan, blue, magenta, red);
-}
-
-.filler-dialog-alpha {
-	@include filler-checkerboard;
-}
-
-.filler-dialog-alpha-gradient {
-	position: absolute;
-	inset: 0;
-	border-radius: inherit;
-}
-
-.filler-dialog-handle {
-	position: absolute;
-	top: 50%;
-	width: 14px;
-	height: 14px;
-	border-radius: 50%;
-	border: 2px solid #fff;
-	box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
-	transform: translate(-50%, -50%);
-	pointer-events: none;
-}
-
-.filler-dialog-tabs {
-	display: flex;
-	align-items: center;
-	gap: 2px;
-	padding-bottom: 6px;
-	border-bottom: 1px solid #dfe2e3;
-}
-
-.filler-dialog-tab {
-	padding: 3px 8px;
-	border: none;
-	border-radius: 4px;
-	background: none;
-	font-size: 10px;
-	letter-spacing: 0.05em;
-	text-transform: uppercase;
-	color: #8a8f93;
-	cursor: pointer;
-
-	&.is-active {
-		color: #1a1a1a;
-		background: rgba(0, 0, 0, 0.06);
-	}
-}
-
-.filler-dialog-copy {
-	margin-left: auto;
-	flex: none;
-	width: 24px;
-	height: 24px;
-	padding: 0;
-	border: none;
-	border-radius: 4px;
-	background: none;
-	color: #8a8f93;
-	cursor: pointer;
-
-	&:hover {
-		background: rgba(0, 0, 0, 0.06);
-		color: #1a1a1a;
-	}
-
-	&.is-copied {
-		color: #2ecc71;
-	}
-}
-
-.filler-dialog-fields {
-	display: flex;
-	gap: 6px;
-}
-
-.filler-dialog-field {
-	flex: 1;
-	min-width: 0;
-	display: flex;
-	flex-direction: column-reverse;
-	align-items: center;
-	gap: 2px;
-
-	input {
-		width: 100%;
-		min-width: 0;
-		padding: 4px;
-		border: 1px solid #dfe2e3;
-		border-radius: 4px;
-		outline: none;
-		text-align: center;
-		font-family: var(--mono, ui-monospace, monospace);
-		color: #1a1a1a;
-
-		&:focus {
-			border-color: #4c9ffe;
-		}
-	}
-}
-
-.filler-dialog-field-label {
-	font-size: 9px;
-	letter-spacing: 0.05em;
-	text-transform: uppercase;
-	color: #8a8f93;
 }

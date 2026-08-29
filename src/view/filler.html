@@ -1,0 +1,163 @@
+<% var data = {
+  title: "Filler (v-filler)"
+}; %>
+<%= _.template(require('./parts/header.html').default)(data) %>
+
+<h1>Filler (v-filler)</h1>
+
+<p>
+  Директива <code>v-filler</code> превращает обычный <code>&lt;input type="text"&gt;</code> в
+  поле выбора цвета в духе Figma: квадратный образец цвета, поле HEX-значения и поле прозрачности
+  (0-100%) — потянуть за подпись «%» можно прямо мышью, влево-вправо. Клик по HEX-полю открывает
+  выпадающий список с ручным вводом и палитрой (список «цвет + название»), плюс свой набор
+  цветов. Клик по квадратному образцу открывает полноценный диалог HSV + прозрачность с кнопкой
+  копирования значения в буфер обмена.
+</p>
+
+<p>
+  Значение директивы — необязательный объект опций, который передаётся напрямую конструктору
+  <code>Filler</code>. Само поле всегда показывает цвет в HEX, независимо от формата, выбранного
+  в диалоге (<code>HEX</code> / <code>RGB</code> / <code>HSL</code>). И выпадающий список, и
+  диалог никогда не бывают уже самого поля — по ширине они всегда подстраиваются под него.
+</p>
+
+<h2>Опции вкратце</h2>
+
+<table>
+  <tbody>
+    <tr>
+      <th>Опция</th>
+      <th>Описание</th>
+      <th>По умолчанию</th>
+    </tr>
+    <tr>
+      <td><code>alpha</code></td>
+      <td>Стартовая прозрачность (0-100); если не задана, читается из <code>data-alpha</code>
+        поля, иначе — <code>100</code>.</td>
+      <td><code>null</code></td>
+    </tr>
+    <tr>
+      <td><code>format</code></td>
+      <td>Формат полей и кнопки копирования внутри диалога — <code>'hex'</code>, <code>'rgb'</code>
+        или <code>'hsl'</code>. Само поле рядом с образцом цвета всегда остаётся HEX.</td>
+      <td><code>'hex'</code></td>
+    </tr>
+    <tr>
+      <td><code>palette</code></td>
+      <td>Массив <code>{ name, hex }</code> для списка «Библиотека» в выпадающем меню —
+        сортируется по <code>name</code> при отрисовке, каждая строка показывает цвет и название
+        вместе.</td>
+      <td>встроенный набор именованных цветов</td>
+    </tr>
+    <tr>
+      <td><code>customPaletteKey</code></td>
+      <td>Ключ <code>localStorage</code>, под которым хранится свой набор цветов пользователя;
+        <code>null</code> отключает сохранение между визитами.</td>
+      <td><code>'youla-filler-palette'</code></td>
+    </tr>
+    <tr>
+      <td><code>suffixText</code></td>
+      <td>Текст после значения прозрачности; перетаскивание этой подписи мышью меняет значение.</td>
+      <td><code>'%'</code></td>
+    </tr>
+    <tr>
+      <td><code>disabled</code></td>
+      <td>Блокирует поле целиком — открытие диалога/списка, ввод и перетаскивание.</td>
+      <td><code>false</code></td>
+    </tr>
+    <tr>
+      <td><code>onChange</code></td>
+      <td>Функция <code>(hex, alpha) =&gt; void</code>, вызывается при любом изменении цвета или
+        прозрачности.</td>
+      <td><code>null</code></td>
+    </tr>
+    <tr>
+      <td><code>classes</code></td>
+      <td>Переопределение CSS-классов внутренних элементов пикера.</td>
+      <td>см. <code>Filler.DEFAULTS.classes</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Базовое использование</h2>
+
+<p>Начальный цвет и прозрачность читаются из <code>value</code> и <code>data-alpha</code>.</p>
+
+<div class="demo">
+  <input type="text" value="#FF6F59" data-alpha="80" v-filler>
+</div>
+
+<div class="demo" v-data>
+  <input type="text" value="#FF6F59" data-alpha="80" v-filler>
+</div>
+
+<pre><code>&lt;input type="text" value="#FF6F59" data-alpha="80" v-filler&gt;</code></pre>
+
+<h2>Реакция на изменения</h2>
+
+<p>
+  <code>onChange</code> получает актуальные HEX и прозрачность при любой правке — вводе HEX,
+  перетаскивании ползунков диалога или значения «%». Кнопка «⧉» в диалоге копирует текущий цвет
+  строкой в том формате, что выбран на вкладках (HEX/RGB/HSL), с учётом прозрачности.
+</p>
+
+<div class="demo" v-data="{ result: '#2196F3, 100%' }">
+  <input
+    type="text"
+    value="#2196F3"
+    v-filler="{ onChange: (hex, alpha) => result = `${hex}, ${alpha}%` }"
+  >
+  <p>Текущее значение: <code v-text="result"></code></p>
+</div>
+
+<pre><code>&lt;input
+  type="text"
+  value="#2196F3"
+  v-filler="{ onChange: (hex, alpha) => result = `${hex}, ${alpha}%` }"
+&gt;
+&lt;p&gt;Текущее значение: &lt;code v-text="result"&gt;&lt;/code&gt;&lt;/p&gt;</code></pre>
+
+<h2>Свой формат и своя палитра</h2>
+
+<p>
+  Диалог можно открыть сразу в формате <code>rgb</code>, а список библиотеки — сузить до нужных
+  брендовых цветов.
+</p>
+
+<div class="demo" v-data>
+  <input
+    type="text"
+    value="#8F00FF"
+    v-filler="{
+      format: 'rgb',
+      palette: [
+        { name: 'Brand Purple', hex: '#8F00FF' },
+        { name: 'Brand Teal', hex: '#0E7A6B' },
+        { name: 'Brand Amber', hex: '#A85417' },
+      ],
+    }"
+  >
+</div>
+
+<pre><code>&lt;input
+  type="text"
+  value="#8F00FF"
+  v-filler="{
+    format: 'rgb',
+    palette: [
+      { name: 'Brand Purple', hex: '#8F00FF' },
+      { name: 'Brand Teal', hex: '#0E7A6B' },
+      { name: 'Brand Amber', hex: '#A85417' },
+    ],
+  }"
+&gt;</code></pre>
+
+<h2>Отключённое поле</h2>
+
+<div class="demo" v-data>
+  <input type="text" value="#9E9E9E" data-alpha="40" v-filler="{ disabled: true }">
+</div>
+
+<pre><code>&lt;input type="text" value="#9E9E9E" data-alpha="40" v-filler="{ disabled: true }"&gt;</code></pre>
+
+<%= _.template(require('./parts/footer.html').default)(data) %>

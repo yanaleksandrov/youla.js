@@ -1,0 +1,426 @@
+@mixin filler-checkerboard {
+	background-image:
+		conic-gradient(
+			#d8d8d8 90deg, #ffffff 90deg 180deg,
+			#d8d8d8 180deg 270deg, #ffffff 270deg
+		);
+	background-size: 8px 8px;
+}
+
+@mixin filler-panel-chrome {
+	position: fixed;
+	top: 0;
+	left: 0;
+	z-index: 999999;
+	// JS always sets an exact width (see Filler#attachFloating), clamped to [200px, 280px].
+	background: #fff;
+	border: 1px solid #dfe2e3;
+	border-radius: 6px;
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+	font-size: 12px;
+}
+
+// Scoping is by naming convention (`.filler-*`) rather than `@scope`: this project's own
+// browserslist ("last 4 versions", "> 0.5%", "Firefox ESR") resolves to browsers — Chrome 109,
+// Opera Mini, KaiOS, UC/QQ Browser — that don't implement `@scope`, and a single unsupported
+// at-rule drops its entire block per the CSS spec's forward-compatible parsing, not just the
+// isolation behavior. That took out all of this component's styling in those browsers.
+
+// The field itself: swatch, hex input, alpha input.
+.filler {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	max-width: 100%;
+	padding-block: 4px;
+	padding-inline: 4px 8px;
+	border: 1px solid #dfe2e3;
+	border-radius: 6px;
+	background: #fff;
+	font-size: 12px;
+	height: 32px;
+	box-sizing: border-box;
+
+	&:focus-within,
+	&.is-open {
+		border-color: #4c9ffe;
+	}
+
+	&.is-disabled {
+		opacity: 0.5;
+		pointer-events: none;
+	}
+}
+
+// Pre-init "skeleton": makes the raw `<input v-filler>` already look like the mounted `.filler`
+// box before JS runs — same border/background/font, and the same left/right padding the swatch
+// and alpha section will occupy — so mounting doesn't shift the box, and the value text (same
+// font, same starting position) doesn't jump either. JS adds the `.filler-input` class as part of
+// mounting, so this stops applying at exactly that point; it can't reach the JS-only `disabled`
+// option (vs. a native `disabled` attribute already in the markup), since nothing's run yet to know it.
+input[v-filler]:not(.filler-input) {
+	max-width: 100%;
+	// left: outer padding (4px) + swatch (23px) + gap (8px); right: gap (8px) + alpha's own
+	// border (1px) and padding (8px) + its input (3ch) + suffix padding (2px) and text (~1ch) +
+	// outer padding (8px) — see .filler-alpha/.filler-alpha-input/.filler-suffix below.
+	padding: 4px calc(36px + 3ch) 4px 35px;
+	border: 1px solid #dfe2e3;
+	border-radius: 6px;
+	background: #fff;
+	outline: none;
+	font-size: 12px;
+	font-family: var(--mono, ui-monospace, monospace);
+	color: #1a1a1a;
+	text-transform: uppercase;
+	height: 32px;
+	box-sizing: border-box;
+
+	&:focus {
+		border-color: #4c9ffe;
+	}
+
+	&:disabled {
+		opacity: 0.5;
+	}
+}
+
+.filler-swatch {
+	flex: none;
+	position: relative;
+	width: 23px;
+	height: 23px;
+	padding: 0;
+	// No border by default — JS adds one only for white/near-white colors, which would otherwise
+	// have no visible edge against the page (see Filler#render).
+	border: none;
+	border-radius: 4px;
+	overflow: hidden;
+	cursor: pointer;
+	@include filler-checkerboard;
+}
+
+.filler-swatch-color {
+	position: absolute;
+	inset: 0;
+}
+
+// The opaque left half, shown only over transparency (see ".has-alpha") so the fully opaque color
+// and the actual, currently-transparent one sit side by side for comparison.
+.filler-swatch-color-opaque {
+	position: absolute;
+	inset: 0;
+	right: 50%;
+	display: none;
+
+	.filler-swatch.has-alpha & {
+		display: block;
+	}
+}
+
+.filler-input {
+	flex: 1;
+	min-width: 0;
+	border: none;
+	background: none;
+	outline: none;
+	padding: 0;
+	line-height: 23px;
+	font-family: var(--mono, ui-monospace, monospace);
+	color: #1a1a1a;
+	text-transform: uppercase;
+}
+
+.filler-alpha {
+	flex: none;
+	display: flex;
+	align-items: center;
+	padding-left: 8px;
+	border-left: 1px solid #dfe2e3;
+}
+
+.filler-alpha-input {
+	width: 3ch;
+	border: none;
+	background: none;
+	outline: none;
+	padding: 0;
+	text-align: right;
+	font-family: var(--mono, ui-monospace, monospace);
+	color: #1a1a1a;
+	line-height: 23px;
+}
+
+.filler-suffix {
+	padding-left: 2px;
+	color: #8a8f93;
+	font-size: 10px;
+	user-select: none;
+	line-height: 23px;
+}
+
+// The HEX dropdown: custom-palette + library lists.
+.filler-dropdown {
+	@include filler-panel-chrome;
+	max-height: 320px;
+	overflow-y: auto;
+	overflow-x: hidden;
+	padding: 8px;
+}
+
+.filler-palette-section + .filler-palette-section {
+	margin-top: 10px;
+}
+
+.filler-palette-title {
+	margin-bottom: 6px;
+	font-size: 10px;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	color: #8a8f93;
+}
+
+// A vertical list — each row shows the color and its name together, per-name width stays legible.
+.filler-palette-row {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+}
+
+.filler-palette-swatch {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	padding: 5px 6px;
+	border: none;
+	border-radius: 4px;
+	background: none;
+	text-align: left;
+	cursor: pointer;
+
+	&:hover {
+		background: rgba(0, 0, 0, 0.05);
+	}
+
+	&:hover .filler-palette-remove {
+		opacity: 1;
+	}
+}
+
+.filler-palette-chip {
+	flex: none;
+	width: 16px;
+	height: 16px;
+	border-radius: 3px;
+	border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.filler-palette-label {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: #1a1a1a;
+}
+
+// A named library entry's hex, alongside its name; never truncated — the name ellipsizes first.
+.filler-palette-hex {
+	flex: none;
+	font-family: var(--mono, ui-monospace, monospace);
+	font-size: 10px;
+	color: #8a8f93;
+}
+
+.filler-palette-remove {
+	flex: none;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	opacity: 0;
+	width: 16px;
+	height: 16px;
+	border-radius: 50%;
+	background: #fff;
+	border: 1px solid #dfe2e3;
+	color: #8a8f93;
+	font-size: 9px;
+	line-height: 1;
+}
+
+.filler-palette-add {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	padding: 5px 6px;
+	border: none;
+	border-radius: 4px;
+	background: none;
+	color: #8a8f93;
+	cursor: pointer;
+
+	&:hover {
+		background: rgba(0, 0, 0, 0.05);
+	}
+
+	.filler-palette-chip {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border: 1px dashed #dfe2e3;
+		line-height: 1;
+	}
+}
+
+// The HSV + alpha dialog.
+.filler-dialog {
+	@include filler-panel-chrome;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	padding: 12px;
+}
+
+.filler-dialog-area {
+	position: relative;
+	width: 100%;
+	height: 140px;
+	border-radius: 4px;
+	cursor: crosshair;
+	touch-action: none;
+	background-image:
+		linear-gradient(to top, #000, transparent),
+		linear-gradient(to right, #fff, transparent);
+}
+
+.filler-dialog-area-handle {
+	position: absolute;
+	width: 12px;
+	height: 12px;
+	border-radius: 50%;
+	border: 2px solid #fff;
+	box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
+	transform: translate(-50%, -50%);
+	pointer-events: none;
+}
+
+.filler-dialog-hue,
+.filler-dialog-alpha {
+	position: relative;
+	height: 12px;
+	border-radius: 6px;
+	cursor: pointer;
+	touch-action: none;
+}
+
+.filler-dialog-hue {
+	background-image: linear-gradient(to right, red, yellow, lime, cyan, blue, magenta, red);
+}
+
+.filler-dialog-alpha {
+	@include filler-checkerboard;
+}
+
+.filler-dialog-alpha-gradient {
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+}
+
+.filler-dialog-handle {
+	position: absolute;
+	top: 50%;
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	border: 2px solid #fff;
+	box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
+	transform: translate(-50%, -50%);
+	pointer-events: none;
+}
+
+.filler-dialog-tabs {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	padding-bottom: 6px;
+	border-bottom: 1px solid #dfe2e3;
+}
+
+.filler-dialog-tab {
+	padding: 3px 8px;
+	border: none;
+	border-radius: 4px;
+	background: none;
+	font-size: 10px;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	color: #8a8f93;
+	cursor: pointer;
+
+	&.is-active {
+		color: #1a1a1a;
+		background: rgba(0, 0, 0, 0.06);
+	}
+}
+
+.filler-dialog-copy {
+	margin-left: auto;
+	flex: none;
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	border: none;
+	border-radius: 4px;
+	background: none;
+	color: #8a8f93;
+	cursor: pointer;
+
+	&:hover {
+		background: rgba(0, 0, 0, 0.06);
+		color: #1a1a1a;
+	}
+
+	&.is-copied {
+		color: #2ecc71;
+	}
+}
+
+.filler-dialog-fields {
+	display: flex;
+	gap: 6px;
+}
+
+.filler-dialog-field {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column-reverse;
+	align-items: center;
+	gap: 2px;
+
+	input {
+		width: 100%;
+		min-width: 0;
+		padding: 4px;
+		border: 1px solid #dfe2e3;
+		border-radius: 4px;
+		outline: none;
+		text-align: center;
+		font-family: var(--mono, ui-monospace, monospace);
+		color: #1a1a1a;
+
+		&:focus {
+			border-color: #4c9ffe;
+		}
+	}
+}
+
+.filler-dialog-field-label {
+	font-size: 9px;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	color: #8a8f93;
+}

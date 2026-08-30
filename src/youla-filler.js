@@ -59,6 +59,7 @@ class Filler {
         dialogHandle: 'handle',
         dialogTabs: 'tabs',
         dialogTab: 'tab',
+        dialogEyedropper: 'eyedropper',
         dialogCopy: 'copy',
         dialogFields: 'fields',
         dialogField: 'field',
@@ -111,6 +112,8 @@ class Filler {
       addCurrentColor: 'Добавить текущий цвет',
       libraryTitle: 'Библиотека',
       copyValue: 'Скопировать значение',
+      pickColor: 'Пипетка с экрана',
+      eyedropper: 'Alt+клик — пипетка с экрана',
 
       solidSource: 'Заливка',
       imageSource: 'Изображение',
@@ -145,6 +148,16 @@ class Filler {
     solid: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256"><path d="M234.53 139.07a8 8 0 0 0 3.13-13.24L122.17 10.34a8 8 0 0 0-11.31 0L70.25 51l-24.6-24.66a8 8 0 0 0-11.31 11.32l24.6 24.6L15 106.17a24 24 0 0 0 0 33.94L99.89 225a24 24 0 0 0 33.94 0l78.49-78.49Zm-32.19-5.24-79.83 79.83a8 8 0 0 1-11.31 0L26.34 128.8a8 8 0 0 1 0-11.31l43.91-43.92 29.12 29.12a28 28 0 1 0 11.31-11.32L81.57 62.26l35-34.95L217.19 128l-11.72 3.9a8 8 0 0 0-3.13 1.93m-86.83-26.31a13.26 13.26 0 1 1-.05.06s.05-.05.05-.06m123.15 56a8 8 0 0 0-13.32 0C223.57 166.23 208 190.09 208 208a24 24 0 0 0 48 0c0-17.91-15.57-41.77-17.34-44.44ZM232 216a8 8 0 0 1-8-8c0-6.8 4-16.32 8-24.08 4 7.76 8 17.34 8 24.08a8 8 0 0 1-8 8"/></svg>',
     image: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256"><path d="M208 32H48a16 16 0 0 0-16 16v160a16 16 0 0 0 16 16h160a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16M48 48h160v77l-25-24a16 16 0 0 0-22 0L53 208h-5Zm160 160H76l96-96 36 36zM96 120a24 24 0 1 0-24-24 24 24 0 0 0 24 24m0-32a8 8 0 1 1-8 8 8 8 0 0 1 8 8"/></svg>',
   };
+
+  // Eyedropper icon (Material "colorize"), for the dialog's pick-from-screen button.
+  static EYEDROPPER_ICON = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path d="M20.71 5.63l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-3.12 3.12-1.93-1.91-1.41 1.41 1.42 1.42L3 16.25V21h4.75l8.92-8.92 1.42 1.42 1.41-1.41-1.93-1.93 3.12-3.12c.4-.39.4-1.02.02-1.41zM6.92 19H5v-1.92l8.06-8.06 1.92 1.92L6.92 19z"/></svg>';
+
+  // The dropdown/dialog panel's width, clamped to this range based on the field's own width (see
+  // attachFloating). Also the bar `availableSpace` uses to judge "enough room" to place the panel
+  // beside the field instead of stacking it — below that, a horizontal placement would just force
+  // the panel narrower than its own minimum anyway, so it isn't worth preferring.
+  static PANEL_MIN_WIDTH = 200;
+  static PANEL_MAX_WIDTH = 280;
 
   // One slider per CSS `filter` function, in display order; labels live in `labels.filters`
   // (DEFAULTS.labels), keyed the same way. Ranges follow the CSS Filter Effects spec: negative
@@ -225,6 +238,22 @@ class Filler {
     return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
   }
 
+  // Like hexToRgb, but also accepts 8-digit #RRGGBBAA and returns its alpha (0-100); the 3/6-digit
+  // forms return `a: null` so the caller can keep whatever alpha it already had.
+  static hexToRgba(hex) {
+    const value = typeof hex === 'string' ? hex.trim().replace(/^#/, '') : '';
+    if (!/^[0-9a-f]{8}$/i.test(value)) {
+      const rgb = Filler.hexToRgb(hex);
+      return rgb ? { ...rgb, a: null } : null;
+    }
+
+    const n = parseInt(value, 16);
+    return {
+      r: (n >>> 24) & 255, g: (n >>> 16) & 255, b: (n >>> 8) & 255,
+      a: Math.round(((n & 255) / 255) * 100),
+    };
+  }
+
   static rgbToHex({ r, g, b }) {
     return `#${[r, g, b].map((v) => Filler.clamp(Math.round(v), 0, 255).toString(16).padStart(2, '0')).join('').toUpperCase()}`;
   }
@@ -256,6 +285,18 @@ class Filler {
     }
 
     return { r, g, b, a: Filler.clamp(a, 0, 1) * 100 };
+  }
+
+  // First image file out of a paste/drop DataTransfer, or null. `.files` covers most paste/drop
+  // cases; `.items` is the fallback some browsers need for a pasted (as opposed to dropped) image.
+  static extractImageFile(dataTransfer) {
+    const fromFiles = [...(dataTransfer.files || [])].find((f) => f.type.startsWith('image/'));
+    if (fromFiles) {
+      return fromFiles;
+    }
+
+    const item = [...(dataTransfer.items || [])].find((i) => i.kind === 'file' && i.type.startsWith('image/'));
+    return item ? item.getAsFile() : null;
   }
 
   /** True for white and near-white colors, where a same-color border would be invisible. */
@@ -335,24 +376,32 @@ class Filler {
     return { r: (r + m) * 255, g: (g + m) * 255, b: (b + m) * 255 };
   }
 
-  // Which side of the anchor has the most room, and how much — used to cap the panel to that room
-  // before measuring (so it scrolls only as a last resort) and to place it once sized. top/bottom
+  // Prefers beside the field — right, then left — over stacking below/above; only stacks once
+  // neither side actually fits the panel's own minimum width (see PANEL_MIN_WIDTH). Whichever side
+  // wins, the room it has is returned as `maxSize`, used to cap the panel to that room before it's
+  // measured (see `reposition` in `attachFloating`) so it scrolls only as a last resort. top/bottom
   // constrain height (panel stays left-aligned below/above); left/right constrain width instead
   // (panel stays top-aligned beside the field).
   static availableSpace(anchorRect, viewport, offset = 6) {
     const space = {
-      bottom: viewport.height - anchorRect.bottom - offset,
-      top: anchorRect.top - offset,
       right: viewport.width - anchorRect.right - offset,
       left: anchorRect.left - offset,
+      bottom: viewport.height - anchorRect.bottom - offset,
+      top: anchorRect.top - offset,
     };
 
-    const side = Object.keys(space).reduce((best, key) => (space[key] > space[best] ? key : best));
+    if (space.right >= Filler.PANEL_MIN_WIDTH) {
+      return { side: 'right', maxSize: space.right };
+    }
+    if (space.left >= Filler.PANEL_MIN_WIDTH) {
+      return { side: 'left', maxSize: space.left };
+    }
 
+    const side = space.bottom >= space.top ? 'bottom' : 'top';
     return { side, maxSize: Math.max(space[side], 0) };
   }
 
-  // Placed on the roomiest side (see `availableSpace`), then clamped to stay on-screen. Assumes
+  // Placed on whichever side `availableSpace` picked, then clamped to stay on-screen. Assumes
   // `size` already respects that side's `maxSize`, so the result never overlaps the anchor.
   static computePosition(anchorRect, size, viewport, offset = 6) {
     const { side } = Filler.availableSpace(anchorRect, viewport, offset);
@@ -415,7 +464,8 @@ class Filler {
   initialize() {
     const { el, classes } = this;
     el.classList.add(classes.input);
-    Object.assign(el, { type: 'text', autocomplete: 'off', spellcheck: false, maxLength: 7 });
+    // 9 = "#" + 8 hex digits, so a full #RRGGBBAA still fits (see handleHexInput).
+    Object.assign(el, { type: 'text', autocomplete: 'off', spellcheck: false, maxLength: 9 });
 
     const wrapper = this.wrapper = Filler.el('div', { className: classes.container });
     el.parentNode.insertBefore(wrapper, el);
@@ -425,6 +475,7 @@ class Filler {
     const swatchColorOpaque = this.swatchColorOpaque = Filler.el('span', { className: classes.swatchColorOpaque });
     const swatch = this.swatch = Filler.el('button', { type: 'button', className: classes.swatch });
     swatch.append(swatchColor, swatchColorOpaque);
+    this.syncSwatchTitle();
 
     const alphaInput = this.alphaInput = Filler.el('input', {
       type: 'text', inputMode: 'numeric', maxLength: 3, className: classes.alphaInput,
@@ -474,7 +525,63 @@ class Filler {
 
     this.bindAlphaSuffixDrag();
 
-    this.swatch.addEventListener('click', () => this.toggleDialog());
+    const { swatch } = this;
+    // Alt+click samples a color from the screen instead of opening the dialog (see syncSwatchTitle
+    // for the discoverability hint, only shown where EyeDropper is actually supported).
+    swatch.addEventListener('click', (event) => {
+      if (event.altKey && window.EyeDropper) {
+        this.pickWithEyeDropper();
+        return;
+      }
+      this.toggleDialog();
+    });
+
+    // Pasting or dropping an image onto the swatch switches straight to image mode with it loaded,
+    // instead of requiring swatch click -> "Image" -> upload -> file picker.
+    swatch.addEventListener('paste', (event) => this.handleSwatchImageData(event.clipboardData));
+    swatch.addEventListener('dragover', (event) => {
+      if (!this.disabled) {
+        event.preventDefault();
+      }
+    });
+    swatch.addEventListener('drop', (event) => {
+      event.preventDefault();
+      this.handleSwatchImageData(event.dataTransfer);
+    });
+  }
+
+  // Alt+click on the swatch samples a color from anywhere on screen — one action instead of hex
+  // field -> dropdown -> palette. Applied via `applyHex`, the same path a palette click uses, so a
+  // picked color that happens to match a palette entry is applied identically to selecting it.
+  pickWithEyeDropper() {
+    if (this.disabled || !window.EyeDropper || !this.sources.includes('solid')) {
+      return;
+    }
+    new window.EyeDropper().open().then(({ sRGBHex }) => {
+      const hex = Filler.normalizeHex(sRGBHex);
+      if (hex) {
+        this.setSource('solid');
+        this.applyHex(hex);
+      }
+    }).catch(() => {});
+  }
+
+  // Whether to show a hint for the Alt+click eyedropper shortcut — only where it actually works.
+  syncSwatchTitle() {
+    this.swatch.title = (window.EyeDropper && this.sources.includes('solid')) ? this.labels.eyedropper : '';
+  }
+
+  handleSwatchImageData(dataTransfer) {
+    if (this.disabled || !dataTransfer || !this.sources.includes('image')) {
+      return;
+    }
+    const file = Filler.extractImageFile(dataTransfer);
+    if (!file) {
+      return;
+    }
+    this.setSource('image');
+    this.openDialog();
+    this.handleImageUpload(file);
   }
 
   // Dragging the "%" suffix left/right nudges transparency, mirroring Ranger's pointer-capture drags.
@@ -510,15 +617,15 @@ class Filler {
     });
   }
 
-  // Applies once typed text is a complete hex (shorthand ok); read-only in 'image' mode, so this
-  // never fires there.
+  // Applies once typed text is a complete hex (3/6/8-digit, shorthand ok); an 8-digit value's own
+  // alpha wins, otherwise the current alpha is kept. Read-only in 'image' mode, so this never fires there.
   handleHexInput() {
-    const rgb = Filler.hexToRgb(this.el.value);
-    if (!rgb) {
+    const color = Filler.hexToRgba(this.el.value);
+    if (!color) {
       return;
     }
 
-    this.hsva = { ...Filler.rgbToHsv(rgb), a: this.hsva.a };
+    this.hsva = { ...Filler.rgbToHsv(color), a: color.a ?? this.hsva.a };
     this.render({ skipHexInput: true });
   }
 
@@ -686,8 +793,12 @@ class Filler {
     return { host, root };
   }
 
-  // Anchors `panel` (see createShadowPanel) to `this.wrapper`, not whatever was clicked. Returns a teardown.
-  attachFloating(panel, onClose) {
+  // Anchors `panel` (see createShadowPanel) to `this.wrapper`, not whatever was clicked; `content`
+  // is that same panel's shadow-root element (its `root`), which is where the scroll clamping
+  // below is applied instead of on `panel` itself — an ancestor's `overflow` clips a descendant's
+  // box-shadow, but never its own, so putting it on `content` keeps `content`'s box-shadow (from
+  // filler-panel-chrome) intact while it still scrolls. Returns a teardown.
+  attachFloating(panel, content, onClose) {
     const { wrapper } = this;
     Object.assign(panel.style, { position: 'fixed', zIndex: 999999, top: 0, left: 0 });
     document.body.appendChild(panel);
@@ -696,20 +807,20 @@ class Filler {
     panel.style.visibility = 'hidden';
 
     const fieldWidth = wrapper.getBoundingClientRect().width;
-    panel.style.width = `${Filler.clamp(fieldWidth, 200, 280)}px`;
+    panel.style.width = `${Filler.clamp(fieldWidth, Filler.PANEL_MIN_WIDTH, Filler.PANEL_MAX_WIDTH)}px`;
 
     const reposition = () => {
       const anchorRect = wrapper.getBoundingClientRect();
       const viewport = { width: window.innerWidth, height: window.innerHeight };
 
-      // Capped to the roomiest side before measuring, so it scrolls only as a last resort instead
-      // of overlapping the field (see Filler.availableSpace / computePosition).
+      // Capped to the chosen side's room before measuring, so it scrolls only as a last resort
+      // instead of overlapping the field (see Filler.availableSpace / computePosition).
       const { side, maxSize } = Filler.availableSpace(anchorRect, viewport);
       const stacked = side === 'top' || side === 'bottom';
 
-      panel.style.maxHeight = `${stacked ? maxSize : viewport.height - 8}px`;
+      content.style.maxHeight = `${stacked ? maxSize : viewport.height - 8}px`;
+      content.style.overflowY = 'auto';
       panel.style.maxWidth = stacked ? '' : `${maxSize}px`;
-      panel.style.overflowY = 'auto';
 
       const size = { width: panel.offsetWidth, height: panel.offsetHeight };
       const { top, left } = Filler.computePosition(anchorRect, size, viewport);
@@ -762,7 +873,7 @@ class Filler {
 
     this.dropdownOpen = true;
     this.wrapper.classList.add('is-open');
-    this.detachDropdown = this.attachFloating(this.dropdownHost, () => this.closeDropdown());
+    this.detachDropdown = this.attachFloating(this.dropdownHost, this.dropdownBody, () => this.closeDropdown());
   }
 
   closeDropdown() {
@@ -890,7 +1001,7 @@ class Filler {
 
     this.dialogOpen = true;
     this.wrapper.classList.add('is-open');
-    this.detachDialog = this.attachFloating(this.dialogHost, () => this.closeDialog());
+    this.detachDialog = this.attachFloating(this.dialogHost, this.dialog, () => this.closeDialog());
   }
 
   closeDialog() {
@@ -934,6 +1045,14 @@ class Filler {
       });
       tabs.appendChild(tab);
     });
+
+    // Hidden outright where the browser doesn't support it — no point offering a button that can't work.
+    const eyedropperButton = this.dialogEyedropperButton = Filler.el('button', {
+      type: 'button', className: classes.dialogEyedropper, title: this.labels.pickColor,
+      innerHTML: Filler.EYEDROPPER_ICON, hidden: !window.EyeDropper,
+    });
+    eyedropperButton.addEventListener('click', () => this.pickWithEyeDropper());
+    tabs.appendChild(eyedropperButton);
 
     const copyButton = Filler.el('button', {
       type: 'button', className: classes.dialogCopy, title: this.labels.copyValue, textContent: '⧉',
@@ -1433,10 +1552,12 @@ class Filler {
         this.source = this.sources[0];
       }
       this.syncSourceUI();
+      this.syncSwatchTitle();
     }
 
     if (labelsChanged) {
       this.syncSourceLabels();
+      this.syncSwatchTitle();
       if (this.source === 'image') {
         this.renderSwatch();
       }

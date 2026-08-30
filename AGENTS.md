@@ -14,6 +14,34 @@ When writing or updating project documentation, follow these rules strictly.
 * If there are multiple warnings, combine them into a single blockquote.
 * When an example requires `v-data="{}"`, always use the shorthand form `v-data` instead.
 
+When documenting a feature, provide a **short, high-level description of its purpose and main capabilities**.
+
+Keep the description concise — usually **1–2 paragraphs**. Do not try to document every detail of the implementation or every possible interaction.
+
+Do not describe:
+
+* implementation details;
+* classes, methods, constructors, or architecture;
+* internal logic or state management;
+* DOM structure or event handlers;
+* UI layout or visual details;
+* step-by-step user interactions;
+* detailed user scenarios;
+* minor behavioral details;
+* dimensions, positioning, or other visual specifics.
+
+Do not explain in detail how the interface works. Simply describe **what the feature is for and what its key capabilities are**, so its purpose and scope can be understood quickly.
+
+If the feature has options or configuration parameters, **do not describe them in detail in the main text**. Options and their details are the responsibility of the options table.
+
+Avoid unnecessary wording and technical details. If a detail does not help explain the feature's main purpose or a key capability, leave it out.
+
+#### Desired level of detail
+
+> The `v-filler` directive turns a text input into a color or image picker. It supports HEX, RGB, and HSL colors, transparency, custom color palettes, and image settings with CSS filters.
+
+This is the preferred level of detail: **short, focused, and high-level, without describing the UI, implementation, or secondary details.**
+
 ## Comments
 
 Follow these rules whenever you write or modify code comments:

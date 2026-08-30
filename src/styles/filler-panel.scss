@@ -4,13 +4,14 @@
 // CSS can't reach these rules and these can't leak onto the page. Restyle from outside via
 // `::part(<class-name>)` — every element here carries a `part` mirroring its class (see Filler.el).
 
-// The HEX dropdown: custom-palette + library lists. Vertical scrolling (when it doesn't fit above/
-// below the field) is handled by the light-DOM shadow host instead — see Filler#attachFloating.
+// The HEX dropdown: custom-palette + library lists. `max-height`/`overflow-y` (when it doesn't fit
+// above/below the field) are set here directly, not on the light-DOM shadow host — see
+// Filler#attachFloating for why: an ancestor's `overflow` would otherwise clip this element's own
+// box-shadow (from filler-panel-chrome), which an element's own `overflow` never does.
 .filler-dropdown {
 	@include filler-panel-chrome;
 	overflow-x: hidden;
 	padding: 8px;
-	max-height: 320px;
 }
 
 .filler-palette-section + .filler-palette-section {
@@ -211,8 +212,43 @@
 	}
 }
 
-.filler-dialog-copy {
+// Pushes itself (and the copy button right after it) to the far end of the tabs row.
+.filler-dialog-eyedropper {
 	margin-left: auto;
+	flex: none;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	border: none;
+	border-radius: 4px;
+	background: none;
+	color: #8a8f93;
+	cursor: pointer;
+
+	svg {
+		display: block;
+		fill: currentColor;
+	}
+
+	&:hover {
+		background: rgba(0, 0, 0, 0.06);
+		color: #1a1a1a;
+	}
+
+	&[hidden] {
+		display: none;
+	}
+
+	// No eyedropper button to carry the margin (unsupported browser) — the copy button takes over.
+	&[hidden] + .filler-dialog-copy {
+		margin-left: auto;
+	}
+}
+
+.filler-dialog-copy {
 	flex: none;
 	width: 24px;
 	height: 24px;

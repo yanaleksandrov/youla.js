@@ -1,10 +1,7 @@
 @import 'filler-mixins';
 
-// Scoping is by naming convention (`.filler-*`), same as the rest of this file — the dropdown/
-// dialog panels themselves are isolated properly via a shadow root instead (see styles/filler-
-// panel.scss and Filler#getPanelStylesheet); this file only ever styles light-DOM elements.
-
-// The field itself: swatch, hex input, alpha input.
+// Scoped by naming convention (`.filler-*`) — this file only styles light-DOM elements. The
+// dropdown/dialog panels are isolated via a shadow root instead (see styles/filler-panel.scss).
 .filler {
 	display: inline-flex;
 	align-items: center;
@@ -31,16 +28,11 @@
 }
 
 // Pre-init "skeleton": makes the raw `<input v-filler>` already look like the mounted `.filler`
-// box before JS runs — same border/background/font, and the same left/right padding the swatch
-// and alpha section will occupy — so mounting doesn't shift the box, and the value text (same
-// font, same starting position) doesn't jump either. JS adds the `.filler-input` class as part of
-// mounting, so this stops applying at exactly that point; it can't reach the JS-only `disabled`
-// option (vs. a native `disabled` attribute already in the markup), since nothing's run yet to know it.
+// box before JS runs, so mounting doesn't shift it. Stops applying once JS adds `.filler-input`.
 input[v-filler]:not(.filler-input) {
 	max-width: 100%;
-	// left: outer padding (4px) + swatch (23px) + gap (8px); right: gap (8px) + alpha's own
-	// border (1px) and padding (8px) + its input (3ch) + suffix padding (2px) and text (~1ch) +
-	// outer padding (8px) — see .filler-alpha/.filler-alpha-input/.filler-suffix below.
+	// left: padding + swatch + gap; right: gap + alpha's border/padding/input/suffix — matches
+	// .filler-alpha/.filler-alpha-input/.filler-alpha-suffix below.
 	padding: 4px calc(36px + 3ch) 4px 35px;
 	border: 1px solid #dfe2e3;
 	border-radius: 6px;
@@ -68,35 +60,29 @@ input[v-filler]:not(.filler-input) {
 	width: 23px;
 	height: 23px;
 	padding: 0;
-	// No border by default — JS adds one only for white/near-white colors, which would otherwise
-	// have no visible edge against the page (see Filler#render).
+	// No border by default — JS adds one only for white/near-white colors, invisible without it.
 	border: none;
 	border-radius: 4px;
 	overflow: hidden;
 	cursor: pointer;
 	@include filler-checkerboard;
-}
 
-.filler-swatch-color {
-	position: absolute;
-	inset: 0;
-
-	// An image fill's thumbnail: cropped to cover, like Figma's own compact fill swatches.
-	.filler-swatch.is-image & {
+	.filler-swatch-color {
+		position: absolute;
+		inset: 0;
 		background-size: cover;
 		background-position: center;
 	}
-}
 
-// The opaque left half, shown only over transparency (see ".has-alpha") so the fully opaque color
-// and the actual, currently-transparent one sit side by side for comparison.
-.filler-swatch-color-opaque {
-	position: absolute;
-	inset: 0;
-	right: 50%;
-	display: none;
+	// Opaque left half, shown only over transparency, so both colors compare side by side.
+	.filler-swatch-color-opaque {
+		position: absolute;
+		inset: 0;
+		right: 50%;
+		display: none;
+	}
 
-	.filler-swatch.has-alpha & {
+	&.has-alpha .filler-swatch-color-opaque {
 		display: block;
 	}
 }
@@ -104,6 +90,7 @@ input[v-filler]:not(.filler-input) {
 .filler-input {
 	flex: 1;
 	min-width: 0;
+	max-width: 130px;
 	border: none;
 	background: none;
 	outline: none;
@@ -113,8 +100,7 @@ input[v-filler]:not(.filler-input) {
 	color: #1a1a1a;
 	text-transform: uppercase;
 
-	// Shows the localized "Image" label instead of a hex value while an image fill is active —
-	// sentence case (not the hex field's all-caps) and non-interactive, since it's read-only.
+	// Sentence case (not the hex field's all-caps) for the localized "Image" label; non-interactive since it's read-only.
 	&.is-image-value {
 		font-family: inherit;
 		text-transform: none;
@@ -128,24 +114,24 @@ input[v-filler]:not(.filler-input) {
 	align-items: center;
 	padding-left: 8px;
 	border-left: 1px solid #dfe2e3;
-}
 
-.filler-alpha-input {
-	width: 3ch;
-	border: none;
-	background: none;
-	outline: none;
-	padding: 0;
-	text-align: right;
-	font-family: var(--mono, ui-monospace, monospace);
-	color: #1a1a1a;
-	line-height: 23px;
-}
+	.filler-alpha-input {
+		width: 3ch;
+		border: none;
+		background: none;
+		outline: none;
+		padding: 0;
+		text-align: right;
+		font-family: var(--mono, ui-monospace, monospace);
+		color: #1a1a1a;
+		line-height: 23px;
+	}
 
-.filler-suffix {
-	padding-left: 2px;
-	color: #8a8f93;
-	font-size: 10px;
-	user-select: none;
-	line-height: 23px;
+	.filler-alpha-suffix {
+		padding-left: 2px;
+		color: #8a8f93;
+		font-size: 10px;
+		user-select: none;
+		line-height: 23px;
+	}
 }

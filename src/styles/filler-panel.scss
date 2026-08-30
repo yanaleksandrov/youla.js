@@ -1,19 +1,16 @@
 @import 'filler-mixins';
 
-// Injected into a shadow root (see Filler#getPanelStylesheet), not the global stylesheet — the
-// dropdown/dialog markup lives inside the shadow root, so page CSS can no longer reach these
-// rules and these rules can no longer leak out onto the page. External restyling still works,
-// just via `::part(<class-name>)` from outside the field's wrapper instead of a plain selector —
-// every element created for these panels gets a `part` attribute mirroring its class (see
-// Filler.el), including any name overridden through the `classes` option.
+// Injected into a shadow root (see Filler#getPanelStylesheet), not the global stylesheet, so page
+// CSS can't reach these rules and these can't leak onto the page. Restyle from outside via
+// `::part(<class-name>)` — every element here carries a `part` mirroring its class (see Filler.el).
 
-// The HEX dropdown: custom-palette + library lists.
+// The HEX dropdown: custom-palette + library lists. Vertical scrolling (when it doesn't fit above/
+// below the field) is handled by the light-DOM shadow host instead — see Filler#attachFloating.
 .filler-dropdown {
 	@include filler-panel-chrome;
-	max-height: 320px;
-	overflow-y: auto;
 	overflow-x: hidden;
 	padding: 8px;
+	max-height: 320px;
 }
 
 .filler-palette-section + .filler-palette-section {
@@ -123,7 +120,6 @@
 	}
 }
 
-// The HSV + alpha dialog.
 .filler-dialog {
 	@include filler-panel-chrome;
 	display: flex;
@@ -274,9 +270,8 @@
 	color: #8a8f93;
 }
 
-// Source-type buttons ('Solid Color' / 'Image'), above the color area/image panel.
 // `&[hidden]` is needed because `display` set here would otherwise outrank the UA stylesheet's
-// own `[hidden] { display: none }` rule (author styles always win over UA ones, specificity aside).
+// own `[hidden] { display: none }` rule.
 .filler-dialog-sources {
 	display: flex;
 	align-items: center;
@@ -290,7 +285,7 @@
 	}
 }
 
-// Icon-only — the localized label lives in the `title` tooltip, not as visible text (see Filler#buildSourceButtons).
+// Icon-only — the localized label lives in the `title` tooltip, not as visible text.
 .filler-dialog-source {
 	flex: none;
 	display: flex;
@@ -402,9 +397,8 @@
 	}
 }
 
-// Left clickable everywhere the label covers (including once an image is loaded) so clicking the
-// thumbnail reopens the file picker to replace it — same as Figma's click-to-replace on the fill
-// swatch. The remove ("×") button below sits on top and handles its own click instead.
+// Covers the whole label (even once an image is loaded) so clicking the thumbnail reopens the
+// file picker to replace it, Figma-style; the remove button sits on top and handles its own click.
 .filler-dialog-image-upload-input {
 	position: absolute;
 	inset: 0;
@@ -465,9 +459,8 @@
 	}
 }
 
-// Square (vs. the round remove button) and top-left (vs. its top-right) — only surfaces once
-// there's something to reset *and* the field is actually being looked at, so it doesn't sit there
-// competing with the remove button the rest of the time.
+// Square and top-left (vs. the round remove button's top-right); surfaces only on hover, once
+// something's actually off default (see `.has-adjustments:hover` below).
 .filler-dialog-image-reset {
 	display: none;
 	position: absolute;
@@ -536,12 +529,9 @@
 	margin-inline-start: 4px;
 }
 
-// Native range input, styled to match the rest of the dialog (same accent, thumb size as the
-// hue/alpha handles). `--filler-slider-thumb` is declared once here — read by both the thumb
-// rules below and the fill's alignment math in filler-slider-fill, so they can't drift apart.
-// The track's radius is a deliberately oversized `9999px` rather than matching its own height, so
-// it stays a full pill regardless of that height (see filler-slider-fill for why the fill's
-// alignment no longer depends on a fixed-pixel margin trick that would fight a resized track).
+// `--filler-slider-thumb` is the single source of truth for thumb size, read by both the thumb
+// rules below and filler-slider-fill's alignment math. Track radius is an oversized `9999px`
+// rather than matching height, so it stays a full pill regardless of that height.
 .filler-dialog-image-slider-input {
 	--filler-slider-thumb: 16px;
 	appearance: none;
@@ -599,5 +589,10 @@
 	&:focus-visible::-moz-range-thumb {
 		outline: 2px solid #4c9ffe;
 		outline-offset: 2px;
+	}
+
+	&:disabled {
+		opacity: 0.5;
+		cursor: default;
 	}
 }

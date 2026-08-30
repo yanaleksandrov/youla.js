@@ -152,20 +152,14 @@ class Filler {
   // Eyedropper icon (Material "colorize"), for the dialog's pick-from-screen button.
   static EYEDROPPER_ICON = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path d="M20.71 5.63l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-3.12 3.12-1.93-1.91-1.41 1.41 1.42 1.42L3 16.25V21h4.75l8.92-8.92 1.42 1.42 1.41-1.41-1.93-1.93 3.12-3.12c.4-.39.4-1.02.02-1.41zM6.92 19H5v-1.92l8.06-8.06 1.92 1.92L6.92 19z"/></svg>';
 
-  // The dropdown/dialog panel's width, clamped to this range based on the field's own width (see
-  // attachFloating). Also the bar `availableSpace` uses to judge "enough room" to place the panel
-  // beside the field instead of stacking it — below that, a horizontal placement would just force
-  // the panel narrower than its own minimum anyway, so it isn't worth preferring.
+  /* Panel width clamp (see attachFloating) — also the "enough room" threshold `availableSpace`
+     uses to prefer placing the panel beside the field over stacking it. */
   static PANEL_MIN_WIDTH = 200;
   static PANEL_MAX_WIDTH = 280;
 
-  // One slider per CSS `filter` function, in display order; labels live in `labels.filters`
-  // (DEFAULTS.labels), keyed the same way. Ranges follow the CSS Filter Effects spec: negative
-  // input is rejected everywhere, so grayscale/sepia/invert/blur run a plain 0-100(px) from their
-  // neutral value (also their floor). brightness/contrast/saturate are neutral at 100 instead, so
-  // their range is centered on it, capped at an arbitrary 200 (the spec leaves them unbounded).
-  // hue-rotate is the only one where negative is a real, different angle rather than a rejected
-  // value, so it's centered on 0 across a full turn (-180..180).
+  /* One slider per CSS filter function; ranges follow the spec — grayscale/sepia/invert/blur run
+     0-100(px) from their floor/neutral value, brightness/contrast/saturate center on their 100%
+     neutral (capped at an arbitrary 200), and hue-rotate alone is signed, centered on 0 (-180..180). */
   static IMAGE_FILTERS = [
     { key: 'brightness', css: 'brightness', min: 0, max: 200, default: 100, step: 1, unit: '%' },
     { key: 'contrast', css: 'contrast', min: 0, max: 200, default: 100, step: 1, unit: '%' },
@@ -183,8 +177,7 @@ class Filler {
     return unit === 'deg' ? '°' : unit;
   }
 
-  // One function call per IMAGE_FILTERS entry; no clamping needed since each slider's own min/max
-  // already keeps its value inside what that CSS function accepts.
+  // One call per IMAGE_FILTERS entry; each slider's own min/max already keeps values in range.
   static computeImageFilter(image) {
     return Filler.IMAGE_FILTERS.map(({ key, css, unit }) => `${css}(${image[key]}${unit})`).join(' ');
   }
@@ -193,9 +186,8 @@ class Filler {
     return Math.min(max, Math.max(min, value));
   }
 
-  /** Builds an element and assigns own properties onto it in one step (className, type, textContent, ...). */
-  // Mirrors `className` into `part`, so shadow-hosted content stays reachable via `::part()`;
-  // pass `part: false` to opt out (e.g. an element that repaints on every drag tick).
+  /* Builds an element and assigns own properties (className, type, textContent, ...); mirrors
+     `className` into `part` for ::part() access from outside a shadow root (`part: false` opts out). */
   static el(tag, { part, ...props } = {}) {
     const el = Object.assign(document.createElement(tag), props);
     if (part !== false && props.className) {
@@ -214,7 +206,7 @@ class Filler {
     return Filler._panelStylesheet;
   }
 
-  /** Normalizes "abc"/"#abc"/"aabbcc"/"#AABBCC" into "#AABBCC", or null if not a valid hex color. */
+  /* Normalizes "abc"/"#abc"/"aabbcc"/"#AABBCC" into "#AABBCC", or null if not a valid hex color. */
   static normalizeHex(hex) {
     if (typeof hex !== 'string') {
       return null;
@@ -238,8 +230,7 @@ class Filler {
     return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
   }
 
-  // Like hexToRgb, but also accepts 8-digit #RRGGBBAA and returns its alpha (0-100); the 3/6-digit
-  // forms return `a: null` so the caller can keep whatever alpha it already had.
+  // Like hexToRgb, but also accepts 8-digit #RRGGBBAA, returning its alpha (3/6-digit forms return `a: null`).
   static hexToRgba(hex) {
     const value = typeof hex === 'string' ? hex.trim().replace(/^#/, '') : '';
     if (!/^[0-9a-f]{8}$/i.test(value)) {
@@ -287,8 +278,7 @@ class Filler {
     return { r, g, b, a: Filler.clamp(a, 0, 1) * 100 };
   }
 
-  // First image file out of a paste/drop DataTransfer, or null. `.files` covers most paste/drop
-  // cases; `.items` is the fallback some browsers need for a pasted (as opposed to dropped) image.
+  // First image file from a paste/drop DataTransfer, or null (`.items` is the fallback for pasted images).
   static extractImageFile(dataTransfer) {
     const fromFiles = [...(dataTransfer.files || [])].find((f) => f.type.startsWith('image/'));
     if (fromFiles) {
@@ -299,7 +289,7 @@ class Filler {
     return item ? item.getAsFile() : null;
   }
 
-  /** True for white and near-white colors, where a same-color border would be invisible. */
+  /* True for white and near-white colors, where a same-color border would be invisible. */
   static isNearWhite({ r, g, b }) {
     return r >= 235 && g >= 235 && b >= 235;
   }
@@ -376,12 +366,9 @@ class Filler {
     return { r: (r + m) * 255, g: (g + m) * 255, b: (b + m) * 255 };
   }
 
-  // Prefers beside the field — right, then left — over stacking below/above; only stacks once
-  // neither side actually fits the panel's own minimum width (see PANEL_MIN_WIDTH). Whichever side
-  // wins, the room it has is returned as `maxSize`, used to cap the panel to that room before it's
-  // measured (see `reposition` in `attachFloating`) so it scrolls only as a last resort. top/bottom
-  // constrain height (panel stays left-aligned below/above); left/right constrain width instead
-  // (panel stays top-aligned beside the field).
+  /* Prefers beside the field (right, then left) over stacking below/above; falls back only when
+     neither side fits the panel's own minimum width (PANEL_MIN_WIDTH). Returns the side and its
+     room as `maxSize`, used to cap the panel before measuring so it scrolls only as a last resort. */
   static availableSpace(anchorRect, viewport, offset = 6) {
     const space = {
       right: viewport.width - anchorRect.right - offset,
@@ -401,8 +388,7 @@ class Filler {
     return { side, maxSize: Math.max(space[side], 0) };
   }
 
-  // Placed on whichever side `availableSpace` picked, then clamped to stay on-screen. Assumes
-  // `size` already respects that side's `maxSize`, so the result never overlaps the anchor.
+  // Placed on whichever side availableSpace picked, then clamped to stay on-screen (assumes `size` already fits `maxSize`).
   static computePosition(anchorRect, size, viewport, offset = 6) {
     const { side } = Filler.availableSpace(anchorRect, viewport, offset);
 
@@ -419,7 +405,7 @@ class Filler {
     };
   }
 
-  /** @param {string|HTMLInputElement} target @param {object} [options] */
+  /* @param {string|HTMLInputElement} target @param {object} [options] */
   constructor(target, options = {}) {
     const el = this.el = typeof target === 'string' ? document.querySelector(target) : target;
 
@@ -526,8 +512,7 @@ class Filler {
     this.bindAlphaSuffixDrag();
 
     const { swatch } = this;
-    // Alt+click samples a color from the screen instead of opening the dialog (see syncSwatchTitle
-    // for the discoverability hint, only shown where EyeDropper is actually supported).
+    // Alt+click samples a color from the screen instead of opening the dialog (see syncSwatchTitle for the hint).
     swatch.addEventListener('click', (event) => {
       if (event.altKey && window.EyeDropper) {
         this.pickWithEyeDropper();
@@ -536,8 +521,7 @@ class Filler {
       this.toggleDialog();
     });
 
-    // Pasting or dropping an image onto the swatch switches straight to image mode with it loaded,
-    // instead of requiring swatch click -> "Image" -> upload -> file picker.
+    // Pasting or dropping an image onto the swatch switches straight to image mode with it loaded.
     swatch.addEventListener('paste', (event) => this.handleSwatchImageData(event.clipboardData));
     swatch.addEventListener('dragover', (event) => {
       if (!this.disabled) {
@@ -550,9 +534,7 @@ class Filler {
     });
   }
 
-  // Alt+click on the swatch samples a color from anywhere on screen — one action instead of hex
-  // field -> dropdown -> palette. Applied via `applyHex`, the same path a palette click uses, so a
-  // picked color that happens to match a palette entry is applied identically to selecting it.
+  // Samples a color from anywhere on screen; applied via `applyHex`, the same path a palette click uses.
   pickWithEyeDropper() {
     if (this.disabled || !window.EyeDropper || !this.sources.includes('solid')) {
       return;
@@ -597,8 +579,7 @@ class Filler {
       let lastX = event.clientX;
       suffix.setPointerCapture(event.pointerId);
 
-      // The wrapping label focuses alphaInput on click regardless of this preventDefault, which
-      // would otherwise make render() skip refreshing the value until blur (see render() below).
+      // The wrapping label still focuses alphaInput on click, which would make render() skip refreshing the value until blur.
       this.draggingAlpha = true;
 
       const onMove = (moveEvent) => {
@@ -617,8 +598,7 @@ class Filler {
     });
   }
 
-  // Applies once typed text is a complete hex (3/6/8-digit, shorthand ok); an 8-digit value's own
-  // alpha wins, otherwise the current alpha is kept. Read-only in 'image' mode, so this never fires there.
+  // Applies once typed text is a complete hex (3/6/8-digit); 8-digit's alpha wins, otherwise the current one is kept.
   handleHexInput() {
     const color = Filler.hexToRgba(this.el.value);
     if (!color) {
@@ -689,8 +669,7 @@ class Filler {
     el.dispatchEvent(new Event('change', { bubbles: true }));
   }
 
-  // Repaints the swatch and field text for the active source ('solid' paints hsva; 'image' shows
-  // the uploaded thumbnail, cropped to cover, with the field showing localized "Image" text).
+  // Repaints the swatch/field for the active source: 'solid' paints hsva, 'image' shows the uploaded thumbnail.
   renderSwatch({ skipHexInput = false } = {}) {
     const { el, hsva, swatch, swatchColor, swatchColorOpaque, labels } = this;
     const isImage = this.source === 'image';
@@ -774,9 +753,9 @@ class Filler {
     });
   }
 
-  // `host` is the plain light-DOM element `attachFloating` positions and appends to <body>; `root`
-  // (inside its shadow tree) carries the panel's own chrome and content, isolated from page CSS
-  // both ways. Restyle from outside via `::part(<class-name>)` instead of a plain selector.
+  /* `host` is the plain light-DOM element attachFloating positions and appends to <body>; `root`
+     (its shadow tree) carries the panel's chrome/content, isolated from page CSS both ways —
+     restyle from outside via `::part(<class-name>)` instead of a plain selector. */
   createShadowPanel(className) {
     const host = Filler.el('div');
     const shadow = host.attachShadow({ mode: 'open' });
@@ -793,11 +772,9 @@ class Filler {
     return { host, root };
   }
 
-  // Anchors `panel` (see createShadowPanel) to `this.wrapper`, not whatever was clicked; `content`
-  // is that same panel's shadow-root element (its `root`), which is where the scroll clamping
-  // below is applied instead of on `panel` itself — an ancestor's `overflow` clips a descendant's
-  // box-shadow, but never its own, so putting it on `content` keeps `content`'s box-shadow (from
-  // filler-panel-chrome) intact while it still scrolls. Returns a teardown.
+  /* `content` is `panel`'s shadow-root element (its `root`) — the scroll clamp below targets it
+     instead of `panel`, since an ancestor's overflow clips a descendant's box-shadow but never
+     its own, keeping content's box-shadow (filler-panel-chrome) intact while it scrolls. */
   attachFloating(panel, content, onClose) {
     const { wrapper } = this;
     Object.assign(panel.style, { position: 'fixed', zIndex: 999999, top: 0, left: 0 });
@@ -813,8 +790,7 @@ class Filler {
       const anchorRect = wrapper.getBoundingClientRect();
       const viewport = { width: window.innerWidth, height: window.innerHeight };
 
-      // Capped to the chosen side's room before measuring, so it scrolls only as a last resort
-      // instead of overlapping the field (see Filler.availableSpace / computePosition).
+      // Capped to the chosen side's room before measuring, so it scrolls only as a last resort.
       const { side, maxSize } = Filler.availableSpace(anchorRect, viewport);
       const stacked = side === 'top' || side === 'bottom';
 
@@ -840,9 +816,9 @@ class Filler {
     };
     const onKeydown = (event) => event.key === 'Escape' && onClose();
 
-    // Deferred past the gesture that opened this panel: a focus-triggered open (see the hex
-    // field's 'focus' listener) runs before that same gesture's 'click' event, which this listener
-    // would otherwise catch and could misread as an outside click.
+    /* Deferred past the gesture that opened this panel: a focus-triggered open (see the hex
+       field's 'focus' listener) runs before that same gesture's 'click' event, which this
+       listener would otherwise catch and could misread as an outside click. */
     const addClickListenerTimer = setTimeout(() => document.addEventListener('click', onDocClick, true), 0);
     document.addEventListener('keydown', onKeydown);
     window.addEventListener('scroll', reposition, true);
@@ -1091,8 +1067,7 @@ class Filler {
     this.syncSourceUI();
   }
 
-  // Source-type buttons ('Solid'/'Image') above the color area; hidden outright with under 2
-  // sources. Icon-only — the localized label lives in `title`, not as visible text.
+  // Source-type buttons ('Solid'/'Image'); hidden outright under 2 sources; icon-only, label lives in `title`.
   buildSourceButtons() {
     const { classes } = this;
     const row = this.dialogSources = Filler.el('div', { className: classes.dialogSources });
@@ -1192,8 +1167,7 @@ class Filler {
       this.clearImage();
     });
 
-    // Square, top-left (mirrors removeButton); shown only on hover while some slider has moved
-    // off default (see filler-panel.scss's `.has-adjustments:hover`).
+    // Square, top-left (mirrors removeButton); shown on hover only once a slider's off default.
     const resetButton = this.dialogImageResetButton = Filler.el('button', {
       type: 'button', className: classes.dialogImageReset, title: labels.resetAdjustments, textContent: '↺',
     });
@@ -1227,8 +1201,7 @@ class Filler {
       const input = Filler.el('input', {
         type: 'range', className: classes.dialogImageSliderInput, min, max, step, value: image[key],
       });
-      // Where the fill treats "center" — the filter's own neutral value, not the track's midpoint
-      // (see filler-slider-fill). Unitless 0-1, not a percentage.
+      // Where the fill treats "center" — the filter's neutral value, not the track's midpoint; unitless 0-1.
       input.style.setProperty('--center', (def - min) / (max - min));
       Filler.setSliderPercent(input);
       input.addEventListener('input', () => {
@@ -1255,8 +1228,7 @@ class Filler {
     return panel;
   }
 
-  // Current position as a 0-1 fraction, kept on the input as `--percent` for the pure-CSS fill
-  // (filler-slider-fill) to read.
+  // Current position as a 0-1 fraction, kept as `--percent` for the pure-CSS fill to read.
   static setSliderPercent(input) {
     const min = +input.min;
     const max = +input.max;
@@ -1492,8 +1464,7 @@ class Filler {
     }
 
     dialogFieldInputs.forEach((input, index) => {
-      // Inside the shadow root, document.activeElement only reports the host — ask the input's
-      // own root instead, which behaves like document.activeElement would outside a shadow tree.
+      // Inside a shadow root, document.activeElement reports only the host — ask the input's own root instead.
       if (input.getRootNode().activeElement !== input) {
         input.value = values[index];
       }
@@ -1567,14 +1538,9 @@ class Filler {
 
 document.addEventListener('youla:init', ()=> {
 
-  /**
-   * Turns `<input type="text">` into a Figma-style fill field: a swatch, a HEX input, and a
-   * transparency field (drag the "%" to adjust). The HEX input opens a dropdown (type a value or
-   * pick from a named/custom palette); the swatch opens a full HSV + alpha dialog with
-   * copy-to-clipboard in HEX/RGB/HSL. The main input always displays HEX.
-   *
-   * @since 1.0
-   */
+  /* Turns `<input type="text">` into a Figma-style fill field — swatch, HEX input, and a
+     transparency field. The HEX field opens a palette dropdown; the swatch opens a full HSV +
+     alpha dialog with copy-to-clipboard in HEX/RGB/HSL. The main input always displays HEX. */
   Youla.directive('filler', (el, output) => {
     if (!(el instanceof HTMLInputElement)) {
       console.warn('Youla.js: "v-filler" requires an <input>.');

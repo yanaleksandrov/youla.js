@@ -1,0 +1,146 @@
+@import 'filler-mixins';
+
+// Scoped by naming convention (`.filler-*`) — this file only styles light-DOM elements. The
+// dropdown/dialog panels are isolated via a shadow root instead (see styles/filler-panel.scss).
+.filler {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	max-width: 100%;
+	padding-block: 4px;
+	padding-inline: 4px 8px;
+	border: 1px solid #dfe2e3;
+	border-radius: 6px;
+	background: #fff;
+	font-size: 12px;
+	height: 32px;
+	box-sizing: border-box;
+
+	&:focus-within,
+	&.is-open {
+		border-color: #4c9ffe;
+	}
+
+	&.is-disabled {
+		opacity: 0.5;
+		pointer-events: none;
+	}
+}
+
+// Pre-init "skeleton": makes the raw `<input v-filler>` already look like the mounted `.filler`
+// box before JS runs, so mounting doesn't shift it. Stops applying once JS adds `.filler-input`.
+input[v-filler]:not(.filler-input) {
+	max-width: 100%;
+	// left: padding + swatch + gap; right: gap + alpha's border/padding/input/suffix — matches
+	// .filler-alpha/.filler-alpha-input/.filler-alpha-suffix below.
+	padding: 4px calc(36px + 3ch) 4px 35px;
+	border: 1px solid #dfe2e3;
+	border-radius: 6px;
+	background: #fff;
+	outline: none;
+	font-size: 12px;
+	font-family: var(--mono, ui-monospace, monospace);
+	color: #1a1a1a;
+	text-transform: uppercase;
+	height: 32px;
+	box-sizing: border-box;
+
+	&:focus {
+		border-color: #4c9ffe;
+	}
+
+	&:disabled {
+		opacity: 0.5;
+	}
+}
+
+.filler-swatch {
+	flex: none;
+	position: relative;
+	width: 23px;
+	height: 23px;
+	padding: 0;
+	// No border by default — JS adds one only for white/near-white colors, invisible without it.
+	border: none;
+	border-radius: 4px;
+	overflow: hidden;
+	cursor: pointer;
+	@include filler-checkerboard;
+
+	.filler-swatch-color {
+		position: absolute;
+		inset: 0;
+		background-size: cover;
+		background-position: center;
+	}
+
+	// Opaque left half, shown only over transparency, so both colors compare side by side.
+	.filler-swatch-color-opaque {
+		position: absolute;
+		inset: 0;
+		right: 50%;
+		display: none;
+	}
+
+	// Live thumbnail for the 'video' source — CSS `background-image` can't render a <video>, unlike
+	// the image source's .filler-swatch-color above, so it gets its own element, sized the same way.
+	.filler-swatch-video {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+	}
+
+	&.has-alpha .filler-swatch-color-opaque {
+		display: block;
+	}
+}
+
+.filler-input {
+	flex: 1;
+	min-width: 0;
+	max-width: 130px;
+	border: none;
+	background: none;
+	outline: none;
+	padding: 0;
+	line-height: 23px;
+	font-family: var(--mono, ui-monospace, monospace);
+	color: #1a1a1a;
+	text-transform: uppercase;
+
+	// Sentence case (not the hex field's all-caps) for the localized "Image" label; non-interactive since it's read-only.
+	&.is-image-value {
+		font-family: inherit;
+		text-transform: none;
+		cursor: default;
+	}
+}
+
+.filler-alpha {
+	flex: none;
+	display: flex;
+	align-items: center;
+	padding-left: 8px;
+	border-left: 1px solid #dfe2e3;
+
+	.filler-alpha-input {
+		width: 3ch;
+		border: none;
+		background: none;
+		outline: none;
+		padding: 0;
+		text-align: right;
+		font-family: var(--mono, ui-monospace, monospace);
+		color: #1a1a1a;
+		line-height: 23px;
+	}
+
+	.filler-alpha-suffix {
+		padding-left: 2px;
+		color: #8a8f93;
+		font-size: 10px;
+		user-select: none;
+		line-height: 23px;
+	}
+}

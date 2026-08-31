@@ -1,0 +1,817 @@
+@import 'filler-mixins';
+
+// Injected into a shadow root (see Filler#getPanelStylesheet), not the global stylesheet, so page
+// CSS can't reach these rules and these can't leak onto the page. Restyle from outside via
+// `::part(<class-name>)` — every element here carries a `part` mirroring its class (see Filler.el).
+
+// The HEX dropdown: custom-palette + library lists. `max-height`/`overflow-y` (when it doesn't fit
+// above/below the field) are set here directly, not on the light-DOM shadow host — see
+// Filler#attachFloating for why: an ancestor's `overflow` would otherwise clip this element's own
+// box-shadow (from filler-panel-chrome), which an element's own `overflow` never does.
+.filler-dropdown {
+	overflow-x: hidden;
+	padding: 8px;
+	background: #fff;
+	border: 1px solid rgb(231, 231, 231);
+	border-radius: 12px;
+	box-shadow: rgba(0, 0, 0, 0.2) 0 8px 24px;
+	font-size: 12px;
+	display: flex;
+	flex-direction: column;
+	min-width: 240px;
+	box-sizing: border-box;
+}
+
+.filler-palette-section + .filler-palette-section {
+	margin-top: 10px;
+}
+
+.filler-palette-title {
+	margin-bottom: 6px;
+	font-size: 10px;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	color: #8a8f93;
+}
+
+// A vertical list — each row shows the color and its name together, per-name width stays legible.
+.filler-palette-row {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+}
+
+.filler-palette-swatch {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	padding: 5px 6px;
+	border: none;
+	border-radius: 5px;
+	background: none;
+	text-align: left;
+	cursor: pointer;
+
+	&:hover {
+		background: rgba(0, 0, 0, 0.05);
+	}
+
+	&:hover .filler-palette-remove {
+		opacity: 1;
+	}
+}
+
+.filler-palette-chip {
+	flex: none;
+	width: 16px;
+	height: 16px;
+	border-radius: 3px;
+	border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.filler-palette-label {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: #1a1a1a;
+}
+
+// A named library entry's hex, alongside its name; never truncated — the name ellipsizes first.
+.filler-palette-hex {
+	flex: none;
+	font-family: var(--mono, ui-monospace, monospace);
+	font-size: 10px;
+	color: #8a8f93;
+}
+
+.filler-palette-remove {
+	flex: none;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	opacity: 0;
+	width: 16px;
+	height: 16px;
+	border-radius: 50%;
+	background: #fff;
+	border: 1px solid #e6e6e6;
+	color: #8a8f93;
+	font-size: 9px;
+	line-height: 1;
+}
+
+.filler-palette-add {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	padding: 5px 6px;
+	border: none;
+	border-radius: 5px;
+	background: none;
+	color: #8a8f93;
+	cursor: pointer;
+
+	&:hover {
+		background: rgba(0, 0, 0, 0.05);
+	}
+
+	.filler-palette-chip {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border: 1px dashed #e6e6e6;
+		line-height: 1;
+	}
+}
+
+.filler-dialog {
+	background: #fff;
+	border: 1px solid #dfe2e3;
+	border-radius: 12px;
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+	font-size: 12px;
+	display: flex;
+	flex-direction: column;
+	min-width: 240px;
+}
+
+.filler-dialog-area {
+	position: relative;
+	width: 100%;
+	aspect-ratio: 1 / 1;
+	outline: rgb(0 0 0 / 10%) solid 1px;
+	outline-offset: -1px;
+	border-radius: 5px;
+	cursor: crosshair;
+	touch-action: none;
+	background-image:
+		linear-gradient(to top, #000, transparent),
+		linear-gradient(to right, #fff, transparent);
+}
+
+.filler-dialog-hue,
+.filler-dialog-alpha {
+	position: relative;
+	height: 16px;
+	border-radius: 16px;
+	cursor: pointer;
+	touch-action: none;
+	outline: rgb(0 0 0 / 10%) solid 1px;
+	outline-offset: -1px;
+}
+
+.filler-dialog-hue {
+	background-image: linear-gradient(to right, red, yellow, lime, cyan, blue, magenta, red);
+}
+
+.filler-dialog-alpha {
+	@include filler-checkerboard;
+}
+
+.filler-dialog-alpha-gradient {
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+}
+
+.filler-dialog-handle,
+.filler-dialog-area-handle {
+	--handle-size: 16px;
+	position: absolute;
+	transform: translate(-50%, -50%);
+	pointer-events: none;
+	box-sizing: border-box;
+	box-shadow:
+		0 0 0.5px rgba(0, 0, 0, 0.2),
+		0 3px 8px rgba(0, 0, 0, 0.1),
+		0 1px 3px rgba(0, 0, 0, 0.1),
+		0 0 0 1px rgba(0, 0, 0, 0.2),
+		inset 0 0 0 1px rgba(0, 0, 0, 0.2);
+	width: var(--handle-size);
+	height: var(--handle-size);
+	border-radius: 50%;
+	border: 4px solid #fff;
+}
+
+// `--percent` (a unitless 0-1 fraction, set in renderDialog) drives `left` here instead of the
+// hue/alpha value's raw percentage, so the handle's center travels from half its own width in from
+// filler-dialog-hue/-alpha's left edge to half in from the right — never past either edge — while
+// the value <-> pointer-position mapping (Filler#bindTrackDrag) stays untouched, so hue 0-360 and
+// alpha 0-100 both stay fully reachable; only where the handle is drawn changes, not what it can select.
+.filler-dialog-handle {
+	position: absolute;
+	top: 50%;
+	left: calc(var(--handle-size) / 2 + var(--percent, 0) * (100% - var(--handle-size)));
+}
+
+// Real tabs — an underline on the active one, not a filled pill — since this row now holds only
+// the HEX/RGB/HSL switch (the eyedropper/copy moved down to flank the value fields, see below).
+.filler-dialog-tabs {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	padding-bottom: 3px;
+	border-bottom: 1px solid #e6e6e6;
+}
+
+.filler-dialog-tab {
+	position: relative;
+	padding: 4px;
+	border: none;
+	background: none;
+	font-size: 10px;
+	letter-spacing: 0.025em;
+	text-transform: uppercase;
+	color: #8a8f93;
+	cursor: pointer;
+	transition: all 0.25s ease;
+
+	&:hover {
+		color: #1a1a1a;
+	}
+
+	&.is-active {
+		color: #1a1a1a;
+
+		// Sits on the row's own border-bottom, marking this as the open tab.
+		&::after {
+			content: '';
+			position: absolute;
+			left: 0;
+			right: 0;
+			bottom: -3px;
+			height: 2px;
+			border-radius: 1px;
+			background: #000000;
+		}
+	}
+}
+
+.filler-dialog-fields {
+	display: flex;
+	align-items: flex-end;
+	gap: 6px;
+}
+
+.filler-dialog-eyedropper,
+.filler-dialog-copy {
+	flex: none;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	border: none;
+	border-radius: 5px;
+	background: none;
+	color: #8a8f93;
+	cursor: pointer;
+
+	&:hover {
+		background: rgba(0, 0, 0, 0.06);
+		color: #1a1a1a;
+	}
+}
+
+.filler-dialog-eyedropper {
+	svg {
+		display: block;
+		fill: currentColor;
+	}
+
+	&[hidden] {
+		display: none;
+	}
+}
+
+.filler-dialog-copy {
+	&.is-copied {
+		color: #2ecc71;
+	}
+}
+
+.filler-dialog-fields-values {
+	display: flex;
+	flex: 1;
+}
+
+.filler-dialog-field {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column-reverse;
+	align-items: center;
+	gap: 2px;
+	margin-left: -1px;
+
+	input {
+		width: 100%;
+		min-width: 0;
+		padding: 4px;
+		border: 1px solid #e6e6e6;
+		outline: none;
+		text-align: center;
+		font-family: var(--mono, ui-monospace, monospace);
+		color: #1a1a1a;
+		font-size: 12px;
+		box-sizing: border-box;
+
+		&:focus {
+			z-index: 1;
+			border-color: #4c9ffe;
+		}
+	}
+
+	.filler-dialog-field-label {
+		font-size: 9px;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		color: #8a8f93;
+	}
+}
+
+// Always shown (unlike the group below) so the close button next to it always is too, regardless
+// of how many sources are configured.
+.filler-dialog-sources {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	border-bottom: 1px solid #e6e6e6;
+	padding: 8px;
+}
+
+// `&[hidden]` is needed because `display` set here would otherwise outrank the UA stylesheet's
+// own `[hidden] { display: none }` rule. Hidden outright under 2 sources — nothing to switch
+// between — while filler-dialog-sources (its row) stays visible for the close button.
+.filler-dialog-sources-group {
+	display: flex;
+	align-items: center;
+	gap: 3px;
+
+	&[hidden] {
+		display: none;
+	}
+}
+
+// Icon-only — the localized label lives in the `title` tooltip, not as visible text.
+.filler-dialog-source {
+	flex: none;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	border: none;
+	border-radius: 5px;
+	background: none;
+	color: #8a8f93;
+	cursor: pointer;
+	transition: all 0.25s ease;
+
+	svg {
+		display: block;
+		fill: currentColor;
+	}
+
+	&:hover {
+		background: rgba(0, 0, 0, 0.05);
+	}
+
+	&.is-active {
+		color: #1a1a1a;
+		background: rgba(0, 0, 0, 0.06);
+	}
+}
+
+// Pushed to the far end of filler-dialog-sources regardless of whether the group above it (icon
+// buttons) is shown or hidden.
+.filler-dialog-close {
+	margin-left: auto;
+	flex: none;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	border: none;
+	border-radius: 5px;
+	background: none;
+	font-size: 15px;
+	line-height: 1;
+	color: #8a8f93;
+	cursor: pointer;
+
+	&:hover {
+		background: rgba(0, 0, 0, 0.06);
+		color: #1a1a1a;
+	}
+}
+
+.filler-dialog-solid {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding: 16px;
+
+	&[hidden] {
+		display: none;
+	}
+}
+
+/* The 'Image' and 'Video' panels share this entire chrome — object-fit + rotate toolbar, upload
+   field, preview — down to the class name suffix; only what follows it (correction sliders vs.
+   playback settings, see below) actually differs between them. One rule per element, shared by
+   both media types, keeps that from being duplicated; where a real variation exists (the toolbar's
+   two controls, or the preview's two corner buttons) it gets its own modifier rule layered on a
+   shared base instead of being duplicated per media type too. */
+.filler-dialog-image,
+.filler-dialog-video {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	padding: 16px;
+
+	&[hidden] {
+		display: none;
+	}
+}
+
+.filler-dialog-image-toolbar,
+.filler-dialog-video-toolbar {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+// Shared chrome for the toolbar's two controls — kept the same height so the <select> and the
+// <button> line up regardless of their different default box models.
+.filler-dialog-image-fit,
+.filler-dialog-image-rotate,
+.filler-dialog-video-fit,
+.filler-dialog-video-rotate {
+	height: 24px;
+	border: 1px solid #e6e6e6;
+	border-radius: 5px;
+	background-color: #fff;
+	color: #1a1a1a;
+	cursor: pointer;
+}
+
+.filler-dialog-image-fit,
+.filler-dialog-video-fit {
+	min-width: 0;
+	padding: 4px 20px 4px 6px;
+	outline: none;
+	font-size: 11px;
+	margin-right: auto;
+
+	&:focus {
+		border-color: #4c9ffe;
+	}
+}
+
+/* Custom chevron for every <select> here (object-fit + preload) — appearance:none clears the
+   native one so a small background SVG can stand in for it. <select> doesn't support ::before/
+   ::after, so there's no separate element to transform on open; instead :focus (the closest
+   cross-browser proxy for "the dropdown is open") swaps in a second copy of the same SVG with the
+   chevron pre-rotated 180°, which reads as the arrow flipping without needing a wrapper element. */
+.filler-dialog-image-fit,
+.filler-dialog-video-fit,
+.filler-dialog-video-setting-input:is(select) {
+	height: 24px;
+	appearance: none;
+	-webkit-appearance: none;
+	background-repeat: no-repeat;
+	background-position: right 8px center;
+	background-size: 8px 4px;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%238a8f93' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+
+	&:focus {
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 5l4-4 4 4' fill='none' stroke='%234c9ffe' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+	}
+}
+
+.filler-dialog-image-rotate,
+.filler-dialog-video-rotate {
+	flex: none;
+	width: 24px;
+	padding: 0;
+	font-size: 13px;
+	line-height: 1;
+
+	&:hover {
+		background: rgba(0, 0, 0, 0.05);
+	}
+}
+
+.filler-dialog-image-upload,
+.filler-dialog-video-upload {
+	position: relative;
+	display: block;
+	aspect-ratio: 2 / 1;
+	border: 1px dashed #e6e6e6;
+	border-radius: 5px;
+	overflow: hidden;
+	cursor: pointer;
+	width: 100%;
+	@include filler-checkerboard;
+
+	&:hover {
+		border-color: #4c9ffe;
+	}
+
+	&.has-media {
+		border-style: solid;
+	}
+}
+
+// Covers the whole label (even once a file is loaded) so clicking the thumbnail reopens the file
+// picker to replace it, Figma-style; the remove button sits on top and handles its own click.
+.filler-dialog-image-upload-input,
+.filler-dialog-video-upload-input {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	opacity: 0;
+	cursor: pointer;
+}
+
+.filler-dialog-image-preview,
+.filler-dialog-video-preview {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.filler-dialog-image-preview-img,
+.filler-dialog-video-preview-video {
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+}
+
+.filler-dialog-image-placeholder,
+.filler-dialog-video-placeholder {
+	padding: 4px 8px;
+	font-size: 11px;
+	text-align: center;
+	color: #8a8f93;
+	border-radius: 5px;
+	backdrop-filter: blur(2px);
+	border: 1px solid #fff;
+	position: absolute;
+	background-color: rgba(255, 255, 255, 0.25);
+	box-shadow: 0 0 0 100px rgba(0, 0, 0, 0.1);
+}
+
+// Shared chrome for the preview's two corner buttons.
+.filler-dialog-image-remove,
+.filler-dialog-image-reset,
+.filler-dialog-video-remove,
+.filler-dialog-video-reset {
+	position: absolute;
+	top: 4px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 18px;
+	height: 18px;
+	padding: 0;
+	border: 1px solid #e6e6e6;
+	background: #fff;
+	color: #8a8f93;
+	font-size: 11px;
+	line-height: 1;
+	cursor: pointer;
+
+	&:hover {
+		color: #1a1a1a;
+	}
+}
+
+.filler-dialog-image-remove,
+.filler-dialog-video-remove {
+	right: 4px;
+	border-radius: 50%;
+
+	&[hidden] {
+		display: none;
+	}
+}
+
+// Square and top-left (vs. the round remove button's top-right); surfaces only on hover, once
+// something's actually off default (see the has-adjustments:hover rule below).
+.filler-dialog-image-reset,
+.filler-dialog-video-reset {
+	left: 4px;
+	display: none;
+	border-radius: 5px;
+}
+
+.filler-dialog-image-upload.has-adjustments:hover .filler-dialog-image-reset,
+.filler-dialog-video-upload.has-adjustments:hover .filler-dialog-video-reset {
+	display: flex;
+}
+
+.filler-dialog-image-sliders {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.filler-dialog-image-sliders-title {
+	font-size: 9px;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	color: #8a8f93;
+}
+
+.filler-dialog-image-slider {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+}
+
+.filler-dialog-image-slider-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.filler-dialog-image-slider-label {
+	font-size: 11px;
+	color: #1a1a1a;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	max-width: 96px;
+	overflow: hidden;
+}
+
+.filler-dialog-image-slider-value {
+	font-size: 10px;
+	font-family: var(--mono, ui-monospace, monospace);
+	color: #8a8f93;
+	margin-inline-start: 4px;
+}
+
+// `--filler-slider-thumb` is the single source of truth for thumb size, read by both the thumb
+// rules below and filler-slider-fill's alignment math. Track radius is an oversized `9999px`
+// rather than matching height, so it stays a full pill regardless of that height.
+.filler-dialog-image-slider-input {
+	--filler-slider-thumb: 16px;
+	appearance: none;
+	width: 100%;
+	max-width: 80px;
+	height: var(--filler-slider-thumb);
+	background: none;
+	cursor: pointer;
+	margin: 0 0 0 auto;
+
+	&::-webkit-slider-runnable-track {
+		height: var(--filler-slider-thumb);
+		border-radius: 9999px;
+		outline: 1px solid rgb(0 0 0 / 20%);
+		outline-offset: -1px;
+
+		@include filler-slider-fill;
+	}
+
+	&::-moz-range-track {
+		height: var(--filler-slider-thumb);
+		border-radius: 9999px;
+		outline: 1px solid rgb(0 0 0 / 20%);
+		outline-offset: -1px;
+
+		@include filler-slider-fill;
+	}
+
+	&::-webkit-slider-thumb {
+		appearance: none;
+		width: var(--filler-slider-thumb);
+		height: var(--filler-slider-thumb);
+		margin: 0;
+		border-radius: 50%;
+		border: 1px solid #b1b1b1;
+		box-shadow: 0 1px 3px 0 #0000001a, 0 5px 12px 0 #00000021, 0 0 .5px 0 #00000026;
+		background: #fff;
+	}
+
+	&::-moz-range-thumb {
+		width: var(--filler-slider-thumb);
+		height: var(--filler-slider-thumb);
+		margin: 0;
+		border-radius: 50%;
+		border: 1px solid #b1b1b1;
+		box-shadow: 0 1px 3px 0 #0000001a, 0 5px 12px 0 #00000021, 0 0 .5px 0 #00000026;
+		background: #fff;
+	}
+
+	&:focus-visible::-webkit-slider-thumb {
+		outline: 2px solid #4c9ffe;
+		outline-offset: 2px;
+	}
+
+	&:focus-visible::-moz-range-thumb {
+		outline: 2px solid #4c9ffe;
+		outline-offset: 2px;
+	}
+
+	&:disabled {
+		opacity: 0.5;
+		cursor: default;
+	}
+}
+
+// Real <video>-tag playback settings (autoplay/loop/muted/controls/playsinline/preload) — checkboxes
+// and a preload <select>, not range sliders, since these are booleans/enums, not continuous values.
+.filler-dialog-video-settings {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.filler-dialog-video-settings-title {
+	font-size: 9px;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	color: #8a8f93;
+}
+
+.filler-dialog-video-setting {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	cursor: pointer;
+}
+
+.filler-dialog-video-setting-label {
+	font-size: 11px;
+	color: #1a1a1a;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	overflow: hidden;
+}
+
+.filler-dialog-video-setting-input {
+	flex: none;
+
+	// A switch, not a checkbox: appearance:none strips the native box, and a background SVG (a
+	// plain filled circle) stands in for the thumb — sliding between `background-position`'s two
+	// ends on :checked is pure CSS, no separate thumb element needed.
+	&[type="checkbox"] {
+		appearance: none;
+		-webkit-appearance: none;
+		width: 30px;
+		height: 17px;
+		margin: 0;
+		border: none;
+		border-radius: 9999px;
+		background-color: #f5f5f5;
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 13 13'%3E%3Ccircle cx='6.5' cy='6.5' r='6.5' fill='white'/%3E%3C/svg%3E");
+		background-repeat: no-repeat;
+		background-position: left 2px center;
+		background-size: 13px 13px;
+		cursor: pointer;
+		transition: background-color 0.15s ease, background-position 0.15s ease;
+		outline: 1px solid rgb(0 0 0 / 20%);
+		outline-offset: -1px;
+
+		&:checked {
+			background-color: #4c9ffe;
+			background-position: right 2px center;
+		}
+
+		&:focus-visible {
+			outline: 2px solid #4c9ffe;
+			outline-offset: 2px;
+		}
+	}
+
+	&:is(select) {
+		padding: 4px 20px 4px 6px;
+		border: 1px solid #e6e6e6;
+		border-radius: 5px;
+		background-color: #fff;
+		outline: none;
+		font-size: 11px;
+		color: #1a1a1a;
+		cursor: pointer;
+		field-sizing: content;
+
+		&:focus {
+			border-color: #4c9ffe;
+		}
+	}
+}

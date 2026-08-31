@@ -1,0 +1,32 @@
+@mixin filler-checkerboard {
+	background-image:
+		conic-gradient(
+			#d8d8d8 90deg, #ffffff 90deg 180deg,
+			#d8d8d8 180deg 270deg, #ffffff 270deg
+		);
+	background-size: 8px 8px;
+}
+
+// Fill drawn from the filter's neutral value (`--center`) to the thumb (`--percent`), colored by
+// which side the thumb is on. The thumb-facing edge uses the browser's own thumb-centering inset,
+// so it lands exactly under it; the neutral-value edge doesn't, so a range anchored at its own
+// edge (grayscale, blur, ...) still reads flush there instead of leaving a sliver of bare track.
+// Both custom properties are unitless 0-1 fractions, set once at build time (Filler.setSliderPercent).
+@mixin filler-slider-fill($track: #f5f5f5, $negative: #ff6f59, $positive: #4c9ffe) {
+	$thumb: var(--filler-slider-thumb, 16px);
+	$thumb-pos: calc(#{$thumb} / 2 + var(--percent, 0.5) * (100% - #{$thumb}));
+	$anchor-pos: calc(var(--center, 0.5) * 100%);
+
+	background:
+		linear-gradient(
+			to right,
+			#{$track} 0%,
+			#{$track} min(#{$anchor-pos}, #{$thumb-pos}),
+			#{$negative} min(#{$anchor-pos}, #{$thumb-pos}),
+			#{$negative} #{$anchor-pos},
+			#{$positive} #{$anchor-pos},
+			#{$positive} max(#{$anchor-pos}, #{$thumb-pos}),
+			#{$track} max(#{$anchor-pos}, #{$thumb-pos}),
+			#{$track} 100%
+		);
+}

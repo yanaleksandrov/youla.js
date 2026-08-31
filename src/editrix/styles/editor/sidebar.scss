@@ -25,6 +25,7 @@
 	}
 
 	&-tab {
+		user-select: none;
 		word-break: keep-all;
 		cursor: pointer;
 		padding: 10px;

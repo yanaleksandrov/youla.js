@@ -1288,9 +1288,6 @@ class Filler {
       button.hidden = !sources.includes(type);
       button.classList.toggle('is-active', type === source);
     });
-    // Only the icon-button group hides under 2 sources — dialogSources (its row) stays visible so
-    // the close button next to it always does too.
-    dialogSourcesGroup.hidden = sources.length < 2;
 
     dialogSolidPanel.hidden = source !== 'solid';
     dialogImagePanel.hidden = source !== 'image';

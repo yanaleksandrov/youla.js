@@ -1,6 +1,6 @@
 import { domWalk } from './dom';
 import { debounce } from './timing';
-import { makeObservable } from './reactivity';
+import { makeObservable, RAW, toRaw } from './reactivity';
 import { saferEval } from './eval';
 import { createEvent, getNextModifier, isKeyModifier, matchesKeyModifiers } from './events';
 import { getForData, createMagicVariables, withMagicVariables, splitMagicVariables } from './magic-variables';
@@ -130,6 +130,15 @@ export default class Component {
 
     const makeProxy = (data) => new Proxy(data, {
       get(target, prop) {
+        // Lets reactivity.js's toRaw() see through this proxy too, not just its own — a value
+        // read here (e.g. controls/fill.js's patchFillAt() reading "fill" off "this") often gets
+        // spread and written straight back through makeObservable's own proxy; without this,
+        // wrap() has no way to tell that value was already one of ours, and wraps it again. See
+        // toRaw()'s own comment (reactivity.js) for what compounding that causes.
+        if (prop === RAW) {
+          return toRaw(target);
+        }
+
         deps.push(prop);
 
         if (typeof target[prop] === 'object' && target[prop] !== null) {

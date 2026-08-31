@@ -9,13 +9,15 @@
 // Filler#attachFloating for why: an ancestor's `overflow` would otherwise clip this element's own
 // box-shadow (from filler-panel-chrome), which an element's own `overflow` never does.
 .filler-dropdown {
-	background: #fff;
-	border: 1px solid #dfe2e3;
-	border-radius: 12px;
-	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-	font-size: 12px;
 	overflow-x: hidden;
 	padding: 8px;
+	background: #fff;
+	border: 1px solid rgb(231, 231, 231);
+	border-radius: 12px;
+	box-shadow: rgba(0, 0, 0, 0.2) 0 8px 24px;
+	font-size: 12px;
+	display: flex;
+	flex-direction: column;
 	min-width: 240px;
 }
 

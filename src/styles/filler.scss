@@ -82,6 +82,15 @@ input[v-filler]:not(.filler-input) {
 		display: none;
 	}
 
+	// Live thumbnail for the 'video' source — CSS `background-image` can't render a <video>, unlike
+	// the image source's .filler-swatch-color above, so it gets its own element, sized the same way.
+	.filler-swatch-video {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+	}
+
 	&.has-alpha .filler-swatch-color-opaque {
 		display: block;
 	}

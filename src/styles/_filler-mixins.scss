@@ -7,16 +7,6 @@
 	background-size: 8px 8px;
 }
 
-// Chrome only — position/size/etc. live on the light-DOM shadow host (see Filler#attachFloating),
-// which is what's actually appended to <body>; this just fills whatever box the host gives it.
-@mixin filler-panel-chrome {
-	background: #fff;
-	border: 1px solid #dfe2e3;
-	border-radius: 6px;
-	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
-	font-size: 12px;
-}
-
 // Fill drawn from the filter's neutral value (`--center`) to the thumb (`--percent`), colored by
 // which side the thumb is on. The thumb-facing edge uses the browser's own thumb-centering inset,
 // so it lands exactly under it; the neutral-value edge doesn't, so a range anchored at its own

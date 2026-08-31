@@ -34,6 +34,7 @@ class Filler {
         swatch: 'swatch',
         swatchColor: 'swatch-color',
         swatchColorOpaque: 'swatch-color-opaque',
+        swatchVideo: 'swatch-video',
         dropdown: 'dropdown',
       }),
 
@@ -62,10 +63,13 @@ class Filler {
         dialogEyedropper: 'eyedropper',
         dialogCopy: 'copy',
         dialogFields: 'fields',
+        dialogFieldsValues: 'fields-values',
         dialogField: 'field',
         dialogFieldLabel: 'field-label',
         dialogSources: 'sources',
+        dialogSourcesGroup: 'sources-group',
         dialogSource: 'source',
+        dialogClose: 'close',
         dialogSolid: 'solid',
       }),
 
@@ -89,6 +93,27 @@ class Filler {
         dialogImageSliderValue: 'slider-value',
         dialogImageSliderInput: 'slider-input',
       }),
+
+      ...classNames('filler-dialog-video', {
+        dialogVideo: '',
+        dialogVideoToolbar: 'toolbar',
+        dialogVideoFit: 'fit',
+        dialogVideoRotate: 'rotate',
+        dialogVideoUpload: 'upload',
+        dialogVideoUploadInput: 'upload-input',
+        dialogVideoPreview: 'preview',
+        dialogVideoPreviewVideo: 'preview-video',
+        dialogVideoPlaceholder: 'placeholder',
+        dialogVideoRemove: 'remove',
+        dialogVideoReset: 'reset',
+        // Real <video>-tag playback settings (autoplay/loop/muted/...), not a CSS-filter correction
+        // panel like the image source's — see Filler.VIDEO_SETTINGS.
+        dialogVideoSettingsTitle: 'settings-title',
+        dialogVideoSettings: 'settings',
+        dialogVideoSetting: 'setting',
+        dialogVideoSettingLabel: 'setting-label',
+        dialogVideoSettingInput: 'setting-input',
+      }),
     },
     // Dialog format ('hex'/'rgb'/'hsl'); the field next to the swatch always shows HEX.
     format: 'hex',
@@ -96,8 +121,8 @@ class Filler {
     alpha: null,
     // {name, hex}[] for the dropdown's library list, sorted by name.
     palette: PALETTE,
-    // Source-type buttons to show — 'solid' and/or 'image'; a single entry locks the dialog to it.
-    sources: ['solid', 'image'],
+    // Source-type buttons to show — 'solid', 'image' and/or 'video'; a single entry locks the dialog to it.
+    sources: ['solid', 'image', 'video'],
     // localStorage key for the custom palette; null disables persistence.
     customPaletteKey: 'youla-filler-palette',
     disabled: false,
@@ -114,11 +139,16 @@ class Filler {
       copyValue: 'Скопировать значение',
       pickColor: 'Пипетка с экрана',
       eyedropper: 'Alt+клик — пипетка с экрана',
+      closeDialog: 'Закрыть',
 
       solidSource: 'Заливка',
       imageSource: 'Изображение',
       uploadImage: 'Выбрать изображение',
       removeImage: 'Удалить изображение',
+      videoSource: 'Видео',
+      uploadVideo: 'Выбрать видео',
+      removeVideo: 'Удалить видео',
+      // Shared by the image and video panels' rotate button — the text itself isn't source-specific.
       rotateImage: 'Повернуть на 90°',
       adjustments: 'Коррекция',
       resetAdjustments: 'Сбросить',
@@ -129,7 +159,7 @@ class Filler {
         none: 'Без изменений',
         'scale-down': 'Уменьшение',
       },
-      // Slider labels, one per Filler.IMAGE_FILTERS key.
+      // Slider labels, one per Filler.MEDIA_FILTERS key (image source only).
       filters: {
         brightness: 'Яркость',
         contrast: 'Контраст',
@@ -140,17 +170,77 @@ class Filler {
         invert: 'Инверсия',
         blur: 'Размытие',
       },
+
+      // Video source only — real <video>-tag attributes, one per Filler.VIDEO_SETTINGS key.
+      videoSettingsTitle: 'Настройки видео',
+      videoSettings: {
+        autoplay: 'Автовоспроизведение',
+        loop: 'Зациклить',
+        muted: 'Без звука',
+        playsInline: 'Воспроизведение в блоке (playsinline)',
+        controls: 'Элементы управления',
+        preload: 'Предзагрузка',
+      },
+      videoPreload: {
+        none: 'Не загружать',
+        metadata: 'Только метаданные',
+        auto: 'Автоматически',
+      },
     },
   };
 
   // Source-type button icons (Phosphor "image" / "paint-brush-broad"), keyed like `sources`.
   static SOURCE_ICONS = {
-    solid: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256"><path d="M234.53 139.07a8 8 0 0 0 3.13-13.24L122.17 10.34a8 8 0 0 0-11.31 0L70.25 51l-24.6-24.66a8 8 0 0 0-11.31 11.32l24.6 24.6L15 106.17a24 24 0 0 0 0 33.94L99.89 225a24 24 0 0 0 33.94 0l78.49-78.49Zm-32.19-5.24-79.83 79.83a8 8 0 0 1-11.31 0L26.34 128.8a8 8 0 0 1 0-11.31l43.91-43.92 29.12 29.12a28 28 0 1 0 11.31-11.32L81.57 62.26l35-34.95L217.19 128l-11.72 3.9a8 8 0 0 0-3.13 1.93m-86.83-26.31a13.26 13.26 0 1 1-.05.06s.05-.05.05-.06m123.15 56a8 8 0 0 0-13.32 0C223.57 166.23 208 190.09 208 208a24 24 0 0 0 48 0c0-17.91-15.57-41.77-17.34-44.44ZM232 216a8 8 0 0 1-8-8c0-6.8 4-16.32 8-24.08 4 7.76 8 17.34 8 24.08a8 8 0 0 1-8 8"/></svg>',
-    image: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256"><path d="M208 32H48a16 16 0 0 0-16 16v160a16 16 0 0 0 16 16h160a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16M48 48h160v77l-25-24a16 16 0 0 0-22 0L53 208h-5Zm160 160H76l96-96 36 36zM96 120a24 24 0 1 0-24-24 24 24 0 0 0 24 24m0-32a8 8 0 1 1-8 8 8 8 0 0 1 8 8"/></svg>',
+    solid: '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 12 12"><path fill="#ababab" d="M3 3h6v6H3z"/><path fill="#000" fill-rule="evenodd" d="M2 1h8a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1M0 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm3 7V3h6v6zM2 2.5a1 1 0 0 1 .5-.5h7a1 1 0 0 1 .5.5v7a1 1 0 0 1-.5.5h-7a1 1 0 0 1-.5-.5z" clip-rule="evenodd"/></svg>',
+    image: '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 12 12"><path fill="#000" d="M10 0a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2zM2 1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zm2.22 4.08a.5.5 0 0 1 .63.07l4 4a.5.5 0 1 1-.7.7L4.5 6.21 2.85 7.85a.5.5 0 1 1-.7-.7l2-2zM8.5 2a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3m0 1a.5.5 0 1 0 0 1 .5.5 0 0 0 0-1"/></svg>',
+    video: '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 12 12"><path fill="#000" d="M10 0a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2zM2 1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1z"/><path stroke="#000" d="M4.1 4.3q.1-.6.8-.5l3 1.8q.5.4 0 .8l-3 1.8q-.7.3-.8-.5z"/></svg>',
   };
 
+  /* Per-type wiring shared by buildMediaPanel/renderMediaPreview/etc. — `classKeys`/`labelKeys` point
+     into `classes`/`labels` so existing image class/label names (public via ::part() and options)
+     stay untouched while video gets its own mirrored set. */
+  static MEDIA = {
+    image: {
+      tag: 'img',
+      accept: 'image/*',
+      classKeys: {
+        panel: 'dialogImage', toolbar: 'dialogImageToolbar', fit: 'dialogImageFit', rotate: 'dialogImageRotate',
+        upload: 'dialogImageUpload', uploadInput: 'dialogImageUploadInput', preview: 'dialogImagePreview',
+        previewMedia: 'dialogImagePreviewImg', placeholder: 'dialogImagePlaceholder', remove: 'dialogImageRemove',
+        reset: 'dialogImageReset', slidersTitle: 'dialogImageSlidersTitle', sliders: 'dialogImageSliders',
+        slider: 'dialogImageSlider', sliderHead: 'dialogImageSliderHead', sliderLabel: 'dialogImageSliderLabel',
+        sliderValue: 'dialogImageSliderValue', sliderInput: 'dialogImageSliderInput',
+      },
+      labelKeys: { source: 'imageSource', upload: 'uploadImage', remove: 'removeImage', rotate: 'rotateImage' },
+    },
+    video: {
+      tag: 'video',
+      accept: 'video/*',
+      classKeys: {
+        panel: 'dialogVideo', toolbar: 'dialogVideoToolbar', fit: 'dialogVideoFit', rotate: 'dialogVideoRotate',
+        upload: 'dialogVideoUpload', uploadInput: 'dialogVideoUploadInput', preview: 'dialogVideoPreview',
+        previewMedia: 'dialogVideoPreviewVideo', placeholder: 'dialogVideoPlaceholder', remove: 'dialogVideoRemove',
+        reset: 'dialogVideoReset', settingsTitle: 'dialogVideoSettingsTitle', settings: 'dialogVideoSettings',
+        setting: 'dialogVideoSetting', settingLabel: 'dialogVideoSettingLabel', settingInput: 'dialogVideoSettingInput',
+      },
+      labelKeys: { source: 'videoSource', upload: 'uploadVideo', remove: 'removeVideo', rotate: 'rotateImage' },
+    },
+  };
+
+  /* Real <video>-tag playback settings, editable in the video panel instead of a CSS-filter
+     correction section (CSS filters apply fine to <video>, but these are what actually matters
+     when the uploaded clip ends up as a background/fill <video> element on the page). */
+  static VIDEO_SETTINGS = [
+    { key: 'autoplay', type: 'checkbox', default: true },
+    { key: 'loop', type: 'checkbox', default: true },
+    { key: 'muted', type: 'checkbox', default: true },
+    { key: 'playsInline', type: 'checkbox', default: true },
+    { key: 'controls', type: 'checkbox', default: false },
+    { key: 'preload', type: 'select', default: 'auto', options: ['none', 'metadata', 'auto'] },
+  ];
+
   // Eyedropper icon (Material "colorize"), for the dialog's pick-from-screen button.
-  static EYEDROPPER_ICON = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path d="M20.71 5.63l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-3.12 3.12-1.93-1.91-1.41 1.41 1.42 1.42L3 16.25V21h4.75l8.92-8.92 1.42 1.42 1.41-1.41-1.93-1.93 3.12-3.12c.4-.39.4-1.02.02-1.41zM6.92 19H5v-1.92l8.06-8.06 1.92 1.92L6.92 19z"/></svg>';
+  static EYEDROPPER_ICON = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 12 12"><path fill="#000" d="M12 2.2a2.2 2.2 0 0 0-.7-1.6C10.42-.23 9-.2 8.13.67L6.93 1.9a1.5 1.5 0 0 0-2.08.05l-.56.56a1 1 0 0 0 0 1.41l.13.13-3.19 3.19A2.5 2.5 0 0 0 .57 9.6l-.5 1.16a.9.9 0 0 0 .18.95 1 1 0 0 0 1.1.2l1.1-.47a2.5 2.5 0 0 0 2.32-.67l3.19-3.2.12.14a1 1 0 0 0 1.42 0l.56-.57a1.5 1.5 0 0 0 .05-2.07l1.23-1.24A2.2 2.2 0 0 0 12 2.2m-7.94 7.86a1.5 1.5 0 0 1-1.5.38.5.5 0 0 0-.34.02l-1.13.5.47-1.12a.5.5 0 0 0 .02-.36 1.5 1.5 0 0 1 .36-1.54l3.19-3.19 2.12 2.13zm6.57-6.93L9.05 4.72a.5.5 0 0 0 0 .7l.3.31a.5.5 0 0 1 0 .7L8.8 7 5 3.2l.56-.56a.5.5 0 0 1 .71 0l.3.3a.5.5 0 0 0 .71 0l1.56-1.56a1.3 1.3 0 0 1 1.77-.05 1.25 1.25 0 0 1 .02 1.8"/></svg>';
 
   /* Panel width clamp (see attachFloating) — also the "enough room" threshold `availableSpace`
      uses to prefer placing the panel beside the field over stacking it. */
@@ -160,7 +250,8 @@ class Filler {
   /* One slider per CSS filter function; ranges follow the spec — grayscale/sepia/invert/blur run
      0-100(px) from their floor/neutral value, brightness/contrast/saturate center on their 100%
      neutral (capped at an arbitrary 200), and hue-rotate alone is signed, centered on 0 (-180..180). */
-  static IMAGE_FILTERS = [
+  // Shared by the image and video panels — CSS `filter` applies identically to <img> and <video>.
+  static MEDIA_FILTERS = [
     { key: 'brightness', css: 'brightness', min: 0, max: 200, default: 100, step: 1, unit: '%' },
     { key: 'contrast', css: 'contrast', min: 0, max: 200, default: 100, step: 1, unit: '%' },
     { key: 'saturate', css: 'saturate', min: 0, max: 200, default: 100, step: 1, unit: '%' },
@@ -173,13 +264,13 @@ class Filler {
 
   // Same as the CSS unit, except degrees show "°" instead of "deg".
   static filterDisplayUnit(key) {
-    const unit = Filler.IMAGE_FILTERS.find((f) => f.key === key).unit;
+    const unit = Filler.MEDIA_FILTERS.find((f) => f.key === key).unit;
     return unit === 'deg' ? '°' : unit;
   }
 
-  // One call per IMAGE_FILTERS entry; each slider's own min/max already keeps values in range.
-  static computeImageFilter(image) {
-    return Filler.IMAGE_FILTERS.map(({ key, css, unit }) => `${css}(${image[key]}${unit})`).join(' ');
+  // One call per MEDIA_FILTERS entry; each slider's own min/max already keeps values in range.
+  static computeMediaFilter(media) {
+    return Filler.MEDIA_FILTERS.map(({ key, css, unit }) => `${css}(${media[key]}${unit})`).join(' ');
   }
 
   static clamp(value, min, max) {
@@ -278,14 +369,14 @@ class Filler {
     return { r, g, b, a: Filler.clamp(a, 0, 1) * 100 };
   }
 
-  // First image file from a paste/drop DataTransfer, or null (`.items` is the fallback for pasted images).
-  static extractImageFile(dataTransfer) {
-    const fromFiles = [...(dataTransfer.files || [])].find((f) => f.type.startsWith('image/'));
+  // First file matching `mimePrefix` from a paste/drop DataTransfer, or null (`.items` is the fallback for pasted files).
+  static extractMediaFile(dataTransfer, mimePrefix) {
+    const fromFiles = [...(dataTransfer.files || [])].find((f) => f.type.startsWith(mimePrefix));
     if (fromFiles) {
       return fromFiles;
     }
 
-    const item = [...(dataTransfer.items || [])].find((i) => i.kind === 'file' && i.type.startsWith('image/'));
+    const item = [...(dataTransfer.items || [])].find((i) => i.kind === 'file' && i.type.startsWith(mimePrefix));
     return item ? item.getAsFile() : null;
   }
 
@@ -426,14 +517,14 @@ class Filler {
     const initialAlpha = Filler.clamp(options.alpha ?? parseFloat(el.dataset.alpha ?? '100'), 0, 100);
     this.hsva = { ...Filler.rgbToHsv(Filler.hexToRgb(initialHex)), a: initialAlpha };
 
-    // Which panel the dialog shows — 'solid' (HSV picker) or 'image' (upload + adjustments).
+    // Which panel the dialog shows — 'solid' (HSV picker), 'image' or 'video' (upload + adjustments).
     this.source = this.sources[0];
-    this.image = {
-      dataUrl: null,
-      fit: 'cover',
-      rotation: 0,
-      ...Object.fromEntries(Filler.IMAGE_FILTERS.map(({ key, default: value }) => [key, value])),
-    };
+    const imageFilterDefaults = Object.fromEntries(Filler.MEDIA_FILTERS.map(({ key, default: value }) => [key, value]));
+    const videoSettingDefaults = Object.fromEntries(Filler.VIDEO_SETTINGS.map(({ key, default: value }) => [key, value]));
+    this.image = { dataUrl: null, fit: 'cover', rotation: 0, ...imageFilterDefaults };
+    this.video = { dataUrl: null, fit: 'cover', rotation: 0, ...videoSettingDefaults };
+    // DOM refs per media type ('image'/'video'), filled in by buildMediaPanel.
+    this.mediaRefs = { image: null, video: null };
 
     this.customPalette = this.loadCustomPalette();
     this.dropdownOpen = false;
@@ -459,8 +550,11 @@ class Filler {
     const swatchColor = this.swatchColor = Filler.el('span', { className: classes.swatchColor });
     // Painted over swatchColor via DOM order (no z-index needed); shown only while there's transparency.
     const swatchColorOpaque = this.swatchColorOpaque = Filler.el('span', { className: classes.swatchColorOpaque });
+    // CSS `background-image` can't show a <video>, so the video source gets its own live element.
+    // autoplay/loop/muted/... are applied from `this.video` by applyVideoSettings, not hardcoded here.
+    const swatchVideo = this.swatchVideo = Filler.el('video', { className: classes.swatchVideo, hidden: true });
     const swatch = this.swatch = Filler.el('button', { type: 'button', className: classes.swatch });
-    swatch.append(swatchColor, swatchColorOpaque);
+    swatch.append(swatchColor, swatchColorOpaque, swatchVideo);
     this.syncSwatchTitle();
 
     const alphaInput = this.alphaInput = Filler.el('input', {
@@ -485,9 +579,9 @@ class Filler {
 
   addListeners() {
     const { el, alphaInput } = this;
-    // Image mode has no hex value to select or type — open the dialog instead of the dropdown.
+    // Image/video mode has no hex value to select or type — open the dialog instead of the dropdown.
     el.addEventListener('focus', () => {
-      if (this.source === 'image') {
+      if (this.source !== 'solid') {
         this.openDialog();
         return;
       }
@@ -521,8 +615,8 @@ class Filler {
       this.toggleDialog();
     });
 
-    // Pasting or dropping an image onto the swatch switches straight to image mode with it loaded.
-    swatch.addEventListener('paste', (event) => this.handleSwatchImageData(event.clipboardData));
+    // Pasting or dropping an image/video onto the swatch switches straight to that mode with it loaded.
+    swatch.addEventListener('paste', (event) => this.handleSwatchMediaData(event.clipboardData));
     swatch.addEventListener('dragover', (event) => {
       if (!this.disabled) {
         event.preventDefault();
@@ -530,7 +624,7 @@ class Filler {
     });
     swatch.addEventListener('drop', (event) => {
       event.preventDefault();
-      this.handleSwatchImageData(event.dataTransfer);
+      this.handleSwatchMediaData(event.dataTransfer);
     });
   }
 
@@ -553,17 +647,22 @@ class Filler {
     this.swatch.title = (window.EyeDropper && this.sources.includes('solid')) ? this.labels.eyedropper : '';
   }
 
-  handleSwatchImageData(dataTransfer) {
-    if (this.disabled || !dataTransfer || !this.sources.includes('image')) {
+  handleSwatchMediaData(dataTransfer) {
+    if (this.disabled || !dataTransfer) {
       return;
     }
-    const file = Filler.extractImageFile(dataTransfer);
+
+    const imageFile = this.sources.includes('image') ? Filler.extractMediaFile(dataTransfer, 'image/') : null;
+    const videoFile = !imageFile && this.sources.includes('video') ? Filler.extractMediaFile(dataTransfer, 'video/') : null;
+    const file = imageFile || videoFile;
     if (!file) {
       return;
     }
-    this.setSource('image');
+
+    const type = imageFile ? 'image' : 'video';
+    this.setSource(type);
     this.openDialog();
-    this.handleImageUpload(file);
+    this.handleMediaUpload(type, file);
   }
 
   // Dragging the "%" suffix left/right nudges transparency, mirroring Ranger's pointer-capture drags.
@@ -611,7 +710,7 @@ class Filler {
 
   // Applies any recognizable pasted color (alpha included); anything else falls through to a normal paste.
   handleHexPaste(event) {
-    if (this.source === 'image') {
+    if (this.source !== 'solid') {
       return;
     }
 
@@ -669,14 +768,50 @@ class Filler {
     el.dispatchEvent(new Event('change', { bubbles: true }));
   }
 
-  // Repaints the swatch/field for the active source: 'solid' paints hsva, 'image' shows the uploaded thumbnail.
+  // Repaints the swatch/field for the active source: 'solid' paints hsva, 'image'/'video' shows the uploaded thumbnail.
   renderSwatch({ skipHexInput = false } = {}) {
-    const { el, hsva, swatch, swatchColor, swatchColorOpaque, labels } = this;
+    const { el, hsva, swatch, swatchColor, swatchColorOpaque, swatchVideo, labels } = this;
     const isImage = this.source === 'image';
+    const isVideo = this.source === 'video';
 
     swatch.classList.toggle('is-image', isImage);
-    el.classList.toggle('is-image-value', isImage);
-    el.readOnly = isImage;
+    swatch.classList.toggle('is-video', isVideo);
+    el.classList.toggle('is-image-value', isImage || isVideo);
+    el.readOnly = isImage || isVideo;
+
+    if (isVideo) {
+      const { dataUrl, fit, rotation } = this.video;
+      if (!skipHexInput) {
+        el.value = labels.videoSource;
+      }
+
+      swatchColor.style.backgroundColor = '';
+      swatchColor.style.backgroundImage = '';
+
+      if (dataUrl) {
+        if (swatchVideo.getAttribute('src') !== dataUrl) {
+          swatchVideo.src = dataUrl;
+        }
+      } else {
+        swatchVideo.removeAttribute('src');
+      }
+      swatchVideo.hidden = !dataUrl;
+      swatchVideo.style.objectFit = fit;
+      swatchVideo.style.transform = `rotate(${rotation}deg)`;
+      swatchVideo.style.opacity = hsva.a / 100;
+
+      swatch.classList.remove('has-alpha');
+      swatch.style.border = 'none';
+
+      // Sets autoplay/loop/muted/... from `this.video` and starts/stops playback to match.
+      this.applyVideoSettings('video');
+      return;
+    }
+
+    swatchVideo.hidden = true;
+    if (!swatchVideo.paused) {
+      swatchVideo.pause();
+    }
 
     if (isImage) {
       const { dataUrl, rotation } = this.image;
@@ -1022,32 +1157,36 @@ class Filler {
       tabs.appendChild(tab);
     });
 
-    // Hidden outright where the browser doesn't support it — no point offering a button that can't work.
+    // Bookend the value fields — eyedropper before them, copy after — rather than sitting in the
+    // format tabs row above. Hidden outright where the browser doesn't support it.
     const eyedropperButton = this.dialogEyedropperButton = Filler.el('button', {
       type: 'button', className: classes.dialogEyedropper, title: this.labels.pickColor,
       innerHTML: Filler.EYEDROPPER_ICON, hidden: !window.EyeDropper,
     });
     eyedropperButton.addEventListener('click', () => this.pickWithEyeDropper());
-    tabs.appendChild(eyedropperButton);
 
     const copyButton = Filler.el('button', {
       type: 'button', className: classes.dialogCopy, title: this.labels.copyValue, textContent: '⧉',
     });
     copyButton.addEventListener('click', () => this.copyValue(copyButton));
-    tabs.appendChild(copyButton);
 
+    // renderDialogFields() rebuilds just this inner row on every format switch, leaving the
+    // eyedropper/copy buttons flanking it untouched.
+    const fieldsValues = Filler.el('div', { className: classes.dialogFieldsValues });
     const fields = Filler.el('div', { className: classes.dialogFields });
+    fields.append(eyedropperButton, fieldsValues, copyButton);
 
     const solidPanel = Filler.el('div', { className: classes.dialogSolid });
     solidPanel.append(area, hue, alpha, tabs, fields);
 
     const sourceButtons = this.buildSourceButtons();
-    const imagePanel = this.buildImagePanel();
+    const imagePanel = this.buildMediaPanel('image');
+    const videoPanel = this.buildMediaPanel('video');
 
     const { host, root: dialog } = this.createShadowPanel(classes.dialog);
     this.dialogHost = host;
     this.dialog = dialog;
-    dialog.append(sourceButtons, solidPanel, imagePanel);
+    dialog.append(sourceButtons, solidPanel, imagePanel, videoPanel);
 
     Object.assign(this, {
       dialogArea: area,
@@ -1058,30 +1197,41 @@ class Filler {
       dialogAlphaGradient: alphaGradient,
       dialogAlphaHandle: alphaHandle,
       dialogTabs: tabs,
-      dialogFields: fields,
+      dialogFields: fieldsValues,
       dialogFieldInputs: [],
       dialogSolidPanel: solidPanel,
       dialogImagePanel: imagePanel,
+      dialogVideoPanel: videoPanel,
     });
 
     this.syncSourceUI();
   }
 
-  // Source-type buttons ('Solid'/'Image'); hidden outright under 2 sources; icon-only, label lives in `title`.
+  /* The dialog's top row: source-type buttons ('Solid'/'Image'/'Video') on the left, grouped so
+     they can be hidden outright under 2 sources, and the close button on the right — which stays
+     visible regardless, since the dialog must stay closable no matter how many sources it offers. */
   buildSourceButtons() {
     const { classes } = this;
     const row = this.dialogSources = Filler.el('div', { className: classes.dialogSources });
+    const group = this.dialogSourcesGroup = Filler.el('div', { className: classes.dialogSourcesGroup });
 
     this.dialogSourceButtons = {};
-    ['solid', 'image'].forEach((type) => {
+    ['solid', 'image', 'video'].forEach((type) => {
       const button = Filler.el('button', {
         type: 'button', className: classes.dialogSource, innerHTML: Filler.SOURCE_ICONS[type],
       });
       button.addEventListener('click', () => this.setSource(type));
 
       this.dialogSourceButtons[type] = button;
-      row.appendChild(button);
+      group.appendChild(button);
     });
+
+    const closeButton = this.dialogCloseButton = Filler.el('button', {
+      type: 'button', className: classes.dialogClose, title: this.labels.closeDialog, textContent: '×',
+    });
+    closeButton.addEventListener('click', () => this.closeDialog());
+
+    row.append(group, closeButton);
 
     this.syncSourceLabels();
 
@@ -1097,6 +1247,7 @@ class Filler {
 
     dialogSourceButtons.solid.title = labels.solidSource;
     dialogSourceButtons.image.title = labels.imageSource;
+    dialogSourceButtons.video.title = labels.videoSource;
   }
 
   setSource(type) {
@@ -1108,10 +1259,10 @@ class Filler {
     this.renderSwatch();
   }
 
-  // Shows/hides the source buttons and solid/image panels for the current `sources` and `source`.
+  // Shows/hides the source buttons and solid/image/video panels for the current `sources` and `source`.
   syncSourceUI() {
-    const { dialogSources, dialogSourceButtons, dialogSolidPanel, dialogImagePanel, sources, source } = this;
-    if (!dialogSources) {
+    const { dialogSourcesGroup, dialogSourceButtons, dialogSolidPanel, dialogImagePanel, dialogVideoPanel, sources, source } = this;
+    if (!dialogSourcesGroup) {
       return;
     }
 
@@ -1119,111 +1270,86 @@ class Filler {
       button.hidden = !sources.includes(type);
       button.classList.toggle('is-active', type === source);
     });
-    dialogSources.hidden = sources.length < 2;
+    // Only the icon-button group hides under 2 sources — dialogSources (its row) stays visible so
+    // the close button next to it always does too.
+    dialogSourcesGroup.hidden = sources.length < 2;
 
     dialogSolidPanel.hidden = source !== 'solid';
     dialogImagePanel.hidden = source !== 'image';
+    dialogVideoPanel.hidden = source !== 'video';
   }
 
-  // The 'Image' panel: object-fit + rotate toolbar, upload field, one slider per IMAGE_FILTERS entry.
-  buildImagePanel() {
-    const { classes, labels, image } = this;
+  /* The 'Image'/'Video' panel: object-fit + rotate toolbar, upload field, plus a type-specific
+     settings section — CSS-filter correction sliders for images (buildFilterSliders), real
+     <video>-tag playback settings for video (buildVideoSettings). `type` is 'image' or 'video' —
+     see Filler.MEDIA for the class/label names it reads. */
+  buildMediaPanel(type) {
+    const { classes, labels } = this;
+    const { tag, accept, classKeys, labelKeys } = Filler.MEDIA[type];
+    const cls = Object.fromEntries(Object.entries(classKeys).map(([k, classKey]) => [k, classes[classKey]]));
+    const lbl = Object.fromEntries(Object.entries(labelKeys).map(([k, labelKey]) => [k, labels[labelKey]]));
+    const media = this[type];
 
-    const fitSelect = this.dialogImageFit = Filler.el('select', { className: classes.dialogImageFit });
+    const fitSelect = Filler.el('select', { className: cls.fit });
     Object.entries(labels.objectFit).forEach(([value, text]) => {
-      fitSelect.appendChild(Filler.el('option', { value, textContent: text, selected: value === image.fit }));
+      fitSelect.appendChild(Filler.el('option', { value, textContent: text, selected: value === media.fit }));
     });
     fitSelect.addEventListener('change', () => {
-      this.image.fit = fitSelect.value;
-      this.renderImagePreview();
+      media.fit = fitSelect.value;
+      this.renderMediaPreview(type);
     });
 
     const rotateButton = Filler.el('button', {
-      type: 'button', className: classes.dialogImageRotate, title: labels.rotateImage, textContent: '⤾',
+      type: 'button', className: cls.rotate, title: lbl.rotate, textContent: '⤾',
     });
     rotateButton.addEventListener('click', () => {
-      this.image.rotation = (this.image.rotation + 90) % 360;
-      this.renderImagePreview();
+      media.rotation = (media.rotation + 90) % 360;
+      this.renderMediaPreview(type);
     });
 
-    const toolbar = Filler.el('div', { className: classes.dialogImageToolbar });
+    const toolbar = Filler.el('div', { className: cls.toolbar });
     toolbar.append(fitSelect, rotateButton);
 
-    const uploadInput = this.dialogImageUploadInput = Filler.el('input', {
-      type: 'file', accept: 'image/*', className: classes.dialogImageUploadInput,
-    });
-    uploadInput.addEventListener('change', () => this.handleImageUpload(uploadInput.files?.[0]));
+    const uploadInput = Filler.el('input', { type: 'file', accept, className: cls.uploadInput });
+    uploadInput.addEventListener('change', () => this.handleMediaUpload(type, uploadInput.files?.[0]));
 
-    const previewImg = this.dialogImagePreviewImg = Filler.el('img', { className: classes.dialogImagePreviewImg });
-    const placeholder = this.dialogImagePlaceholder = Filler.el('span', {
-      className: classes.dialogImagePlaceholder, textContent: labels.uploadImage,
-    });
-    const removeButton = this.dialogImageRemoveButton = Filler.el('button', {
-      type: 'button', className: classes.dialogImageRemove, title: labels.removeImage, textContent: '×',
+    // autoplay/loop/muted/... are applied from `this.video` by applyVideoSettings, not hardcoded here.
+    const previewMedia = Filler.el(tag, { className: cls.previewMedia });
+
+    const placeholder = Filler.el('span', { className: cls.placeholder, textContent: lbl.upload });
+    const removeButton = Filler.el('button', {
+      type: 'button', className: cls.remove, title: lbl.remove, textContent: '×',
     });
     removeButton.addEventListener('click', (event) => {
       event.preventDefault();
       event.stopPropagation();
-      this.clearImage();
+      this.clearMedia(type);
     });
 
-    // Square, top-left (mirrors removeButton); shown on hover only once a slider's off default.
-    const resetButton = this.dialogImageResetButton = Filler.el('button', {
-      type: 'button', className: classes.dialogImageReset, title: labels.resetAdjustments, textContent: '↺',
+    // Square, top-left (mirrors removeButton); shown on hover only once something's off default.
+    const resetButton = Filler.el('button', {
+      type: 'button', className: cls.reset, title: labels.resetAdjustments, textContent: '↺',
     });
     resetButton.addEventListener('click', (event) => {
       event.preventDefault();
       event.stopPropagation();
-      this.resetImageAdjustments();
+      this.resetMediaAdjustments(type);
     });
 
-    const preview = this.dialogImagePreview = Filler.el('span', { className: classes.dialogImagePreview });
-    preview.append(previewImg, placeholder, resetButton, removeButton);
+    const preview = Filler.el('span', { className: cls.preview });
+    preview.append(previewMedia, placeholder, resetButton, removeButton);
 
-    const upload = this.dialogImageUpload = Filler.el('label', { className: classes.dialogImageUpload });
+    const upload = Filler.el('label', { className: cls.upload });
     upload.append(uploadInput, preview);
 
-    const slidersTitle = Filler.el('span', { className: classes.dialogImageSlidersTitle, textContent: labels.adjustments });
+    this.mediaRefs[type] = { uploadInput, previewMedia, placeholder, upload, removeButton };
 
-    const sliders = Filler.el('div', { className: classes.dialogImageSliders });
-    this.dialogImageSliderInputs = {};
-    this.dialogImageSliderValues = {};
+    const panel = Filler.el('div', { className: cls.panel });
+    panel.append(toolbar, upload);
+    panel.append(...(type === 'video' ? this.buildVideoSettings(type, cls, media) : this.buildFilterSliders(type, cls, media)));
 
-    Filler.IMAGE_FILTERS.forEach(({ key, min, max, step, default: def }) => {
-      const displayUnit = Filler.filterDisplayUnit(key);
-      // `part: false` — this repaints on every drag tick and isn't meant to be its own ::part().
-      const valueEl = Filler.el('span', {
-        className: classes.dialogImageSliderValue, part: false, textContent: `${image[key]}${displayUnit}`,
-      });
-      const head = Filler.el('span', { className: classes.dialogImageSliderHead });
-      head.append(Filler.el('span', { className: classes.dialogImageSliderLabel, textContent: labels.filters[key] }), valueEl);
-
-      const input = Filler.el('input', {
-        type: 'range', className: classes.dialogImageSliderInput, min, max, step, value: image[key],
-      });
-      // Where the fill treats "center" — the filter's neutral value, not the track's midpoint; unitless 0-1.
-      input.style.setProperty('--center', (def - min) / (max - min));
-      Filler.setSliderPercent(input);
-      input.addEventListener('input', () => {
-        this.image[key] = +input.value;
-        valueEl.textContent = `${input.value}${displayUnit}`;
-        Filler.setSliderPercent(input);
-        this.applyImageFilter();
-        this.syncImageAdjustmentsState();
-      });
-      this.dialogImageSliderInputs[key] = input;
-      this.dialogImageSliderValues[key] = valueEl;
-
-      const row = Filler.el('label', { className: classes.dialogImageSlider });
-      row.append(head, input);
-      sliders.appendChild(row);
-    });
-
-    const panel = Filler.el('div', { className: classes.dialogImage });
-    panel.append(toolbar, upload, slidersTitle, sliders);
-
-    this.renderImagePreview();
-    this.syncImageAdjustmentsState();
+    this.renderMediaPreview(type);
+    this.syncMediaAdjustmentsState(type);
 
     return panel;
   }
@@ -1235,84 +1361,236 @@ class Filler {
     input.style.setProperty('--percent', (+input.value - min) / (max - min));
   }
 
-  // Whether any slider has moved off default; gates the reset button's visibility.
-  hasImageAdjustments() {
-    return Filler.IMAGE_FILTERS.some(({ key, default: value }) => this.image[key] !== value);
+  // The image panel's correction sliders — one per Filler.MEDIA_FILTERS entry; returns [title, list].
+  buildFilterSliders(type, cls, media) {
+    const { labels } = this;
+    const slidersTitle = Filler.el('span', { className: cls.slidersTitle, textContent: labels.adjustments });
+    const sliders = Filler.el('div', { className: cls.sliders });
+    const sliderInputs = {};
+    const sliderValues = {};
+
+    Filler.MEDIA_FILTERS.forEach(({ key, min, max, step, default: def }) => {
+      const displayUnit = Filler.filterDisplayUnit(key);
+      // `part: false` — this repaints on every drag tick and isn't meant to be its own ::part().
+      const valueEl = Filler.el('span', {
+        className: cls.sliderValue, part: false, textContent: `${media[key]}${displayUnit}`,
+      });
+      const head = Filler.el('span', { className: cls.sliderHead });
+      head.append(Filler.el('span', { className: cls.sliderLabel, textContent: labels.filters[key] }), valueEl);
+
+      const input = Filler.el('input', {
+        type: 'range', className: cls.sliderInput, min, max, step, value: media[key],
+      });
+      // Where the fill treats "center" — the filter's neutral value, not the track's midpoint; unitless 0-1.
+      input.style.setProperty('--center', (def - min) / (max - min));
+      Filler.setSliderPercent(input);
+      input.addEventListener('input', () => {
+        media[key] = +input.value;
+        valueEl.textContent = `${input.value}${displayUnit}`;
+        Filler.setSliderPercent(input);
+        this.applyImageFilter();
+        this.syncMediaAdjustmentsState(type);
+      });
+      sliderInputs[key] = input;
+      sliderValues[key] = valueEl;
+
+      const row = Filler.el('label', { className: cls.slider });
+      row.append(head, input);
+      sliders.appendChild(row);
+    });
+
+    Object.assign(this.mediaRefs[type], { sliderInputs, sliderValues });
+
+    return [slidersTitle, sliders];
   }
 
-  syncImageAdjustmentsState() {
-    this.dialogImageUpload.classList.toggle('has-adjustments', this.hasImageAdjustments());
+  /* The video panel's real <video>-tag playback settings — one checkbox/select per
+     Filler.VIDEO_SETTINGS entry, applied live via applyVideoSettings; returns [title, list]. */
+  buildVideoSettings(type, cls, media) {
+    const { labels } = this;
+    const settingsTitle = Filler.el('span', { className: cls.settingsTitle, textContent: labels.videoSettingsTitle });
+    const settings = Filler.el('div', { className: cls.settings });
+    const settingInputs = {};
+
+    Filler.VIDEO_SETTINGS.forEach(({ key, type: controlType, options }) => {
+      const row = Filler.el('label', { className: cls.setting });
+      row.appendChild(Filler.el('span', { className: cls.settingLabel, textContent: labels.videoSettings[key] }));
+
+      const onInput = (value) => {
+        media[key] = value;
+        this.applyVideoSettings(type);
+        this.syncMediaAdjustmentsState(type);
+      };
+
+      let input;
+      if (controlType === 'select') {
+        input = Filler.el('select', { className: cls.settingInput });
+        options.forEach((value) => {
+          input.appendChild(Filler.el('option', {
+            value, textContent: labels.videoPreload[value], selected: value === media[key],
+          }));
+        });
+        input.addEventListener('change', () => onInput(input.value));
+      } else {
+        input = Filler.el('input', { type: 'checkbox', className: cls.settingInput, checked: media[key] });
+        input.addEventListener('change', () => onInput(input.checked));
+      }
+
+      row.appendChild(input);
+      settings.appendChild(row);
+      settingInputs[key] = input;
+    });
+
+    Object.assign(this.mediaRefs[type], { settingInputs });
+
+    return [settingsTitle, settings];
   }
 
-  handleImageUpload(file) {
-    if (!file || !file.type.startsWith('image/')) {
+  // Whether anything (filter sliders, or video settings) has moved off default; gates the reset button.
+  hasMediaAdjustments(type) {
+    const media = this[type];
+    return type === 'video'
+      ? Filler.VIDEO_SETTINGS.some(({ key, default: value }) => media[key] !== value)
+      : Filler.MEDIA_FILTERS.some(({ key, default: value }) => media[key] !== value);
+  }
+
+  syncMediaAdjustmentsState(type) {
+    this.mediaRefs[type].upload.classList.toggle('has-adjustments', this.hasMediaAdjustments(type));
+  }
+
+  handleMediaUpload(type, file) {
+    const { accept } = Filler.MEDIA[type];
+    if (!file || !file.type.startsWith(accept.replace('*', ''))) {
       return;
     }
 
+    const media = this[type];
     const reader = new FileReader();
     reader.onload = () => {
-      this.image.dataUrl = reader.result;
-      this.image.rotation = 0;
-      this.renderImagePreview();
+      media.dataUrl = reader.result;
+      media.rotation = 0;
+      this.renderMediaPreview(type);
     };
     reader.readAsDataURL(file);
   }
 
-  clearImage() {
-    this.image.dataUrl = null;
-    this.image.rotation = 0;
-    this.dialogImageUploadInput.value = '';
-    this.resetImageAdjustments();
-    this.renderImagePreview();
+  clearMedia(type) {
+    const media = this[type];
+    media.dataUrl = null;
+    media.rotation = 0;
+    this.mediaRefs[type].uploadInput.value = '';
+    this.resetMediaAdjustments(type);
+    this.renderMediaPreview(type);
   }
 
-  // Restores every filter to its neutral default, Figma-style; the image itself is untouched.
-  resetImageAdjustments() {
-    Filler.IMAGE_FILTERS.forEach(({ key, default: value }) => {
-      this.image[key] = value;
+  // Restores every filter/setting to its default, Figma-style; the uploaded media itself is untouched.
+  resetMediaAdjustments(type) {
+    const media = this[type];
 
-      const input = this.dialogImageSliderInputs[key];
-      input.value = value;
-      Filler.setSliderPercent(input);
-      this.dialogImageSliderValues[key].textContent = `${value}${Filler.filterDisplayUnit(key)}`;
-    });
-    this.syncImageAdjustmentsState();
-    this.renderSwatch();
-  }
-
-  // Repaints the upload field's preview/placeholder and the image itself from `this.image`.
-  renderImagePreview() {
-    const { dataUrl, fit, rotation } = this.image;
-    const { dialogImagePreviewImg: img, dialogImagePlaceholder: placeholder, dialogImageUpload: upload, dialogImageRemoveButton: removeButton } = this;
-
-    upload.classList.toggle('has-image', !!dataUrl);
-    placeholder.hidden = !!dataUrl;
-    removeButton.hidden = !dataUrl;
-    img.hidden = !dataUrl;
-
-    // Nothing to adjust without an image — keep the sliders inert (and visibly so) until one's loaded.
-    Object.values(this.dialogImageSliderInputs).forEach((input) => { input.disabled = !dataUrl; });
-
-    if (dataUrl) {
-      img.src = dataUrl;
-      img.style.objectFit = fit;
-      img.style.transform = `rotate(${rotation}deg)`;
+    if (type === 'video') {
+      const { settingInputs } = this.mediaRefs[type];
+      Filler.VIDEO_SETTINGS.forEach(({ key, type: controlType, default: value }) => {
+        media[key] = value;
+        if (controlType === 'select') {
+          settingInputs[key].value = value;
+        } else {
+          settingInputs[key].checked = value;
+        }
+      });
+      this.applyVideoSettings(type);
     } else {
-      img.src = '';
+      const { sliderInputs, sliderValues } = this.mediaRefs[type];
+      Filler.MEDIA_FILTERS.forEach(({ key, default: value }) => {
+        media[key] = value;
+
+        const input = sliderInputs[key];
+        input.value = value;
+        Filler.setSliderPercent(input);
+        sliderValues[key].textContent = `${value}${Filler.filterDisplayUnit(key)}`;
+      });
     }
 
-    // Also applies the adjustment filter and, while 'image' is active, syncs the compact swatch.
+    this.syncMediaAdjustmentsState(type);
     this.renderSwatch();
   }
 
-  // Applies the computed filter to the dialog preview, and to the compact swatch while 'image' is active.
+  // Repaints the upload field's preview/placeholder and the media element itself from `this[type]`.
+  renderMediaPreview(type) {
+    const { dataUrl, fit, rotation } = this[type];
+    const { previewMedia, placeholder, upload, removeButton, sliderInputs } = this.mediaRefs[type];
+
+    upload.classList.toggle('has-media', !!dataUrl);
+    placeholder.hidden = !!dataUrl;
+    removeButton.hidden = !dataUrl;
+    previewMedia.hidden = !dataUrl;
+
+    // Nothing to adjust without an image — keep the filter sliders inert until one's loaded; video's
+    // playback settings stay usable even before a clip is chosen, since they don't touch pixels.
+    if (sliderInputs) {
+      Object.values(sliderInputs).forEach((input) => { input.disabled = !dataUrl; });
+    }
+
+    if (dataUrl) {
+      // Guarded — re-assigning a <video>'s `src` to the same value restarts playback.
+      if (previewMedia.getAttribute('src') !== dataUrl) {
+        previewMedia.src = dataUrl;
+      }
+      previewMedia.style.objectFit = fit;
+      previewMedia.style.transform = `rotate(${rotation}deg)`;
+    } else {
+      previewMedia.removeAttribute('src');
+    }
+
+    if (type === 'video') {
+      this.applyVideoSettings(type);
+    }
+
+    // Also applies the image correction filter and, while this type is active, syncs the compact swatch.
+    this.renderSwatch();
+  }
+
+  // Applies the computed CSS filter to the image dialog preview, and to the swatch while 'image' is active.
   applyImageFilter() {
-    const filter = Filler.computeImageFilter(this.image);
-    if (this.dialogImagePreviewImg) {
-      this.dialogImagePreviewImg.style.filter = filter;
+    const filter = Filler.computeMediaFilter(this.image);
+    const refs = this.mediaRefs.image;
+    if (refs?.previewMedia) {
+      refs.previewMedia.style.filter = filter;
     }
     if (this.source === 'image' && this.swatchColor) {
       this.swatchColor.style.filter = filter;
+    }
+  }
+
+  /* Applies autoplay/loop/muted/controls/playsInline from `this.video` to the dialog preview, and
+     to the compact swatch while 'video' is active — then starts/stops playback to match, since
+     setting the IDL properties alone doesn't retroactively (re)start an already-loaded <video>. */
+  applyVideoSettings(type) {
+    const media = this[type];
+    const refs = this.mediaRefs[type];
+
+    const apply = (el) => {
+      if (!el) {
+        return;
+      }
+      el.loop = media.loop;
+      el.muted = media.muted;
+      el.controls = media.controls;
+      el.playsInline = media.playsInline;
+      el.autoplay = media.autoplay;
+
+      if (!el.getAttribute('src')) {
+        return;
+      }
+      if (media.autoplay) {
+        el.play().catch(() => {});
+      } else {
+        el.pause();
+      }
+    };
+
+    apply(refs?.previewMedia);
+    if (this.source === type) {
+      apply(this.swatchVideo);
     }
   }
 
@@ -1477,15 +1755,20 @@ class Filler {
 
     const hueRgb = Filler.hsvToRgb({ h, s: 100, v: 100 });
     this.dialogArea.style.backgroundColor = `rgb(${Math.round(hueRgb.r)}, ${Math.round(hueRgb.g)}, ${Math.round(hueRgb.b)})`;
-    dialogAreaHandle.style.left = `${s}%`;
-    dialogAreaHandle.style.top = `${100 - v}%`;
-
-    this.dialogHueHandle.style.left = `${(h / 360) * 100}%`;
 
     const rgb = Filler.hsvToRgb({ h, s, v });
     const rgbTriplet = `${Math.round(rgb.r)}, ${Math.round(rgb.g)}, ${Math.round(rgb.b)}`;
+    dialogAreaHandle.style.left = `${s}%`;
+    dialogAreaHandle.style.top = `${100 - v}%`;
+    dialogAreaHandle.style.backgroundColor = `rgb(${rgbTriplet})`;
+
+    // A unitless 0-1 fraction — CSS (`.filler-dialog-handle`) insets the actual `left` by half the
+    // handle's own width from each edge, so the handle stays inside the track at ratio 0/1 instead
+    // of hanging half off it. The ratio itself is untouched, so the full h/a range stays reachable.
+    this.dialogHueHandle.style.setProperty('--percent', h / 360);
+
     this.dialogAlphaGradient.style.backgroundImage = `linear-gradient(to right, rgba(${rgbTriplet}, 0), rgba(${rgbTriplet}, 1))`;
-    this.dialogAlphaHandle.style.left = `${a}%`;
+    this.dialogAlphaHandle.style.setProperty('--percent', a / 100);
 
     this.updateDialogFieldValues();
   }
@@ -1529,7 +1812,10 @@ class Filler {
     if (labelsChanged) {
       this.syncSourceLabels();
       this.syncSwatchTitle();
-      if (this.source === 'image') {
+      if (this.dialogCloseButton) {
+        this.dialogCloseButton.title = this.labels.closeDialog;
+      }
+      if (this.source !== 'solid') {
         this.renderSwatch();
       }
     }

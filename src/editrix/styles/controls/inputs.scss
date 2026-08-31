@@ -1,13 +1,13 @@
 .editrix-inputs {
 	display: flex;
-	gap: 0.5rem;
+	gap: 8px;
 	justify-content: space-between;
 	align-items: baseline;
 
 	&-item {
 		display: flex;
 		flex-direction: column;
-		gap: 0.25rem;
+		gap: 4px;
 		flex: 1;
 	}
 
@@ -22,7 +22,7 @@
 	// Status control, toolbox.html) rather than an editable box like -box below.
 	&-value {
 		color: #2d2d2d;
-		font-size: 0.75rem;
+		font-size: 12px;
 		text-align: right;
 	}
 
@@ -32,11 +32,11 @@
 		display: flex;
 		align-items: center;
 		transition: all 0.25s;
-		gap: 0.375rem;
+		gap: 6px;
 		color: #2d2d2d;
 		flex: 1;
-		border-radius: 0.25rem;
-		padding-inline: 0.5rem;
+		border-radius: 4px;
+		padding-inline: 8px;
 
 		&:hover {
 			background-color: #ececec;
@@ -49,7 +49,7 @@
 	}
 
 	&-variable {
-		min-width: 0.5rem;
+		min-width: 8px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -57,8 +57,8 @@
 		background-position: center;
 		background-size: 10px;
 		background-repeat: no-repeat;
-		width: 1.5rem;
-		height: 1.5rem;
+		width: 24px;
+		height: 24px;
 		opacity: 0;
 	}
 

@@ -1,36 +1,32 @@
 // The "fill" control (plugins/editrix/controls/fill.js) — a Figma-style multi-fill list: each row
-// a live preview swatch + summary text, opening its own popover (reusing .editrix-details/
-// .editrix-list/.editrix-buttons/.editrix-field-preview/.editrix-slider wherever their existing
-// look already fits) to edit that one fill's own type/color/image/opacity.
+// is flat (drag handle, v-filler field, visibility toggle, remove) — see filler.scss/
+// filler-panel.scss for the field's own styling; it opens its own dialog, no popover of ours here.
 
+// The "+" button (`[data-part="add"]`) is relocated into .editrix-section-head by contentFields()
+// (youla-editrix.js) and styled there like every other section's own .editrix-section-buttons —
+// nothing of its own to style here.
 .editrix-fill {
 	display: flex;
 	flex-direction: column;
-	gap: 0.375rem;
+	gap: 6px;
 	width: 100%;
 
 	&-list {
 		display: flex;
 		flex-direction: column;
-		gap: 0.25rem;
-	}
-
-	// The "add fill" popover reuses .editrix-details for its own chrome, plus .editrix-buttons-item
-	// for the "+" trigger itself — sized to sit on its own row, right-aligned under the list.
-	&-add {
-		align-self: flex-end;
-
-		.editrix-details-content {
-			right: 0;
-			padding: 0.125rem;
-		}
 	}
 }
 
 .editrix-fill-item {
-	background-color: #f8f8f8;
-	border-radius: 0.375rem;
-	transition: opacity 0.2s;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 4px 8px;
+	transition: opacity 0.2s, background-color 0.25s;
+
+	&:hover {
+		background-color: #f8f8f8;
+	}
 
 	// A fill switched off (fillVisibility() in fill.js) reads as dimmed, same as Figma's own
 	// hidden-layer treatment — cheaper than a dedicated ":class" binding just for this.
@@ -42,43 +38,15 @@
 		opacity: 0.4;
 	}
 
-	&__summary {
-		gap: 0.5rem;
-		padding: 0.375rem 0.5rem;
-
-		&:hover {
-			background-color: #f1f1f1;
-		}
-	}
-
 	&__handle {
 		color: #b4b4b4;
 		cursor: grab;
-		font-size: 0.75rem;
-	}
-
-	&__preview {
-		width: 1.25rem;
-		height: 1.25rem;
-		min-width: 1.25rem;
-		border-radius: 0.25rem;
-		border: 1px solid #e6e6e6;
-		background-size: cover;
-		background-position: center;
-	}
-
-	&__label {
-		flex: 1;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-		font-size: 0.75rem;
-		color: #2d2d2d;
+		font-size: 12px;
 	}
 
 	&__visibility {
 		color: #929292;
-		font-size: 0.8125rem;
+		font-size: 12px;
 		cursor: pointer;
 
 		&:hover {
@@ -88,7 +56,7 @@
 
 	&__remove {
 		color: #929292;
-		font-size: 0.8125rem;
+		font-size: 12px;
 		cursor: pointer;
 		visibility: hidden;
 		opacity: 0;
@@ -102,24 +70,5 @@
 	&:hover &__remove {
 		visibility: visible;
 		opacity: 1;
-	}
-
-	.editrix-details-content {
-		right: 0;
-		padding: 0.75rem;
-		display: flex;
-		flex-direction: column;
-		gap: 0.625rem;
-	}
-}
-
-.editrix-fill-popover {
-	&__types {
-		align-self: flex-start;
-
-		.editrix-buttons-item.active {
-			background-color: #1069fb;
-			color: #fff;
-		}
 	}
 }

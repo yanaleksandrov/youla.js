@@ -19,128 +19,129 @@
       Content
     </div>
   </div>
-  <div class="editrix-blocks" v-bind="e.sidebarPanel('blocks')">
-    <div class="editrix-inputs-box"><i class="ph ph-magnifying-glass"></i> <input placeholder="Type for find..."></div>
 
-    <div class="editrix-blocks-item" v-bind="e.paletteItem('editrix-text')">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256">
-        <path d="M112 44a4 4 0 0 0-4 4v20H24a12 12 0 0 0-12 12v96a12 12 0 0 0 12 12h84v20a4 4 0 0 0 8 0V48a4 4 0 0 0-4-4ZM24 180a4 4 0 0 1-4-4V80a4 4 0 0 1 4-4h84v104ZM244 80v96a12 12 0 0 1-12 12h-88a4 4 0 0 1 0-8h88a4 4 0 0 0 4-4V80a4 4 0 0 0-4-4h-88a4 4 0 0 1 0-8h88a12 12 0 0 1 12 12ZM84 112a4 4 0 0 1-4 4H68v28a4 4 0 0 1-8 0v-28H48a4 4 0 0 1 0-8h32a4 4 0 0 1 4 4Z"/>
-      </svg>
-      Text
-    </div>
-    <div class="editrix-blocks-item" v-bind="e.paletteItem('editrix-button')">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256">
-        <path d="M92 24v-8a4 4 0 0 1 8 0v8a4 4 0 0 1-8 0Zm-76 76h8a4 4 0 0 0 0-8h-8a4 4 0 0 0 0 8Zm110-64a4 4 0 0 0 6-2l8-16a4 4 0 0 0-8-4l-8 16a4 4 0 0 0 2 6Zm-96 88-16 8a4 4 0 0 0 4 8l16-8a4 4 0 1 0-4-8Zm186 63a12 12 0 0 1 0 17l-12 12a12 12 0 0 1-17 0l-52-51a4 4 0 0 0-3-1 4 4 0 0 0-3 2l-18 47a12 12 0 0 1-11 7 12 12 0 0 1-11-8L37 52a12 12 0 0 1 15-15l160 52a12 12 0 0 1 1 22l-47 18a4 4 0 0 0-1 7Zm-5 5-51-51a12 12 0 0 1 3-19l47-18a4 4 0 0 0-1-8L49 44a4 4 0 0 0-5 5l52 160a4 4 0 0 0 8 1l18-47a12 12 0 0 1 8-7 12 12 0 0 1 3 0 12 12 0 0 1 8 4l51 51a4 4 0 0 0 6 0l13-13a4 4 0 0 0 0-6Z"/>
-      </svg>
-      Button
-    </div>
-  </div>
-  <div class="editrix-blocks" v-bind="e.sidebarPanel('patterns')" hidden>
-    <div class="editrix-inputs-box"><i class="ph ph-magnifying-glass"></i> <input placeholder="Type for find..."></div>
+  <div class="editrix-sidebar-content">
+    <div class="editrix-blocks" v-bind="e.sidebarPanel('blocks')">
+      <div class="editrix-inputs-box"><i class="ph ph-magnifying-glass"></i> <input placeholder="Type for find..."></div>
 
-    <div class="editrix-blocks-item" v-bind="e.paletteItem('editrix-text')">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256">
-        <path d="M112 44a4 4 0 0 0-4 4v20H24a12 12 0 0 0-12 12v96a12 12 0 0 0 12 12h84v20a4 4 0 0 0 8 0V48a4 4 0 0 0-4-4ZM24 180a4 4 0 0 1-4-4V80a4 4 0 0 1 4-4h84v104ZM244 80v96a12 12 0 0 1-12 12h-88a4 4 0 0 1 0-8h88a4 4 0 0 0 4-4V80a4 4 0 0 0-4-4h-88a4 4 0 0 1 0-8h88a12 12 0 0 1 12 12ZM84 112a4 4 0 0 1-4 4H68v28a4 4 0 0 1-8 0v-28H48a4 4 0 0 1 0-8h32a4 4 0 0 1 4 4Z"/>
-      </svg>
-      Home Page 1
+      <div class="editrix-blocks-item" v-bind="e.paletteItem('editrix-text')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256">
+          <path d="M112 44a4 4 0 0 0-4 4v20H24a12 12 0 0 0-12 12v96a12 12 0 0 0 12 12h84v20a4 4 0 0 0 8 0V48a4 4 0 0 0-4-4ZM24 180a4 4 0 0 1-4-4V80a4 4 0 0 1 4-4h84v104ZM244 80v96a12 12 0 0 1-12 12h-88a4 4 0 0 1 0-8h88a4 4 0 0 0 4-4V80a4 4 0 0 0-4-4h-88a4 4 0 0 1 0-8h88a12 12 0 0 1 12 12ZM84 112a4 4 0 0 1-4 4H68v28a4 4 0 0 1-8 0v-28H48a4 4 0 0 1 0-8h32a4 4 0 0 1 4 4Z"/>
+        </svg>
+        Text
+      </div>
+      <div class="editrix-blocks-item" v-bind="e.paletteItem('editrix-button')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256">
+          <path d="M92 24v-8a4 4 0 0 1 8 0v8a4 4 0 0 1-8 0Zm-76 76h8a4 4 0 0 0 0-8h-8a4 4 0 0 0 0 8Zm110-64a4 4 0 0 0 6-2l8-16a4 4 0 0 0-8-4l-8 16a4 4 0 0 0 2 6Zm-96 88-16 8a4 4 0 0 0 4 8l16-8a4 4 0 1 0-4-8Zm186 63a12 12 0 0 1 0 17l-12 12a12 12 0 0 1-17 0l-52-51a4 4 0 0 0-3-1 4 4 0 0 0-3 2l-18 47a12 12 0 0 1-11 7 12 12 0 0 1-11-8L37 52a12 12 0 0 1 15-15l160 52a12 12 0 0 1 1 22l-47 18a4 4 0 0 0-1 7Zm-5 5-51-51a12 12 0 0 1 3-19l47-18a4 4 0 0 0-1-8L49 44a4 4 0 0 0-5 5l52 160a4 4 0 0 0 8 1l18-47a12 12 0 0 1 8-7 12 12 0 0 1 3 0 12 12 0 0 1 8 4l51 51a4 4 0 0 0 6 0l13-13a4 4 0 0 0 0-6Z"/>
+        </svg>
+        Button
+      </div>
     </div>
-    <div class="editrix-blocks-item" v-bind="e.paletteItem('editrix-button')">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256">
-        <path d="M92 24v-8a4 4 0 0 1 8 0v8a4 4 0 0 1-8 0Zm-76 76h8a4 4 0 0 0 0-8h-8a4 4 0 0 0 0 8Zm110-64a4 4 0 0 0 6-2l8-16a4 4 0 0 0-8-4l-8 16a4 4 0 0 0 2 6Zm-96 88-16 8a4 4 0 0 0 4 8l16-8a4 4 0 1 0-4-8Zm186 63a12 12 0 0 1 0 17l-12 12a12 12 0 0 1-17 0l-52-51a4 4 0 0 0-3-1 4 4 0 0 0-3 2l-18 47a12 12 0 0 1-11 7 12 12 0 0 1-11-8L37 52a12 12 0 0 1 15-15l160 52a12 12 0 0 1 1 22l-47 18a4 4 0 0 0-1 7Zm-5 5-51-51a12 12 0 0 1 3-19l47-18a4 4 0 0 0-1-8L49 44a4 4 0 0 0-5 5l52 160a4 4 0 0 0 8 1l18-47a12 12 0 0 1 8-7 12 12 0 0 1 3 0 12 12 0 0 1 8 4l51 51a4 4 0 0 0 6 0l13-13a4 4 0 0 0 0-6Z"/>
-      </svg>
-      Home Page 2
-    </div>
-    <div class="editrix-blocks-item" v-bind="e.paletteItem('editrix-text')">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256">
-        <path d="M112 44a4 4 0 0 0-4 4v20H24a12 12 0 0 0-12 12v96a12 12 0 0 0 12 12h84v20a4 4 0 0 0 8 0V48a4 4 0 0 0-4-4ZM24 180a4 4 0 0 1-4-4V80a4 4 0 0 1 4-4h84v104ZM244 80v96a12 12 0 0 1-12 12h-88a4 4 0 0 1 0-8h88a4 4 0 0 0 4-4V80a4 4 0 0 0-4-4h-88a4 4 0 0 1 0-8h88a12 12 0 0 1 12 12ZM84 112a4 4 0 0 1-4 4H68v28a4 4 0 0 1-8 0v-28H48a4 4 0 0 1 0-8h32a4 4 0 0 1 4 4Z"/>
-      </svg>
-      Home Page 3
-    </div>
-  </div>
-  <div class="editrix-blocks" v-bind="e.sidebarPanel('content')" hidden>
-    <div class="editrix-blocks-empty" v-show="!activeBlock">Select a block on the canvas to edit its settings.</div>
-    <div class="editrix-fields" v-show="activeBlock" v-bind="e.contentFields"></div>
+    <div class="editrix-blocks" v-bind="e.sidebarPanel('patterns')" hidden>
+      <div class="editrix-inputs-box"><i class="ph ph-magnifying-glass"></i> <input placeholder="Type for find..."></div>
 
-    <template id="editrix-field-template">
-      <div class="editrix-control">
-        <div class="editrix-field">
-          <i class="ph ph-question editrix-field__tooltip"></i>
-          <div class="editrix-field__control"></div>
-          <div class="editrix-field__description"></div>
+      <div class="editrix-blocks-item" v-bind="e.paletteItem('editrix-text')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256">
+          <path d="M112 44a4 4 0 0 0-4 4v20H24a12 12 0 0 0-12 12v96a12 12 0 0 0 12 12h84v20a4 4 0 0 0 8 0V48a4 4 0 0 0-4-4ZM24 180a4 4 0 0 1-4-4V80a4 4 0 0 1 4-4h84v104ZM244 80v96a12 12 0 0 1-12 12h-88a4 4 0 0 1 0-8h88a4 4 0 0 0 4-4V80a4 4 0 0 0-4-4h-88a4 4 0 0 1 0-8h88a12 12 0 0 1 12 12ZM84 112a4 4 0 0 1-4 4H68v28a4 4 0 0 1-8 0v-28H48a4 4 0 0 1 0-8h32a4 4 0 0 1 4 4Z"/>
+        </svg>
+        Home Page 1
+      </div>
+      <div class="editrix-blocks-item" v-bind="e.paletteItem('editrix-button')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256">
+          <path d="M92 24v-8a4 4 0 0 1 8 0v8a4 4 0 0 1-8 0Zm-76 76h8a4 4 0 0 0 0-8h-8a4 4 0 0 0 0 8Zm110-64a4 4 0 0 0 6-2l8-16a4 4 0 0 0-8-4l-8 16a4 4 0 0 0 2 6Zm-96 88-16 8a4 4 0 0 0 4 8l16-8a4 4 0 1 0-4-8Zm186 63a12 12 0 0 1 0 17l-12 12a12 12 0 0 1-17 0l-52-51a4 4 0 0 0-3-1 4 4 0 0 0-3 2l-18 47a12 12 0 0 1-11 7 12 12 0 0 1-11-8L37 52a12 12 0 0 1 15-15l160 52a12 12 0 0 1 1 22l-47 18a4 4 0 0 0-1 7Zm-5 5-51-51a12 12 0 0 1 3-19l47-18a4 4 0 0 0-1-8L49 44a4 4 0 0 0-5 5l52 160a4 4 0 0 0 8 1l18-47a12 12 0 0 1 8-7 12 12 0 0 1 3 0 12 12 0 0 1 8 4l51 51a4 4 0 0 0 6 0l13-13a4 4 0 0 0 0-6Z"/>
+        </svg>
+        Home Page 2
+      </div>
+      <div class="editrix-blocks-item" v-bind="e.paletteItem('editrix-text')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256">
+          <path d="M112 44a4 4 0 0 0-4 4v20H24a12 12 0 0 0-12 12v96a12 12 0 0 0 12 12h84v20a4 4 0 0 0 8 0V48a4 4 0 0 0-4-4ZM24 180a4 4 0 0 1-4-4V80a4 4 0 0 1 4-4h84v104ZM244 80v96a12 12 0 0 1-12 12h-88a4 4 0 0 1 0-8h88a4 4 0 0 0 4-4V80a4 4 0 0 0-4-4h-88a4 4 0 0 1 0-8h88a12 12 0 0 1 12 12ZM84 112a4 4 0 0 1-4 4H68v28a4 4 0 0 1-8 0v-28H48a4 4 0 0 1 0-8h32a4 4 0 0 1 4 4Z"/>
+        </svg>
+        Home Page 3
+      </div>
+    </div>
+    <div class="editrix-blocks" v-bind="e.sidebarPanel('content')" hidden>
+      <div class="editrix-blocks-empty" v-show="!activeBlock">Select a block on the canvas to edit its settings.</div>
+      <div class="editrix-fields" v-show="activeBlock" v-bind="e.contentFields"></div>
+
+      <template id="editrix-field-template">
+        <div class="editrix-control">
+          <div class="editrix-field">
+            <i class="ph ph-question editrix-field__tooltip"></i>
+            <div class="editrix-field__control"></div>
+            <div class="editrix-field__description"></div>
+          </div>
         </div>
-      </div>
-    </template>
+      </template>
 
-    <template id="editrix-control-text">
-      <input class="editrix-inputs-box">
-    </template>
+      <template id="editrix-control-text">
+        <input class="editrix-inputs-box">
+      </template>
 
-    <template id="editrix-control-switcher">
-      <label class="editrix-switch">
-        <input type="checkbox">
-        <span class="editrix-switch__track"></span>
-      </label>
-    </template>
+      <template id="editrix-control-switcher">
+        <label class="editrix-switch">
+          <input type="checkbox">
+          <span class="editrix-switch__track"></span>
+        </label>
+      </template>
 
-    <template id="editrix-control-select">
-      <select class="editrix-inputs-box">
-        <option value="left">Left</option>
-        <option value="center">Center</option>
-        <option value="right">Right</option>
-        <option value="justify">Justify</option>
-      </select>
-    </template>
-
-    <template id="editrix-control-color">
-      <div class="editrix-field-preview">
-        <input type="color">
-      </div>
-    </template>
-
-    <template id="editrix-control-url">
-      <input type="text" class="editrix-inputs-box" placeholder="https://…" data-part="url">
-      <div class="editrix-field-inline">
-        <label><input type="checkbox" data-part="is_external"> Open in new tab</label>
-        <label><input type="checkbox" data-part="nofollow"> Nofollow</label>
-      </div>
-    </template>
-
-    <template id="editrix-control-media">
-      <div class="editrix-field-inline">
-        <div class="editrix-field-preview" data-part="preview"></div>
-        <input type="text" class="editrix-inputs-box" placeholder="https://…" data-part="url">
-      </div>
-    </template>
-
-    <template id="editrix-control-slider">
-      <div class="editrix-slider">
-        <input type="range" data-part="range">
-        <span class="editrix-slider-affix" data-part="prefix"></span>
-        <input type="number" class="editrix-inputs-box editrix-slider-input" data-part="size">
-        <span class="editrix-slider-affix" data-part="suffix"></span>
-        <select class="editrix-inputs-box editrix-slider-unit" data-part="unit">
-          <option v-each="unit in units" :value="unit" v-text="unit"></option>
+      <template id="editrix-control-select">
+        <select class="editrix-inputs-box">
+          <option value="left">Left</option>
+          <option value="center">Center</option>
+          <option value="right">Right</option>
+          <option value="justify">Justify</option>
         </select>
-      </div>
-    </template>
+      </template>
 
-    <template id="editrix-control-dimensions">
-      <div class="editrix-borders">
-        <div class="editrix-borders-values">
-          <input type="number" data-side="top">
-          <input type="number" data-side="right">
-          <input type="number" data-side="bottom">
-          <input type="number" data-side="left">
+      <template id="editrix-control-color">
+        <input type="text" class="editrix-inputs-box">
+      </template>
+
+      <template id="editrix-control-url">
+        <input type="text" class="editrix-inputs-box" placeholder="https://…" data-part="url">
+        <div class="editrix-field-inline">
+          <label><input type="checkbox" data-part="is_external"> Open in new tab</label>
+          <label><input type="checkbox" data-part="nofollow"> Nofollow</label>
         </div>
-        <div class="editrix-borders-buttons">
-          <span class="editrix-buttons-item" title="Link sides together" data-part="link-toggle">
-            <i class="ph ph-link"></i>
-          </span>
-          <select class="editrix-inputs-box" data-part="unit">
+      </template>
+
+      <template id="editrix-control-media">
+        <div class="editrix-field-inline">
+          <div class="editrix-field-preview" data-part="preview"></div>
+          <input type="text" class="editrix-inputs-box" placeholder="https://…" data-part="url">
+        </div>
+      </template>
+
+      <template id="editrix-control-slider">
+        <div class="editrix-slider">
+          <input type="range" data-part="range">
+          <span class="editrix-slider-affix" data-part="prefix"></span>
+          <input type="number" class="editrix-inputs-box editrix-slider-input" data-part="size">
+          <span class="editrix-slider-affix" data-part="suffix"></span>
+          <select class="editrix-inputs-box editrix-slider-unit" data-part="unit">
             <option v-each="unit in units" :value="unit" v-text="unit"></option>
           </select>
         </div>
-      </div>
-    </template>
+      </template>
+
+      <template id="editrix-control-dimensions">
+        <div class="editrix-borders">
+          <div class="editrix-borders-values">
+            <input type="number" data-side="top">
+            <input type="number" data-side="right">
+            <input type="number" data-side="bottom">
+            <input type="number" data-side="left">
+          </div>
+          <div class="editrix-borders-buttons">
+          <span class="editrix-buttons-item" title="Link sides together" data-part="link-toggle">
+            <i class="ph ph-link"></i>
+          </span>
+            <select class="editrix-inputs-box" data-part="unit">
+              <option v-each="unit in units" :value="unit" v-text="unit"></option>
+            </select>
+          </div>
+        </div>
+      </template>
+    </div>
   </div>
 </div>

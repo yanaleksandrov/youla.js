@@ -73,20 +73,30 @@ export function createDataControls() {
       };
     },
 
-    // A color swatch. v-bind="e.color('accent_color')" on an <input type="color"> inside a
-    // field(..., { type: 'color', default: '#000000' }) wrapper — a native picker stands in for
-    // Elementor's full color picker (palette + alpha channel) for now; the value shape (a hex
-    // string) stays the same when that's swapped in later.
+    // A color swatch — the same Figma-style swatch + hex field + alpha drag as the "fill" control's
+    // own rows (youla-filler.js), locked to solid color only. v-bind="e.color('accent_color')" on
+    // a plain <input type="text"> inside a field(..., { type: 'color', default: '#000000' })
+    // wrapper. Replaces the native <input type="color"> this control used to render — a browser
+    // picker has no alpha channel or palette, and was only ever meant as a placeholder for this.
     color(name) {
       return {
-        ':value'() {
-          return this.getValue(name) ?? '#000000';
-        },
-        ':disabled'() {
-          return !!this._controls[name]?.disabled;
-        },
-        '@input'(e) {
-          this.setValue(name, e.target.value);
+        'v-filler'() {
+          // v-filler reads the <input>'s own "value" only once, at construction (see Filler's
+          // constructor, youla-filler.js) — the framework never gives this control's own
+          // <template> a chance to know the field's current value before v-filler mounts, so seed
+          // it here instead, the same one-time convention controls/fill.js's createFillItem() uses
+          // for its own row inputs. Guarded on "_x_filler" so it never fights the mounted widget's
+          // own state afterward (update() doesn't re-read "value" anyway, but the intent should
+          // read as "seed once", not "keep resetting").
+          if (!this.$el._x_filler) {
+            this.$el.value = this.getValue(name) ?? '#000000';
+          }
+
+          return {
+            sources: ['solid'],
+            disabled: !!this._controls[name]?.disabled,
+            onChange: (hex) => this.setValue(name, hex),
+          };
         },
       };
     },

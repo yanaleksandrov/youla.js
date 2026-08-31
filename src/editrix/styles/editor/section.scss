@@ -1,7 +1,7 @@
 .editrix-section {
-	padding: 0.8125rem 1rem;
+	padding-block: 14px;
 	border-bottom: 1px solid #e6e6e6;
-	gap: 0.875rem;
+	gap: 14px;
 	display: grid;
 
 	&:last-child {
@@ -13,36 +13,36 @@
 		user-select: none;
 		display: flex;
 		align-items: center;
-		gap: 1rem;
+		gap: 16px;
 		justify-content: space-between;
 		width: 100%;
 		line-height: 1;
 		position: relative;
 
 		+ .editrix-control {
-			margin-top: 0.5rem;
+			margin-top: 8px;
 		}
 	}
 
 	&-body {
 		width: 100%;
 		position: relative;
-		gap: 0.5rem;
+		gap: 8px;
 		display: grid;
 	}
 
 	&-buttons {
 		display: flex;
 		align-items: center;
-		font-size: 0.8125rem;
+		font-size: 12px;
 		position: absolute;
 		right: 0;
 
 		i {
-			border-radius: 0.25rem;
+			border-radius: 4px;
 			cursor: pointer;
-			height: 1.5rem;
-			width: 1.5rem;
+			height: 24px;
+			width: 24px;
 			display: flex;
 			align-items: center;
 			justify-content: center;

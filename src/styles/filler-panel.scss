@@ -388,6 +388,14 @@
 		color: #1a1a1a;
 		background: rgba(0, 0, 0, 0.06);
 	}
+
+	// `&[hidden]` is needed for the same reason as filler-dialog-sources-group above — this rule's
+	// own `display` would otherwise outrank the UA stylesheet's `[hidden] { display: none }`, so a
+	// button syncSourceUI() hides (a source not in `sources`, e.g. "video" for the fill control's
+	// solid/image-only list) stayed visible and clickable-looking despite doing nothing when clicked.
+	&[hidden] {
+		display: none;
+	}
 }
 
 // Pushed to the far end of filler-dialog-sources regardless of whether the group above it (icon
@@ -504,7 +512,7 @@
 	flex: none;
 	width: 24px;
 	padding: 0;
-	font-size: 13px;
+	font-size: 12px;
 	line-height: 1;
 
 	&:hover {

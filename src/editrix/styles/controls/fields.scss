@@ -14,13 +14,13 @@
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
-	gap: 0.375rem;
-	padding-block: 0.625rem;
+	gap: 6px;
+	padding-block: 10px;
 
 	&:before {
 		content: attr(data-title);
 		color: #00000080;
-		font-size: 0.8125rem;
+		font-size: 12px;
 		user-select: none;
 		flex: 1;
 	}
@@ -37,7 +37,7 @@
 	&__tooltip {
 		color: #929292;
 		cursor: pointer;
-		font-size: 0.75rem;
+		font-size: 12px;
 
 		&:hover {
 			color: #2d2d2d;
@@ -51,7 +51,7 @@
 
 	&__description {
 		color: #8e8e8e;
-		font-size: 0.675rem;
+		font-size: 10.8px;
 	}
 
 	// switcher/popover_toggle read better with the field beside the title, not on its own row
@@ -66,8 +66,8 @@
 .editrix-switch {
 	position: relative;
 	display: inline-block;
-	width: 1.75rem;
-	height: 1rem;
+	width: 28px;
+	height: 16px;
 	flex-shrink: 0;
 
 	input {
@@ -83,17 +83,17 @@
 		position: absolute;
 		inset: 0;
 		background-color: #d9d9d9;
-		border-radius: 1rem;
+		border-radius: 16px;
 		transition: background-color 0.2s;
 		pointer-events: none;
 
 		&:before {
 			content: '';
 			position: absolute;
-			top: 0.125rem;
-			left: 0.125rem;
-			width: 0.75rem;
-			height: 0.75rem;
+			top: 2px;
+			left: 2px;
+			width: 12px;
+			height: 12px;
 			background-color: #fff;
 			border-radius: 50%;
 			transition: transform 0.2s;
@@ -104,7 +104,7 @@
 		background-color: #1069fb;
 
 		&:before {
-			transform: translateX(0.75rem);
+			transform: translateX(12px);
 		}
 	}
 
@@ -118,42 +118,35 @@
 .editrix-field-row {
 	display: flex;
 	flex-direction: column;
-	gap: 0.5rem;
+	gap: 8px;
 }
 
 .editrix-field-inline {
 	display: flex;
 	align-items: center;
-	gap: 0.5rem;
+	gap: 8px;
 
 	> label {
 		display: flex;
 		align-items: center;
-		gap: 0.375rem;
+		gap: 6px;
 		color: #2d2d2d;
-		font-size: 0.75rem;
+		font-size: 12px;
 		cursor: pointer;
 	}
 }
 
-// Live preview swatch/thumbnail next to a color/media control's input.
+// Live preview swatch/thumbnail next to a media control's input (the "color" control used this
+// too, until it moved to v-filler — see controls/data.js's own color()).
 .editrix-field-preview {
-	width: 1.5rem;
-	height: 1.5rem;
-	min-width: 1.5rem;
-	border-radius: 0.25rem;
+	width: 24px;
+	height: 24px;
+	min-width: 24px;
+	border-radius: 4px;
 	border: 1px solid #e6e6e6;
 	background-size: cover;
 	background-position: center;
 	overflow: hidden;
-
-	input[type="color"] {
-		width: 100%;
-		height: 100%;
-		border: 0;
-		padding: 0;
-		cursor: pointer;
-	}
 }
 
 input[type="range"] {
@@ -169,7 +162,7 @@ input[type="range"] {
 .editrix-slider {
 	display: flex;
 	align-items: center;
-	gap: 0.5rem;
+	gap: 8px;
 
 	// Scoped override of ranger.scss's :root tokens — its defaults (a tall, orange-accented
 	// handle, plus top/bottom margin reserved for the label/scale switched off above) are sized
@@ -178,8 +171,8 @@ input[type="range"] {
 	--ranger-height: 4px;
 	--ranger-gap-top: 0;
 	--ranger-gap-bottom: 0;
-	--ranger-thumb-width: 0.75rem;
-	--ranger-thumb-height: 1rem;
+	--ranger-thumb-width: 12px;
+	--ranger-thumb-height: 16px;
 
 	// Ranger wraps the <input type="range"> in this on mount.
 	> .ranger {
@@ -189,7 +182,7 @@ input[type="range"] {
 
 	&-affix {
 		color: #8e8e8e;
-		font-size: 0.75rem;
+		font-size: 12px;
 		white-space: nowrap;
 	}
 
@@ -197,7 +190,7 @@ input[type="range"] {
 	// instead of fighting the track for space.
 	&-input.editrix-inputs-box {
 		flex: none;
-		width: 3.5rem;
+		width: 56px;
 		text-align: center;
 	}
 

@@ -1,11 +1,18 @@
 /**
- * The "fill" control — a Figma-style multi-fill list (solid color and image for now; see
+ * The "fill" control — a Figma-style multi-fill list (solid color, image and video for now; see
  * FILL_TYPES below for what a type needs to plug in, so a "gradient" type can be added later by
- * adding one more registry entry there, plus its own popover panel in
- * view/editrix/controls/fill.html, without touching anything solid/image-specific here).
+ * adding one more registry entry there). Each row is flat — drag handle, a single v-filler field,
+ * visibility toggle, remove — with no popover of its own: v-filler (youla-filler.js) already
+ * covers solid color (HSV + alpha), image/video upload, and switching between all three, in its
+ * own dialog — so the "+" button (renderFillControl() below) always adds a solid fill outright,
+ * Figma-style; switching an individual row to "Image"/"Video" happens inside its own v-filler
+ * dialog, not through a type-picker menu here. FILL_TYPES still says what a fresh fill of a given
+ * type looks like, for whenever fillAdd() is called with something other than 'solid'.
  *
- * Value shape: Fill[], each `{ type, visible, opacity, color?, image?: { url } }` — see
- * FILL_TYPES' own createDefault() for exactly what each type stores.
+ * Value shape: Fill[], each `{ type, visible, color, alpha, image, video }` — "image"/"video" are
+ * null until that source has something uploaded, then `{ dataUrl, fit, rotation, ...filters }` for
+ * image (see youla-filler.js's own Filler.MEDIA_FILTERS for the filter keys) or
+ * `{ dataUrl, fit, rotation, ...settings }` for video (Filler.VIDEO_SETTINGS for the setting keys).
  *
  * Unlike every other control in this system, a fill list's own DOM shape (how many rows exist)
  * depends on its *value*, not just its definition — so, unlike text()/color()/media()/... (whose
@@ -18,33 +25,19 @@
  * user has open — and drop keystrokes/drag state — on every edit made inside it.
  */
 
-// One entry per fill type this control knows how to edit — the whole "solid vs. image" (later
-// "vs. gradient") switch, in one place: what a fresh fill of this type looks like, its list-row
-// preview, and its list-row summary text. Everything else (the popover's own type tabs, the "add
-// fill" menu) is built from this map, so adding a type here is the only JS-side step adding one
-// later needs — its own popover panel still needs markup (one more "data-part" panel in
-// view/editrix/controls/fill.html, shown via fillPanel() same as "solid"/"image" below).
+// One entry per fill type this control knows how to edit — what a fresh fill of that type looks
+// like. The "+" button (fillAdd() below) only ever calls this with 'solid'; 'image' stays
+// registered so fillAdd() itself doesn't need to change if something other than the button ever
+// needs to add one directly (switching an *existing* row to "Image" instead goes through its own
+// v-filler dialog — onSourceChange below just patches `type`, it never touches this map).
 const FILL_TYPES = {
   solid: {
-    label: 'Solid color',
-    icon: 'ph-drop',
-    createDefault: () => ({ type: 'solid', visible: true, opacity: 100, color: '#1069fb' }),
-    summary: (fill) => (fill.color || '#000000').toUpperCase(),
-    previewStyle: (fill) => ({ backgroundColor: fill.color || '#000000', backgroundImage: 'none' }),
+    createDefault: () => ({ type: 'solid', visible: true, color: '#1069FB', alpha: 100, image: null, video: null }),
   },
   image: {
-    label: 'Image',
-    icon: 'ph-image',
-    createDefault: () => ({ type: 'image', visible: true, opacity: 100, image: { url: '' } }),
-    summary: (fill) => (fill.image?.url ? fill.image.url.split('/').pop() : 'No image selected'),
-    previewStyle: (fill) => ({
-      backgroundColor: 'transparent',
-      backgroundImage: fill.image?.url ? `url("${fill.image.url}")` : 'none',
-    }),
+    createDefault: () => ({ type: 'image', visible: true, color: '#1069FB', alpha: 100, image: null, video: null }),
   },
 };
-
-const FILL_TYPE_LIST = Object.entries(FILL_TYPES).map(([value, def]) => ({ value, label: def.label, icon: def.icon }));
 
 /**
  * Clones a single-root <template>'s content by id — every template this control uses
@@ -93,21 +86,12 @@ function renumberFillItems(list) {
   });
 }
 
-// Builds a row's popover type-switch tabs (and, via renderFillControl() below, the "add fill"
-// menu items) from FILL_TYPE_LIST, so both stay in sync with FILL_TYPES without their own
-// hand-written markup.
-function buildTypeTabs(row, name) {
-  const container = row.querySelector('[data-part="types"]');
-  const nameArg = JSON.stringify(name);
-
-  FILL_TYPE_LIST.forEach(({ value, label, icon }) => {
-    const tab = document.createElement('span');
-    tab.className = 'editrix-buttons-item';
-    tab.title = label;
-    tab.innerHTML = `<i class="ph ${icon}"></i>`;
-    tab.setAttribute('v-bind', `e.fillType(${nameArg}, ${JSON.stringify(value)})`);
-    container.append(tab);
-  });
+// v-filler (youla-filler.js) hangs document/window-level listeners and a body-appended floating
+// panel off any open dialog/dropdown, and nothing watches for its <input> leaving the DOM — so
+// every caller pulling a fill row out (rebuilding the list, or removing one row) MUST destroy its
+// filler instance(s) first, or the leftover listeners and panel leak for the rest of the session.
+function destroyFillItemFillers(scope) {
+  scope.querySelectorAll('[data-part="filler"]').forEach((filler) => filler._x_filler?.destroy());
 }
 
 /**
@@ -118,42 +102,36 @@ function buildTypeTabs(row, name) {
  *
  * @param {string} name - The fill control's own setting name.
  * @param {number} index - This row's position in the fill array.
+ * @param {object} fill - This row's own current value, for its one-time initial seeding.
  * @returns {HTMLElement}
  */
-function createFillItem(name, index) {
+function createFillItem(name, index, fill) {
   const el = cloneTemplate('editrix-fill-item-template');
   const nameArg = JSON.stringify(name);
 
   el.dataset.index = index;
   el.setAttribute('v-bind', `e.fillItemRoot(${nameArg})`);
 
-  el.querySelector('[data-part="preview"]').setAttribute('v-bind', `e.fillPreview(${nameArg})`);
-  el.querySelector('[data-part="summary"]').setAttribute('v-bind', `e.fillSummary(${nameArg})`);
   el.querySelector('[data-part="visibility"]').setAttribute('v-bind', `e.fillVisibility(${nameArg})`);
   el.querySelector('[data-part="remove"]').setAttribute('v-bind', `e.fillRemove(${nameArg})`);
 
-  el.querySelector('[data-part="solid"]').setAttribute('v-bind', `e.fillPanel(${nameArg}, 'solid')`);
-  el.querySelector('[data-part="color"]').setAttribute('v-bind', `e.fillColor(${nameArg})`);
-  el.querySelector('[data-part="hex"]').setAttribute('v-bind', `e.fillColorHex(${nameArg})`);
-  el.querySelector('[data-part="opacity-range"]').setAttribute('v-bind', `e.fillOpacityRange(${nameArg})`);
-  el.querySelector('[data-part="opacity-number"]').setAttribute('v-bind', `e.fillOpacityNumber(${nameArg})`);
-
-  el.querySelector('[data-part="image"]').setAttribute('v-bind', `e.fillPanel(${nameArg}, 'image')`);
-  el.querySelector('[data-part="image-preview"]').setAttribute('v-bind', `e.fillImagePreview(${nameArg})`);
-  el.querySelector('[data-part="image-url"]').setAttribute('v-bind', `e.fillImageUrl(${nameArg})`);
-  el.querySelector('[data-part="image-opacity-range"]').setAttribute('v-bind', `e.fillOpacityRange(${nameArg})`);
-  el.querySelector('[data-part="image-opacity-number"]').setAttribute('v-bind', `e.fillOpacityNumber(${nameArg})`);
-
-  buildTypeTabs(el, name);
+  const filler = el.querySelector('[data-part="filler"]');
+  // v-filler reads an <input>'s own "value" only once, at construction (see Filler's constructor,
+  // youla-filler.js) — set as a real attribute here, the same one-time-setup convention "data-index"
+  // above uses, rather than a reactive ":value" binding that would fight v-filler's own rendering.
+  filler.value = fill.color || '#1069FB';
+  filler.setAttribute('v-bind', `e.fillFiller(${nameArg})`);
 
   return el;
 }
 
 /**
- * Builds the fill control's own outer shell (the list's mount point, plus the "add fill" menu —
- * built once, right here, since unlike the rows themselves it never depends on the field's
- * value). Registered as controls/render.js's CONTROL_RENDERERS.fill, exactly like every other
- * control type's own renderer.
+ * Builds the fill control's own outer shell (the list's mount point, plus the "+" button that
+ * adds a solid fill outright — built once, right here, since unlike the rows themselves it never
+ * depends on the field's value). Registered as controls/render.js's CONTROL_RENDERERS.fill,
+ * exactly like every other control type's own renderer. The "+" button itself (`[data-part="add"]`)
+ * gets relocated into its section's `.editrix-section-head` by contentFields() (youla-editrix.js),
+ * matching every other section's own head-row buttons — see that file's own comment.
  *
  * @param {string} name
  * @returns {HTMLElement}
@@ -163,16 +141,7 @@ export function renderFillControl(name) {
   const nameArg = JSON.stringify(name);
 
   el.querySelector('[data-part="list"]').setAttribute('v-bind', `e.fillList(${nameArg})`);
-  el.querySelector('[data-part="add-toggle"]').setAttribute('v-bind', 'e.detailsAutoClose');
-
-  const menu = el.querySelector('[data-part="add-menu"]');
-  FILL_TYPE_LIST.forEach(({ value, label, icon }) => {
-    const item = document.createElement('div');
-    item.className = 'editrix-list-item';
-    item.innerHTML = `<i class="ph ${icon}"></i> ${label}`;
-    item.setAttribute('v-bind', `e.fillAdd(${nameArg}, ${JSON.stringify(value)})`);
-    menu.append(item);
-  });
+  el.querySelector('[data-part="add"]').setAttribute('v-bind', `e.fillAdd(${nameArg}, 'solid')`);
 
   return el;
 }
@@ -194,41 +163,55 @@ export function createFillControl() {
 
           if (this.$el.dataset.owner !== owner) {
             this.$el.dataset.owner = owner;
+            destroyFillItemFillers(this.$el);
             this.$el.innerHTML = '';
-            readFills(this, name).forEach((fill, index) => this.$el.append(createFillItem(name, index)));
+            readFills(this, name).forEach((fill, index) => {
+              const row = createFillItem(name, index, fill);
+              this.$el.append(row);
+              // Wires this row's @click/@dragstart/... listeners and its v-filler input, the same
+              // way fillAdd() below already does for a single appended row — skipping it here left
+              // every row built by *this* path with none of its directives ever applied: visibility/
+              // remove never got a click listener and drag-reorder never got wired, so hide/show,
+              // delete and sorting silently did nothing from the very first render (and after every
+              // active-block switch), even though v-filler kept working — its binding still gets
+              // picked up by the framework's normal reactive refresh() pass, unlike event listeners.
+              this.$root.__x.initialize(row);
+            });
           }
           return owner;
         },
       };
     },
 
-    // v-bind="e.fillAdd(name, 'solid')" on an "add fill" menu item — appends a fresh fill of that
-    // type and its row together, then closes the menu.
+    // v-bind="e.fillAdd(name, 'solid')" on the control's own "+" button — appends a fresh fill of
+    // that type and its row together, immediately, Figma-style (no type-picker in between).
     fillAdd(name, type) {
       return {
         '@click'() {
           const fills = readFills(this, name);
           const index = fills.length;
+          const fill = FILL_TYPES[type].createDefault();
 
-          writeFills(this, name, [...fills, FILL_TYPES[type].createDefault()]);
+          writeFills(this, name, [...fills, fill]);
 
-          const list = this.$el.closest('.editrix-fill').querySelector('[data-part="list"]');
-          const row = createFillItem(name, index);
+          // ".editrix-section", not ".editrix-fill": contentFields() (youla-editrix.js) relocates
+          // this button out of ".editrix-fill" into the section's own head row, so ".editrix-fill"
+          // (and its "[data-part='list']") is no longer an ancestor — the section is the nearest
+          // element still common to both.
+          const list = this.$el.closest('.editrix-section').querySelector('[data-part="list"]');
+          const row = createFillItem(name, index, fill);
           list.append(row);
           this.$root.__x.initialize(row);
-
-          this.$el.closest('details').open = false;
         },
       };
     },
 
-    // v-bind="e.fillItemRoot(name)" on a row's own <details> root — draggable reordering (mirrors
-    // youla-editrix.js's own e.sortable(), adapted for a control-system value instead of a
-    // top-level reactive property) plus the generic outside-click auto-close every other
-    // <details> popover in this project already uses.
+    // v-bind="e.fillItemRoot(name)" on a row's own root — draggable reordering, mirroring
+    // youla-editrix.js's own e.sortable() (adapted for a control-system value instead of a
+    // top-level reactive property). No popover of its own to auto-close here — v-filler's dialog
+    // (fillFiller() below) handles that itself.
     fillItemRoot(name) {
       return {
-        ...this.detailsAutoClose,
         ':draggable': 'true',
         '@dragstart'() {
           this.$el.classList.add('is-dragging');
@@ -260,31 +243,8 @@ export function createFillControl() {
       };
     },
 
-    // v-bind="e.fillPreview(name)" on a row's swatch — FILL_TYPES' own previewStyle() drives it.
-    fillPreview(name) {
-      return {
-        ':style'() {
-          const fill = readFills(this, name)[fillIndexOf(this.$el)] || {};
-          const style = (FILL_TYPES[fill.type] || FILL_TYPES.solid).previewStyle(fill);
-
-          return { ...style, opacity: (fill.opacity ?? 100) / 100 };
-        },
-      };
-    },
-
-    // v-bind="e.fillSummary(name)" on a row's label.
-    fillSummary(name) {
-      return {
-        'v-text'() {
-          const fill = readFills(this, name)[fillIndexOf(this.$el)] || {};
-          return (FILL_TYPES[fill.type] || FILL_TYPES.solid).summary(fill);
-        },
-      };
-    },
-
     // v-bind="e.fillVisibility(name)" on a row's eye icon — hides a fill without removing it,
-    // matching Figma's own per-fill visibility toggle. ".stop.prevent" keeps the click from also
-    // toggling the row's <details> open/closed, since the icon sits inside its <summary>.
+    // matching Figma's own per-fill visibility toggle.
     fillVisibility(name) {
       return {
         ':class'() {
@@ -308,125 +268,42 @@ export function createFillControl() {
           const list = row.parentElement;
 
           writeFills(this, name, readFills(this, name).filter((_, i) => i !== index));
+          destroyFillItemFillers(row);
           row.remove();
           renumberFillItems(list);
         },
       };
     },
 
-    // v-bind="e.fillType(name, 'solid')" on a popover's type-switch tab — switching type replaces
-    // the fill with that type's own default value, carrying "visible"/"opacity" over so toggling
-    // types doesn't also reset those.
-    fillType(name, type) {
+    // v-bind="e.fillFiller(name)" on a row's own <input> — the entire color/image/video editing
+    // surface (swatch, hex field, alpha, image/video upload + correction dialog, and switching
+    // between all three) is v-filler's own; this just keeps the row's own Fill in sync with
+    // whatever the user does inside it. "source"/"image"/"video" seed the widget from the fill's
+    // current value (see the seeding comment on Filler's own constructor, youla-filler.js) — read
+    // once, on this row's first mount, same as createFillItem()'s one-time ":value" attribute;
+    // later re-evaluations just echo the same values back onto an already-mounted instance, which
+    // is a no-op (see update(), same file).
+    fillFiller(name) {
       return {
-        ':class'() {
-          const fill = readFills(this, name)[fillIndexOf(this.$el)] || {};
-          return { active: fill.type === type };
-        },
-        '@click'() {
+        'v-filler'() {
           const index = fillIndexOf(this.$el);
-          const current = readFills(this, name)[index] || {};
+          const fill = readFills(this, name)[index] || {};
 
-          if (current.type === type) {
-            return;
-          }
-
-          patchFillAt(this, name, index, {
-            ...FILL_TYPES[type].createDefault(),
-            visible: current.visible ?? true,
-            opacity: current.opacity ?? 100,
-          });
-        },
-      };
-    },
-
-    // v-bind="e.fillPanel(name, 'solid')" / "...'image')" on a popover's per-type panel.
-    fillPanel(name, type) {
-      return {
-        'v-show'() {
-          return (readFills(this, name)[fillIndexOf(this.$el)] || {}).type === type;
-        },
-      };
-    },
-
-    // v-bind="e.fillColor(name)" on a popover's <input type="color">.
-    fillColor(name) {
-      return {
-        ':value'() {
-          return readFills(this, name)[fillIndexOf(this.$el)]?.color ?? '#000000';
-        },
-        '@input'(e) {
-          patchFillAt(this, name, fillIndexOf(this.$el), { color: e.target.value });
-        },
-      };
-    },
-
-    // v-bind="e.fillColorHex(name)" on the hex text field beside it — kept in sync both ways,
-    // reverting on anything that isn't a bare 6-digit hex rather than writing a broken color.
-    fillColorHex(name) {
-      return {
-        ':value'() {
-          return (readFills(this, name)[fillIndexOf(this.$el)]?.color ?? '#000000').replace('#', '').toUpperCase();
-        },
-        '@change'(e) {
-          const index = fillIndexOf(this.$el);
-          const current = readFills(this, name)[index]?.color ?? '#000000';
-          const value = e.target.value.trim().replace(/^#/, '');
-
-          if (/^[0-9a-f]{6}$/i.test(value)) {
-            patchFillAt(this, name, index, { color: `#${value.toLowerCase()}` });
-          } else {
-            e.target.value = current.replace('#', '').toUpperCase();
-          }
-        },
-      };
-    },
-
-    // v-bind="e.fillOpacityRange(name)" / "e.fillOpacityNumber(name)" — shared by both the solid
-    // and image panels, since "opacity" means the same thing regardless of fill type. The range
-    // input reuses the same v-ranger directive (youla-ranger.js) the slider control's own
-    // sliderRange() (controls/unit.js) is built on.
-    fillOpacityRange(name) {
-      return {
-        ':value'() {
-          return readFills(this, name)[fillIndexOf(this.$el)]?.opacity ?? 100;
-        },
-        '@input'(e) {
-          patchFillAt(this, name, fillIndexOf(this.$el), { opacity: parseFloat(e.target.value) || 0 });
-        },
-        'v-ranger': '{ labelIsVisible: false, scaleTicksCount: 0 }',
-      };
-    },
-    fillOpacityNumber(name) {
-      return {
-        ':value'() {
-          return readFills(this, name)[fillIndexOf(this.$el)]?.opacity ?? 100;
-        },
-        '@input'(e) {
-          const value = Math.min(100, Math.max(0, parseFloat(e.target.value) || 0));
-          patchFillAt(this, name, fillIndexOf(this.$el), { opacity: value });
-        },
-      };
-    },
-
-    // v-bind="e.fillImageUrl(name)" / "e.fillImagePreview(name)" — a plain URL field stands in
-    // for the media library, matching this project's existing media() control (controls/data.js).
-    fillImageUrl(name) {
-      return {
-        ':value'() {
-          return readFills(this, name)[fillIndexOf(this.$el)]?.image?.url ?? '';
-        },
-        '@input'(e) {
-          const index = fillIndexOf(this.$el);
-          patchFillAt(this, name, index, { image: { ...readFills(this, name)[index]?.image, url: e.target.value } });
-        },
-      };
-    },
-    fillImagePreview(name) {
-      return {
-        ':style'() {
-          const url = readFills(this, name)[fillIndexOf(this.$el)]?.image?.url;
-          return { backgroundImage: url ? `url("${url}")` : 'none' };
+          return {
+            sources: ['solid', 'image', 'video'],
+            alpha: fill.alpha ?? 100,
+            source: fill.type,
+            image: fill.image || undefined,
+            video: fill.video || undefined,
+            onChange: (hex, alpha) => patchFillAt(this, name, index, { color: hex, alpha }),
+            onSourceChange: (type) => patchFillAt(this, name, index, { type }),
+            onMediaChange: (type, media) => {
+              // Both image and video persist here — leaving video out (as before, when it wasn't
+              // a selectable source yet) would seed every future mount from a permanently-null
+              // fill.video, discarding whatever the user just uploaded on every re-render.
+              patchFillAt(this, name, index, { [type]: { ...media } });
+            },
+          };
         },
       };
     },

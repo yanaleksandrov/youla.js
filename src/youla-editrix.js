@@ -50,7 +50,9 @@ const CONTENT_FIELDS = [
         },
       },
       {
-        name: 'accent_color', title: 'Accent color', tooltip: 'Used for links and highlights',
+        name: 'accent_color',
+        title: 'Accent color',
+        tooltip: 'Used for links and highlights',
         options: { type: 'color', default: '#1069fb' },
       },
     ],
@@ -93,19 +95,28 @@ const CONTENT_FIELDS = [
     heading: 'Fill controls',
     fields: [
       {
-        name: 'background_fill', title: 'Background', tooltip: 'Figma-style: layer solid colors and images, each with its own opacity',
+        name: 'background_fill',
+        title: '',
+        tooltip: '',
         options: {
           type: 'fill',
           default: [
-            { type: 'solid', visible: true, opacity: 100, color: '#1069fb' },
-            { type: 'image', visible: false, opacity: 100, image: { url: '' } },
+            { type: 'solid', visible: true, opacity: 100, color: '#000' },
           ],
-          description: 'Click a fill to edit it; drag to reorder',
+          description: '',
         },
       },
     ],
   },
 ];
+
+// Sidebar nav tab names (sidebarTab(), below) mapped to a brief description of what the tab does
+// — shown as that tab's own v-tooltip.
+const SIDEBAR_TAB_DESCRIPTIONS = {
+  blocks: 'Drag blocks onto the canvas',
+  patterns: 'Insert a ready-made block pattern',
+  content: "Edit the selected block's settings",
+};
 
 // Classes toggled on a canvas container while something is being dragged over/from it.
 const DRAG_CLASSES = {
@@ -367,12 +378,19 @@ function mountEditor(el, scheme) {
  * Drag-to-adjust a numeric <input>: nudges its value by "step" per pixel moved horizontally,
  * clamped to its own min/max (read fresh at drag-start, so it keeps working if they change later).
  *
+ * Uses pointer capture on "handle" itself (mirroring youla-filler.js's own drag helpers) rather
+ * than plain mousemove/mouseup on "window", which this used to be: without capture, releasing the
+ * button outside the browser's viewport (an easy thing to do — the handle sits right at a field's
+ * edge) can leave "mouseup" never firing at all, so "onMove"/"onEnd" stayed on "window" forever —
+ * every mouse movement anywhere on the page from then on kept nudging that one stale input.
+ * Capture guarantees "pointerup" (or "pointercancel", for a browser-aborted gesture) fires on
+ * "handle" regardless of where the pointer ends up.
+ *
+ * @param {HTMLElement} handle - The drag handle itself; captures the pointer for the gesture.
  * @param {HTMLInputElement} input - The field to adjust.
- * @param {number} startX - The pointer's starting X position.
- * @param {string} moveEvent - "mousemove" or "touchmove".
- * @param {string} endEvent - "mouseup" or "touchend".
+ * @param {PointerEvent} startEvent - The "pointerdown" that started the drag.
  */
-function startNumberDrag(input, startX, moveEvent, endEvent) {
+function startNumberDrag(handle, input, startEvent) {
   if (!input) {
     return;
   }
@@ -381,13 +399,14 @@ function startNumberDrag(input, startX, moveEvent, endEvent) {
   const min = input.min ? parseFloat(input.min) : Number.NEGATIVE_INFINITY;
   const max = input.max ? parseFloat(input.max) : Number.POSITIVE_INFINITY;
   const startValue = parseFloat(input.value) || 0;
+  const startX = startEvent.clientX;
 
   document.body.style.userSelect = 'none';
   document.body.style.cursor = 'e-resize';
+  handle.setPointerCapture(startEvent.pointerId);
 
   const onMove = (e) => {
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const value = Math.min(Math.max(startValue + (clientX - startX) * step, min), max);
+    const value = Math.min(Math.max(startValue + (e.clientX - startX) * step, min), max);
 
     input.value = +value.toFixed(6);
     input.dispatchEvent(new Event('input', { bubbles: true }));
@@ -396,12 +415,14 @@ function startNumberDrag(input, startX, moveEvent, endEvent) {
   const onEnd = () => {
     document.body.style.userSelect = '';
     document.body.style.cursor = '';
-    window.removeEventListener(moveEvent, onMove);
-    window.removeEventListener(endEvent, onEnd);
+    handle.removeEventListener('pointermove', onMove);
+    handle.removeEventListener('pointerup', onEnd);
+    handle.removeEventListener('pointercancel', onEnd);
   };
 
-  window.addEventListener(moveEvent, onMove);
-  window.addEventListener(endEvent, onEnd);
+  handle.addEventListener('pointermove', onMove);
+  handle.addEventListener('pointerup', onEnd);
+  handle.addEventListener('pointercancel', onEnd);
 }
 
 document.addEventListener('youla:init', () => {
@@ -470,10 +491,13 @@ document.addEventListener('youla:init', () => {
     // Sidebar nav (sections/sidebar.html) — v-bind="e.sidebarTab('blocks')" on the tab button,
     // v-bind="e.sidebarPanel('blocks')" on the panel it shows. Parameterized by tab name so both
     // reduce to one definition each, reused across however many tabs the sidebar ends up with.
+    // The tooltip (SIDEBAR_TAB_DESCRIPTIONS) only ever shows on hover, after a 1s delay, matching
+    // v-tooltip's own default trigger — ".hover" is spelled out anyway for clarity at the call site.
     sidebarTab(name) {
       return {
         ':class': `{'active': tab === '${name}'}`,
         '@click': `tab = '${name}'`,
+        'v-tooltip.hover.2000ms': JSON.stringify(SIDEBAR_TAB_DESCRIPTIONS[name] || ''),
       };
     },
     sidebarPanel(name) {
@@ -675,6 +699,18 @@ document.addEventListener('youla:init', () => {
           section.innerHTML = `<div class="editrix-section-head">${heading}</div><div class="editrix-section-body"></div>`;
           section.querySelector('.editrix-section-body').append(...fields.map(renderField));
 
+          // A field's own "[data-part='add']" (currently just the fill control's own "+" —
+          // controls/fill.js's renderFillControl()) belongs beside its section heading, matching
+          // every other section's own .editrix-section-buttons (see "Categories"/"Advanced" in
+          // toolbox.html), not floating inside the control body where it used to sit.
+          const addButton = section.querySelector('[data-part="add"]');
+          if (addButton) {
+            const buttons = document.createElement('div');
+            buttons.className = 'editrix-section-buttons';
+            buttons.append(addButton);
+            section.querySelector('.editrix-section-head').append(buttons);
+          }
+
           this.$el.append(section);
         });
       },
@@ -738,13 +774,12 @@ document.addEventListener('youla:init', () => {
     },
 
     // Toolbox > drag-to-adjust number inputs (Position panel's Margin/Padding handles) —
-    // v-bind="e.dragHandle" on the handle; always paired with the <input> right after it.
+    // v-bind="e.dragHandle" on the handle; always paired with the <input> right after it. One
+    // "pointerdown" covers mouse/touch/pen alike (see startNumberDrag()'s own comment for why it
+    // — not separate mousedown/touchstart handlers — is what makes the drag itself leak-proof).
     dragHandle: {
-      '@mousedown'(e) {
-        startNumberDrag(this.$el.nextElementSibling, e.clientX, 'mousemove', 'mouseup');
-      },
-      '@touchstart'(e) {
-        startNumberDrag(this.$el.nextElementSibling, e.touches[0].clientX, 'touchmove', 'touchend');
+      '@pointerdown'(e) {
+        startNumberDrag(this.$el, this.$el.nextElementSibling, e);
       },
     },
 

@@ -130,6 +130,11 @@ class Filler {
     suffixText: '%',
     // (hex, alpha) => void, fired on any color/transparency change.
     onChange: null,
+    // (type) => void, fired when the dialog's source switches ('solid'/'image'/'video').
+    onSourceChange: null,
+    // ('image'|'video', media) => void, fired after an upload/clear/reset or any correction-slider
+    // (or, for video, playback-setting) edit — "media" is the same object as this.image/this.video.
+    onMediaChange: null,
 
     // User-facing text, overridable for localization.
     labels: {
@@ -517,12 +522,16 @@ class Filler {
     const initialAlpha = Filler.clamp(options.alpha ?? parseFloat(el.dataset.alpha ?? '100'), 0, 100);
     this.hsva = { ...Filler.rgbToHsv(Filler.hexToRgb(initialHex)), a: initialAlpha };
 
-    // Which panel the dialog shows — 'solid' (HSV picker), 'image' or 'video' (upload + adjustments).
-    this.source = this.sources[0];
+    // Which panel the dialog shows — 'solid' (HSV picker), 'image' or 'video' (upload + adjustments);
+    // "options.source" seeds it (e.g. restoring a fill saved elsewhere), falling back to the first
+    // configured source.
+    this.source = options.source && this.sources.includes(options.source) ? options.source : this.sources[0];
     const imageFilterDefaults = Object.fromEntries(Filler.MEDIA_FILTERS.map(({ key, default: value }) => [key, value]));
     const videoSettingDefaults = Object.fromEntries(Filler.VIDEO_SETTINGS.map(({ key, default: value }) => [key, value]));
-    this.image = { dataUrl: null, fit: 'cover', rotation: 0, ...imageFilterDefaults };
-    this.video = { dataUrl: null, fit: 'cover', rotation: 0, ...videoSettingDefaults };
+    // "options.image"/"options.video" likewise restore a previously uploaded file's own dataUrl/
+    // filters/settings, merged over the defaults so a partial patch still leaves the rest usable.
+    this.image = { dataUrl: null, fit: 'cover', rotation: 0, ...imageFilterDefaults, ...options.image };
+    this.video = { dataUrl: null, fit: 'cover', rotation: 0, ...videoSettingDefaults, ...options.video };
     // DOM refs per media type ('image'/'video'), filled in by buildMediaPanel.
     this.mediaRefs = { image: null, video: null };
 
@@ -690,10 +699,18 @@ class Filler {
         alphaInput.value = Math.round(this.hsva.a);
         suffix.removeEventListener('pointermove', onMove);
         suffix.removeEventListener('pointerup', onUp);
+        suffix.removeEventListener('pointercancel', onUp);
       };
 
       suffix.addEventListener('pointermove', onMove);
       suffix.addEventListener('pointerup', onUp);
+      // The browser can abort an active pointer capture without ever firing "pointerup" (a touch
+      // gesture reinterpreted as a scroll, an intervening system dialog, ...) — "pointercancel" is
+      // the only event guaranteed to still fire then. Without also cleaning up here, "onMove" and
+      // "onUp" stay attached to "suffix" (which — built once in initialize() — outlives any single
+      // drag) forever: each subsequent drag adds one more surviving pair, so every later pointermove
+      // fires every leaked "onMove" too, compounding drag by drag until the field visibly lags.
+      suffix.addEventListener('pointercancel', onUp);
     });
   }
 
@@ -1257,6 +1274,7 @@ class Filler {
     this.source = type;
     this.syncSourceUI();
     this.renderSwatch();
+    this.onSourceChange?.(type);
   }
 
   // Shows/hides the source buttons and solid/image/video panels for the current `sources` and `source`.
@@ -1547,6 +1565,7 @@ class Filler {
 
     // Also applies the image correction filter and, while this type is active, syncs the compact swatch.
     this.renderSwatch();
+    this.onMediaChange?.(type, this[type]);
   }
 
   // Applies the computed CSS filter to the image dialog preview, and to the swatch while 'image' is active.
@@ -1613,10 +1632,14 @@ class Filler {
       const onUp = () => {
         track.removeEventListener('pointermove', onMove);
         track.removeEventListener('pointerup', onUp);
+        track.removeEventListener('pointercancel', onUp);
       };
 
       track.addEventListener('pointermove', onMove);
       track.addEventListener('pointerup', onUp);
+      // See the matching comment in bindAlphaSuffixDrag() — "pointerup" alone misses a
+      // browser-aborted capture, leaking onMove/onUp onto this (reused, long-lived) track.
+      track.addEventListener('pointercancel', onUp);
     });
   }
 
@@ -1643,10 +1666,14 @@ class Filler {
       const onUp = () => {
         area.removeEventListener('pointermove', onMove);
         area.removeEventListener('pointerup', onUp);
+        area.removeEventListener('pointercancel', onUp);
       };
 
       area.addEventListener('pointermove', onMove);
       area.addEventListener('pointerup', onUp);
+      // See the matching comment in bindAlphaSuffixDrag() — "pointerup" alone misses a
+      // browser-aborted capture, leaking onMove/onUp onto this (reused, long-lived) area.
+      area.addEventListener('pointercancel', onUp);
     });
   }
 
@@ -1775,11 +1802,20 @@ class Filler {
 
   // Applies an options patch to an already-mounted instance.
   update(options = {}) {
+    // "image"/"video"/"source"/"alpha" are one-time seeds the constructor already merged with
+    // defaults (see its own comment) — a caller like controls/fill.js's fillFiller() keeps handing
+    // them back on every re-render (echoing whatever it currently has, which is null/undefined for
+    // a fill that hasn't switched source or uploaded anything yet), so blindly reassigning them
+    // here would clobber this.image/this.video with `undefined` — breaking the correction sliders
+    // ("Brightness: undefined%"), fit-select and rotate — the moment any *other* reactive write
+    // triggers a refresh. Dropped from the options patch entirely; only re-applied by construction.
+    const { image, video, source, alpha, ...rest } = options;
+
     const paletteChanged = 'palette' in options;
     const sourcesChanged = 'sources' in options;
     const labelsChanged = 'labels' in options;
 
-    Object.assign(this, options, {
+    Object.assign(this, rest, {
       classes: options.classes ? { ...this.classes, ...options.classes } : this.classes,
       labels: options.labels ? { ...this.labels, ...options.labels } : this.labels,
       palette: options.palette ? [...options.palette] : this.palette,
@@ -1819,6 +1855,17 @@ class Filler {
         this.renderSwatch();
       }
     }
+  }
+
+  /* Releases everything attachFloating hung off `window`/`document` — closing the dialog/dropdown
+     removes their listeners and detaches their body-appended panel. Callers that pull a filler's
+     `<input>` out of the DOM directly (e.g. controls/fill.js rebuilding or removing a row) MUST
+     call this first: nothing here watches for disconnection on its own, so skipping it leaks a
+     permanent scroll/resize listener plus an orphaned floating panel per instance. */
+  destroy() {
+    this.closeDialog();
+    this.closeDropdown();
+    clearTimeout(this.copyResetTimer);
   }
 }
 

@@ -10,7 +10,11 @@
  * @returns {*} The expression's value, or undefined when "noReturn" is true.
  */
 export function saferEval(expression, dataContext, additionalHelperVariables = {}, noReturn = false) {
-  expression = noReturn ? `with($data){${expression}}` : `var result; with($data){result=${expression}}; return result`;
+  // No intermediate bookkeeping variable: a name like "result" here would be just as reachable
+  // through `with($data)` as any real property, so a data property that happened to share it
+  // would silently hijack the assignment (see the regression this fixed: `v-data="{ result }"`
+  // combined with a directive expression evaluated through this same function).
+  expression = noReturn ? `with($data){${expression}}` : `with($data){return (${expression})}`;
 
   return (new Function(['$data', ...Object.keys(additionalHelperVariables)], expression))(
     dataContext, ...Object.values(additionalHelperVariables)

@@ -1,8 +1,8 @@
-// Shared thumb look. Kept as a mixin (not @extend), since Firefox and Chrome both drop an entire selector list containing a pseudo-element they don't recognize.
+// Mixin, not @extend — Firefox/Chrome drop a selector list containing an unrecognized pseudo-element.
 @mixin ranger-thumb {
 	cursor: pointer;
 	pointer-events: all;
-	// The box below is the real hit/drag target — `--ranger-thumb-icon-size` (default the image's own size) lets a skin paint a smaller visible mark inside a larger tappable box.
+	// --ranger-thumb-icon-size lets a skin paint a smaller visible mark inside a larger tappable box.
 	background-position: center;
 	background-repeat: no-repeat;
 	background-color: var(--ranger-thumb-bg);
@@ -15,7 +15,7 @@
 	height: var(--ranger-thumb-height);
 }
 
-// Skin tokens — the default skin, "Coral": a flat, squared-off look with a thin bar-shaped handle, in the spirit of Ion.RangeSlider skins. Declared on :root so custom properties reach both the pre-init raw <input> and the post-init `.ranger` tree.
+// Default "Coral" skin tokens; declared on :root so they reach both the pre-init input and the post-init .ranger tree.
 :root {
 	--ranger-height: 6px;
 	--ranger-radius: 0;
@@ -36,9 +36,9 @@
 	--ranger-tick-label-color: #888;
 	--ranger-mark-color: #f59e0b;
 
-	// Element selector, not a class, so this reaches a raw <input type="range"> before Ranger even runs — see the pre-init box note below.
+	// Element selector, not a class, so this reaches the raw input before Ranger runs.
 	input[type="range"] {
-		// Shared cosmetics — must apply from first paint, or the native control briefly renders unstyled.
+		// Must apply from first paint or the native control briefly renders unstyled.
 		accent-color: var(--ranger-accent);
 		appearance: none;
 		border-radius: var(--ranger-radius);
@@ -49,7 +49,7 @@
 		width: 100%;
 		min-height: initial;
 
-		// Pre-init box: a real in-flow track matching `.ranger` below, so nothing shifts once JS swaps this for the absolute overlay.
+		// Pre-init track matches .ranger below so nothing shifts once JS swaps in the overlay.
 		background-color: var(--ranger-bg);
 		display: block;
 		height: var(--ranger-height);
@@ -67,7 +67,7 @@
 			@include ranger-thumb;
 		}
 
-		// Custom-styled thumbs don't reliably pick up the browser's default focus ring, so draw an explicit one for keyboard users.
+		// Custom thumbs don't reliably show the native focus ring, so draw one explicitly.
 		&:focus-visible::-webkit-slider-thumb {
 			outline: 2px solid var(--ranger-accent);
 			outline-offset: 2px;
@@ -78,7 +78,7 @@
 			outline-offset: 2px;
 		}
 
-		// Firefox paints its track/progress as separate pseudo-elements, so neutralize both to keep only our `.ranger-fill` layer visible.
+		// Firefox renders track/progress as separate pseudo-elements — neutralize both so only .ranger-fill shows.
 		&::-moz-range-track {
 			background: transparent;
 			border: none;
@@ -126,7 +126,7 @@
 		pointer-events: none;
 	}
 
-	// Handles landing on the exact same value would share a pixel and one z-index would swallow every click, so split the shared hit area in half instead.
+	// Splits the shared hit area when both handles land on the same value, so neither swallows all clicks.
 	&.is-overlapping {
 		input[type="range"]:not(.ranger-input--to)::-webkit-slider-thumb {
 			clip-path: inset(0 50% 0 0);
@@ -145,10 +145,10 @@
 		}
 	}
 
-	// Colored progress fill — a dedicated layer so it can never paint over either handle; kept below the marks/handle layers, no z-index needed (see reorderLayers in index.js).
+	// Dedicated fill layer, kept below marks/handles by DOM order (see reorderLayers in index.js).
 	&-fill {
 		background-color: var(--ranger-accent);
-		// Set via the fillGradient option; 'none' by default, so the plain background-color above shows through.
+		// Set via the fillGradient option; defaults to 'none'.
 		background-image: var(--ranger-fill-gradient, none);
 		border-radius: var(--ranger-radius);
 		height: 100%;
@@ -158,15 +158,14 @@
 		top: 0;
 		touch-action: none;
 
-		// Range mode only (see is-draggable in index.js) — grab the fill to slide both handles together.
+		// Range mode only — grabbing the fill slides both handles together.
 		&.is-draggable {
 			cursor: grab;
 			pointer-events: auto;
 		}
 	}
 
-	// Once JS wraps the input (see index.js), `.ranger` owns the visible track, so the input itself becomes an invisible absolute overlay covering it.
-	// Unlike every other layer here, this needs a real z-index: updateHandleStackOrder in index.js swaps it on every drag tick, and reordering the DOM mid-drag risks cancelling native pointer capture.
+	// Invisible overlay on .ranger's track; needs a real z-index since updateHandleStackOrder (index.js) reorders it mid-drag without cancelling pointer capture.
 	& > input[type="range"] {
 		background-color: transparent;
 		height: 100%;
@@ -185,7 +184,7 @@
 		transition: opacity 0.2s ease-out;
 		min-height: 1.25rem;
 
-		// labelOnDragOnly fades the label via opacity, not display/visibility, since those can't transition and labelTo's own visibility toggle overrides an ancestor's `hidden`.
+		// Fades via opacity, not display/visibility, since labelTo's own visibility toggle would override those.
 		&.is-idle {
 			opacity: 0;
 			pointer-events: none;
@@ -217,7 +216,7 @@
 		}
 	}
 
-	// Appended first among `.ranger`'s children (see reorderLayers in index.js), so it paints below every other layer without z-index.
+	// Appended first among .ranger's children (see reorderLayers in index.js) so it paints below other layers without z-index.
 	&-scale {
 		display: flex;
 		justify-content: space-between;
@@ -246,24 +245,24 @@
 				width: 1px;
 			}
 
-			// Minor (unlabeled) ticks inserted between major ones — shorter, same baseline, so the hierarchy reads at a glance.
+			// Minor ticks are shorter than major ticks, same baseline.
 			&--minor::before {
 				height: 4px;
 			}
 
-			// Opt-in (via the `classes` option): reacts to the live --ranger-scale custom property every tick carries, growing taller as a handle passes by.
+			// Opt-in via the classes option; grows with the live --ranger-scale property as a handle passes.
 			&--animated::before {
 				background-color: var(--ranger-tick-color);
 				height: calc(4px + var(--ranger-scale, 0) * 12px);
 				transition: height 0.15s ease-out, opacity 0.15s ease-out;
 			}
 
-			// Minor ticks animate too, just with a shorter baseline/peak so the major/minor hierarchy still reads.
+			// Minor ticks animate too, with a shorter peak to preserve the hierarchy.
 			&--minor.ranger-scale-tick--animated::before {
 				height: calc(2px + var(--ranger-scale, 0) * 12px);
 			}
 
-			// Automatically applied (see createScale in index.js) to whichever tick lands on minValue/maxValue.
+			// Applied automatically (createScale in index.js) to the ticks at minValue/maxValue.
 			&--limit {
 				&::before {
 					background-color: var(--ranger-accent);
@@ -290,7 +289,7 @@
 		}
 	}
 
-	// Separate from &-scale since mark positions are arbitrary values, not an evenly spaced grid; appended above fill but below the handles (see reorderLayers), no z-index needed.
+	// Separate from &-scale since marks are arbitrary positions, not an evenly spaced grid.
 	&-marks {
 		inset-inline: 0;
 		height: 100%;
@@ -306,7 +305,7 @@
 		top: 0;
 		width: 2px;
 
-		// Point marks are re-centered on their value in JS (see positionMarks) — zone marks stay at this edge anchor, since their left edge is the `from` boundary itself.
+		// Point marks are re-centered on their value in JS (positionMarks); zone marks keep this edge anchor.
 		ins {
 			color: var(--ranger-tick-label-color);
 			font-size: 11px;
@@ -317,12 +316,12 @@
 			margin-bottom: 4px;
 		}
 
-		// The `classes.markRange` default ({ from, to }) - width/inset are set inline per-mark in JS, so only the "zone" look lives here.
+		// classes.markRange default; width/inset are set inline per-mark in JS.
 		&--range {
 			opacity: 0.25;
 		}
 
-		// Opt-in (via a mark's own `className`) - a wider, accent-colored variant for a single stand-out mark.
+		// Opt-in via a mark's own className — wider, accent-colored highlight variant.
 		&--highlight {
 			background-color: var(--ranger-accent);
 			width: 4px;

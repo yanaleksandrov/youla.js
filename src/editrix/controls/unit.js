@@ -1,29 +1,21 @@
 /**
  * "Unit" controls — a compound value that pairs one or more numbers with a CSS length unit
- * (Elementor's own slider/dimensions/gaps controls, which this mirrors). Like multi-value.js,
- * there's no wrapper factory of their own: a unit control's wrapper is just
- * `field(name, title, tooltip, { type: 'slider', default: {...}, min: 0, max: 100 })` like any
- * other — sliderRange()/partNumber()/linkedNumber()/linkToggle()/unitSelect() (base.js) are what's
- * actually reused. `gaps` is the same pattern as `dimensions` (2 parts instead of 4, no separate
- * "row"/"column" linking beyond what linkedNumber() already gives it) once this one's reviewed.
+ * (Elementor's slider/dimensions/gaps controls). No wrapper factory of their own: sliderRange()/
+ * partNumber()/linkedNumber()/linkToggle()/unitSelect() (base.js) are what's actually reused.
  *
  * Value shapes, for reference:
  *   slider:     { size: 0, unit: 'px' }
  *   dimensions: { top: 0, right: 0, bottom: 0, left: 0, unit: 'px', isLinked: true }
  */
 
-// The 4 side keys a dimensions control links together — v-bind="e.linkedNumber(name, 'top',
-// dimensionSides)" (see controls/render.js's dimensions() renderer), so the "which sides move
-// together when linked" list lives in exactly one place, reachable from markup the same way units
-// (base.js) is.
+// The 4 side keys a dimensions control links together — see linkedNumber() (base.js).
 const DIMENSION_SIDES = ['top', 'right', 'bottom', 'left'];
 
 export function createUnitControls() {
   return {
     dimensionSides: DIMENSION_SIDES,
 
-    // v-bind="e.sliderRange('width')" on a slider control's `<input type="range">` — partNumber()'s
-    // value/change behavior, plus the min/max/step off the control's own definition.
+    // v-bind="e.sliderRange(name)" on a slider's <input type="range"> — partNumber() plus min/max/step off the control's own definition.
     sliderRange(name) {
       return {
         ...this.partNumber(name, 'size'),
@@ -36,10 +28,7 @@ export function createUnitControls() {
         ':step'() {
           return this._controls[name]?.step ?? 1;
         },
-        // Ranger's floating value label and tick scale (youla-ranger.js), both on by default, are
-        // built for a full-size standalone slider — this control is a compact sidebar row with its
-        // own numeric input right next to the track (controls/render.js's slider() renderer), so
-        // only the bare track+thumb belong here.
+        // Compact sidebar row, not a full-size slider — hide Ranger's floating label and tick scale.
         'v-ranger': '{ labelIsVisible: false, scaleTicksCount: 0 }',
       };
     },

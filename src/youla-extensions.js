@@ -1,24 +1,8 @@
 document.addEventListener('youla:init', ()=> {
   /**
-   * Multi-step wizard: `v-step="condition"` marks a panel's completion
-   * state from the bound expression; `$step` (one state machine per wizard
-   * root, cached on the root element itself) drives navigation — `$step.goNext()`,
-   * `$step.goBack()`, and the read-only helpers below. Registered as a
-   * `Youla.variable()` rather than a `Youla.method()` — unlike most custom
-   * methods, that makes it reachable from any expression (`v-show`,
-   * `:attribute`, `v-text`), not just `@event` ones.
-   *
-   * Its state still lives outside the reactive data, though, so nothing
-   * would otherwise mark a binding reading `$step` as dirty. `Youla.reactive()`
-   * wraps the wizard object below for exactly that: writing `this.currentIndex`
-   * (in `goto()`) or pushing onto `this.steps` (in `getStep()`) force-refreshes
-   * the owning component on its own — see `Component#refresh(force)` and
-   * `helpers.js#reactive`.
-   *
-   * The directive itself is the one exception: it mutates a step object
-   * stashed directly on the element (`el._x_step`), which bypasses that
-   * wrapper entirely (it's never read back through the wizard's own
-   * properties), so it still force-refreshes by hand via `Youla.forceRefresh()`.
+   * Multi-step wizard: `v-step="condition"` marks a panel's completion state; `$step`
+   * (one state machine per wizard root) drives navigation via `goNext()`/`goBack()`. Registered
+   * as a `Youla.variable()` so it's reachable from any expression, not just `@event` ones.
    *
    * @since 1.0
    */
@@ -29,6 +13,7 @@ document.addEventListener('youla:init', ()=> {
 
     if (step.isComplete !== isComplete) {
       step.isComplete = isComplete;
+      // step lives on el._x_step, outside the wizard's reactive wrapper, so refresh manually.
       Youla.forceRefresh(wizard.root);
     }
   });
@@ -165,9 +150,7 @@ document.addEventListener('youla:init', ()=> {
   }
 
   /**
-   * Copy any string data to clipboard.
-   *
-   * Usage example: @click="$copy('Some text', ['is-copied', 'is-'])"
+   * Copies a string to the clipboard, e.g. `@click="$copy('Some text', ['is-copied'])"`.
    *
    * @since 1.0
    */
@@ -182,20 +165,9 @@ document.addEventListener('youla:init', ()=> {
   });
 
   /**
-   * Selfie
-   *
-   * `$stream` (one instance per `v-data` root, cached on the root element
-   * itself, like `$step`) wraps `getUserMedia` into a ready-made
-   * preview → snapshot → canvas → image scenario. Registered as a
-   * `Youla.variable()` rather than a `Youla.method()` — unlike most custom
-   * methods, that makes `error` (and every other property here) reachable
-   * from any expression (`v-show`, `:src`), not just `@event` ones.
-   *
-   * Its state still lives outside the reactive data, though, so nothing
-   * would otherwise mark a binding reading it as dirty — `Youla.reactive()`
-   * wraps the object below so writing `this.error` (in `requestStream()`)
-   * force-refreshes the owning component on its own, the same way `$step`
-   * relies on it for `this.currentIndex` and `this.steps`.
+   * Selfie: `$stream` (one instance per `v-data` root) wraps `getUserMedia` into a
+   * preview -> snapshot -> canvas -> image flow. Registered as a `Youla.variable()` so its
+   * properties are reachable from any expression, not just `@event` ones.
    *
    * @since 1.0
    */
@@ -333,7 +305,6 @@ document.addEventListener('youla:init', ()=> {
       let type = el.getAttribute( 'type' );
       if( type ) {
         let exp = '';
-        // validation based on the field type
         switch( type ) {
           case 'tel':
             exp = /[^ \-()+\d]/g;
@@ -344,13 +315,11 @@ document.addEventListener('youla:init', ()=> {
           case 'color':
             exp = /[^ a-zA-Z(),\d]/g;
             break;
-          // TODO: validate domains and subdomains
-          // @see https://stackoverflow.com/questions/26093545/how-to-validate-domain-name-using-regex
+          // TODO: validate domains and subdomains, see https://stackoverflow.com/questions/26093545
           case 'domain':
             break;
         }
 
-        // removing forbidden characters
         if ( exp ) {
           el.value = el.value.replace( exp, '' );
         }
@@ -358,11 +327,7 @@ document.addEventListener('youla:init', ()=> {
     } else if( mask === Object( mask ) ) {
       el.value = el.value.replace( mask, '' );
     }
-    /**
-     * Validation by mask.
-     *
-     * @see discussion //javascript.ru/forum/dom-window/82008-kak-preobrazovat-stroku-v-massiv.html
-     */
+    // Validation by mask, see //javascript.ru/forum/dom-window/82008-kak-preobrazovat-stroku-v-massiv.html
     else {
       try {
         function limit( position, symbol, max ) {
@@ -380,7 +345,6 @@ document.addEventListener('youla:init', ()=> {
         }
 
         let maskArr  = mask.match( /(\{[^}]+?\})|(.)/g ),
-          //var maskArr  = mask.match( /(\{[^\s]+\})|(\+)|([()])|(.)|(\s+)/g ),
           position = -1;
         maskArr = maskArr.map( symbol => {
           ++position;
@@ -403,7 +367,6 @@ document.addEventListener('youla:init', ()=> {
           }
         });
 
-        //console.log( maskArr );
         vanillaTextMask.maskInput({
           inputElement: el,
           guide: false,
@@ -442,12 +405,9 @@ document.addEventListener('youla:init', ()=> {
   });
 
   /**
-   * Notifications system: a single `v-data="notice"` container, rendered once in
-   * parts/footer.html, holds the real queue. `$notice` (registered below as a `Youla.variable()`
-   * rather than a `Youla.method()`, so it's reachable from any expression — not just `@event`
-   * ones) always resolves to *that* container's own reactive data, no matter which component the
-   * calling expression happens to live in — so `$notice.info('Saved')` works from literally any
-   * `v-data` on the page, not just from inside the notice container itself.
+   * Notifications system: a single `v-data="notice"` container (parts/footer.html) holds
+   * the queue. `$notice` always resolves to that container's data, so `$notice.info('Saved')`
+   * works from any `v-data` on the page.
    *
    * @since 1.0
    */
@@ -472,8 +432,7 @@ document.addEventListener('youla:init', ()=> {
     loading( message ) {
       this.add( message, 'loading' );
     },
-    // @mouseenter on the container: freezes every item's countdown where it stood, so hovering
-    // in to read one doesn't lose the others to a timer race either.
+    // @mouseenter on the container: freezes every item's countdown where it stood.
     pause() {
       this.hovering = true;
 
@@ -485,8 +444,7 @@ document.addEventListener('youla:init', ()=> {
         }
       });
     },
-    // @mouseleave: picks every countdown back up from where pause() froze it (including any
-    // item that arrived while hovering and was never scheduled in the first place).
+    // @mouseleave: picks every countdown back up from where pause() froze it.
     resume() {
       this.hovering = false;
 
@@ -507,8 +465,7 @@ document.addEventListener('youla:init', ()=> {
       if ( typeof item !== 'undefined' ) {
         clearTimeout( item.timer );
 
-        // v-each only re-renders when "items" itself is reassigned (see toasts.html's demo for
-        // the same pattern) — mutating a nested key in place never marks it as changed.
+        // v-each only re-renders when "items" itself is reassigned, not on a mutated nested key.
         this.items = { ...this.items, [id]: { ...item, selectors: [ ...item.selectors, 'hide' ] } };
 
         setTimeout( () => {
@@ -521,9 +478,7 @@ document.addEventListener('youla:init', ()=> {
       if ( message ) {
         let timestamp = Date.now();
 
-        // No per-item spinner markup here on purpose: it's a real inline <svg> in the template
-        // (see parts/footer.html), animated in CSS off "duration" — a real DOM animation, unlike
-        // a background-image SVG, can actually be paused (see the ":hover" rule in styles.scss).
+        // Spinner is a real inline <svg> (parts/footer.html), animated via CSS, so it can be paused on :hover.
         this.items = { ...this.items, [timestamp]: {
           message: message,
           closable: true,
@@ -580,10 +535,8 @@ document.addEventListener('youla:init', ()=> {
   });
 
   /**
-   * Pins a sidebar in place while its `position: relative` parent scrolls
-   * past, keeping it inside the parent's own bounds rather than just
-   * sticking to the viewport — for a sidebar taller than the viewport, it
-   * scrolls internally instead of overflowing off the top or bottom.
+   * Pins a sidebar within its `position: relative` parent's bounds as it scrolls, instead
+   * of sticking to the viewport — a taller-than-viewport sidebar scrolls internally.
    *
    * @since 1.0
    */
@@ -607,8 +560,7 @@ document.addEventListener('youla:init', ()=> {
       const delta    = window.scrollY - lastScroll;
       lastScroll     = window.scrollY;
 
-      // Only slide while actually stuck — rect.top runs ahead of "top" both
-      // before engaging (still in flow) and after releasing at the bottom.
+      // Only slide while actually stuck — rect.top runs ahead of "top" otherwise.
       if (overflow <= 0 || rect.top > top) {
         return;
       }
@@ -624,9 +576,8 @@ document.addEventListener('youla:init', ()=> {
   });
 
   /**
-   * Expands or collapses an element with a smooth slide animation, driven
-   * by the directive's own truthiness (`v-collapse="open"`) rather than a
-   * CSS class — so it works with any bound boolean expression.
+   * Expands or collapses an element with a smooth slide animation, driven by the
+   * directive's truthiness (`v-collapse="open"`) rather than a CSS class.
    *
    * @since 1.0
    */
@@ -689,15 +640,9 @@ document.addEventListener('youla:init', ()=> {
   });
 
   /**
-   * Animates a progress indicator into view once when it enters the viewport.
-   * Sets `--youla-progress` and `--youla-progress-transition` CSS properties
-   * based on `from.to` (both percentages) and the shared `<number><unit>`
-   * duration modifier. Skips the transition when reduced motion is preferred.
-   *
-   * `to` can also come from the directive's bound value instead of the `to`
-   * modifier — e.g. `v-progress.0.600ms="percent"` — in which case it's
-   * reactive: once the initial reveal has played, every change to `percent`
-   * transitions `--youla-progress` straight to the new value.
+   * Animates `--youla-progress` into view once the element enters the viewport, from/to
+   * modifiers as percentages (`v-progress.20.80.600ms`). `to` can also be a reactive bound
+   * value, e.g. `v-progress.0.600ms="percent"`. Skips the transition on reduced motion.
    *
    * @since 1.0
    */
@@ -761,11 +706,9 @@ document.addEventListener('youla:init', ()=> {
   });
 
   /**
-   * Adapter for SlimSelect — turns `<option>`s (with optional
-   * data-image/data-icon/data-description attributes) and optgroups into
-   * SlimSelect's data format. The directive's bound value, if given, is
-   * parsed as JSON and merged into SlimSelect's settings. Requires
-   * SlimSelect to be loaded; this project doesn't bundle it.
+   * Adapter for SlimSelect — turns `<option>`s (with optional data-image/data-icon/
+   * data-description) and optgroups into SlimSelect's data format. Requires SlimSelect to
+   * be loaded; this project doesn't bundle it.
    *
    * @see   https://github.com/brianvoe/slim-select
    * @since 1.0

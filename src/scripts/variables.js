@@ -1,9 +1,6 @@
 import { register } from './registry';
 
-// The built-in magic variables (see magic-variables.js#createMagicVariables) always
-// win over a same-named custom one, but registering under one of these names
-// is almost certainly a mistake, so it's rejected up front instead of
-// silently never taking effect.
+// Built-ins always win over a same-named custom variable, so registering one of these names is rejected up front instead of silently doing nothing.
 const RESERVED = ['$el', '$event', '$refs', '$root'];
 
 let variables = {}
@@ -14,10 +11,7 @@ let variables = {}
  * alongside the built-in `$el`, `$event`, `$refs` and `$root`.
  *
  * @param {string} name - The variable's name, without the `$` prefix.
- * @param {Function} callback - Factory called as `(root, el, event)` every time an expression is
- *   evaluated; its return value becomes `$name` for that evaluation. `root` is the component's
- *   `v-data` element, `el` the element the expression is declared on, and `event` the triggering
- *   DOM event (undefined outside an event handler).
+ * @param {Function} callback - Factory called as `(root, el, event)`; its return value becomes `$name`.
  * @returns {void}
  */
 export function variable(name, callback) {

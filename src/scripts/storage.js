@@ -1,8 +1,4 @@
-// Unlike cookies, localStorage has no native expiration, so a TTL is faked by
-// wrapping the value in a small envelope carrying the absolute expiry time.
-// The key is namespaced to make collisions with a plain, pre-existing stored
-// value (from before TTL support existed, or set without an expiration)
-// vanishingly unlikely.
+// localStorage has no native TTL, so one is faked by wrapping the value in an envelope carrying the absolute expiry time.
 const TTL_KEY = '__youla_expires';
 const EXPIRED = Symbol('expired');
 
@@ -21,8 +17,7 @@ function wrapWithTTL(value, expires) {
  * Unwraps a value previously wrapped by wrapWithTTL().
  *
  * @param {string} raw - The raw string read from localStorage.
- * @returns {*} The unwrapped value; the EXPIRED symbol if its TTL has passed; or `undefined`
- * if "raw" isn't one of our envelopes (a plain value stored without an expiration).
+ * @returns {*} Unwrapped value, EXPIRED if the TTL has passed, or undefined if not an envelope.
  */
 function unwrapTTL(raw) {
   try {
@@ -42,7 +37,7 @@ export const storage = {
    *
    * @param {string} name - The key (localStorage) or cookie name to read.
    * @param {'local'|'cookie'} [type] - Which storage to read from.
-   * @returns {*} The parsed value (JSON-decoded when possible for cookies), or undefined if not found or expired.
+   * @returns {*} Parsed value, or undefined if not found or expired.
    */
   get: (name, type = 'local') => {
     if (!name) return;
@@ -84,11 +79,7 @@ export const storage = {
    * @param {string} name - The key (localStorage) or cookie name to write.
    * @param {*} value - The value to store; falsy clears the existing entry.
    * @param {'local'|'cookie'} [type] - Which storage to write to.
-   * @param {object} [options] - For a cookie: its attributes — "expires" (Date) is converted to a
-   * UTC string, every other key (e.g. "path", "domain", "secure", "samesite") is appended as
-   * "key=value", or as a bare flag when its value is exactly true. For localStorage, only
-   * "expires" (Date) is used, to fake a TTL — everything else is ignored. Omitting "expires"
-   * makes a cookie a session cookie and a localStorage entry permanent.
+   * @param {object} [options] - Cookie attributes (expires converted to UTC string); for localStorage only "expires" is used, to fake a TTL.
    * @returns {void}
    */
   set: (name, value, type = 'local', options = {path: '/'}) => {
@@ -178,11 +169,10 @@ export function getStorageType(modifiers) {
 }
 
 /**
- * Coerces a persisted (string) value back to the type of an existing reference value "a" — used
- * to restore a stored value into the same shape it had before it was persisted.
+ * Coerces a persisted (string) value back to the type of reference value "a".
  *
- * @param {*} a - A reference value whose type "value" should be converted to.
- * @param {*} value - The raw value to convert (typically a string read back from storage).
+ * @param {*} a - Reference value whose type to convert to.
+ * @param {*} value - Raw value to convert (typically a string read back from storage).
  * @returns {*} "value" converted to match the type of "a".
  */
 export function castToType(a, value) {

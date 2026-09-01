@@ -66,11 +66,7 @@ export function getAttributes(el) {
  */
 export function updateAttribute(el, name, value) {
   if (name === 'value') {
-    // Radio/checkbox is deliberately NOT special-cased here the way v-prop's own directive
-    // special-cases it (directives/v-prop.js): a plain ":value" bind (e.g. a v-each-rendered
-    // radio's own distinguishing value) means "set this element's value", exactly like it does
-    // for every other input type below — the "value write means check/uncheck by comparing
-    // against it" behavior is v-prop's own read-back concern, not this generic attribute's.
+    // Radio/checkbox isn't special-cased here like v-prop does; a plain :value bind just sets the element's value like any other input.
     if (el.tagName === 'SELECT') {
       const selectedValues = [].concat(value).map(v => v + '')
       Array.from(el.options).forEach(option => {

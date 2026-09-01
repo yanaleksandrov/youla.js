@@ -1,22 +1,13 @@
 /**
- * A well-known symbol every proxy this module (and component.js's own dependency-tracking proxy
- * in evaluate(), which cooperates with it — see that file) creates responds to by handing back its
- * own raw, unwrapped target — see toRaw() below.
+ * Well-known symbol every proxy in this module (and component.js's own dependency-tracking
+ * proxy, which cooperates with it) responds to by handing back its raw, unwrapped target.
  */
 export const RAW = Symbol('raw');
 
 /**
- * Unwraps "value" all the way down to whatever it was before any wrap()/tracking-proxy layer was
- * ever applied to it — a no-op for a plain value or one that was never wrapped.
- *
- * Without this, a value that round-trips through a proxy — read (wrapping it), spread into a new
- * object, written back (wrapping it *again*, since wrap() had no way to tell the value it was
- * just handed was already one of its own proxies) — picks up one more Proxy layer than it had
- * before every single time. controls/fill.js's patchFillAt() does exactly that on every color/
- * media change; a couple of seconds of dragging a slider (tens to hundreds of writes) was enough
- * to nest a single "image"/"video" sub-object under hundreds of Proxy layers, so later just
- * *reading* one of its properties needed as many nested calls as there had been writes —
- * "RangeError: Maximum call stack size exceeded", not from any real recursion in application code.
+ * Unwraps "value" down to whatever it was before any wrap()/tracking proxy was applied — a
+ * no-op for a plain or already-raw value. Without it, a value that round-trips through a proxy
+ * (read, spread, write back) picks up another Proxy layer each time, eventually overflowing the call stack.
  *
  * @param {*} value
  * @returns {*}
@@ -31,8 +22,7 @@ export function toRaw(value) {
  * never wrapped, since calling a native method on a wrapped node would break "this" binding.
  *
  * @param {object} data - The plain object to make observable.
- * @param {(prop: string) => void} onChange - Called after each successful property write, with
- *   the name of the property that changed.
+ * @param {(prop: string) => void} onChange - Called with the changed property name after each successful write.
  * @returns {Proxy} The observable version of "data".
  */
 export function makeObservable(data, onChange) {
@@ -41,8 +31,7 @@ export function makeObservable(data, onChange) {
       return target;
     }
 
-    // Never wrap something that's already (transitively, through however many proxy layers)
-    // one of ours — see toRaw()'s own comment for why this matters.
+    // Never wrap something that's already (transitively) one of ours — see toRaw().
     target = toRaw(target);
 
     return new Proxy(target, {
@@ -67,8 +56,7 @@ export function makeObservable(data, onChange) {
  * `Component#refresh(force)`), deferred with a 0ms timeout so several calls in the same tick
  * still collapse into work the debounced `refresh()` already coalesces internally.
  *
- * @param {HTMLElement} root - The component's root element ("v-data"), whose `Component`
- *   instance is stashed at "root.__x" by `Youla.componentInitialize` once it's fully constructed.
+ * @param {HTMLElement} root - The component's root element ("v-data"); its `Component` instance is stashed at "root.__x".
  * @returns {void}
  */
 export function forceRefresh(root) {

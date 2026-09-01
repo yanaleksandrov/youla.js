@@ -1,21 +1,14 @@
 /**
- * Runs "mutate" (a synchronous DOM reorder — e.g. insertBefore) and smoothly animates every
- * affected child from its old screen position to its new one, via the FLIP technique: record
- * every child's rect, mutate, then for whichever ones actually moved, jump them back to their old
- * spot with a transform (no transition) and release it on the next frame so the browser's own
- * "transition" (declared once, in CSS, on whatever item class this is) animates it home. A CSS
- * Grid/Flexbox reflow isn't transitionable on its own — an item just snaps to its new cell the
- * instant the DOM changes — this is what actually makes that snap read as a smooth slide.
+ * Runs "mutate" (a synchronous DOM reorder) and animates every affected child from its old
+ * position to its new one via the FLIP technique — a CSS Grid/Flexbox reflow isn't transitionable
+ * on its own, so this makes the snap read as a smooth slide.
  *
- * Generic on purpose: works for any reorderable list of siblings — youla-editrix.js's own
- * sortable() (gallery thumbnails, toolbox.html) and controls/repeater.js's own repeaterItemRoot()
- * both call this rather than reordering the DOM directly.
- *
- * @param {HTMLElement} container - The parent whose children are being reordered.
+ * @param {HTMLElement} container - Parent whose children are being reordered.
  * @param {Function} mutate - Performs the actual DOM reorder synchronously.
+ * @param {HTMLElement} [exclude] - Child to skip (e.g. the drag source, which already has its own transform).
  */
-export function animateReorder(container, mutate) {
-  const children = [...container.children];
+export function animateReorder(container, mutate, exclude) {
+  const children = [...container.children].filter((el) => el !== exclude);
   const firstRects = new Map(children.map((el) => [el, el.getBoundingClientRect()]));
 
   mutate();

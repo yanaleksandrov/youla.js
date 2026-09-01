@@ -9,7 +9,7 @@ import { withMagicVariables, splitMagicVariables } from '../magic-variables';
  *
  * @param {HTMLElement} el - the template element carrying v-each; cloned once per rendered item.
  * @param {string} output - the raw expression string; v-each parses `attribute.expression` itself rather than using an evaluated value.
- * @param {object} attribute - the parsed attribute descriptor (expression, modifiers, etc. — see parseAttribute in ../attributes).
+ * @param {object} attribute - the parsed attribute descriptor (expression, modifiers, etc.).
  * @param {Component} component - the owning component instance, used to evaluate the items expression against its data.
  * @param {object} [additionalHelperVariables] - loop variables from an enclosing v-each clone, so nested loops can resolve the parent item (e.g. `product in category.products`).
  */
@@ -19,18 +19,12 @@ directive('each', (el, output, attribute, component, additionalHelperVariables =
     return;
   }
 
-  /**
-   * Step 1: parse v-each value
-   *
-   * Parses "i in 5", "dog in dogs", or "(car, index) in cars" syntax, with dot notation support, like: "(person, index) in data.list.persons"
-   */
+  // Parses "i in 5", "dog in dogs", or "(car, index) in cars" syntax, with dot notation support.
   let [, item, index = 'key', items, join] = expression.match(/^\(?([\w]+)(?:,\s*(\w+))?\)?\s+in\s+(.*?)(?:\s+join\s+'([^']+)')?$/) || [];
 
   const { magicVariables, otherVariables } = splitMagicVariables(additionalHelperVariables);
 
-  /**
-   * Step 2: resolves "items" against the component's data; a nested "v-each"'s parent item is available via otherVariables.
-   */
+  // Resolves "items" against the component's data; a nested v-each's parent item is available via otherVariables.
   let dataItems;
 
   if (Number.isInteger(+items)) {
@@ -43,11 +37,7 @@ directive('each', (el, output, attribute, component, additionalHelperVariables =
     }
   }
 
-  /**
-   * Step 3: remove all and start elements rendering.
-   *
-   * Removes everything already rendered, then starts rendering the elements fresh.
-   */
+  // Remove everything already rendered, then render fresh.
   if (attribute.modifiers.includes('lazy')) {
     el.setAttribute(attribute.directive, expression);
     el.removeAttribute(attribute.name);
@@ -70,9 +60,7 @@ directive('each', (el, output, attribute, component, additionalHelperVariables =
     clone.removeAttribute('v-each');
 
     (async () => {
-      // "+key || key" would wrongly fall back to the string "0" for the very first entry — 0 is
-      // itself falsy, so only fall back when the key genuinely isn't numeric (e.g. an object
-      // keyed by non-numeric strings), not just when it converts to a falsy number.
+      // "+key || key" would wrongly fall back to "0" for the first entry since 0 is falsy; only fall back when the key truly isn't numeric.
       const numericKey = +key;
 
       clone.__x_for_data = {...otherVariables, [item]: dataItem, [index]: Number.isNaN(numericKey) ? key : numericKey};

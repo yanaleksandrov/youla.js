@@ -18,8 +18,7 @@
 		white-space: nowrap;
 	}
 
-	// A field's own read-only value, shown beside its label (e.g. the Publish summary below the
-	// Status control, toolbox.html) rather than an editable box like -box below.
+	// Read-only value shown beside its label, as opposed to the editable -box below.
 	&-value {
 		color: #2d2d2d;
 		font-size: 12px;

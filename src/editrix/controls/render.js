@@ -14,6 +14,7 @@
  */
 
 import { renderFillControl } from './fill';
+import { renderRepeaterControl } from './repeater';
 
 /**
  * Clones a <template>'s content by id.
@@ -33,7 +34,7 @@ function cloneTemplate(id) {
 // Control types whose own markup reads better stacked in its own column (url/media/slider) rather
 // than sharing the title's row (text/switcher/select/color/dimensions) — see fields.scss's
 // ".editrix-field-row" rule.
-const ROW_TYPES = new Set(['url', 'media', 'slider', 'fill']);
+const ROW_TYPES = new Set(['url', 'media', 'slider', 'fill', 'repeater']);
 
 // One renderer per control type — each returns that type's own markup (a clone of its own
 // <template>, fully wired via setAttribute()), so renderField() below never needs to know a
@@ -107,37 +108,47 @@ const CONTROL_RENDERERS = {
   fill(name) {
     return renderFillControl(name);
   },
+
+  // The generic "repeater" control — same "built imperatively, value drives DOM shape" situation
+  // as "fill" above, generalized to whatever fields a given repeater declares. See controls/
+  // repeater.js's own header comment.
+  repeater(name) {
+    return renderRepeaterControl(name);
+  },
 };
 
 /**
  * Renders one full control instance: the shared wrapper (title/tooltip/control slot/description,
- * "#editrix-field-template") around whichever control type's own markup — the definition shape
- * matches e.field()'s own signature (plugins/editrix/controls/base.js) exactly, so an entry here
- * is exactly what you'd otherwise write by hand as `v-bind="e.field(name, title, tooltip, options)"`.
+ * "#editrix-field-template") around whichever control type's own markup. A field definition's own
+ * shape is flat — "name"/"title"/"tooltip" plus "type"/"default"/"description" and whatever else
+ * that particular control type reads off its own definition (e.g. "min"/"max"/"step" for slider(),
+ * "options" for select()) all sit at the same level — so "rest" here is exactly e.field()'s own
+ * 4th argument (plugins/editrix/controls/base.js), unpacked rather than nested under its own key.
  *
  * @param {Object} def
  * @param {string} def.name - The setting's key, unique across the whole panel.
  * @param {string} def.title
- * @param {string} [def.tooltip]
- * @param {Object} def.options - type/default/condition/... — same shape e.field() reads.
+ * @param {string} def.tooltip
+ * @param {Object} rest - type/default/description/condition/disabled/responsive, plus whatever
+ *   the control type itself needs — same shape e.field() reads as its own 4th argument.
  * @returns {HTMLElement} The `.editrix-control` wrapper, fully wired, not yet inserted into the DOM.
  */
-export function renderField({ name, title, tooltip = '', options }) {
-  const renderControl = CONTROL_RENDERERS[options.type];
+export function renderField({ name, title, tooltip, ...rest }) {
+  const renderControl = CONTROL_RENDERERS[rest.type];
 
   if (!renderControl) {
-    throw new Error(`Youla.js: no control renderer registered for type "${options.type}" (field "${name}").`);
+    throw new Error(`Youla.js: no control renderer registered for type "${rest.type}" (field "${name}").`);
   }
 
   const wrapper = cloneTemplate('editrix-field-template').firstElementChild;
   const field = wrapper.querySelector('.editrix-field');
 
-  field.setAttribute('v-bind', `e.field(${JSON.stringify(name)}, ${JSON.stringify(title)}, ${JSON.stringify(tooltip)}, ${JSON.stringify(options)})`);
+  field.setAttribute('v-bind', `e.field(${JSON.stringify(name)}, ${JSON.stringify(title)}, ${JSON.stringify(tooltip)}, ${JSON.stringify(rest)})`);
   field.querySelector('.editrix-field__tooltip').setAttribute('v-bind', `e.fieldTooltip(${JSON.stringify(name)})`);
   field.querySelector('.editrix-field__description').setAttribute('v-bind', `e.fieldDescription(${JSON.stringify(name)})`);
 
   const controlSlot = field.querySelector('.editrix-field__control');
-  controlSlot.classList.toggle('editrix-field-row', ROW_TYPES.has(options.type));
+  controlSlot.classList.toggle('editrix-field-row', ROW_TYPES.has(rest.type));
   controlSlot.append(renderControl(name, title));
 
   return wrapper;

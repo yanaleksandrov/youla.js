@@ -303,12 +303,28 @@ export default class Component {
    * every element registers its event listeners and runs its directives (or
    * updates its bound attribute) against the freshly evaluated data.
    *
+   * Idempotent per element ("el.__x_initialized"): a directive whose own output builds and
+   * inserts child markup (repeaterList()/fillList() in controls/repeater.js/fill.js,
+   * contentFields() in youla-editrix.js, ...) runs as part of *this* domWalk pass, while that same
+   * pass's own snapshot of children (domWalk, dom.js — taken right after the parent's callback
+   * runs, specifically so newly-inserted markup like this is picked up) is about to walk into
+   * those very same freshly-inserted, already-initialized elements again. Without this guard, an
+   * element inserted that way ends up with every "@event" listener attached twice — harmless for
+   * a "v-text"/":value"-only binding, but a click handler that removes its own element from the
+   * DOM (repeaterRemove(), fillRemove()) fires a second time on an already-detached element,
+   * throwing on whatever it reads off the DOM next.
+   *
    * @param {HTMLElement} root - The root element to walk and initialize.
    */
   initialize(root) {
     const self = this;
 
     domWalk(root, el => {
+      if (el.__x_initialized) {
+        return;
+      }
+      el.__x_initialized = true;
+
       const additionalHelperVariables = {...getForData(el), ...self.getAliasVariables(), ...self.getMagicVariables(el)};
 
       self.resolveAttributes(el).forEach(attribute => {

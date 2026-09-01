@@ -3,6 +3,7 @@ import { createDataControls } from './data';
 import { createMultiValueControls } from './multi-value';
 import { createUnitControls } from './unit';
 import { createFillControl } from './fill';
+import { createRepeaterControl } from './repeater';
 
 /**
  * Assembles the whole control system into one object to spread into `Youla.data('editrix', () =>
@@ -15,7 +16,7 @@ import { createFillControl } from './fill';
  * @returns {Object}
  */
 export function createControlsSystem() {
-  const parts = [createControlsBase(), createDataControls(), createMultiValueControls(), createUnitControls(), createFillControl()];
+  const parts = [createControlsBase(), createDataControls(), createMultiValueControls(), createUnitControls(), createFillControl(), createRepeaterControl()];
   const merged = {};
 
   parts.forEach((part) => {

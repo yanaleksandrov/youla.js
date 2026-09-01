@@ -22,14 +22,8 @@
 
     <%= _.template(require('./editrix/sidebar.html').default)(data) %>
 
-    <!-- The "fill" control's own <template>s (plugins/editrix/controls/fill.js) — kept in their
-         own partial rather than nested inside sidebar.html's own require() the way sidebar.html
-         itself is nested here: html-webpack-plugin only wires up require() for the templates it
-         compiles directly (this file), not for a second level of require() inside an
-         already-required partial's own text. Where they sit in the document doesn't matter
-         (document.getElementById() finds them either way) — this is the one place in the page
-         that can actually require() a further-nested partial. -->
     <%= _.template(require('./editrix/controls/fill.html').default)(data) %>
+    <%= _.template(require('./editrix/controls/repeater.html').default)(data) %>
 
     <div class="editrix-preview" v-bind="e.canvas"></div>
 
@@ -38,9 +32,6 @@
     </div>
   </div>
 
-  <!-- Stands in for what a backend would render here: the option lists behind the "Page" panel's
-       Status/Visibility/Discussion/Authors controls. youla-editrix.js reads this at boot instead
-       of hardcoding them. -->
   <script type="application/json" id="editrix-data">
     {
       "statuses": [
@@ -112,7 +103,152 @@
           "name": "Nina Kovalski",
           "email": "kovalski@gmail.com"
         }
-      ]
+      ],
+      "blocks": {
+        "editrix-heading": {
+          "label": "Heading",
+          "icon": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 256 256\"><path d=\"M112 44a4 4 0 0 0-4 4v20H24a12 12 0 0 0-12 12v96a12 12 0 0 0 12 12h84v20a4 4 0 0 0 8 0V48a4 4 0 0 0-4-4ZM24 180a4 4 0 0 1-4-4V80a4 4 0 0 1 4-4h84v104ZM244 80v96a12 12 0 0 1-12 12h-88a4 4 0 0 1 0-8h88a4 4 0 0 0 4-4V80a4 4 0 0 0-4-4h-88a4 4 0 0 1 0-8h88a12 12 0 0 1 12 12ZM84 112a4 4 0 0 1-4 4H68v28a4 4 0 0 1-8 0v-28H48a4 4 0 0 1 0-8h32a4 4 0 0 1 4 4Z\"/></svg>",
+          "html": "<h1>Add a heading</h1>",
+          "scheme": "h1",
+          "sections": [
+            {
+              "heading": "Content",
+              "tooltip": "Settings for the heading's own text and how it's aligned",
+              "fields": [
+                {
+                  "name": "align",
+                  "title": "Alignment",
+                  "tooltip": "Text alignment inside the block",
+                  "type": "select",
+                  "default": "left",
+                  "options": { "left": "Left", "center": "Center", "right": "Right", "justify": "Justify" },
+                  "description": ""
+                }
+              ]
+            },
+            {
+              "heading": "Style",
+              "fields": [
+                {
+                  "name": "accent_color",
+                  "title": "Accent color",
+                  "tooltip": "Used for links and highlights",
+                  "type": "color",
+                  "default": "#1069fb",
+                  "description": ""
+                }
+              ]
+            }
+          ]
+        },
+        "editrix-image": {
+          "label": "Image",
+          "icon": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 256 256\"><rect x=\"28\" y=\"48\" width=\"200\" height=\"160\" rx=\"14\" fill=\"none\" stroke=\"#000\" stroke-width=\"14\"/><circle cx=\"88\" cy=\"104\" r=\"16\"/><path d=\"M52 176 L100 124 L136 160 L180 108 L204 176 Z\"/></svg>",
+          "html": "<figure><img src=\"https://placehold.co/600x400\" alt=\"\"><figcaption>Add a caption</figcaption></figure>",
+          "scheme": null,
+          "sections": [
+            {
+              "heading": "Content",
+              "tooltip": "Settings for what the image shows and where it links to",
+              "fields": [
+                {
+                  "name": "image",
+                  "title": "Image",
+                  "tooltip": "What the block shows",
+                  "type": "media",
+                  "default": { "url": "", "alt": "" },
+                  "description": "A plain URL field stands in for the media library for now"
+                },
+                {
+                  "name": "caption",
+                  "title": "Caption",
+                  "tooltip": "Shown underneath the image",
+                  "type": "text",
+                  "default": "Add a caption",
+                  "placeholder": "Enter a caption…",
+                  "description": ""
+                },
+                {
+                  "name": "show_caption",
+                  "title": "Show caption",
+                  "tooltip": "Hide it without deleting the text",
+                  "type": "switcher",
+                  "default": true,
+                  "description": ""
+                },
+                {
+                  "name": "link",
+                  "title": "Link",
+                  "tooltip": "Where the image goes when clicked",
+                  "type": "url",
+                  "default": { "url": "", "is_external": false, "nofollow": false },
+                  "description": "Leave empty for no link"
+                },
+                {
+                  "name": "width",
+                  "title": "Width",
+                  "tooltip": "How wide the image is",
+                  "type": "slider",
+                  "default": { "size": 100, "unit": "%" },
+                  "min": 0,
+                  "max": 100,
+                  "step": 1,
+                  "description": ""
+                }
+              ]
+            },
+            {
+              "heading": "Style",
+              "fields": [
+                {
+                  "name": "background_fill",
+                  "title": "",
+                  "tooltip": "",
+                  "type": "fill",
+                  "default": [
+                    { "type": "solid", "visible": true, "opacity": 100, "color": "#000" }
+                  ],
+                  "description": ""
+                }
+              ]
+            }
+          ]
+        },
+        "editrix-faq": {
+          "label": "FAQ",
+          "icon": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 256 256\"><rect x=\"28\" y=\"48\" width=\"200\" height=\"36\" rx=\"8\" fill=\"none\" stroke=\"#000\" stroke-width=\"14\"/><rect x=\"28\" y=\"110\" width=\"200\" height=\"36\" rx=\"8\" fill=\"none\" stroke=\"#000\" stroke-width=\"14\"/><rect x=\"28\" y=\"172\" width=\"200\" height=\"36\" rx=\"8\" fill=\"none\" stroke=\"#000\" stroke-width=\"14\"/></svg>",
+          "html": "<div class=\"faq-block\"><p>FAQ list — configure its items in the sidebar.</p></div>",
+          "scheme": null,
+          "sections": [
+            {
+              "heading": "Content",
+              "tooltip": "Add, remove and reorder the FAQ's own questions and answers",
+              "fields": [
+                {
+                  "name": "items",
+                  "title": "",
+                  "tooltip": "",
+                  "type": "repeater",
+                  "min": 0,
+                  "max": 5,
+                  "default": [
+                    { "question": "What is Youla.js?", "answer": "A lightweight reactive layer for building admin UIs.", "highlighted": false, "accent_color": "#1069fb" },
+                    { "question": "Is it free to use?", "answer": "Yes — it ships under the MIT license.", "highlighted": true, "accent_color": "#1069fb" },
+                    { "question": "Is it free to use?", "answer": "Yes — it ships under the MIT license.", "highlighted": true, "accent_color": "#1069fb" }
+                  ],
+                  "fields": [
+                    { "name": "question", "title": "Question", "type": "text", "default": "New question", "placeholder": "Enter a question…" },
+                    { "name": "answer", "title": "Answer", "type": "text", "default": "", "placeholder": "Enter an answer…" },
+                    { "name": "highlighted", "title": "Highlight", "type": "switcher", "default": false },
+                    { "name": "accent_color", "title": "Accent color", "type": "color", "default": "#1069fb" }
+                  ],
+                  "description": "Each item can hold its own set of fields — add as many, of whatever type, as a given repeater needs."
+                }
+              ]
+            }
+          ]
+        }
+      }
     }
   </script>
 </body>

@@ -10,105 +10,39 @@ import { titleSchema } from './editrix/prosemirror/schemes/title';
 
 import { createControlsSystem } from './editrix/controls';
 import { renderField } from './editrix/controls/render';
+import { animateReorder } from './editrix/animate-reorder';
 
-// Maps a palette block's identifier (v-bind="e.paletteItem('editrix-text')", sections/sidebar.html)
-// to what dropping it onto the canvas creates: the markup it starts with, and which rich-text
-// scheme (if any) to mount on it — see container()/mountEditor() below. New block types plug in
-// here without touching the drag-and-drop mechanics themselves.
-const BLOCK_TEMPLATES = {
-  'editrix-text': { html: '<h1>I am text</h1>', scheme: 'base' },
-  'editrix-button': { html: '<button type="button">Submit Now!</button>', scheme: null },
-};
+// Registers every block type the builder knows about — the palette (blockList, below, feeds
+// v-each="block in blockList" in view/editrix/sidebar.html's "Blocks" tab) and the Content tab
+// (contentFields, below) both read this map, so adding a new block type is exactly one entry in
+// the `#editrix-data` JSON block (view/editrix.html) this is read from at boot — a stand-in for
+// wherever a real backend would inject it server-side, matching statuses/visibilities/discussions/
+// authors below — so nothing in this file itself needs to change.
+//
+// Each entry is:
+//   - label/icon: what the palette shows for it.
+//   - html/scheme: what dropping it onto the canvas creates — its starting markup, and which
+//     rich-text scheme (if any, else null) to mount on it (see createBlock()/mountEditor() below).
+//   - sections: its own Content-tab groups, each a `{ heading, tooltip, fields }` — "heading" (plus
+//     an optional "tooltip", shown by an icon right next to it — see contentFields' own comment)
+//     titles the group, and "fields" is that group's own field list. Each field entry is exactly
+//     renderField()'s own argument shape (plugins/editrix/controls/render.js), which is exactly
+//     e.field()'s own signature (plugins/editrix/controls/base.js) — so a field here never needs
+//     translating, and two block types are free to reuse the same field name/control without
+//     stepping on each other (contentFields, below, only ever has one block type's fields mounted
+//     at a time).
+//
+// Starts empty and is populated once, inside the 'youla:init' listener below, right after its own
+// backend data has been read — createBlock()/readBlockSettings() (below) only ever run once the
+// builder itself has mounted and a user has done something, well after that point, so they always
+// see it populated.
+let BLOCKS = {};
 
-// Sidebar > Content tab (sections/sidebar.html's field template library) — every control instance
-// shown there, grouped under a heading. Each field entry is exactly renderField()'s own argument
-// shape (plugins/editrix/controls/render.js), which is exactly e.field()'s own signature — so
-// adding a control here never means touching the rendering code itself.
-const CONTENT_FIELDS = [
-  {
-    heading: 'Data controls',
-    fields: [
-      {
-        name: 'title', title: 'Title', tooltip: 'Shown at the top of the block',
-        options: {
-          type: 'text',
-          default: 'Untitled',
-          placeholder: 'Enter a title…',
-          description: 'Plain text, no formatting',
-        },
-      },
-      {
-        name: 'show_title', title: 'Show title', tooltip: 'Hide it without deleting the text',
-        options: { type: 'switcher', default: true },
-      },
-      {
-        name: 'align', title: 'Alignment', tooltip: 'Text alignment inside the block',
-        options: {
-          type: 'select',
-          default: 'left',
-          options: { left: 'Left', center: 'Center', right: 'Right', justify: 'Justify' },
-        },
-      },
-      {
-        name: 'accent_color',
-        title: 'Accent color',
-        tooltip: 'Used for links and highlights',
-        options: { type: 'color', default: '#1069fb' },
-      },
-    ],
-  },
-  {
-    heading: 'Multi-value controls',
-    fields: [
-      {
-        name: 'link', title: 'Link', tooltip: 'Where the button goes',
-        options: {
-          type: 'url',
-          default: { url: '', is_external: false, nofollow: false },
-          description: 'Leave empty for no link',
-        },
-      },
-      {
-        name: 'cover_image', title: 'Cover image', tooltip: 'A plain URL field stands in for the media library for now',
-        options: {
-          type: 'media',
-          default: { url: '', alt: '' },
-          description: 'Paste an image URL',
-        },
-      },
-    ],
-  },
-  {
-    heading: 'Unit controls',
-    fields: [
-      {
-        name: 'width', title: 'Width', tooltip: 'How wide the block is',
-        options: { type: 'slider', default: { size: 0, unit: 'px' }, min: 0, max: 100, step: 1 },
-      },
-      {
-        name: 'padding', title: 'Padding', tooltip: 'Space inside the block, on each side',
-        options: { type: 'dimensions', default: { top: 0, right: 0, bottom: 0, left: 0, unit: 'px', isLinked: true } },
-      },
-    ],
-  },
-  {
-    heading: 'Fill controls',
-    fields: [
-      {
-        name: 'background_fill',
-        title: '',
-        tooltip: '',
-        options: {
-          type: 'fill',
-          default: [
-            { type: 'solid', visible: true, opacity: 100, color: '#000' },
-          ],
-          description: '',
-        },
-      },
-    ],
-  },
-];
+// Sidebar > block palette (view/editrix/sidebar.html's "Blocks" tab, `v-each="block in blockList"`)
+// — one entry per BLOCKS key, in whatever order Object.entries() gives it. Exists only because
+// v-each needs an array to loop over, not an object; BLOCKS itself stays the one source of truth.
+// Populated alongside BLOCKS itself — see 'youla:init' below.
+let BLOCK_LIST = [];
 
 // Sidebar nav tab names (sidebarTab(), below) mapped to a brief description of what the tab does
 // — shown as that tab's own v-tooltip.
@@ -141,19 +75,31 @@ const CONTAINER_TOOLS_HTML = `
   </ul>
 `;
 
-// The lone child every block gets, right above its own content — see blockTitle()/readBlockSettings()
-// below. Its "title"/"show_title" values come from CONTENT_FIELDS like any other setting; this is
-// just the one spot on the canvas (as opposed to the sidebar's Content tab) that renders them.
-const BLOCK_TITLE_HTML = '<div class="editrix-block-title"></div>';
+// Every block type's own field defaults, flattened to a plain "{ name: default }" map and keyed by
+// block type — the baseline a block's own settings are read against on the canvas
+// (readBlockSettings() below) before it's ever been selected/edited, so a freshly dropped block
+// already shows its declared defaults (e.g. left-aligned) instead of blank/zeroed fields, and one
+// block type's defaults never leak into another's. Controls/base.js's own getValue() has its own
+// (per-control, not per-block) fallback to `def.default` for exactly the same reason, on the
+// sidebar side. Computed once BLOCKS itself is populated — see 'youla:init' below.
+let DEFAULT_BLOCK_SETTINGS = {};
 
-// Every CONTENT_FIELDS default, flattened to a plain "{ name: default }" map — the baseline a
-// block's own settings are read against on the canvas (readBlockSettings() below) before it's ever
-// been selected/edited, so a freshly dropped block already shows "Untitled", left-aligned, etc.
-// instead of blank/zeroed fields. Controls/base.js's own getValue() has its own (per-control, not
-// per-block) fallback to `def.default` for exactly the same reason, on the sidebar side.
-const DEFAULT_BLOCK_SETTINGS = Object.fromEntries(
-  CONTENT_FIELDS.flatMap(({ fields }) => fields).map(({ name, options }) => [name, options.default]),
-);
+/**
+ * Derives DEFAULT_BLOCK_SETTINGS's own shape from "blocks" — pulled out of the 'youla:init'
+ * listener below only so BLOCKS/BLOCK_LIST/DEFAULT_BLOCK_SETTINGS's own "populate them once the
+ * backend data is in" step reads as one line each there, rather than this nested three deep.
+ *
+ * @param {Object} blocks - BLOCKS itself, or whatever was just read in its place.
+ * @returns {Object}
+ */
+function computeDefaultBlockSettings(blocks) {
+  return Object.fromEntries(
+    Object.entries(blocks).map(([blockType, { sections }]) => [
+      blockType,
+      Object.fromEntries(sections.flatMap((section) => section.fields).map(({ name, default: value }) => [name, value])),
+    ]),
+  );
+}
 
 // The block currently being dragged, or the palette item about to spawn one — deliberately kept
 // outside the reactive data: it's rebuilt on every drag and never rendered, so tracking it would
@@ -170,59 +116,19 @@ function nextBlockId() {
 }
 
 /**
- * Reads block "id"'s own settings, merged over DEFAULT_BLOCK_SETTINGS so a field that was never
- * touched still reads its declared default — used by the canvas-facing bindings (a block's own
- * ":style"/blockTitle) that must reflect *that* block's settings regardless of which block (if
- * any) the sidebar currently has active; getValue()/setValue() (controls/base.js) stay the right
- * choice for the sidebar's own fields, which always mean "the active block".
+ * Reads block element "el"'s own settings, merged over its own type's DEFAULT_BLOCK_SETTINGS entry
+ * so a field that was never touched still reads its declared default — used by the canvas-facing
+ * binding (a block's own ":style", in container() below) that must reflect *that* block's settings
+ * regardless of which block (if any) the sidebar currently has active; getValue()/setValue()
+ * (controls/base.js) stay the right choice for the sidebar's own fields, which always mean "the
+ * active block".
  *
  * @param {Object} component - The reactive `this` from whichever binding is reading.
- * @param {string} [id] - A block's `dataset.blockId`.
+ * @param {HTMLElement} [el] - A block's own `.editrix-container` element.
  * @returns {Object}
  */
-function readBlockSettings(component, id) {
-  return { ...DEFAULT_BLOCK_SETTINGS, ...(id ? component.settings[id] : null) };
-}
-
-/**
- * Runs "mutate" (a synchronous DOM reorder — e.g. insertBefore) and smoothly animates every
- * affected child from its old screen position to its new one, via the FLIP technique: record
- * every child's rect, mutate, then for whichever ones actually moved, jump them back to their old
- * spot with a transform (no transition) and release it on the next frame so the browser's own
- * "transition" (declared once, in CSS, on whatever item class this is) animates it home. A CSS
- * Grid/Flexbox reflow isn't transitionable on its own — an item just snaps to its new cell the
- * instant the DOM changes — this is what actually makes that snap read as a smooth slide.
- *
- * Generic on purpose: works for any reorderable list of siblings, not just one particular gallery
- * or grid — see sortable() below for its one current caller.
- *
- * @param {HTMLElement} container - The parent whose children are being reordered.
- * @param {Function} mutate - Performs the actual DOM reorder synchronously.
- */
-function animateReorder(container, mutate) {
-  const children = [...container.children];
-  const firstRects = new Map(children.map((el) => [el, el.getBoundingClientRect()]));
-
-  mutate();
-
-  children.forEach((el) => {
-    const first = firstRects.get(el);
-    const last = el.getBoundingClientRect();
-    const dx = first.left - last.left;
-    const dy = first.top - last.top;
-
-    if (!dx && !dy) {
-      return;
-    }
-
-    el.style.transition = 'none';
-    el.style.transform = `translate(${dx}px, ${dy}px)`;
-
-    requestAnimationFrame(() => {
-      el.style.transition = '';
-      el.style.transform = '';
-    });
-  });
+function readBlockSettings(component, el) {
+  return { ...DEFAULT_BLOCK_SETTINGS[el?.dataset.blockType], ...(el?.dataset.blockId ? component.settings[el.dataset.blockId] : null) };
 }
 
 /**
@@ -248,22 +154,25 @@ function reorderBlocks(blocks, element, anchor, after) {
 
 /**
  * Builds the DOM element a palette item's blockType drops in as — the one piece that actually
- * knows about BLOCK_TEMPLATES, kept separate from placeDroppedBlock() below so that function
- * never needs to care whether a drop is spawning a brand new block or just moving an existing one.
+ * knows about BLOCKS, kept separate from placeDroppedBlock() below so that function never needs to
+ * care whether a drop is spawning a brand new block or just moving an existing one. Stamps its own
+ * "dataset.blockType" so every other binding (container()'s own ":style", contentFields()) can
+ * later find its way back to this same BLOCKS entry without threading the type through separately.
  *
- * @param {string} blockType - A BLOCK_TEMPLATES key (see paletteItem()).
+ * @param {string} blockType - A BLOCKS key (see paletteItem()).
  * @returns {HTMLElement|null} The new element, or null if "blockType" isn't registered.
  */
 function createBlock(blockType) {
-  const template = BLOCK_TEMPLATES[blockType];
-  if (!template) {
+  const block = BLOCKS[blockType];
+  if (!block) {
     return null;
   }
 
   const element = document.createElement('div');
   element.className = 'editrix-container';
-  element.innerHTML = template.html;
-  element.setAttribute('v-bind', template.scheme !== null ? `e.container('${template.scheme}')` : 'e.container()');
+  element.innerHTML = block.html;
+  element.dataset.blockType = blockType;
+  element.setAttribute('v-bind', block.scheme !== null ? `e.container('${block.scheme}')` : 'e.container()');
   return element;
 }
 
@@ -434,9 +343,10 @@ document.addEventListener('youla:init', () => {
   const ZOOM_DEFAULT = 100;
 
   /**
-   * Reads the "Page" panel's option lists (Status/Visibility/Discussion/Authors) out of the
-   * `#editrix-data` JSON block rendered into the page's footer (view/editrix.html) — stand-in for
-   * wherever a real backend would inject them server-side, so they're never hardcoded here.
+   * Reads the "Page" panel's option lists (Status/Visibility/Discussion/Authors) and the block
+   * registry (BLOCKS) out of the `#editrix-data` JSON block rendered into the page's footer
+   * (view/editrix.html) — stand-in for wherever a real backend would inject them server-side, so
+   * they're never hardcoded here.
    *
    * @param {string} id - The `<script type="application/json">` element's id.
    * @returns {Object} The parsed payload, or `{}` if the element is missing/unparsable.
@@ -462,7 +372,17 @@ document.addEventListener('youla:init', () => {
     visibilities: VISIBILITIES = [],
     discussions: DISCUSSIONS = [],
     authors: AUTHORS = [],
+    blocks: BLOCKS_DATA = {},
   } = readBackendData('editrix-data');
+
+  // BLOCKS/BLOCK_LIST/DEFAULT_BLOCK_SETTINGS (module scope, above) start empty specifically so
+  // they can be populated here, now that the backend data they're derived from has actually been
+  // read — everything that reads them (createBlock(), readBlockSettings(), blockList below, ...)
+  // only ever runs once the builder itself has mounted and a user has done something, well after
+  // this point.
+  BLOCKS = BLOCKS_DATA;
+  BLOCK_LIST = Object.entries(BLOCKS).map(([type, { label, icon }]) => ({ type, label, icon }));
+  DEFAULT_BLOCK_SETTINGS = computeDefaultBlockSettings(BLOCKS);
 
   /**
    * Editrix: the page builder's root component, mounted on `<div class="editrix" v-data="editrix
@@ -553,10 +473,15 @@ document.addEventListener('youla:init', () => {
       };
     },
 
-    // Sidebar > block palette (sections/sidebar.html) — v-bind="e.paletteItem('editrix-text')" on
-    // each palette entry. Dragging one onto the canvas — an existing container, or empty canvas
-    // itself, both handled by placeDroppedBlock() (see container()/canvas() above) — spawns a new
-    // block from BLOCK_TEMPLATES[blockType]; reusable for however many block types get added.
+    // Sidebar > block palette (view/editrix/sidebar.html's "Blocks" tab) — `v-each="block in
+    // blockList"` renders one ".editrix-blocks-item" per BLOCKS entry, so the palette never needs
+    // editing by hand when a block type is added/removed here.
+    blockList: BLOCK_LIST,
+
+    // v-bind="e.paletteItem(block.type)" on each palette entry (view/editrix/sidebar.html). Dragging
+    // one onto the canvas — an existing container, or empty canvas itself, both handled by
+    // placeDroppedBlock() (see container()/canvas() above) — spawns a new block from
+    // BLOCKS[blockType]; reusable for however many block types get added.
     paletteItem(blockType) {
       return {
         ':draggable': 'true',
@@ -577,12 +502,16 @@ document.addEventListener('youla:init', () => {
     container(scheme) {
       return {
         ':draggable': 'true',
-        // Only "align"/"accent_color" apply here — "width"/"padding" (also CONTENT_FIELDS
-        // settings, so still stored and editable) have no safe target yet: this element's own
-        // "padding" is what centers it into an 800px column (see editor.scss's $max-width), so
-        // writing either as a literal CSS value here would fight that rather than complement it.
+        // Only "align"/"accent_color" apply here, and only for whichever block type actually
+        // declares them (readBlockSettings() reads that type's own DEFAULT_BLOCK_SETTINGS entry,
+        // so a block type that doesn't declare a field simply gets `undefined` for it here, a safe
+        // no-op for setProperty()) — a block type opts into this generic canvas styling just by
+        // using these field names, the same way any block can opt into "width"/"padding" (still no
+        // safe target here: this element's own padding is what centers it into an 800px column,
+        // see editor.scss's $max-width, so writing either as a literal CSS value would fight that
+        // rather than complement it) once something needs to apply them.
         ':style'() {
-          const settings = readBlockSettings(this, this.$el.dataset.blockId);
+          const settings = readBlockSettings(this, this.$el);
 
           return {
             textAlign: settings.align,
@@ -595,13 +524,6 @@ document.addEventListener('youla:init', () => {
           }
           if (!this.$el.dataset.blockId) {
             this.$el.dataset.blockId = nextBlockId();
-          }
-          if (!this.$el.querySelector(':scope > .editrix-block-title')) {
-            this.$el.insertAdjacentHTML('afterbegin', BLOCK_TITLE_HTML);
-
-            const title = this.$el.querySelector(':scope > .editrix-block-title');
-            title.setAttribute('v-bind', 'e.blockTitle');
-            this.$root.__x.initialize(title);
           }
           if (scheme !== undefined) {
             mountEditor(this.$el, scheme);
@@ -671,48 +593,82 @@ document.addEventListener('youla:init', () => {
       };
     },
 
-    // The ".editrix-block-title" every container() @load prepends to its own block (see
-    // BLOCK_TITLE_HTML) — reads straight off that block's own "dataset.blockId" (found via
-    // closest(), since this element itself carries no id) rather than "activeBlock"/getValue(), so
-    // every block shows its own title regardless of which one (if any) is currently selected.
-    blockTitle: {
-      'v-show'() {
-        return readBlockSettings(this, this.$el.closest('.editrix-container')?.dataset.blockId).show_title;
-      },
-      'v-text'() {
-        return readBlockSettings(this, this.$el.closest('.editrix-container')?.dataset.blockId).title;
-      },
-    },
-
-    // Sidebar > Content tab (sections/sidebar.html) — v-bind="e.contentFields" on the panel's
-    // mount div. Runs once, on load: builds every CONTENT_FIELDS group as a ".editrix-section",
-    // rendering each field from the <template> library that sits right next to this div (see
-    // plugins/editrix/controls/render.js). Inserted synchronously so domWalk's own traversal (it
-    // snapshots an element's children only *after* resolving that element's own attributes — see
-    // dom.js) picks up and initializes this new markup as part of the very same pass, the same way
-    // a v-each clone's children get walked without a separate initialize() call.
+    // Sidebar > Content tab (view/editrix/sidebar.html) — v-bind="e.contentFields" on the panel's
+    // mount div. Rebuilds this tab's own field markup — one ".editrix-section" per
+    // BLOCKS[blockType]'s own `sections` entry, cloned from the <template> library right next to
+    // this div (see plugins/editrix/controls/render.js) — the first time a block is selected, and
+    // again whenever the *active block's own type* changes: ":data-owner" doubles as that guard
+    // and as a harmless attribute recording which block type the fields on screen belong to,
+    // mirroring controls/fill.js's own fillList(). Selecting a different block of the *same* type
+    // never rebuilds anything — only "activeBlock" changed, which every field's own v-bind already
+    // re-reads on its own.
     contentFields: {
-      '@load'() {
-        CONTENT_FIELDS.forEach(({ heading, fields }) => {
+      ':data-owner'() {
+        const activeElement = this.activeBlock && this.blocks.find((block) => block.dataset.blockId === this.activeBlock);
+        const blockType = activeElement?.dataset.blockType || '';
+
+        if (this.$el.dataset.owner === blockType) {
+          return blockType;
+        }
+        this.$el.dataset.owner = blockType;
+
+        // v-filler (youla-filler.js) hangs document/window-level listeners and a floating panel
+        // off any <input> it's mounted on (color() controls/data.js, and every fill list row —
+        // controls/fill.js), and nothing watches for that input leaving the DOM — so every one
+        // still on screen must be destroyed before it's thrown away here, exactly like
+        // controls/fill.js's own destroyFillItemFillers() already does for a single row.
+        this.$el.querySelectorAll('input').forEach((input) => input._x_filler?.destroy());
+        this.$el.innerHTML = '';
+
+        (BLOCKS[blockType]?.sections || []).forEach(({ heading, tooltip, fields }) => {
           const section = document.createElement('div');
           section.className = 'editrix-section';
-          section.innerHTML = `<div class="editrix-section-head">${heading}</div><div class="editrix-section-body"></div>`;
+          section.innerHTML = `
+            <div class="editrix-section-head"><span class="editrix-section-head__title">${heading}</span></div>
+            <div class="editrix-section-body"></div>
+          `;
+
+          // A section's own, optional "tooltip" — a "?" icon shown immediately to the right of its
+          // heading (inside the same ".editrix-section-head__title" wrapper, not a direct child of
+          // ".editrix-section-head" itself, so it stays glued to the heading text rather than that
+          // element's own "justify-content: space-between" pushing it out to the row's far end —
+          // see section.scss). Reuses the "v-tooltip" directive directly (youla-tooltip.js), the
+          // same one controls/base.js's own fieldTooltip() wraps for a single field's own tooltip;
+          // no wrapper needed here since, unlike a field's tooltip, a section's own heading/tooltip
+          // never changes after this section is built, so there's nothing to keep it reactive to.
+          if (tooltip) {
+            const tooltipIcon = document.createElement('i');
+            tooltipIcon.className = 'ph ph-question editrix-section-head__tooltip';
+            tooltipIcon.setAttribute('v-tooltip.click', JSON.stringify(tooltip));
+            section.querySelector('.editrix-section-head__title').append(tooltipIcon);
+          }
+
           section.querySelector('.editrix-section-body').append(...fields.map(renderField));
 
-          // A field's own "[data-part='add']" (currently just the fill control's own "+" —
-          // controls/fill.js's renderFillControl()) belongs beside its section heading, matching
-          // every other section's own .editrix-section-buttons (see "Categories"/"Advanced" in
-          // toolbox.html), not floating inside the control body where it used to sit.
-          const addButton = section.querySelector('[data-part="add"]');
-          if (addButton) {
+          // A field's own "[data-part='add']"/"[data-part='toggle-all']" (the fill/repeater
+          // controls' own "+" — controls/fill.js's renderFillControl(), controls/repeater.js's
+          // renderRepeaterControl() — the latter's expand/collapse-all button too) belong beside
+          // its section heading, matching every other section's own .editrix-section-buttons (see
+          // "Categories"/"Advanced" in toolbox.html), not floating inside the control body where
+          // they used to sit. querySelectorAll (not a single querySelector), and appended in the
+          // document order it returns them in, so a section holding more than one such control
+          // (or a repeater's own two buttons) all end up in this one row, each control's own
+          // buttons still grouped together in the order its own template declares them.
+          const headButtons = section.querySelectorAll('[data-part="toggle-all"], [data-part="add"]');
+          if (headButtons.length) {
             const buttons = document.createElement('div');
             buttons.className = 'editrix-section-buttons';
-            buttons.append(addButton);
+            headButtons.forEach((button) => buttons.append(button));
             section.querySelector('.editrix-section-head').append(buttons);
           }
 
           this.$el.append(section);
+          // Unlike the old "@load"-once version of this binding, this runs well after the
+          // framework's own initial DOM walk — so, like fillList()'s own freshly appended rows,
+          // this section needs its own directives wired up by hand.
+          this.$root.__x.initialize(section);
         });
+        return blockType;
       },
     },
 

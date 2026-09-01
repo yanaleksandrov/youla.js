@@ -37,7 +37,7 @@
 	&-items {
 		display: grid;
 		gap: 4px;
-		grid-template-columns: repeat(3, 1fr);
+		grid-template-columns: repeat(auto-fit, minmax(calc(33.333% - 8px), 1fr));
 	}
 
 	&-item {

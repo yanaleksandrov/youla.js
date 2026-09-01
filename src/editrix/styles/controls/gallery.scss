@@ -1,0 +1,100 @@
+.editrix-gallery {
+	gap: 4px;
+	display: grid;
+	width: 100%;
+	position: relative;
+
+	&:has(:nth-child(n+7)) {
+		width: calc(100% + 8px);
+	}
+
+	&-remove {
+		font-size: 12px;
+		position: absolute;
+		right: 4px;
+		top: 4px;
+		color: #ff0000;
+		background-color: #fff;
+		padding: 4px;
+		z-index: 2;
+		border-radius: 4px;
+		height: 20px;
+		width: 20px;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		visibility: hidden;
+		opacity: 0;
+		transition: all 0.25s;
+		cursor: pointer;
+
+		.editrix-gallery-item:hover & {
+			visibility: visible;
+			opacity: 1;
+		}
+	}
+
+	&-items {
+		display: grid;
+		gap: 4px;
+		grid-template-columns: repeat(auto-fit, minmax(calc(33.333% - 8px), 1fr));
+	}
+
+	&-item {
+		overflow: hidden;
+		border-radius: 6px;
+		aspect-ratio: 1 / 1;
+		display: flex;
+		transition: all 0.25s;
+		position: relative;
+		user-select: none;
+		cursor: grab;
+
+		&.is-dragging {
+			transform: scale(0.85);
+			opacity: 0.5;
+		}
+	}
+
+	&-add {
+		background-color: #f8f8f8;
+		border-radius: 6px;
+		max-height: 48px;
+		padding: 10px;
+		border: 1px dashed #e6e6e6;
+		display: flex;
+		align-items: center;
+		flex-direction: column;
+		gap: 4px;
+		font-size: 8px;
+		color: rgba(0, 0, 0, 0.5);
+		cursor: pointer;
+		transition: all 0.25s;
+		position: relative;
+
+		&:hover {
+			background-color: #f4f4f4;
+			border-color: rgba(0, 0, 0, 0.5);
+			color: rgba(0, 0, 0, 0.75);
+		}
+
+		input[type="file"] {
+			position: absolute;
+			inset: 0;
+			opacity: 0;
+			cursor: pointer;
+		}
+	}
+
+	&-image {
+		display: block;
+		object-fit: cover;
+		width: auto;
+		height: 100%;
+		min-width: 100%;
+		// draggable="false" (markup) is the real fix; this just backstops Safari, which still
+		// lets an <img> start its own native drag without it.
+		-webkit-user-drag: none;
+		user-drag: none;
+	}
+}

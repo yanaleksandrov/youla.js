@@ -47,6 +47,7 @@
 		margin: 0;
 		padding: 0;
 		width: 100%;
+		min-height: initial;
 
 		// Pre-init box: a real in-flow track matching `.ranger` below, so nothing shifts once JS swaps this for the absolute overlay.
 		background-color: var(--ranger-bg);
@@ -182,6 +183,7 @@
 		inset-inline: 0;
 		top: calc(-1 * var(--ranger-gap-top));
 		transition: opacity 0.2s ease-out;
+		min-height: 1.25rem;
 
 		// labelOnDragOnly fades the label via opacity, not display/visibility, since those can't transition and labelTo's own visibility toggle overrides an ancestor's `hidden`.
 		&.is-idle {

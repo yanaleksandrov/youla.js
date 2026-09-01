@@ -1,0 +1,98 @@
+@import 'editor/editrix';
+@import 'editor/icons';
+@import 'editor/editor';
+@import 'editor/blocks';
+@import 'editor/tooltip';
+@import 'editor/preview';
+@import 'editor/toolbar';
+@import 'editor/sidebar';
+@import 'editor/section';
+
+@import 'controls/details';
+@import 'controls/control';
+@import 'controls/buttons';
+@import 'controls/borders';
+@import 'controls/inputs';
+@import 'controls/gallery';
+@import 'controls/categories';
+@import 'controls/fields';
+@import 'controls/fill';
+@import 'controls/repeater';
+
+.editrix-list {
+	margin: 0;
+	list-style: none;
+	display: grid;
+	border-bottom: 1px solid #e6e6e6;
+	padding: 2px;
+	gap: 2px;
+
+	&:last-child {
+		border-bottom: 0;
+	}
+
+	&-item {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 2px 8px;
+		transition: all 0.25s;
+		padding: 10.8px;
+		border-radius: 6px;
+		cursor: pointer;
+
+		&:hover,
+		&.active,
+		&.checked {
+			color: #1069fb;
+			background-color: #f8f8f8;
+		}
+
+		&.active {
+			pointer-events: none;
+		}
+
+		i {
+			font-size: 12px;
+		}
+
+		input[type="radio"] {
+			display: none;
+		}
+
+		input[type="checkbox"].ph {
+			width: 1em;
+			border: 0;
+			min-width: 1em;
+			background-color: transparent;
+			color: #1069fb;
+		}
+	}
+
+	&-caption {
+		min-width: 100%;
+		font-weight: normal;
+		color: #8e8e8e;
+		font-size: 10.8px;
+		padding-inline-start: 20px;
+	}
+
+	// Status and Visibility (toolbox.html) are two independent settings, matching WordPress's own
+	// split — each gets its own shade of the project's blue (rather than sharing the plain
+	// gray/blue hover above) so the two lists read as distinct choices, not one long combined list.
+	&--status &-item {
+		&:hover,
+		&.active {
+			color: #1069fb;
+			background-color: #eaf2ff;
+		}
+	}
+
+	&--visibility &-item {
+		&:hover,
+		&.active {
+			color: #1d4ed8;
+			background-color: #eef2ff;
+		}
+	}
+}

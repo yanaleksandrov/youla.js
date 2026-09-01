@@ -1,6 +1,6 @@
 import { domWalk } from './dom';
 import { debounce } from './timing';
-import { makeObservable } from './reactivity';
+import { makeObservable, RAW, toRaw } from './reactivity';
 import { saferEval } from './eval';
 import { createEvent, getNextModifier, isKeyModifier, matchesKeyModifiers } from './events';
 import { getForData, createMagicVariables, withMagicVariables, splitMagicVariables } from './magic-variables';
@@ -10,6 +10,39 @@ import { injectDataProviders } from './data';
 import { storage, isStorageModifier, getStorageType, computeExpires } from './storage';
 import { getDirective } from './directives';
 import { resolveMethods } from './methods';
+
+/**
+ * A "@event.window"/"@event.document"/"@event.outside" listener (attachListener(), below) targets
+ * something other than the element it conceptually belongs to, and an "@intersect" observer keeps
+ * its own independent reference to that element too — so removing "el" from the DOM does nothing
+ * to release either: the listener/observer (and everything its closure captures, "el" included)
+ * stays alive forever, since nothing else in this file ever notices an individual element's
+ * removal. This is the shared, once-only fix every such binding registers a cleanup with instead
+ * of each hand-rolling its own — one MutationObserver for the whole page rather than one per
+ * binding, the same removal-watching shape youla-tooltip.js already uses for its own floating
+ * panel (see that file's own "ensureRemovalObserver").
+ */
+let disconnectObserver;
+const disconnectCleanups = new Map();
+
+function cleanupOnDisconnect(el, cleanup) {
+  if (!disconnectObserver) {
+    disconnectObserver = new MutationObserver(() => {
+      disconnectCleanups.forEach((cleanups, target) => {
+        if (!target.isConnected) {
+          cleanups.forEach(fn => fn());
+          disconnectCleanups.delete(target);
+        }
+      });
+    });
+    disconnectObserver.observe(document.body, { childList: true, subtree: true });
+  }
+
+  if (!disconnectCleanups.has(el)) {
+    disconnectCleanups.set(el, []);
+  }
+  disconnectCleanups.get(el).push(cleanup);
+}
 
 /**
  * Determines whether a function is an arrow function, by inspecting its source text: an
@@ -97,6 +130,15 @@ export default class Component {
 
     const makeProxy = (data) => new Proxy(data, {
       get(target, prop) {
+        // Lets reactivity.js's toRaw() see through this proxy too, not just its own — a value
+        // read here (e.g. controls/fill.js's patchFillAt() reading "fill" off "this") often gets
+        // spread and written straight back through makeObservable's own proxy; without this,
+        // wrap() has no way to tell that value was already one of ours, and wraps it again. See
+        // toRaw()'s own comment (reactivity.js) for what compounding that causes.
+        if (prop === RAW) {
+          return toRaw(target);
+        }
+
         deps.push(prop);
 
         if (typeof target[prop] === 'object' && target[prop] !== null) {
@@ -261,12 +303,28 @@ export default class Component {
    * every element registers its event listeners and runs its directives (or
    * updates its bound attribute) against the freshly evaluated data.
    *
+   * Idempotent per element ("el.__x_initialized"): a directive whose own output builds and
+   * inserts child markup (repeaterList()/fillList() in controls/repeater.js/fill.js,
+   * contentFields() in youla-editrix.js, ...) runs as part of *this* domWalk pass, while that same
+   * pass's own snapshot of children (domWalk, dom.js — taken right after the parent's callback
+   * runs, specifically so newly-inserted markup like this is picked up) is about to walk into
+   * those very same freshly-inserted, already-initialized elements again. Without this guard, an
+   * element inserted that way ends up with every "@event" listener attached twice — harmless for
+   * a "v-text"/":value"-only binding, but a click handler that removes its own element from the
+   * DOM (repeaterRemove(), fillRemove()) fires a second time on an already-detached element,
+   * throwing on whatever it reads off the DOM next.
+   *
    * @param {HTMLElement} root - The root element to walk and initialize.
    */
   initialize(root) {
     const self = this;
 
     domWalk(root, el => {
+      if (el.__x_initialized) {
+        return;
+      }
+      el.__x_initialized = true;
+
       const additionalHelperVariables = {...getForData(el), ...self.getAliasVariables(), ...self.getMagicVariables(el)};
 
       self.resolveAttributes(el).forEach(attribute => {
@@ -312,8 +370,19 @@ export default class Component {
   refresh(force = false) {
     const self = this;
 
-    // Debounced (and deferred with a 0ms delay) so several data writes in the same tick collapse into a single re-render.
-    debounce(() => {
+    // OR'd across every call that lands before the debounced flush below actually runs, so a
+    // forced call is never lost just because a plain one happened to be scheduled after it.
+    this.pendingForceRefresh = this.pendingForceRefresh || force;
+
+    // Built once and reused (not "debounce(fn, 0)()" recreated per call, which would hand each
+    // call its own fresh timer and never actually coalesce anything) — every reactive write during
+    // a fast burst (e.g. each pointermove tick while dragging a v-filler/v-ranger slider) would
+    // otherwise queue its own independent full-tree domWalk, flooding the task queue and freezing
+    // the page instead of collapsing into one pass.
+    this.scheduleRefresh ??= debounce(() => {
+      const force = self.pendingForceRefresh;
+      self.pendingForceRefresh = false;
+
       domWalk(self.root, el => {
         // An element inside a "v-each" clone only carries its loop variables on "__x_for_data", so resolve them here too or bindings referencing them stop updating after the first render.
         const additionalHelperVariables = {...getForData(el), ...self.getAliasVariables(), ...self.getMagicVariables(el)};
@@ -332,13 +401,19 @@ export default class Component {
       });
 
       self.concernedData = [];
-    }, 0)()
+    }, 0);
+
+    this.scheduleRefresh();
   }
 
   /**
    * Builds and attaches a DOM event listener for "@event" (or the synthetic event behind
    * "v-prop"), wiring up whichever modifiers were used: retargeting, passive/capture, delay,
-   * prevent, stop, outside, key filters, once, and the special "load"/"intersect" events.
+   * prevent, stop, outside, key filters, once, and the special "load"/"intersect" events. A
+   * "window"/"document"/"outside" listener, and an "intersect" observer, auto-detach once "el"
+   * leaves the DOM (see cleanupOnDisconnect() above) — everything else lives directly on "el" and
+   * needs no such cleanup, since removing "el" itself is enough to make it (and its listeners)
+   * eligible for garbage collection the normal way.
    *
    * @param {HTMLElement} el - The element the listener conceptually belongs to.
    * @param {string} event - The event name to listen for (e.g. "click", "load", "intersect").
@@ -431,9 +506,16 @@ export default class Component {
         }
       }));
       observer.observe(el);
+      cleanupOnDisconnect(el, () => observer.disconnect());
     }
 
     target.addEventListener(event, handler, options);
+
+    // "target" isn't "el" for window/document/outside — nothing else ever notices "el" leaving
+    // the DOM, so without this the listener (and everything its closure captures) outlives it.
+    if (target !== el) {
+      cleanupOnDisconnect(el, () => target.removeEventListener(event, handler, options));
+    }
   }
 
   /**

@@ -1,0 +1,138 @@
+<div class="editrix-sidebar">
+  <div class="editrix-sidebar-nav">
+    <div class="editrix-sidebar-tab" v-bind="e.sidebarTab('blocks')">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 256 256">
+        <path d="m223 68-88-48a14 14 0 0 0-14 0L33 68a14 14 0 0 0-7 12v96a14 14 0 0 0 7 12l88 48a14 14 0 0 0 14 0l88-48a14 14 0 0 0 7-12V80a14 14 0 0 0-7-12Zm-96-38a2 2 0 0 1 2 0l84 46-85 46-85-46ZM39 178a2 2 0 0 1-1-2V87l84 46v90Zm178 0-83 45v-90l84-46v89a2 2 0 0 1-1 2Z"/>
+      </svg>
+      Blocks
+    </div>
+    <div class="editrix-sidebar-tab" v-bind="e.sidebarTab('patterns')">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 256 256">
+        <path d="M208 90H48a14 14 0 0 0-14 14v96a14 14 0 0 0 14 14h160a14 14 0 0 0 14-14v-96a14 14 0 0 0-14-14Zm2 110a2 2 0 0 1-2 2H48a2 2 0 0 1-2-2v-96a2 2 0 0 1 2-2h160a2 2 0 0 1 2 2ZM50 64a6 6 0 0 1 6-6h144a6 6 0 0 1 0 12H56a6 6 0 0 1-6-6Zm16-32a6 6 0 0 1 6-6h112a6 6 0 0 1 0 12H72a6 6 0 0 1-6-6Z"/>
+      </svg>
+      Patterns
+    </div>
+    <div class="editrix-sidebar-tab" v-bind="e.sidebarTab('content')">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 256 256">
+        <path d="M208 90H48a14 14 0 0 0-14 14v96a14 14 0 0 0 14 14h160a14 14 0 0 0 14-14v-96a14 14 0 0 0-14-14Zm2 110a2 2 0 0 1-2 2H48a2 2 0 0 1-2-2v-96a2 2 0 0 1 2-2h160a2 2 0 0 1 2 2ZM50 64a6 6 0 0 1 6-6h144a6 6 0 0 1 0 12H56a6 6 0 0 1-6-6Zm16-32a6 6 0 0 1 6-6h112a6 6 0 0 1 0 12H72a6 6 0 0 1-6-6Z"/>
+      </svg>
+      Content
+    </div>
+  </div>
+
+  <div class="editrix-sidebar-content">
+    <div class="editrix-blocks" v-bind="e.sidebarPanel('blocks')">
+      <div class="editrix-inputs-box"><i class="ph ph-magnifying-glass"></i> <input placeholder="Type for find..."></div>
+
+      <div class="editrix-blocks-item" v-each="block in blockList" v-bind="e.paletteItem(block.type)">
+        <span v-html="block.icon"></span>
+        <span v-text="block.label"></span>
+      </div>
+    </div>
+    <div class="editrix-blocks" v-bind="e.sidebarPanel('patterns')" hidden>
+      <div class="editrix-inputs-box"><i class="ph ph-magnifying-glass"></i> <input placeholder="Type for find..."></div>
+
+      <div class="editrix-blocks-item" v-bind="e.paletteItem('editrix-heading')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256">
+          <path d="M112 44a4 4 0 0 0-4 4v20H24a12 12 0 0 0-12 12v96a12 12 0 0 0 12 12h84v20a4 4 0 0 0 8 0V48a4 4 0 0 0-4-4ZM24 180a4 4 0 0 1-4-4V80a4 4 0 0 1 4-4h84v104ZM244 80v96a12 12 0 0 1-12 12h-88a4 4 0 0 1 0-8h88a4 4 0 0 0 4-4V80a4 4 0 0 0-4-4h-88a4 4 0 0 1 0-8h88a12 12 0 0 1 12 12ZM84 112a4 4 0 0 1-4 4H68v28a4 4 0 0 1-8 0v-28H48a4 4 0 0 1 0-8h32a4 4 0 0 1 4 4Z"/>
+        </svg>
+        Home Page 1
+      </div>
+      <div class="editrix-blocks-item" v-bind="e.paletteItem('editrix-image')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256">
+          <rect x="28" y="48" width="200" height="160" rx="14" fill="none" stroke="#000" stroke-width="14"/>
+          <circle cx="88" cy="104" r="16"/>
+          <path d="M52 176 L100 124 L136 160 L180 108 L204 176 Z"/>
+        </svg>
+        Home Page 2
+      </div>
+      <div class="editrix-blocks-item" v-bind="e.paletteItem('editrix-heading')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256">
+          <path d="M112 44a4 4 0 0 0-4 4v20H24a12 12 0 0 0-12 12v96a12 12 0 0 0 12 12h84v20a4 4 0 0 0 8 0V48a4 4 0 0 0-4-4ZM24 180a4 4 0 0 1-4-4V80a4 4 0 0 1 4-4h84v104ZM244 80v96a12 12 0 0 1-12 12h-88a4 4 0 0 1 0-8h88a4 4 0 0 0 4-4V80a4 4 0 0 0-4-4h-88a4 4 0 0 1 0-8h88a12 12 0 0 1 12 12ZM84 112a4 4 0 0 1-4 4H68v28a4 4 0 0 1-8 0v-28H48a4 4 0 0 1 0-8h32a4 4 0 0 1 4 4Z"/>
+        </svg>
+        Home Page 3
+      </div>
+    </div>
+    <div class="editrix-blocks" v-bind="e.sidebarPanel('content')" hidden>
+      <div class="editrix-blocks-empty" v-show="!activeBlock">Select a block on the canvas to edit its settings.</div>
+      <div class="editrix-fields" v-show="activeBlock" v-bind="e.contentFields"></div>
+
+      <template id="editrix-field-template">
+        <div class="editrix-control">
+          <div class="editrix-field">
+            <i class="ph ph-question editrix-field__tooltip"></i>
+            <div class="editrix-field__control"></div>
+            <div class="editrix-field__description"></div>
+          </div>
+        </div>
+      </template>
+
+      <template id="editrix-control-text">
+        <input class="editrix-inputs-box">
+      </template>
+
+      <template id="editrix-control-switcher">
+        <input type="checkbox" class="editrix-switch">
+      </template>
+
+      <template id="editrix-control-select">
+        <select class="editrix-inputs-box">
+          <option value="left">Left</option>
+          <option value="center">Center</option>
+          <option value="right">Right</option>
+          <option value="justify">Justify</option>
+        </select>
+      </template>
+
+      <template id="editrix-control-color">
+        <input type="text" class="editrix-inputs-box">
+      </template>
+
+      <template id="editrix-control-url">
+        <input type="text" class="editrix-inputs-box" placeholder="https://…" data-part="url">
+        <div class="editrix-field-inline">
+          <label><input type="checkbox" data-part="is_external"> Open in new tab</label>
+          <label><input type="checkbox" data-part="nofollow"> Nofollow</label>
+        </div>
+      </template>
+
+      <template id="editrix-control-media">
+        <div class="editrix-field-inline">
+          <div class="editrix-field-preview" data-part="preview"></div>
+          <input type="text" class="editrix-inputs-box" placeholder="https://…" data-part="url">
+        </div>
+      </template>
+
+      <template id="editrix-control-slider">
+        <div class="editrix-slider">
+          <input type="range" data-part="range">
+          <span class="editrix-slider-affix" data-part="prefix"></span>
+          <input type="number" class="editrix-inputs-box editrix-slider-input" data-part="size">
+          <span class="editrix-slider-affix" data-part="suffix"></span>
+          <select class="editrix-inputs-box editrix-slider-unit" data-part="unit">
+            <option v-each="unit in units" :value="unit" v-text="unit"></option>
+          </select>
+        </div>
+      </template>
+
+      <template id="editrix-control-dimensions">
+        <div class="editrix-borders">
+          <div class="editrix-borders-values">
+            <input type="number" data-side="top">
+            <input type="number" data-side="right">
+            <input type="number" data-side="bottom">
+            <input type="number" data-side="left">
+          </div>
+          <div class="editrix-borders-buttons">
+          <span class="editrix-buttons-item" title="Link sides together" data-part="link-toggle">
+            <i class="ph ph-link"></i>
+          </span>
+            <select class="editrix-inputs-box" data-part="unit">
+              <option v-each="unit in units" :value="unit" v-text="unit"></option>
+            </select>
+          </div>
+        </div>
+      </template>
+    </div>
+  </div>
+</div>

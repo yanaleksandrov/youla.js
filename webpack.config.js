@@ -167,12 +167,12 @@ module.exports = {
       },
       {
         test: /\.html$/,
-        include: path.resolve(__dirname, 'src/view/parts'),
+        include: path.resolve(__dirname, 'src/view/parts') + path.sep,
         use: ['raw-loader'],
       },
       {
         test: /\.html$/,
-        include: path.resolve(__dirname, 'src/view/sections'),
+        include: path.resolve(__dirname, 'src/view/editrix') + path.sep,
         use: ['raw-loader'],
       },
     ],

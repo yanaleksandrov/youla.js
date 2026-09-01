@@ -1,0 +1,80 @@
+.editrix-section {
+	padding-block: 10px;
+	border-bottom: 1px solid #e6e6e6;
+	gap: 10px;
+	display: grid;
+
+	&:last-child {
+		border: 0;
+	}
+
+	&-head {
+		font-weight: 600;
+		user-select: none;
+		display: flex;
+		align-items: center;
+		gap: 16px;
+		justify-content: space-between;
+		width: 100%;
+		line-height: 1;
+		position: relative;
+		padding-inline: 10px;
+
+		+ .editrix-control {
+			margin-top: 8px;
+		}
+
+		// The heading text and its own optional tooltip icon share this wrapper — the head's own
+		// "justify-content: space-between" above is there for ".editrix-section-buttons" (also a
+		// direct child, but taken out of flex flow by its own "position: absolute"), so a *second*
+		// in-flow child here (the tooltip icon, un-wrapped) would get shoved to the row's far end by
+		// that same rule instead of sitting right next to the heading. Grouping the two into one
+		// flex item keeps the icon glued to the text regardless.
+		&__title {
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+		}
+
+		// Same look as controls/base.js's own fieldTooltip() icon (fields.scss's
+		// ".editrix-field__tooltip") — a separate class since a section heading and a single
+		// field's own title aren't the same thing, even though they read identically.
+		&__tooltip {
+			font-weight: 400;
+			color: #929292;
+			cursor: pointer;
+			font-size: 12px;
+
+			&:hover {
+				color: #2d2d2d;
+			}
+		}
+	}
+
+	&-body {
+		width: 100%;
+		position: relative;
+		gap: 8px;
+		display: grid;
+	}
+
+	&-buttons {
+		display: flex;
+		align-items: center;
+		font-size: 12px;
+
+		i {
+			border-radius: 4px;
+			cursor: pointer;
+			height: 24px;
+			width: 24px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+
+			&:hover {
+				background-color: #f5f5f5;
+			}
+		}
+	}
+}

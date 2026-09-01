@@ -1,0 +1,93 @@
+.editrix-sidebar {
+	max-width: 288px;
+	position: sticky;
+	top: 36px;
+	width: 100%;
+	margin-bottom: auto;
+	font-size: 11.5px;
+	background-color: #fff;
+	line-height: 1.15;
+	display: flex;
+	border-inline-end: 1px solid #f1f1f1;
+	overflow-y: scroll;
+	height: calc(100dvh - 37px);
+
+	// Makes the scrollbar declared above overlay this box's own right edge instead of reserving
+	// track width from it: widen the box by exactly the custom scrollbar's own width (matching
+	// editor/editrix.scss's global ".editrix *::-webkit-scrollbar{width:8px}" — the two must stay
+	// in sync, there's no single source of truth for it since a WebKit/Blink scrollbar's reserved
+	// width isn't readable from CSS) so the native carve-out lands in that extra 8px instead of
+	// eating into it, then claw the added width back with a negative end-margin so nothing outside
+	// this element (the flex layout, ".editrix-preview" next to it) sees any size change. The
+	// widened box's own end border/background would otherwise render 8px past where the sidebar
+	// visually used to end — so its own end border is dropped (".editrix-preview" already draws
+	// the same divider line via its own "border-left", editor/preview.scss, so nothing is lost)
+	// and the background gets a hard-stop gradient that goes transparent for exactly that trailing
+	// 8px, letting ".editrix-preview" show through underneath it, right up to the scrollbar itself.
+	// Native "overlay" scrollbars (no reserved space at all, no widening needed) would be the
+	// simpler fix, but "overflow: overlay" is unsupported in current Chromium (verified against a
+	// real, headed Chrome — it silently falls back to "scroll", the pre-existing behavior) and
+	// Firefox never had a CSS-level equivalent — @supports gates this to browsers that both
+	// understand the syntax AND are guaranteed to actually have that 8px custom scrollbar to
+	// compensate for (Firefox's own native scrollbar is neither ::-webkit-scrollbar-styled nor
+	// necessarily 8px wide, so guessing a width for it would trade a known squeeze for a
+	// mismatched one); everywhere else this simply keeps today's reserved-space scrollbar.
+	@supports selector(::-webkit-scrollbar) {
+		width: calc(100% + 8px);
+		max-width: calc(288px + 8px);
+		box-sizing: border-box;
+		margin-inline-end: -8px;
+		border-inline-end: 0;
+		background: linear-gradient(to right, #fff calc(100% - 8px), transparent calc(100% - 8px));
+	}
+
+	&-nav {
+		display: flex;
+		width: 56px;
+		flex-direction: column;
+		position: sticky;
+		top: 0;
+		padding: 4px;
+		gap: 4px;
+		height: auto;
+		margin-bottom: auto;
+	}
+
+	&-tab {
+		user-select: none;
+		word-break: keep-all;
+		cursor: pointer;
+		padding: 10px;
+		text-align: center;
+		border-radius: 5px;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 4px;
+		transition: all 0.3s;
+		font-size: 9px;
+
+		&:hover,
+		&.active {
+			background-color: #f5f5f5;
+		}
+	}
+
+	&-content {
+		flex: 1;
+		border-left: 1px solid #f1f1f1;
+	}
+}
+
+.editrix-toolbox {
+	max-width: 240px;
+	position: sticky;
+	top: 36px;
+	width: 100%;
+	margin-bottom: auto;
+	font-size: 11.5px;
+	background-color: #fff;
+	line-height: 1.15;
+	height: calc(100dvh - 37px);
+	border-inline-start: 1px solid #f1f1f1;
+}

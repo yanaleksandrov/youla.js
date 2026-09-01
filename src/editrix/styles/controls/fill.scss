@@ -1,0 +1,74 @@
+// The "fill" control (plugins/editrix/controls/fill.js) — a Figma-style multi-fill list: each row
+// is flat (drag handle, v-filler field, visibility toggle, remove) — see filler.scss/
+// filler-panel.scss for the field's own styling; it opens its own dialog, no popover of ours here.
+
+// The "+" button (`[data-part="add"]`) is relocated into .editrix-section-head by contentFields()
+// (youla-editrix.js) and styled there like every other section's own .editrix-section-buttons —
+// nothing of its own to style here.
+.editrix-fill {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	width: 100%;
+
+	&-list {
+		display: flex;
+		flex-direction: column;
+	}
+}
+
+.editrix-fill-item {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 4px 8px;
+	transition: opacity 0.2s, background-color 0.25s;
+
+	&:hover {
+		background-color: #f8f8f8;
+	}
+
+	// A fill switched off (fillVisibility() in fill.js) reads as dimmed, same as Figma's own
+	// hidden-layer treatment — cheaper than a dedicated ":class" binding just for this.
+	&:has(.ph-eye-slash) {
+		opacity: 0.5;
+	}
+
+	&.is-dragging {
+		opacity: 0.4;
+	}
+
+	&__handle {
+		color: #b4b4b4;
+		cursor: grab;
+		font-size: 12px;
+	}
+
+	&__visibility {
+		color: #929292;
+		font-size: 12px;
+		cursor: pointer;
+
+		&:hover {
+			color: #2d2d2d;
+		}
+	}
+
+	&__remove {
+		color: #929292;
+		font-size: 12px;
+		cursor: pointer;
+		visibility: hidden;
+		opacity: 0;
+		transition: all 0.2s;
+
+		&:hover {
+			color: #ff0000;
+		}
+	}
+
+	&:hover &__remove {
+		visibility: visible;
+		opacity: 1;
+	}
+}

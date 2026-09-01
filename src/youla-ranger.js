@@ -653,11 +653,17 @@ class Ranger {
     const onUp = () => {
       this.fill.removeEventListener('pointermove', onMove);
       this.fill.removeEventListener('pointerup', onUp);
+      this.fill.removeEventListener('pointercancel', onUp);
       this.onEnd?.([Number(this.fromSlider.value), Number(this.toSlider.value)], this.fill);
     };
 
     this.fill.addEventListener('pointermove', onMove);
     this.fill.addEventListener('pointerup', onUp);
+    // A browser-aborted pointer capture (touch reinterpreted as scroll, an intervening system
+    // dialog, ...) fires "pointercancel" instead of "pointerup" — without also cleaning up here,
+    // onMove/onUp stay attached to this.fill (built once, reused for the slider's whole lifetime)
+    // forever, and every later drag adds one more surviving pair.
+    this.fill.addEventListener('pointercancel', onUp);
   }
 
   // Fill is a separate layer positioned by percentage, so it never draws over a handle.

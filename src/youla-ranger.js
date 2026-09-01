@@ -52,7 +52,7 @@ class Ranger {
     // Displays the value exponentially between min/max while dragging itself stays linear.
     logScale: false,
 
-    // Clamps every resolved value to [minValue, maxValue] (either end optional) without touching the native min/max, so the tick scale/fill/labels keep spanning the slider's full domain.
+    // Clamps resolved values to [minValue, maxValue] without touching native min/max, so the scale/fill/labels still span the full domain.
     minValue: null,
     maxValue: null,
 
@@ -115,10 +115,8 @@ class Ranger {
   }
 
   /**
-   * Inverse of logScale's default position→value mapping (`min * (max/min) ** ((position-min)/(max-min))`):
-   * given a real/displayed value (e.g. a $10 price), returns the linear drag position that would
-   * display it. Lets markup declare `value`/`data-points` in real units — no logarithm required on
-   * whichever end renders the initial HTML — while dragging itself stays linear post-init.
+   * Inverse of logScale's position→value mapping: converts a real/displayed value back to the
+   * linear drag position, so markup can declare `value`/`data-points` in real units.
    */
   static logScalePosition(value, min, max) {
     return min + (max - min) * (Math.log(value / min) / Math.log(max / min));
@@ -294,7 +292,7 @@ class Ranger {
       }
     }
 
-    /* Neutralizes native `step` to "any" (it re-snaps assignments, breaking fineStep); `this.step` holds the real one. */
+    // Neutralizes native `step` to "any" (it re-snaps assignments, breaking fineStep); `this.step` holds the real one.
     this.step = this.fromSlider.step;
     this.fromSlider.step = 'any';
 
@@ -373,9 +371,8 @@ class Ranger {
   }
 
   /**
-   * Parses data-points into extra handle starting values (comma-separated, forward-compatible with
-   * more than one) — today only the first entry is used, for the upper handle. Falls back to max
-   * wherever an entry is missing or not a number.
+   * Parses data-points into extra handle starting values; only the first entry is used (upper handle).
+   * Falls back to max when an entry is missing or not a number.
    */
   parsePoints() {
     const attr = this.fromSlider.dataset.points ?? '';
@@ -659,10 +656,7 @@ class Ranger {
 
     this.fill.addEventListener('pointermove', onMove);
     this.fill.addEventListener('pointerup', onUp);
-    // A browser-aborted pointer capture (touch reinterpreted as scroll, an intervening system
-    // dialog, ...) fires "pointercancel" instead of "pointerup" — without also cleaning up here,
-    // onMove/onUp stay attached to this.fill (built once, reused for the slider's whole lifetime)
-    // forever, and every later drag adds one more surviving pair.
+    // Also clean up on pointercancel (e.g. touch reinterpreted as scroll), or listeners leak on this.fill.
     this.fill.addEventListener('pointercancel', onUp);
   }
 
@@ -711,7 +705,7 @@ class Ranger {
     slider.setAttribute('aria-valuetext', this.formatDisplayValue(slider.value));
   }
 
-  // Reorders scale/label/fill/marks by DOM order (safe — only touched here, never mid-drag); the handles stay above them via the static z-index on `.ranger > input` in core.scss instead.
+  // Reorders scale/label/fill/marks in the DOM; handles stay on top via the static z-index on `.ranger > input` in core.scss.
   reorderLayers() {
     [this.scale, this.label, this.fill, this.marksContainer].forEach((layer) => {
       if (layer) {
@@ -722,7 +716,7 @@ class Ranger {
     this.updateHandleStackOrder(this.toSlider);
   }
 
-  // Keeps the more-likely-to-grab handle on top via z-index, not a DOM move — this fires on every drag tick, and reordering the DOM mid-drag can cancel the browser's native pointer capture.
+  // Keeps the more-likely-to-grab handle on top via z-index, not a DOM move, which would cancel pointer capture mid-drag.
   updateHandleStackOrder(target) {
     if (!this.toSlider) {
       return;
@@ -829,7 +823,7 @@ class Ranger {
     }
   }
 
-  // Centers on percent, including at 0/100, so the label stays centered on the handle it's labeling instead of clamped flush inside the track.
+  // Centers the label on its handle by percent, even at 0/100, instead of clamping flush inside the track.
   positionLabel(labelEl, percent, containerWidth) {
     const centered = (percent / 100) * containerWidth - labelEl.offsetWidth / 2;
     labelEl.style.insetInlineStart = `${centered}px`;
@@ -987,10 +981,8 @@ class Ranger {
 document.addEventListener('youla:init', () => {
 
   /**
-   * Turns a plain `<input type="range">` into a skinned Ranger — fill, floating value label,
-   * tick scale, and marks, plus (when the input also carries `data-points`) a second handle
-   * for a range slider. The bound expression is passed straight through as Ranger's options
-   * object; `min`/`max`/`step` stay native HTML attributes, exactly as `new Ranger()` expects.
+   * Turns a plain `<input type="range">` into a skinned Ranger; `data-points` adds a second handle for range mode.
+   * The bound expression is passed through as Ranger's options object.
    *
    * @since 1.0
    */
@@ -1009,11 +1001,7 @@ document.addEventListener('youla:init', () => {
 
     el._x_ranger = new Ranger(el, options);
 
-    // Range mode clones "el" (via cloneNode) to build the second handle, which copies "v-ranger"
-    // itself onto it along with anything else Youla cares about (e.g. "v-ref"). That clone is a
-    // purely internal DOM node, not an independently Youla-managed element, so strip every
-    // directive/event/binding attribute it inherited — or a stray "v-ref" on it would collide
-    // with the real handle's (e.g. shadowing it in $refs).
+    // The cloned second handle inherits directive attributes (e.g. v-ref) from "el" — strip them to avoid collisions.
     if (el._x_ranger.toSlider) {
       [...el._x_ranger.toSlider.attributes]
         .map(({ name }) => name)

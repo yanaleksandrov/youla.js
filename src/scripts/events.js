@@ -37,8 +37,7 @@ const KEY_ALIASES = {
 
 const SYSTEM_MODIFIER_KEYS = { ctrl: 'ctrlKey', alt: 'altKey', shift: 'shiftKey', meta: 'metaKey' };
 
-// Behavior modifiers Component#attachListener gives dedicated handling to — anything
-// else on a "@keydown.enter"-style attribute is treated as a key filter instead.
+// Behavior modifiers Component#attachListener handles directly; anything else is treated as a key filter.
 const BEHAVIOR_MODIFIERS = new Set(['window', 'document', 'passive', 'capture', 'delay', 'prevent', 'stop', 'outside', 'once']);
 
 /**

@@ -22,7 +22,6 @@
 
     <%= _.template(require('./editrix/sidebar.html').default)(data) %>
 
-    <%= _.template(require('./editrix/controls/fill.html').default)(data) %>
     <%= _.template(require('./editrix/controls/repeater.html').default)(data) %>
 
     <div class="editrix-preview" v-bind="e.canvas"></div>
@@ -203,10 +202,14 @@
                 {
                   "name": "background_fill",
                   "title": "",
-                  "tooltip": "",
-                  "type": "fill",
+                  "tooltip": "Figma-style multi-fill list — add, reorder, hide or remove as many layers as needed",
+                  "type": "repeater",
+                  "hideable": true,
                   "default": [
-                    { "type": "solid", "visible": true, "opacity": 100, "color": "#000" }
+                    { "visible": true, "fill": { "type": "solid", "color": "#000000", "alpha": 100, "image": null, "video": null } }
+                  ],
+                  "fields": [
+                    { "name": "fill", "title": "", "type": "fill", "default": { "type": "solid", "color": "#1069FB", "alpha": 100, "image": null, "video": null } }
                   ],
                   "description": ""
                 }

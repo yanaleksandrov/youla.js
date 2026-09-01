@@ -2,64 +2,35 @@
  * The control system's shared core: the settings/definition registry, condition/responsive
  * resolution, and the wrapper chrome (label/tooltip/description) every control type is built on.
  *
- * Youla.js has no component-rendering system — directives/`v-bind` only ever react over markup
- * that's already on the page, they can't generate it. So unlike Elementor (whose PHP/JS renders
- * a control's markup from its config), a control here is real HTML wired up with `v-bind` — either
- * hand-written directly in a view, or (sections/sidebar.html's "Content" tab) cloned at runtime
- * from a `<template>` and wired the same way (see controls/render.js). What this module (and
- * data.js/multi-value.js/unit.js) provides is the reusable *behavior* every control type is
- * composed from, so the actual amount of markup+JS per control stays small, and adding a new
- * control type never means duplicating the label/tooltip/description/condition/responsive plumbing.
- *
- * A control's "definition" (label, tooltip, description, default, condition, disabled,
- * responsive, plus whatever the control type itself needs — e.g. `options` for select()) is
- * whatever object literal is passed as a control factory's second argument, right there in
- * markup: `v-bind="e.text('title', { label: 'Title', default: 'Untitled' })"`. Its *value* lives
- * separately, in `settings[name]`, exactly like Elementor's `element.getSettings()`.
+ * A control's "definition" (label, tooltip, description, default, condition, disabled, responsive,
+ * plus whatever the control type needs) is the object literal passed as a factory's second
+ * argument, right there in markup; its *value* lives separately, in `settings[name]`.
  *
  * @returns {Object} Properties/methods to spread into `Youla.data('editrix', () => ({ ... }))`.
  */
 
-// The CSS length units every unit control's <select> offers — see unitSelect() and "units" below.
+// CSS length units every unit control's <select> offers — see unitSelect() and "units" below.
 const CONTROL_UNITS = ['px', '%', 'em', 'rem', 'vw', 'vh'];
 
 export function createControlsBase() {
   return {
-    // Every control's definition, keyed by name — refreshed on every render (so a dynamic
-    // `condition`/`disabled`/`label` stays live), populated by registerControl() below. Treat as
-    // read-only; go through getValue()/setValue()/isConditionMet() instead of reading it directly.
+    // Every control's definition, keyed by name, refreshed on every render; go through getValue()/setValue()/isConditionMet() rather than reading this directly.
     _controls: {},
 
-    // Every block's current control values, keyed first by block id (youla-editrix.js's
-    // `container()` stamps one onto every `.editrix-container`, read via `this.activeBlock` —
-    // whichever block was last clicked on the canvas) and then by control name — Elementor calls
-    // the inner object "settings". A responsive control's entry is itself keyed by device
-    // ({desktop, tablet, mobile}); use getValue()/setValue() rather than reading/writing this
-    // directly, so callers never need to care whether a given control happens to be responsive,
-    // and never need to know which block is currently active.
+    // Every block's current control values, keyed by block id (youla-editrix.js's container() via `this.activeBlock`) then control name; use getValue()/setValue() rather than reading this directly.
     settings: {},
 
-    // Which breakpoint a `responsive: true` control currently reads/writes — matches Elementor's
-    // single device switcher in its editor toolbar, one for the whole panel rather than one per
-    // field. Fixed at 'desktop' for now (no switcher UI exists yet); getValue()/setValue() already
-    // key off it, so a control declaring `responsive: true` keeps working once one is added.
+    // Which breakpoint a `responsive: true` control currently reads/writes — fixed at 'desktop' until a device switcher exists.
     responsiveDevice: 'desktop',
 
-    // The CSS length units every unit control's <select> offers — v-each="unit in units" (see
-    // sections/sidebar.html's field template library), so unitSelect() and its markup share one
-    // source of truth.
+    // Shared with sidebar.html's unit <select> templates (v-each="unit in units").
     units: CONTROL_UNITS,
 
-    // Which block's settings the Content tab currently reads/writes — set by `container()`'s
-    // `@click` (youla-editrix.js) to whichever `.editrix-container` was last clicked. `null` until
-    // a block has ever been selected, in which case blockSettings() below falls back to a shared
-    // "__page__" bucket so a control rendered with nothing selected still has somewhere to write.
+    // Which block's settings the Content tab reads/writes; null (nothing selected yet) falls back to a shared "__page__" bucket.
     activeBlock: null,
 
     /**
-     * The active block's own settings object — `settings[activeBlock]`, created on first use.
-     * getValue()/setValue()/registerControl() go through this rather than "settings" directly, so
-     * none of them need to know a block is even involved.
+     * The active block's own settings object, created on first use.
      *
      * @returns {Object}
      */
@@ -70,28 +41,17 @@ export function createControlsBase() {
 
     /**
      * Registers/refreshes "name"'s control definition, and seeds its value's default the first
-     * time it's used. field() (below) is the only caller — every control instance registers once,
-     * on its wrapper — so a control's config lives entirely where it's written in markup, with no
-     * separate schema to keep in sync, while still supporting a `condition`/`disabled`/`label`
-     * that changes at runtime.
+     * time it's used. field() is the only caller — every control instance registers once, on its wrapper.
      *
      * @param {string} name - The setting's key, unique across the whole panel.
      * @param {string} type - The control type (used for the `editrix-field--<type>` class).
-     * @param {Object} [options] - label/tooltip/description/default/condition/disabled/responsive,
-     *   plus whatever the control type itself reads off its own definition (e.g. `min`/`max`/`step`
-     *   for slider(), `options` for select()).
+     * @param {Object} [options] - label/tooltip/description/default/condition/disabled/responsive, plus type-specific options.
      * @returns {Object} The definition, for the calling factory's own use.
      */
     registerControl(name, type, options = {}) {
       const def = { name, type, ...options };
 
-      // resolveAttributes() re-evaluates every v-bind expression — and so calls this — on every
-      // refresh pass, by design (see docs/v-bind.html's tabButton() example). _controls is part
-      // of the reactive data (so plain markup expressions like "_controls['align'].options" can
-      // read it), which means writing it unconditionally here would count as a change on every
-      // single pass, triggering the very refresh that just called it — forever. Comparing first
-      // breaks that loop: a write (and the refresh it schedules) only happens when something in
-      // the definition actually changed.
+      // Compare before writing — _controls is reactive, so an unconditional write would trigger the very refresh that just called this, forever.
       if (JSON.stringify(this._controls[name]) !== JSON.stringify(def)) {
         this._controls[name] = def;
       }
@@ -140,9 +100,8 @@ export function createControlsBase() {
     },
 
     /**
-     * Merges a patch into an object-valued control's current value — url()/media()/dimensions()
-     * and friends all store `{ ...several named fields }`, so a change to just one of them (e.g.
-     * dragging the "top" side of a dimensions control) shouldn't clobber the others.
+     * Merges a patch into an object-valued control's current value, so a change to one part
+     * doesn't clobber the others.
      *
      * @param {string} name
      * @param {Object} patch
@@ -153,8 +112,7 @@ export function createControlsBase() {
 
     /**
      * Elementor-style condition check, as used by a control's `condition` option: every key must
-     * match — an array means "one of these"; a trailing "!" on the key negates that key's check;
-     * an `undefined` expected value just means "is truthy". `{}`/`null`/`undefined` always passes.
+     * match — an array means "one of these", a trailing "!" on the key negates it.
      *
      * @param {Object} [condition] - e.g. `{ show_icon: true }`, `{ 'unit!': 'custom' }`.
      * @returns {boolean}
@@ -176,25 +134,14 @@ export function createControlsBase() {
     },
 
     /**
-     * The one reusable template every control is built from — v-bind="e.field('title', 'Title',
-     * 'Helper text', { type: 'text', default: 'Untitled', ... })" on a control's outer
-     * `.editrix-field`, with the control's own markup (an <input>, a compound control's several
-     * parts, ...) as its children, plus a `v-bind="e.fieldTooltip('title')"` icon for the
-     * tooltip — see below. Registers the control (so this must run before anything else reads
-     * `name`, which is exactly why it belongs on the wrapper — the parent, walked before its
-     * children — rather than on the control's own field element).
-     *
-     * Renders the title via CSS (`.editrix-field:before { content: attr(data-title) }`, the same
-     * `data-title` convention controls/borders.scss already uses) rather than a separate label
-     * element — entirely optional: given no title, nothing renders (an empty `data-title`
-     * produces no `:before` content).
+     * The one reusable template every control is built from — v-bind="e.field(...)" on a
+     * control's outer `.editrix-field`, registering the control and returning its show/class/title
+     * bindings; pair with `v-bind="e.fieldTooltip(name)"` for the tooltip icon.
      *
      * @param {string} name - The setting's key, unique across the whole panel.
-     * @param {string} [title] - The control's label, shown above (or, for switcher/popover_toggle,
-     *   beside) its field.
+     * @param {string} [title] - The control's label.
      * @param {string} [tooltip] - Extra help text, shown by fieldTooltip()'s icon on click.
-     * @param {Object} [options] - type/default/condition/disabled/responsive/description, plus
-     *   whatever the control type itself reads off its own definition.
+     * @param {Object} [options] - type/default/condition/disabled/responsive/description, plus type-specific options.
      * @returns {Object} The wrapper's bindings.
      */
     field(name, title, tooltip, options = {}) {
@@ -217,10 +164,7 @@ export function createControlsBase() {
       };
     },
 
-    // v-bind="e.fieldTooltip('title')" on the small "?" icon next to a control's title — reuses
-    // the existing `v-tooltip` directive (youla-tooltip.js), triggered by `.click` (not the
-    // directive's default hover) since the icon itself is the click target; hidden entirely when
-    // no tooltip text is given.
+    // v-bind="e.fieldTooltip(name)" on a control's "?" icon — reuses v-tooltip, triggered on click since the icon itself is the target; hidden without tooltip text.
     fieldTooltip(name) {
       return {
         'v-show'() {
@@ -232,8 +176,7 @@ export function createControlsBase() {
       };
     },
 
-    // v-bind="e.fieldDescription('title')" on `.editrix-field__description`, below the field —
-    // hidden entirely when no description is given.
+    // v-bind="e.fieldDescription(name)" on `.editrix-field__description` — hidden without a description.
     fieldDescription(name) {
       return {
         'v-show'() {
@@ -245,10 +188,7 @@ export function createControlsBase() {
       };
     },
 
-    // v-bind="e.fieldAffix('price', 'prefix')" / "...'suffix')" on a small static-text span glued
-    // to one side of a control's own input (e.g. slider() — controls/render.js) — a control opts
-    // in by adding a "prefix"/"suffix" string to its own definition (`{ type: 'slider', prefix:
-    // '$' }`); hidden entirely when that key isn't set, so both stay optional per field.
+    // v-bind="e.fieldAffix(name, 'prefix'/'suffix')" on static text glued to a control's input (e.g. slider()) — hidden unless the field declares that key.
     fieldAffix(name, key) {
       return {
         'v-show'() {
@@ -260,12 +200,9 @@ export function createControlsBase() {
       };
     },
 
-    // --- Compound values: shared by every multi-value/unit control (url, media, dimensions, ---
-    // --- slider, ...), whose setting is one object with several named parts. A compound       ---
-    // --- control's wrapper is just field(name, title, tooltip, { type: 'url', default: {...} }) ---
-    // --- like any other — its parts (below) are what set it apart, not a separate registration. ---
+    // Compound values: shared by every multi-value/unit control (url, media, dimensions, slider, ...), whose setting is one object with several named parts.
 
-    // v-bind="e.part('link', 'url')" on a text-like input for one part of a compound value.
+    // v-bind="e.part(name, 'url')" on a text-like input for one part of a compound value.
     part(name, key) {
       return {
         ':value'() {
@@ -277,7 +214,7 @@ export function createControlsBase() {
       };
     },
 
-    // v-bind="e.partNumber('box_shadow', 'blur')" on a number input for one numeric part.
+    // v-bind="e.partNumber(name, 'blur')" on a number input for one numeric part.
     partNumber(name, key) {
       return {
         ':value'() {
@@ -289,7 +226,7 @@ export function createControlsBase() {
       };
     },
 
-    // v-bind="e.partSwitch('link', 'is_external')" on a checkbox for one boolean part.
+    // v-bind="e.partSwitch(name, 'is_external')" on a checkbox for one boolean part.
     partSwitch(name, key) {
       return {
         ':checked'() {
@@ -301,8 +238,7 @@ export function createControlsBase() {
       };
     },
 
-    // v-bind="e.unitSelect('gap')" on the unit <select> a slider/dimensions/gaps control shares —
-    // the same handful of CSS length units, so a control just brings its own value/min/max.
+    // v-bind="e.unitSelect(name)" on the unit <select> a slider/dimensions/gaps control shares.
     unitSelect(name) {
       return {
         ':value'() {
@@ -314,9 +250,7 @@ export function createControlsBase() {
       };
     },
 
-    // v-bind="e.linkedNumber('padding', 'top', ['top','right','bottom','left'])" on one side's
-    // number input, for a compound value with an `isLinked` flag (dimensions/gaps): while linked,
-    // editing any one part updates every part in "allKeys" together; unlinked, only its own part.
+    // v-bind="e.linkedNumber(name, 'top', ['top','right','bottom','left'])" on one side's number input — while linked, editing any part updates every part in "allKeys" together.
     linkedNumber(name, key, allKeys) {
       return {
         ':value'() {
@@ -333,7 +267,7 @@ export function createControlsBase() {
       };
     },
 
-    // v-bind="e.linkToggle('padding')" on the link/unlink button paired with linkedNumber() above.
+    // v-bind="e.linkToggle(name)" on the link/unlink button paired with linkedNumber() above.
     linkToggle(name) {
       return {
         ':class'() {

@@ -1,11 +1,4 @@
-// The "repeater" control (plugins/editrix/controls/repeater.js) — a generic, collapsible list of
-// items, each holding whatever fields that repeater declares. Unlike "fill" (fill.scss), whose
-// rows are flat, a repeater row's own body can hold several fields, so it collapses behind a
-// summary head instead — see repeaterToggle()/repeaterLabel() (repeater.js).
-
-// The "+" button (`[data-part="add"]`) is relocated into .editrix-section-head by contentFields()
-// (youla-editrix.js) and styled there like every other section's own .editrix-section-buttons —
-// nothing of its own to style here, same as fill's own "+".
+// Styles for the repeater control (controls/repeater.js) — a collapsible list of items, each holding whatever fields that repeater declares.
 .editrix-repeater {
 	display: flex;
 	flex-direction: column;
@@ -25,6 +18,11 @@
 
 	&.is-dragging {
 		opacity: 0.4;
+	}
+
+	// An item switched off via repeaterVisibility() (repeater.js) reads as dimmed.
+	&:has(.ph-eye-slash) {
+		opacity: 0.5;
 	}
 
 	&__head {
@@ -65,6 +63,17 @@
 		transform: rotate(180deg);
 	}
 
+	// Unlike __remove below, stays visible outright so an item switched off keeps reading as "off".
+	&__visibility {
+		color: #929292;
+		font-size: 12px;
+		cursor: pointer;
+
+		&:hover {
+			color: #2d2d2d;
+		}
+	}
+
 	&__remove {
 		color: #929292;
 		font-size: 12px;
@@ -88,9 +97,7 @@
 		flex-direction: column;
 		border-top: 1px solid #e6e6e6;
 
-		// Its own fields reuse ".editrix-field" wholesale (see repeater.js's createRepeaterField())
-		// — only the padding-block needs trimming so a repeater row's own body doesn't inherit that
-		// class's usual page-wide vertical rhythm.
+		// Trims .editrix-field's usual padding-block for this nested context (see createRepeaterField(), repeater.js).
 		.editrix-field {
 			padding-block: 8px;
 		}
@@ -100,12 +107,7 @@
 		display: flex;
 	}
 
-	// A "min: 1, max: 1" repeater (isLockedToOneItem(), repeater.js) — exactly one item, forever,
-	// so there's nothing left for the head's own drag handle/label/caret/remove to do. Hiding it
-	// (rather than just disabling drag/remove individually) is what makes repeaterToggle()'s own
-	// click handler unreachable too, which is why the body's visibility is overridden here in CSS
-	// rather than by also special-casing "is-open" in JS: with no head to click, "is-open" would
-	// otherwise just never get set, leaving the body permanently collapsed instead of always shown.
+	// A locked "min:1, max:1" repeater (isLockedToOneItem(), repeater.js) hides the head and forces the body open, since there's no head left to click to set is-open.
 	&.is-locked {
 		.editrix-repeater-item__head {
 			display: none;

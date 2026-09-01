@@ -1,33 +1,18 @@
 document.addEventListener('youla:init', () => {
   const BYTES_IN_MB = 1048576;
 
-  // Prefix for a non-absolute `route`, e.g. `Youla.baseURL = 'https://api.example.com'`
-  // in your own `youla:init` listener. Left blank, routes resolve relative to the page.
+  // Prefix for a non-absolute `route`; left blank, routes resolve relative to the page.
   Youla.baseURL ??= '';
 
   /**
-   * Registers `$ajax(route, payload, onProgress, options)`, Youla.js's request method.
+   * Registers `$ajax(route, payload, onProgress, options)`. Dispatches an `ajax:${route}`
+   * CustomEvent on `document` once the response arrives; an array `data` response is treated
+   * as fragment instructions (see applyFragment). Calling again on the same element cancels
+   * any request still in flight.
    *
-   * `route` is appended to `Youla.baseURL` unless already absolute, and also becomes the
-   * `ajax:${route}` CustomEvent dispatched on `document` once the response arrives —
-   * listeners can react to it or replace the value the returned promise resolves with.
-   *
-   * The response is parsed as JSON when possible, plain text otherwise. An object response
-   * with a `data` property resolves as `data` instead of the whole object; if that `data` is
-   * an array, each entry is treated as a fragment instruction that updates part of the page
-   * (see applyFragment).
-   *
-   * The request body comes from the element `$ajax` was called on (see buildRequestBody): the
-   * whole form for a `<form>`, or just that field otherwise. The element gets an `is-load`
-   * class for the request's duration. The HTTP method defaults to `POST` for a `<form>` and
-   * `GET` otherwise, unless a `method` attribute is set.
-   *
-   * Calling `$ajax` again on the same element cancels any request still in flight, so
-   * overlapping responses can't apply out of order.
-   *
-   * @param {Event} e - The triggering event (unused; part of every method's call signature).
-   * @param {HTMLElement} el - The element `$ajax` was called on.
-   * @returns {Function} `(route: string, payload?: object, onProgress?: Function, options?: {headers?: Object, credentials?: boolean}) => Promise`
+   * @param {Event} e - Triggering event (unused).
+   * @param {HTMLElement} el - Element `$ajax` was called on.
+   * @returns {Function} `(route, payload?, onProgress?, options?) => Promise`
    */
   Youla.method('ajax', (e, el) => (route, payload, onProgress, options = {}) => {
     abortPrevious(el);
@@ -62,9 +47,7 @@ document.addEventListener('youla:init', () => {
 
         const data = parsed?.data ?? parsed ?? xhr.responseText;
 
-        // A listener overriding the resolution (see the "override" case in
-        // the docs) settles it synchronously here; the fallback below only
-        // fires if nothing did.
+        // A listener can override the resolution synchronously via "resolve"; otherwise it falls through below.
         let settled = false;
         const override = value => { settled = true; resolve(value); };
 
@@ -94,13 +77,10 @@ document.addEventListener('youla:init', () => {
   });
 
   /**
-   * Aborts the in-flight request (if any) still tracked on "el" from a
-   * previous `$ajax` call — clearing its handlers first so the abort
-   * itself doesn't also toggle the loading class off for the new request
-   * that's about to start, and rejecting its promise so it doesn't just
-   * hang forever.
+   * Aborts and rejects the in-flight request (if any) tracked on "el", clearing its
+   * handlers first so the abort doesn't toggle off the loading class for the new request.
    *
-   * @param {HTMLElement} el - The element to check for a tracked request.
+   * @param {HTMLElement} el - Element to check for a tracked request.
    * @returns {void}
    */
   function abortPrevious(el) {
@@ -115,11 +95,10 @@ document.addEventListener('youla:init', () => {
   }
 
   /**
-   * Toggles an `is-load` class on "el" and any `[type="submit"]`
-   * descendants for the lifetime of a request.
+   * Toggles an `is-load` class on "el" and any `[type="submit"]` descendants.
    *
-   * @param {HTMLElement} el - The element the request was made from.
-   * @returns {Function} Call with no arguments once the request settles, to remove the class again.
+   * @param {HTMLElement} el - Element the request was made from.
+   * @returns {Function} Call once the request settles to remove the class.
    */
   function toggleLoading(el) {
     const elements = [el, ...el.querySelectorAll('[type="submit"]')];
@@ -130,13 +109,10 @@ document.addEventListener('youla:init', () => {
   }
 
   /**
-   * Builds the request body from "el": every field for a `<form>`
-   * (`FormData(form)` already includes file inputs, keyed by their `name`),
-   * or just "el" itself otherwise — its value, or its selected files if
-   * it's a lone `input[type="file"]`. "payload"'s own entries are appended
-   * last, so they can add to (but not silently vanish behind) the field data.
+   * Builds the request body from "el": every field for a `<form>`, or just "el" itself
+   * otherwise. "payload"'s entries are appended last, on top of the field data.
    *
-   * @param {HTMLElement} el - The form or field the request was made from.
+   * @param {HTMLElement} el - Form or field the request was made from.
    * @param {Object} [payload] - Extra key/value pairs to append.
    * @returns {FormData}
    */
@@ -160,13 +136,11 @@ document.addEventListener('youla:init', () => {
   }
 
   /**
-   * Normalizes an XHR upload/load event plus its XHR instance into the
-   * plain object passed to `$ajax`'s `onProgress` callback. "raw"/"json"/
-   * "blob" read as empty/null/blank until the response body actually
-   * arrives (the "loadend" tick).
+   * Normalizes an XHR upload/load event plus its XHR instance into the plain object passed
+   * to `$ajax`'s `onProgress` callback.
    *
-   * @param {ProgressEvent} event - The upload/load event ("loadstart", "progress", or "loadend").
-   * @param {XMLHttpRequest} xhr - The request the event belongs to.
+   * @param {ProgressEvent} event - Upload/load event ("loadstart", "progress", or "loadend").
+   * @param {XMLHttpRequest} xhr - Request the event belongs to.
    * @returns {Object} `{ raw, json, blob, status, url, loaded, total, percent, start, progress, end }`.
    */
   function readProgress(event, xhr) {
@@ -189,12 +163,10 @@ document.addEventListener('youla:init', () => {
   }
 
   /**
-   * Parses "text" as JSON, or returns null if it's empty or malformed —
-   * lets a response be treated as JSON when possible without a caller
-   * having to guard every `$ajax` call with its own try/catch.
+   * Parses "text" as JSON, or returns null if it's empty or malformed.
    *
-   * @param {string} text - The text to parse.
-   * @returns {*} The parsed value, or null.
+   * @param {string} text - Text to parse.
+   * @returns {*} Parsed value, or null.
    */
   function parseJSON(text) {
     try {
@@ -215,13 +187,9 @@ document.addEventListener('youla:init', () => {
   }
 
   /**
-   * Applies one fragment instruction — `{ target, "action:delay"?: value }`
-   * — to every element matching the "target" selector: each of its own
-   * keys names an action (optionally suffixed with a `:delay` in ms, e.g.
-   * `"update:300"`) run against that element with "value". "target" is
-   * optional — page-global actions ("notify", "redirect", "reload",
-   * "changeURL") don't touch any element, so there's nothing to select and
-   * the action just runs once against `null`.
+   * Applies one fragment instruction to every element matching "target". Each key names an
+   * action, optionally suffixed with a `:delay` in ms (e.g. `"update:300"`). "target" is
+   * optional for page-global actions ("notify", "redirect", "reload", "changeURL").
    *
    * @param {Object} item - `{ target?: string, [action: string]: * }`.
    * @returns {void}
@@ -240,13 +208,11 @@ document.addEventListener('youla:init', () => {
   }
 
   /**
-   * Runs a single fragment action against "target". Unrecognized actions
-   * are silently ignored, so an older client can safely receive an action
-   * name a newer server started sending.
+   * Runs a single fragment action against "target". Unrecognized actions are silently ignored.
    *
-   * @param {string} action - The action name, e.g. "update" or "classList.add".
-   * @param {HTMLElement} target - The element the action applies to.
-   * @param {*} value - The action's payload (shape depends on the action).
+   * @param {string} action - Action name, e.g. "update" or "classList.add".
+   * @param {HTMLElement} target - Element the action applies to.
+   * @param {*} value - Action's payload (shape depends on the action).
    * @returns {void}
    */
   function runFragmentAction(action, target, value) {
@@ -268,8 +234,7 @@ document.addEventListener('youla:init', () => {
         break;
       case 'value':
         target.value = value || '';
-        // Lets a v-prop-bound field pick up the change too, instead of its
-        // underlying data silently drifting out of sync with the DOM.
+        // Lets a v-prop-bound field pick up the change too.
         target.dispatchEvent(new Event('input', { bubbles: true }));
         break;
       case 'update':

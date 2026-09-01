@@ -92,8 +92,7 @@
 		width: auto;
 		height: 100%;
 		min-width: 100%;
-		// draggable="false" (markup) is the real fix; this just backstops Safari, which still
-		// lets an <img> start its own native drag without it.
+		// Backstops Safari, which can still start a native image drag despite draggable="false".
 		-webkit-user-drag: none;
 		user-drag: none;
 	}

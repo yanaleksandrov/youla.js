@@ -106,8 +106,7 @@ class Filler {
         dialogVideoPlaceholder: 'placeholder',
         dialogVideoRemove: 'remove',
         dialogVideoReset: 'reset',
-        // Real <video>-tag playback settings (autoplay/loop/muted/...), not a CSS-filter correction
-        // panel like the image source's — see Filler.VIDEO_SETTINGS.
+        // Real <video>-tag playback settings (autoplay/loop/muted/...), not a CSS-filter correction panel like the image source's.
         dialogVideoSettingsTitle: 'settings-title',
         dialogVideoSettings: 'settings',
         dialogVideoSetting: 'setting',
@@ -132,8 +131,7 @@ class Filler {
     onChange: null,
     // (type) => void, fired when the dialog's source switches ('solid'/'image'/'video').
     onSourceChange: null,
-    // ('image'|'video', media) => void, fired after an upload/clear/reset or any correction-slider
-    // (or, for video, playback-setting) edit — "media" is the same object as this.image/this.video.
+    // ('image'|'video', media) => void, fired after an upload/clear/reset or any slider/setting edit.
     onMediaChange: null,
 
     // User-facing text, overridable for localization.
@@ -201,9 +199,7 @@ class Filler {
     video: '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 12 12"><path fill="#000" d="M10 0a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2zM2 1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1z"/><path stroke="#000" d="M4.1 4.3q.1-.6.8-.5l3 1.8q.5.4 0 .8l-3 1.8q-.7.3-.8-.5z"/></svg>',
   };
 
-  /* Per-type wiring shared by buildMediaPanel/renderMediaPreview/etc. — `classKeys`/`labelKeys` point
-     into `classes`/`labels` so existing image class/label names (public via ::part() and options)
-     stay untouched while video gets its own mirrored set. */
+  // Per-type wiring shared by buildMediaPanel/renderMediaPreview/etc.; `classKeys`/`labelKeys` point into `classes`/`labels`.
   static MEDIA = {
     image: {
       tag: 'img',
@@ -232,9 +228,7 @@ class Filler {
     },
   };
 
-  /* Real <video>-tag playback settings, editable in the video panel instead of a CSS-filter
-     correction section (CSS filters apply fine to <video>, but these are what actually matters
-     when the uploaded clip ends up as a background/fill <video> element on the page). */
+  // Real <video>-tag playback settings, editable in the video panel instead of a CSS-filter correction section.
   static VIDEO_SETTINGS = [
     { key: 'autoplay', type: 'checkbox', default: true },
     { key: 'loop', type: 'checkbox', default: true },
@@ -247,15 +241,11 @@ class Filler {
   // Eyedropper icon (Material "colorize"), for the dialog's pick-from-screen button.
   static EYEDROPPER_ICON = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 12 12"><path fill="#000" d="M12 2.2a2.2 2.2 0 0 0-.7-1.6C10.42-.23 9-.2 8.13.67L6.93 1.9a1.5 1.5 0 0 0-2.08.05l-.56.56a1 1 0 0 0 0 1.41l.13.13-3.19 3.19A2.5 2.5 0 0 0 .57 9.6l-.5 1.16a.9.9 0 0 0 .18.95 1 1 0 0 0 1.1.2l1.1-.47a2.5 2.5 0 0 0 2.32-.67l3.19-3.2.12.14a1 1 0 0 0 1.42 0l.56-.57a1.5 1.5 0 0 0 .05-2.07l1.23-1.24A2.2 2.2 0 0 0 12 2.2m-7.94 7.86a1.5 1.5 0 0 1-1.5.38.5.5 0 0 0-.34.02l-1.13.5.47-1.12a.5.5 0 0 0 .02-.36 1.5 1.5 0 0 1 .36-1.54l3.19-3.19 2.12 2.13zm6.57-6.93L9.05 4.72a.5.5 0 0 0 0 .7l.3.31a.5.5 0 0 1 0 .7L8.8 7 5 3.2l.56-.56a.5.5 0 0 1 .71 0l.3.3a.5.5 0 0 0 .71 0l1.56-1.56a1.3 1.3 0 0 1 1.77-.05 1.25 1.25 0 0 1 .02 1.8"/></svg>';
 
-  /* Panel width clamp (see attachFloating) — also the "enough room" threshold `availableSpace`
-     uses to prefer placing the panel beside the field over stacking it. */
+  // Panel width clamp; also the "enough room" threshold `availableSpace` uses to prefer beside the field over stacking.
   static PANEL_MIN_WIDTH = 200;
   static PANEL_MAX_WIDTH = 280;
 
-  /* One slider per CSS filter function; ranges follow the spec — grayscale/sepia/invert/blur run
-     0-100(px) from their floor/neutral value, brightness/contrast/saturate center on their 100%
-     neutral (capped at an arbitrary 200), and hue-rotate alone is signed, centered on 0 (-180..180). */
-  // Shared by the image and video panels — CSS `filter` applies identically to <img> and <video>.
+  // One slider per CSS filter function; ranges follow the spec, hue-rotate alone is signed (-180..180).
   static MEDIA_FILTERS = [
     { key: 'brightness', css: 'brightness', min: 0, max: 200, default: 100, step: 1, unit: '%' },
     { key: 'contrast', css: 'contrast', min: 0, max: 200, default: 100, step: 1, unit: '%' },
@@ -462,9 +452,7 @@ class Filler {
     return { r: (r + m) * 255, g: (g + m) * 255, b: (b + m) * 255 };
   }
 
-  /* Prefers beside the field (right, then left) over stacking below/above; falls back only when
-     neither side fits the panel's own minimum width (PANEL_MIN_WIDTH). Returns the side and its
-     room as `maxSize`, used to cap the panel before measuring so it scrolls only as a last resort. */
+  // Prefers beside the field (right, then left) over stacking, falling back only if neither fits PANEL_MIN_WIDTH.
   static availableSpace(anchorRect, viewport, offset = 6) {
     const space = {
       right: viewport.width - anchorRect.right - offset,
@@ -501,7 +489,10 @@ class Filler {
     };
   }
 
-  /* @param {string|HTMLInputElement} target @param {object} [options] */
+  /**
+   * @param {string|HTMLInputElement} target
+   * @param {object} [options]
+   */
   constructor(target, options = {}) {
     const el = this.el = typeof target === 'string' ? document.querySelector(target) : target;
 
@@ -522,14 +513,11 @@ class Filler {
     const initialAlpha = Filler.clamp(options.alpha ?? parseFloat(el.dataset.alpha ?? '100'), 0, 100);
     this.hsva = { ...Filler.rgbToHsv(Filler.hexToRgb(initialHex)), a: initialAlpha };
 
-    // Which panel the dialog shows — 'solid' (HSV picker), 'image' or 'video' (upload + adjustments);
-    // "options.source" seeds it (e.g. restoring a fill saved elsewhere), falling back to the first
-    // configured source.
+    // Which panel the dialog shows; "options.source" seeds it (e.g. restoring a fill saved elsewhere), else the first configured source.
     this.source = options.source && this.sources.includes(options.source) ? options.source : this.sources[0];
     const imageFilterDefaults = Object.fromEntries(Filler.MEDIA_FILTERS.map(({ key, default: value }) => [key, value]));
     const videoSettingDefaults = Object.fromEntries(Filler.VIDEO_SETTINGS.map(({ key, default: value }) => [key, value]));
-    // "options.image"/"options.video" likewise restore a previously uploaded file's own dataUrl/
-    // filters/settings, merged over the defaults so a partial patch still leaves the rest usable.
+    // "options.image"/"options.video" restore a previously uploaded file's dataUrl/filters/settings, merged over the defaults.
     this.image = { dataUrl: null, fit: 'cover', rotation: 0, ...imageFilterDefaults, ...options.image };
     this.video = { dataUrl: null, fit: 'cover', rotation: 0, ...videoSettingDefaults, ...options.video };
     // DOM refs per media type ('image'/'video'), filled in by buildMediaPanel.
@@ -560,7 +548,6 @@ class Filler {
     // Painted over swatchColor via DOM order (no z-index needed); shown only while there's transparency.
     const swatchColorOpaque = this.swatchColorOpaque = Filler.el('span', { className: classes.swatchColorOpaque });
     // CSS `background-image` can't show a <video>, so the video source gets its own live element.
-    // autoplay/loop/muted/... are applied from `this.video` by applyVideoSettings, not hardcoded here.
     const swatchVideo = this.swatchVideo = Filler.el('video', { className: classes.swatchVideo, hidden: true });
     const swatch = this.swatch = Filler.el('button', { type: 'button', className: classes.swatch });
     swatch.append(swatchColor, swatchColorOpaque, swatchVideo);
@@ -704,12 +691,7 @@ class Filler {
 
       suffix.addEventListener('pointermove', onMove);
       suffix.addEventListener('pointerup', onUp);
-      // The browser can abort an active pointer capture without ever firing "pointerup" (a touch
-      // gesture reinterpreted as a scroll, an intervening system dialog, ...) — "pointercancel" is
-      // the only event guaranteed to still fire then. Without also cleaning up here, "onMove" and
-      // "onUp" stay attached to "suffix" (which — built once in initialize() — outlives any single
-      // drag) forever: each subsequent drag adds one more surviving pair, so every later pointermove
-      // fires every leaked "onMove" too, compounding drag by drag until the field visibly lags.
+      // "pointerup" can be skipped (capture aborted mid-gesture); "pointercancel" always fires, avoiding a listener leak on "suffix".
       suffix.addEventListener('pointercancel', onUp);
     });
   }
@@ -905,9 +887,7 @@ class Filler {
     });
   }
 
-  /* `host` is the plain light-DOM element attachFloating positions and appends to <body>; `root`
-     (its shadow tree) carries the panel's chrome/content, isolated from page CSS both ways —
-     restyle from outside via `::part(<class-name>)` instead of a plain selector. */
+  // `host` is the light-DOM element attachFloating positions; `root` is its shadow tree — restyle it via `::part(<class-name>)`.
   createShadowPanel(className) {
     const host = Filler.el('div');
     const shadow = host.attachShadow({ mode: 'open' });
@@ -924,9 +904,7 @@ class Filler {
     return { host, root };
   }
 
-  /* `content` is `panel`'s shadow-root element (its `root`) — the scroll clamp below targets it
-     instead of `panel`, since an ancestor's overflow clips a descendant's box-shadow but never
-     its own, keeping content's box-shadow (filler-panel-chrome) intact while it scrolls. */
+  // Scroll clamp targets `content` (panel's shadow root), not `panel`, so overflow clipping never eats its own box-shadow.
   attachFloating(panel, content, onClose) {
     const { wrapper } = this;
     Object.assign(panel.style, { position: 'fixed', zIndex: 999999, top: 0, left: 0 });
@@ -968,9 +946,7 @@ class Filler {
     };
     const onKeydown = (event) => event.key === 'Escape' && onClose();
 
-    /* Deferred past the gesture that opened this panel: a focus-triggered open (see the hex
-       field's 'focus' listener) runs before that same gesture's 'click' event, which this
-       listener would otherwise catch and could misread as an outside click. */
+    // Deferred so the gesture that opened this panel (e.g. a focus-triggered open) isn't misread as an outside click.
     const addClickListenerTimer = setTimeout(() => document.addEventListener('click', onDocClick, true), 0);
     document.addEventListener('keydown', onKeydown);
     window.addEventListener('scroll', reposition, true);
@@ -1174,8 +1150,7 @@ class Filler {
       tabs.appendChild(tab);
     });
 
-    // Bookend the value fields — eyedropper before them, copy after — rather than sitting in the
-    // format tabs row above. Hidden outright where the browser doesn't support it.
+    // Bookends the value fields — eyedropper before, copy after — hidden where the browser lacks EyeDropper.
     const eyedropperButton = this.dialogEyedropperButton = Filler.el('button', {
       type: 'button', className: classes.dialogEyedropper, title: this.labels.pickColor,
       innerHTML: Filler.EYEDROPPER_ICON, hidden: !window.EyeDropper,
@@ -1187,8 +1162,7 @@ class Filler {
     });
     copyButton.addEventListener('click', () => this.copyValue(copyButton));
 
-    // renderDialogFields() rebuilds just this inner row on every format switch, leaving the
-    // eyedropper/copy buttons flanking it untouched.
+    // renderDialogFields() rebuilds just this inner row on every format switch, leaving eyedropper/copy untouched.
     const fieldsValues = Filler.el('div', { className: classes.dialogFieldsValues });
     const fields = Filler.el('div', { className: classes.dialogFields });
     fields.append(eyedropperButton, fieldsValues, copyButton);
@@ -1224,9 +1198,7 @@ class Filler {
     this.syncSourceUI();
   }
 
-  /* The dialog's top row: source-type buttons ('Solid'/'Image'/'Video') on the left, grouped so
-     they can be hidden outright under 2 sources, and the close button on the right — which stays
-     visible regardless, since the dialog must stay closable no matter how many sources it offers. */
+  // Dialog's top row: grouped source-type buttons on the left, close button on the right (always visible).
   buildSourceButtons() {
     const { classes } = this;
     const row = this.dialogSources = Filler.el('div', { className: classes.dialogSources });
@@ -1294,10 +1266,7 @@ class Filler {
     dialogVideoPanel.hidden = source !== 'video';
   }
 
-  /* The 'Image'/'Video' panel: object-fit + rotate toolbar, upload field, plus a type-specific
-     settings section — CSS-filter correction sliders for images (buildFilterSliders), real
-     <video>-tag playback settings for video (buildVideoSettings). `type` is 'image' or 'video' —
-     see Filler.MEDIA for the class/label names it reads. */
+  // The 'Image'/'Video' panel: object-fit + rotate toolbar, upload field, plus a type-specific settings section.
   buildMediaPanel(type) {
     const { classes, labels } = this;
     const { tag, accept, classKeys, labelKeys } = Filler.MEDIA[type];
@@ -1419,8 +1388,7 @@ class Filler {
     return [slidersTitle, sliders];
   }
 
-  /* The video panel's real <video>-tag playback settings — one checkbox/select per
-     Filler.VIDEO_SETTINGS entry, applied live via applyVideoSettings; returns [title, list]. */
+  // The video panel's playback settings — one checkbox/select per Filler.VIDEO_SETTINGS entry; returns [title, list].
   buildVideoSettings(type, cls, media) {
     const { labels } = this;
     const settingsTitle = Filler.el('span', { className: cls.settingsTitle, textContent: labels.videoSettingsTitle });
@@ -1539,8 +1507,7 @@ class Filler {
     removeButton.hidden = !dataUrl;
     previewMedia.hidden = !dataUrl;
 
-    // Nothing to adjust without an image — keep the filter sliders inert until one's loaded; video's
-    // playback settings stay usable even before a clip is chosen, since they don't touch pixels.
+    // Filter sliders stay inert until an image is loaded; video's playback settings don't touch pixels, so they stay usable regardless.
     if (sliderInputs) {
       Object.values(sliderInputs).forEach((input) => { input.disabled = !dataUrl; });
     }
@@ -1577,9 +1544,7 @@ class Filler {
     }
   }
 
-  /* Applies autoplay/loop/muted/controls/playsInline from `this.video` to the dialog preview, and
-     to the compact swatch while 'video' is active — then starts/stops playback to match, since
-     setting the IDL properties alone doesn't retroactively (re)start an already-loaded <video>. */
+  // Applies playback settings from `this.video` and starts/stops playback, since setting the IDL properties alone doesn't restart an already-loaded <video>.
   applyVideoSettings(type) {
     const media = this[type];
     const refs = this.mediaRefs[type];
@@ -1634,8 +1599,7 @@ class Filler {
 
       track.addEventListener('pointermove', onMove);
       track.addEventListener('pointerup', onUp);
-      // See the matching comment in bindAlphaSuffixDrag() — "pointerup" alone misses a
-      // browser-aborted capture, leaking onMove/onUp onto this (reused, long-lived) track.
+      // See bindAlphaSuffixDrag() — "pointercancel" avoids leaking onMove/onUp onto this reused track.
       track.addEventListener('pointercancel', onUp);
     });
   }
@@ -1668,8 +1632,7 @@ class Filler {
 
       area.addEventListener('pointermove', onMove);
       area.addEventListener('pointerup', onUp);
-      // See the matching comment in bindAlphaSuffixDrag() — "pointerup" alone misses a
-      // browser-aborted capture, leaking onMove/onUp onto this (reused, long-lived) area.
+      // See bindAlphaSuffixDrag() — "pointercancel" avoids leaking onMove/onUp onto this reused area.
       area.addEventListener('pointercancel', onUp);
     });
   }
@@ -1786,9 +1749,7 @@ class Filler {
     dialogAreaHandle.style.top = `${100 - v}%`;
     dialogAreaHandle.style.backgroundColor = `rgb(${rgbTriplet})`;
 
-    // A unitless 0-1 fraction — CSS (`.filler-dialog-handle`) insets the actual `left` by half the
-    // handle's own width from each edge, so the handle stays inside the track at ratio 0/1 instead
-    // of hanging half off it. The ratio itself is untouched, so the full h/a range stays reachable.
+    // Unitless 0-1 fraction; CSS insets the actual `left` by half the handle's width so it stays inside the track at ratio 0/1.
     this.dialogHueHandle.style.setProperty('--percent', h / 360);
 
     this.dialogAlphaGradient.style.backgroundImage = `linear-gradient(to right, rgba(${rgbTriplet}, 0), rgba(${rgbTriplet}, 1))`;
@@ -1799,13 +1760,7 @@ class Filler {
 
   // Applies an options patch to an already-mounted instance.
   update(options = {}) {
-    // "image"/"video"/"source"/"alpha" are one-time seeds the constructor already merged with
-    // defaults (see its own comment) — a caller like controls/fill.js's fillFiller() keeps handing
-    // them back on every re-render (echoing whatever it currently has, which is null/undefined for
-    // a fill that hasn't switched source or uploaded anything yet), so blindly reassigning them
-    // here would clobber this.image/this.video with `undefined` — breaking the correction sliders
-    // ("Brightness: undefined%"), fit-select and rotate — the moment any *other* reactive write
-    // triggers a refresh. Dropped from the options patch entirely; only re-applied by construction.
+    // One-time constructor seeds; a caller like repeaterField()'s "fill" case echoes stale null/undefined values on every re-render, which would clobber this.image/this.video if reapplied here.
     const { image, video, source, alpha, ...rest } = options;
 
     const paletteChanged = 'palette' in options;
@@ -1854,11 +1809,10 @@ class Filler {
     }
   }
 
-  /* Releases everything attachFloating hung off `window`/`document` — closing the dialog/dropdown
-     removes their listeners and detaches their body-appended panel. Callers that pull a filler's
-     `<input>` out of the DOM directly (e.g. controls/fill.js rebuilding or removing a row) MUST
-     call this first: nothing here watches for disconnection on its own, so skipping it leaks a
-     permanent scroll/resize listener plus an orphaned floating panel per instance. */
+  /**
+   * Releases attachFloating's window/document listeners and detaches the floating panel.
+   * Call before removing a filler's `<input>` from the DOM (e.g. controls/repeater.js rebuilding a row), or it leaks.
+   */
   destroy() {
     this.closeDialog();
     this.closeDropdown();
@@ -1868,9 +1822,7 @@ class Filler {
 
 document.addEventListener('youla:init', ()=> {
 
-  /* Turns `<input type="text">` into a Figma-style fill field — swatch, HEX input, and a
-     transparency field. The HEX field opens a palette dropdown; the swatch opens a full HSV +
-     alpha dialog with copy-to-clipboard in HEX/RGB/HSL. The main input always displays HEX. */
+  // Turns `<input type="text">` into a Figma-style fill field: swatch, HEX input, and a transparency field.
   Youla.directive('filler', (el, output) => {
     if (!(el instanceof HTMLInputElement)) {
       console.warn('Youla.js: "v-filler" requires an <input>.');

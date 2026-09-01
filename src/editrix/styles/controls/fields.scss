@@ -1,15 +1,4 @@
-// Generic control-system chrome (title/tooltip/description/responsive/disabled), shared by every
-// control type — see plugins/editrix/controls/base.js's field() and sections/sidebar.html's field
-// template library (controls/render.js). Type-specific field markup (switcher, slider,
-// dimensions, ...) reuses the existing .editrix-inputs-box/.editrix-borders/.editrix-buttons
-// families (inputs.scss/borders.scss/buttons.scss) wherever it already fits.
-//
-// The title is rendered from field()'s ":data-title" binding via ":before", the same data-title
-// convention controls/borders.scss already uses for its own "Padding"/"Margin" captions — not a
-// separate label element, so every control's wrapper has exactly the same shape. The tooltip icon
-// (fieldTooltip()) sits right after it on the same row via flex-wrap; the control and description
-// each wrap to their own full-width row below.
-
+// Generic control-system chrome (title/tooltip/description/responsive/disabled) shared by every control type — see controls/base.js's field().
 .editrix-field {
 	display: flex;
 	flex-wrap: wrap;
@@ -73,11 +62,7 @@
 	}
 }
 
-// Boolean toggle — v-bind="e.switcher(name)" directly on the <input type="checkbox">. A switch,
-// not a checkbox: appearance:none strips the native box, and a background SVG (a plain filled
-// circle) stands in for the thumb — sliding between background-position's two ends on :checked is
-// pure CSS, no separate thumb element needed. Same technique as the filler dialog's own video
-// setting switches (styles/filler-panel.scss), just sized/accented to match this control system.
+// Boolean toggle built from a checkbox: appearance:none strips the native box, and the thumb is a background SVG that slides via background-position on :checked.
 .editrix-switch {
 	appearance: none;
 	-webkit-appearance: none;
@@ -111,8 +96,7 @@
 	}
 }
 
-// A row of sub-fields for a compound control (url/media/text_shadow/...) — parts stacked with a
-// consistent gap, reusing .editrix-inputs-box for each part's own chrome.
+// Stacks the sub-fields of a compound control (url/media/text_shadow/...) with a consistent gap.
 .editrix-field-row {
 	display: flex;
 	flex-direction: column;
@@ -134,8 +118,7 @@
 	}
 }
 
-// Live preview swatch/thumbnail next to a media control's input (the "color" control used this
-// too, until it moved to v-filler — see controls/data.js's own color()).
+// Live preview swatch/thumbnail next to a media control's input.
 .editrix-field-preview {
 	width: 24px;
 	height: 24px;
@@ -152,19 +135,13 @@ input[type="range"] {
 	accent-color: #1069fb;
 }
 
-// Compact range control (Content tab's slider fields — controls/render.js's slider() renderer) —
-// bare track+thumb only (Ranger's own value label and tick scale, both on by default, are switched
-// off via sliderRange()'s v-ranger options in controls/unit.js), with the numeric value — plus its
-// optional prefix/suffix and unit — sitting to the track's right instead of Ranger's usual
-// full-width layout with room reserved above/below for that label/scale.
+// Compact range control (controls/render.js's slider() renderer) — bare track+thumb with the numeric value to the right, instead of Ranger's default full-width layout.
 .editrix-slider {
 	display: flex;
 	align-items: center;
 	gap: 8px;
 
-	// Scoped override of ranger.scss's :root tokens — its defaults (a tall, orange-accented
-	// handle, plus top/bottom margin reserved for the label/scale switched off above) are sized
-	// for a full standalone slider, not this compact sidebar row.
+	// Scoped override of ranger.scss's :root tokens, sized down for this compact sidebar row.
 	--ranger-accent: #1069fb;
 	--ranger-height: 4px;
 	--ranger-gap-top: 0;
@@ -184,8 +161,7 @@ input[type="range"] {
 		white-space: nowrap;
 	}
 
-	// ".editrix-inputs-box" itself is "flex: 1" (inputs.scss) — both need to hold a fixed width
-	// instead of fighting the track for space.
+	// Overrides .editrix-inputs-box's flex:1 (inputs.scss) so these hold a fixed width instead of fighting the track.
 	&-input.editrix-inputs-box {
 		flex: none;
 		width: 56px;

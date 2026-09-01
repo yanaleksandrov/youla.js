@@ -16,7 +16,6 @@
 @import 'controls/gallery';
 @import 'controls/categories';
 @import 'controls/fields';
-@import 'controls/fill';
 @import 'controls/repeater';
 
 .editrix-list {
@@ -77,9 +76,7 @@
 		padding-inline-start: 20px;
 	}
 
-	// Status and Visibility (toolbox.html) are two independent settings, matching WordPress's own
-	// split — each gets its own shade of the project's blue (rather than sharing the plain
-	// gray/blue hover above) so the two lists read as distinct choices, not one long combined list.
+	// Status and Visibility are independent settings, so each gets its own accent shade instead of sharing the default hover color.
 	&--status &-item {
 		&:hover,
 		&.active {

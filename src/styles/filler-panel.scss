@@ -1,13 +1,8 @@
 @import 'filler-mixins';
 
-// Injected into a shadow root (see Filler#getPanelStylesheet), not the global stylesheet, so page
-// CSS can't reach these rules and these can't leak onto the page. Restyle from outside via
-// `::part(<class-name>)` — every element here carries a `part` mirroring its class (see Filler.el).
+// Injected into a shadow root (Filler#getPanelStylesheet); restyle from outside via ::part(<class-name>).
 
-// The HEX dropdown: custom-palette + library lists. `max-height`/`overflow-y` (when it doesn't fit
-// above/below the field) are set here directly, not on the light-DOM shadow host — see
-// Filler#attachFloating for why: an ancestor's `overflow` would otherwise clip this element's own
-// box-shadow (from filler-panel-chrome), which an element's own `overflow` never does.
+// HEX dropdown (custom palette + library lists); max-height/overflow-y set here rather than on the shadow host so an ancestor's overflow can't clip this element's own box-shadow.
 .filler-dropdown {
 	overflow-x: hidden;
 	padding: 8px;
@@ -34,7 +29,6 @@
 	color: #8a8f93;
 }
 
-// A vertical list — each row shows the color and its name together, per-name width stays legible.
 .filler-palette-row {
 	display: flex;
 	flex-direction: column;
@@ -80,7 +74,7 @@
 	color: #1a1a1a;
 }
 
-// A named library entry's hex, alongside its name; never truncated — the name ellipsizes first.
+// Never truncated — the name ellipsizes first.
 .filler-palette-hex {
 	flex: none;
 	font-family: var(--mono, ui-monospace, monospace);
@@ -198,19 +192,13 @@
 	border: 4px solid #fff;
 }
 
-// `--percent` (a unitless 0-1 fraction, set in renderDialog) drives `left` here instead of the
-// hue/alpha value's raw percentage, so the handle's center travels from half its own width in from
-// filler-dialog-hue/-alpha's left edge to half in from the right — never past either edge — while
-// the value <-> pointer-position mapping (Filler#bindTrackDrag) stays untouched, so hue 0-360 and
-// alpha 0-100 both stay fully reachable; only where the handle is drawn changes, not what it can select.
+// --percent (unitless 0-1, set in renderDialog) keeps the handle's center inset by half its width so it never overshoots either edge.
 .filler-dialog-handle {
 	position: absolute;
 	top: 50%;
 	left: calc(var(--handle-size) / 2 + var(--percent, 0) * (100% - var(--handle-size)));
 }
 
-// Real tabs — an underline on the active one, not a filled pill — since this row now holds only
-// the HEX/RGB/HSL switch (the eyedropper/copy moved down to flank the value fields, see below).
 .filler-dialog-tabs {
 	display: flex;
 	align-items: center;
@@ -238,7 +226,6 @@
 	&.is-active {
 		color: #1a1a1a;
 
-		// Sits on the row's own border-bottom, marking this as the open tab.
 		&::after {
 			content: '';
 			position: absolute;
@@ -336,8 +323,7 @@
 	}
 }
 
-// Always shown (unlike the group below) so the close button next to it always is too, regardless
-// of how many sources are configured.
+// Always shown so the close button stays visible regardless of how many sources are configured.
 .filler-dialog-sources {
 	display: flex;
 	align-items: center;
@@ -346,9 +332,7 @@
 	padding: 8px;
 }
 
-// `&[hidden]` is needed because `display` set here would otherwise outrank the UA stylesheet's
-// own `[hidden] { display: none }` rule. Hidden outright under 2 sources — nothing to switch
-// between — while filler-dialog-sources (its row) stays visible for the close button.
+// Hidden outright under 2 sources; filler-dialog-sources itself stays visible for the close button.
 .filler-dialog-sources-group {
 	display: flex;
 	align-items: center;
@@ -359,7 +343,7 @@
 	}
 }
 
-// Icon-only — the localized label lives in the `title` tooltip, not as visible text.
+// Icon-only — the localized label lives in the title tooltip.
 .filler-dialog-source {
 	flex: none;
 	display: flex;
@@ -389,17 +373,12 @@
 		background: rgba(0, 0, 0, 0.06);
 	}
 
-	// `&[hidden]` is needed for the same reason as filler-dialog-sources-group above — this rule's
-	// own `display` would otherwise outrank the UA stylesheet's `[hidden] { display: none }`, so a
-	// button syncSourceUI() hides (a source not in `sources`, e.g. "video" for the fill control's
-	// solid/image-only list) stayed visible and clickable-looking despite doing nothing when clicked.
+	// Needed since this rule's own display would otherwise outrank the UA [hidden] rule.
 	&[hidden] {
 		display: none;
 	}
 }
 
-// Pushed to the far end of filler-dialog-sources regardless of whether the group above it (icon
-// buttons) is shown or hidden.
 .filler-dialog-close {
 	margin-left: auto;
 	flex: none;
@@ -434,12 +413,7 @@
 	}
 }
 
-/* The 'Image' and 'Video' panels share this entire chrome — object-fit + rotate toolbar, upload
-   field, preview — down to the class name suffix; only what follows it (correction sliders vs.
-   playback settings, see below) actually differs between them. One rule per element, shared by
-   both media types, keeps that from being duplicated; where a real variation exists (the toolbar's
-   two controls, or the preview's two corner buttons) it gets its own modifier rule layered on a
-   shared base instead of being duplicated per media type too. */
+/* Image and Video panels share this chrome (toolbar, upload field, preview) via matching class-name suffixes. */
 .filler-dialog-image,
 .filler-dialog-video {
 	display: flex;
@@ -459,8 +433,7 @@
 	gap: 6px;
 }
 
-// Shared chrome for the toolbar's two controls — kept the same height so the <select> and the
-// <button> line up regardless of their different default box models.
+// Same height so the <select> and <button> line up despite different default box models.
 .filler-dialog-image-fit,
 .filler-dialog-image-rotate,
 .filler-dialog-video-fit,
@@ -486,11 +459,7 @@
 	}
 }
 
-/* Custom chevron for every <select> here (object-fit + preload) — appearance:none clears the
-   native one so a small background SVG can stand in for it. <select> doesn't support ::before/
-   ::after, so there's no separate element to transform on open; instead :focus (the closest
-   cross-browser proxy for "the dropdown is open") swaps in a second copy of the same SVG with the
-   chevron pre-rotated 180°, which reads as the arrow flipping without needing a wrapper element. */
+/* Custom chevron via background SVG since <select> supports neither appearance nor ::before/::after; :focus swaps in a pre-rotated copy to fake the open-state flip. */
 .filler-dialog-image-fit,
 .filler-dialog-video-fit,
 .filler-dialog-video-setting-input:is(select) {
@@ -541,8 +510,7 @@
 	}
 }
 
-// Covers the whole label (even once a file is loaded) so clicking the thumbnail reopens the file
-// picker to replace it, Figma-style; the remove button sits on top and handles its own click.
+// Covers the whole label so clicking the thumbnail reopens the file picker; the remove button sits on top.
 .filler-dialog-image-upload-input,
 .filler-dialog-video-upload-input {
 	position: absolute;
@@ -618,8 +586,7 @@
 	}
 }
 
-// Square and top-left (vs. the round remove button's top-right); surfaces only on hover, once
-// something's actually off default (see the has-adjustments:hover rule below).
+// Surfaces only on hover once something's off default (see has-adjustments:hover below).
 .filler-dialog-image-reset,
 .filler-dialog-video-reset {
 	left: 4px;
@@ -673,9 +640,7 @@
 	margin-inline-start: 4px;
 }
 
-// `--filler-slider-thumb` is the single source of truth for thumb size, read by both the thumb
-// rules below and filler-slider-fill's alignment math. Track radius is an oversized `9999px`
-// rather than matching height, so it stays a full pill regardless of that height.
+// --filler-slider-thumb is the single source of truth for thumb size, also read by filler-slider-fill's alignment math.
 .filler-dialog-image-slider-input {
 	--filler-slider-thumb: 16px;
 	appearance: none;
@@ -741,8 +706,6 @@
 	}
 }
 
-// Real <video>-tag playback settings (autoplay/loop/muted/controls/playsinline/preload) — checkboxes
-// and a preload <select>, not range sliders, since these are booleans/enums, not continuous values.
 .filler-dialog-video-settings {
 	display: flex;
 	flex-direction: column;
@@ -775,9 +738,7 @@
 .filler-dialog-video-setting-input {
 	flex: none;
 
-	// A switch, not a checkbox: appearance:none strips the native box, and a background SVG (a
-	// plain filled circle) stands in for the thumb — sliding between `background-position`'s two
-	// ends on :checked is pure CSS, no separate thumb element needed.
+	// Switch look via background-position sliding between two ends on :checked — no separate thumb element.
 	&[type="checkbox"] {
 		appearance: none;
 		-webkit-appearance: none;

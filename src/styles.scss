@@ -323,8 +323,7 @@ table {
 	}
 }
 
-// A real DOM animation (unlike the background-image data URI this used to be) can actually be
-// paused — matches the JS pause()/resume() the container's @mouseenter/@mouseleave call.
+// Matches the JS pause()/resume() the container's @mouseenter/@mouseleave call.
 .notice-root:hover .notice__spinner circle {
 	animation-play-state: paused;
 }

@@ -125,12 +125,12 @@ function renderSegments(segments, data) {
  *
  * @param {HTMLElement} el - the element the directive is on.
  * @param {*} output - the directive attribute's expression, evaluated against the component's data.
- * @param {object} attribute - the parsed attribute descriptor (directive name, modifiers, raw expression, etc. — see parseAttribute in ../attributes).
+ * @param {object} attribute - the parsed attribute descriptor (name, modifiers, expression).
  * @param {Component} component - the owning component instance.
  */
 directive('text', (el, output, attribute, component) => {
   if (isPlainObject(output)) {
-    // First pass: compile placeholders from whatever is already rendered, since it already matches the current data by construction (no flicker, no layout shift).
+    // First pass: compile placeholders from what's already rendered, since it matches the current data by construction.
     if (!el._x_text_segments) {
       el._x_text_segments = compilePlaceholders(el, el.textContent, output);
       el._x_text = el.textContent;
@@ -142,7 +142,7 @@ directive('text', (el, output, attribute, component) => {
 
   output = output ?? '';
 
-  // textContent is layout-independent (unlike innerText, which forces a reflow and varies across browsers for hidden elements).
+  // textContent is layout-independent, unlike innerText which forces a reflow and varies across browsers for hidden elements.
   if (el._x_text === output) {
     return;
   }

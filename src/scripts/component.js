@@ -12,15 +12,9 @@ import { getDirective } from './directives';
 import { resolveMethods } from './methods';
 
 /**
- * A "@event.window"/"@event.document"/"@event.outside" listener (attachListener(), below) targets
- * something other than the element it conceptually belongs to, and an "@intersect" observer keeps
- * its own independent reference to that element too — so removing "el" from the DOM does nothing
- * to release either: the listener/observer (and everything its closure captures, "el" included)
- * stays alive forever, since nothing else in this file ever notices an individual element's
- * removal. This is the shared, once-only fix every such binding registers a cleanup with instead
- * of each hand-rolling its own — one MutationObserver for the whole page rather than one per
- * binding, the same removal-watching shape youla-tooltip.js already uses for its own floating
- * panel (see that file's own "ensureRemovalObserver").
+ * A window/document/outside listener or an intersect observer keeps its own reference to "el",
+ * so removing "el" from the DOM wouldn't otherwise release it. This shared MutationObserver
+ * notices removal once for the whole page and runs each binding's registered cleanup (same shape as youla-tooltip.js's ensureRemovalObserver).
  */
 let disconnectObserver;
 const disconnectCleanups = new Map();
@@ -119,10 +113,8 @@ export default class Component {
    * Evaluates an expression (or calls a function) against the component's data, tracking
    * which top-level data properties were read via a dependency-tracking proxy.
    *
-   * @param {string|Function} expressionOrFn - A JS expression string, or a function (e.g. a
-   *   "v-bind" entry given as a method) to call with the proxy as "this".
-   * @param {Object} [additionalHelperVariables] - Extra variables available to the expression
-   *   (e.g. "v-each" loop variables, magic variables) alongside the component's data.
+   * @param {string|Function} expressionOrFn - A JS expression string, or a function (e.g. a v-bind method) called with the proxy as "this".
+   * @param {Object} [additionalHelperVariables] - Extra variables available alongside the component's data (loop/magic variables).
    * @returns {{output: *, deps: string[]}} The evaluated result and the property names it read.
    */
   evaluate(expressionOrFn, additionalHelperVariables) {
@@ -130,11 +122,7 @@ export default class Component {
 
     const makeProxy = (data) => new Proxy(data, {
       get(target, prop) {
-        // Lets reactivity.js's toRaw() see through this proxy too, not just its own — a value
-        // read here (e.g. controls/fill.js's patchFillAt() reading "fill" off "this") often gets
-        // spread and written straight back through makeObservable's own proxy; without this,
-        // wrap() has no way to tell that value was already one of ours, and wraps it again. See
-        // toRaw()'s own comment (reactivity.js) for what compounding that causes.
+        // Lets reactivity.js's toRaw() see through this proxy too, so a value read here and written back through makeObservable's proxy isn't wrapped again (see toRaw()).
         if (prop === RAW) {
           return toRaw(target);
         }
@@ -151,7 +139,7 @@ export default class Component {
 
     const proxiedData = makeProxy(this.data);
 
-    // Magic variables ("$el", "$refs", ...) skip the tracking proxy — they're DOM elements, not reactive data, and wrapping one would break native method calls like "$el.closest(...)"; they're layered onto "$data" instead (see withMagicVariables).
+    // Magic variables skip the tracking proxy since wrapping a DOM element would break native calls like $el.closest(); they're layered onto $data instead (see withMagicVariables).
     const { magicVariables, otherVariables } = splitMagicVariables(additionalHelperVariables);
 
     // "v-each" loop variables are passed to saferEval as separate parameters rather than properties of $data, so wrap object-valued ones the same way or property reads on them go untracked.
@@ -211,7 +199,7 @@ export default class Component {
         // A key with no v-/@/: prefix (e.g. "type") is a plain HTML attribute, written directly as markup.
         const isPlainAttribute = !parsed.directive && !parsed.event && !parsed.bind;
 
-        // A "v-*" key that isn't a registered directive (e.g. "v-ref") is read straight off the element instead (see getRefsProxy), so write it as a real attribute since there's none to read yet.
+        // A "v-*" key that isn't a registered directive (e.g. "v-ref") is read straight off the element instead (see createRefsProxy), so write it as a real attribute since there's none to read yet.
         if (parsed.directive && !getDirective(parsed.directive)) {
           el.setAttribute(name, isFn ? value.call(self.data) : value);
           return [];
@@ -256,8 +244,7 @@ export default class Component {
    * @param {Object} attribute - A parsed attribute descriptor, as returned by "resolveAttributes()".
    * @param {Object} additionalHelperVariables - Extra variables available to the expression (see "evaluate()").
    * @param {Object} [options]
-   * @param {boolean} [options.withDeps] - When true, also resolves "v-each"'s deps from its raw expression
-   *   (its items expression never goes through "evaluate()", so it can't be tracked the normal way).
+   * @param {boolean} [options.withDeps] - When true, also resolves "v-each"'s deps from its raw expression (untracked by evaluate()).
    * @returns {{output: *, deps: string[]}} The resolved output, and (when requested) its tracked deps.
    */
   computeOutput(attribute, additionalHelperVariables, { withDeps = false } = {}) {
@@ -299,20 +286,12 @@ export default class Component {
   }
 
   /**
-   * Performs the component's first render: walks the DOM from "root", and for
-   * every element registers its event listeners and runs its directives (or
-   * updates its bound attribute) against the freshly evaluated data.
-   *
-   * Idempotent per element ("el.__x_initialized"): a directive whose own output builds and
-   * inserts child markup (repeaterList()/fillList() in controls/repeater.js/fill.js,
-   * contentFields() in youla-editrix.js, ...) runs as part of *this* domWalk pass, while that same
-   * pass's own snapshot of children (domWalk, dom.js — taken right after the parent's callback
-   * runs, specifically so newly-inserted markup like this is picked up) is about to walk into
-   * those very same freshly-inserted, already-initialized elements again. Without this guard, an
-   * element inserted that way ends up with every "@event" listener attached twice — harmless for
-   * a "v-text"/":value"-only binding, but a click handler that removes its own element from the
-   * DOM (repeaterRemove(), fillRemove()) fires a second time on an already-detached element,
-   * throwing on whatever it reads off the DOM next.
+   * Performs the component's first render: walks the DOM from "root", attaching listeners and
+   * running directives for every element. Idempotent per element ("el.__x_initialized"), since a
+   * directive that inserts child markup (repeaterList() in controls/repeater.js, contentFields()
+   * in youla-editrix.js) runs within the same domWalk pass that then revisits that markup —
+   * without the guard, listeners double-attach and a self-removing handler like repeaterRemove()
+   * throws on an already-detached element.
    *
    * @param {HTMLElement} root - The root element to walk and initialize.
    */
@@ -330,7 +309,6 @@ export default class Component {
       self.resolveAttributes(el).forEach(attribute => {
         let {directive, event, expression, modifiers, bind} = attribute;
 
-        // init events
         let propExpression;
         if (directive === 'v-prop') {
           propExpression = generateExpressionForProp(el, self.data, attribute);
@@ -357,28 +335,18 @@ export default class Component {
   }
 
   /**
-   * Re-evaluates every element's bindings and re-runs only those whose
-   * dependencies actually changed since the last flush — everything else is
-   * left untouched. Clears "concernedData" once the pass completes.
+   * Re-evaluates every element's bindings, re-running only those whose dependencies changed
+   * since the last flush. Clears "concernedData" once the pass completes.
    *
-   * @param {boolean} [force] - When true, re-runs and re-applies every binding
-   *   unconditionally, ignoring "concernedData" — for state that lives outside
-   *   the reactive data entirely (nothing ever "sets" it through the tracked
-   *   proxy, so nothing would otherwise mark a binding reading it as dirty).
-   *   See `$step` in youla-methods.js for the motivating case.
+   * @param {boolean} [force] - Re-runs every binding unconditionally, for state that lives outside the reactive data (see `$step` in youla-extensions.js).
    */
   refresh(force = false) {
     const self = this;
 
-    // OR'd across every call that lands before the debounced flush below actually runs, so a
-    // forced call is never lost just because a plain one happened to be scheduled after it.
+    // OR'd across calls before the debounced flush runs, so a forced call is never lost to a later plain one.
     this.pendingForceRefresh = this.pendingForceRefresh || force;
 
-    // Built once and reused (not "debounce(fn, 0)()" recreated per call, which would hand each
-    // call its own fresh timer and never actually coalesce anything) — every reactive write during
-    // a fast burst (e.g. each pointermove tick while dragging a v-filler/v-ranger slider) would
-    // otherwise queue its own independent full-tree domWalk, flooding the task queue and freezing
-    // the page instead of collapsing into one pass.
+    // Built once and reused, not recreated per call — otherwise each write in a fast burst (e.g. dragging a v-filler/v-ranger slider) would queue its own full domWalk instead of coalescing.
     this.scheduleRefresh ??= debounce(() => {
       const force = self.pendingForceRefresh;
       self.pendingForceRefresh = false;
@@ -407,13 +375,9 @@ export default class Component {
   }
 
   /**
-   * Builds and attaches a DOM event listener for "@event" (or the synthetic event behind
-   * "v-prop"), wiring up whichever modifiers were used: retargeting, passive/capture, delay,
-   * prevent, stop, outside, key filters, once, and the special "load"/"intersect" events. A
-   * "window"/"document"/"outside" listener, and an "intersect" observer, auto-detach once "el"
-   * leaves the DOM (see cleanupOnDisconnect() above) — everything else lives directly on "el" and
-   * needs no such cleanup, since removing "el" itself is enough to make it (and its listeners)
-   * eligible for garbage collection the normal way.
+   * Builds and attaches a DOM listener for "@event" (or v-prop's synthetic event), applying its
+   * modifiers (retargeting, passive/capture, delay, prevent, stop, outside, key filters, once,
+   * load/intersect). Window/document/outside listeners and intersect observers auto-detach on "el" removal (see cleanupOnDisconnect()); everything else is cleaned up by GC once "el" itself is removed.
    *
    * @param {HTMLElement} el - The element the listener conceptually belongs to.
    * @param {string} event - The event name to listen for (e.g. "click", "load", "intersect").
@@ -444,7 +408,6 @@ export default class Component {
       options.capture = true;
     }
 
-    // delay an event for a certain time
     if (modifiers.includes('delay')) {
       handler = debounce(handler, Number(getNextModifier(modifiers, 'delay').split('ms')[0]) || 250);
     }
@@ -453,22 +416,20 @@ export default class Component {
       handler = wrapHandler(handler, (next, e) => { e.preventDefault(); next(e); });
     }
 
-    // stopping event propagation in DOM.
     if (modifiers.includes('stop')) {
       handler = wrapHandler(handler, (next, e) => { e.stopPropagation(); next(e); });
     }
 
-    // event outside of element
     if (modifiers.includes('outside')) {
       target = document;
 
       handler = wrapHandler(handler, (next, e) => {
-        // Don't do anything if the click came form the element or within it.
+        // Ignore a click that came from the element or within it.
         if (el.contains(e.target)) {
           return;
         }
 
-        // Don't do anything if this element isn't currently visible.
+        // Ignore clicks while this element isn't currently visible.
         if (el.offsetWidth < 1 && el.offsetHeight < 1) {
           return;
         }
@@ -486,7 +447,6 @@ export default class Component {
       handler = wrapHandler(handler, (next, e) => matchesKeyModifiers(e, modifiers) && next(e));
     }
 
-    // one time run event
     if (modifiers.includes('once')) {
       options.once = true;
     }
@@ -511,8 +471,7 @@ export default class Component {
 
     target.addEventListener(event, handler, options);
 
-    // "target" isn't "el" for window/document/outside — nothing else ever notices "el" leaving
-    // the DOM, so without this the listener (and everything its closure captures) outlives it.
+    // "target" isn't "el" for window/document/outside; without this cleanup the listener outlives "el" leaving the DOM.
     if (target !== el) {
       cleanupOnDisconnect(el, () => target.removeEventListener(event, handler, options));
     }
@@ -548,10 +507,8 @@ export default class Component {
   }
 
   /**
-   * Returns the component's local data alias (from "v-data="notice as n""), if any, keyed the
-   * way "v-each" loop variables are — so it's tracked for reactivity the same way bare
-   * properties are (see the "trackedHelperVariables" comment in evaluate()), unlike magic
-   * variables such as "$el", which skip tracking entirely.
+   * Returns the component's local data alias (from `v-data="notice as n"`), if any — keyed like
+   * a "v-each" loop variable so it's tracked for reactivity, unlike magic variables like "$el".
    *
    * @returns {object} "{ [alias]: this.data }", or "{}" when "v-data" carries no alias.
    */

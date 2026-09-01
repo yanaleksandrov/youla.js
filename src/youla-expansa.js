@@ -1,7 +1,7 @@
 document.addEventListener('youla:init', ()=> {
   /**
    * Password policy: checks a string against a fixed policy (minimum count per character
-   * class, minimum length) and can generate a password that already satisfies it.
+   * class, minimum length) and can generate a password satisfying it.
    *
    * @since 1.0
    */
@@ -40,15 +40,13 @@ document.addEventListener('youla:init', ()=> {
       return this.labels[this.level()];
     },
     check(value) {
-      // Whitespace isn't part of any charset above and would otherwise count toward length for free.
+      // Whitespace isn't part of any charset and would otherwise count toward length for free.
       if (/\s/.test(value)) {
         value = this.value = value.replace(/\s/g, '');
       }
 
       let matchCount = 0;
-      // One point per character class plus one for the length rule — fixed, unlike the old
-      // per-call total, which only counted the length rule's point when it passed. That let a
-      // short password satisfying all 4 character classes read as 100% despite failing length.
+      // One point per character class plus one for the length rule.
       let totalWeight = Object.keys(this.charsets).reduce((sum, type) => sum + this.min[type], 0) + 1;
 
       for (const type in this.charsets) {
@@ -180,9 +178,7 @@ document.addEventListener('youla:init', ()=> {
    * @since 1.0
    */
   Youla.data('builder', () => {
-    // Shared by addRule()/removeRule(): replaces group "key"'s rules with whatever "transform"
-    // returns, leaving every other group untouched. Reassigning "groups" wholesale (not the
-    // group/its rules in place) is what makes v-each notice the change and re-render.
+    // Reassigns "groups" wholesale (not in place) so v-each notices the change and re-renders.
     const updateRules = (groups, key, transform) => groups.map((group, index) => index !== key ? group : {
       ...group,
       rules: transform(group.rules),

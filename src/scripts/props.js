@@ -29,7 +29,6 @@ export function hydrateProps(rootElement, data) {
 
     let [key, ...prop] = expression.split('.');
 
-    // set default value if undefined
     if (data[key] === undefined) {
       let fields = [];
       if (el.type === 'checkbox') {
@@ -41,7 +40,7 @@ export function hydrateProps(rootElement, data) {
 
     let value = generateExpressionForProp(el, data, attribute);
 
-    // calc real value based on fields value attributes
+    // assign the field's current value onto data
     saferEval(value, withMagicVariables(data, createMagicVariables(rootElement, el)));
 
     // get data from localStorage or cookie

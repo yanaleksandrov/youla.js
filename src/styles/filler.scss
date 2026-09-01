@@ -1,11 +1,11 @@
 @import 'filler-mixins';
 
-// Scoped by naming convention (`.filler-*`) — this file only styles light-DOM elements. The
-// dropdown/dialog panels are isolated via a shadow root instead (see styles/filler-panel.scss).
+// Light-DOM elements only (`.filler-*`) — dropdown/dialog panels live in a shadow root (styles/filler-panel.scss).
 .filler {
 	display: inline-flex;
 	align-items: center;
 	gap: 8px;
+	width: 100%;
 	max-width: 100%;
 	padding-block: 4px;
 	padding-inline: 4px 8px;
@@ -27,12 +27,10 @@
 	}
 }
 
-// Pre-init "skeleton": makes the raw `<input v-filler>` already look like the mounted `.filler`
-// box before JS runs, so mounting doesn't shift it. Stops applying once JS adds `.filler-input`.
+// Pre-init skeleton so the raw input already looks like the mounted .filler box; stops once JS adds .filler-input.
 input[v-filler]:not(.filler-input) {
 	max-width: 100%;
-	// left: padding + swatch + gap; right: gap + alpha's border/padding/input/suffix — matches
-	// .filler-alpha/.filler-alpha-input/.filler-alpha-suffix below.
+	// Right offset matches the alpha block's width (.filler-alpha/-input/-suffix below).
 	padding: 4px calc(36px + 3ch) 4px 35px;
 	border: 1px solid #dfe2e3;
 	border-radius: 6px;
@@ -60,7 +58,7 @@ input[v-filler]:not(.filler-input) {
 	width: 23px;
 	height: 23px;
 	padding: 0;
-	// No border by default — JS adds one only for white/near-white colors, invisible without it.
+	// No border by default — JS adds one only for white/near-white colors, otherwise invisible.
 	border: none;
 	border-radius: 4px;
 	overflow: hidden;
@@ -82,8 +80,7 @@ input[v-filler]:not(.filler-input) {
 		display: none;
 	}
 
-	// Live thumbnail for the 'video' source — CSS `background-image` can't render a <video>, unlike
-	// the image source's .filler-swatch-color above, so it gets its own element, sized the same way.
+	// Live thumbnail for the 'video' source — background-image can't render a <video>, so it gets its own element.
 	.filler-swatch-video {
 		position: absolute;
 		inset: 0;
@@ -109,7 +106,7 @@ input[v-filler]:not(.filler-input) {
 	color: #1a1a1a;
 	text-transform: uppercase;
 
-	// Sentence case (not the hex field's all-caps) for the localized "Image" label; non-interactive since it's read-only.
+	// Sentence case (not the hex field's all-caps) for the localized "Image" label; read-only.
 	&.is-image-value {
 		font-family: inherit;
 		text-transform: none;

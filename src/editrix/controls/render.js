@@ -1,19 +1,12 @@
 /**
  * Renders control instances at runtime by cloning the <template> library shipped in
- * sections/sidebar.html's "Content" panel — Youla.js has no component-rendering system (see
- * base.js's header comment: a control is "real, hand-written HTML using v-bind to wire behavior
- * on top"), so composing one from a plain JS definition works the same way v-each (directives/
- * v-each.js) and container() (youla-editrix.js) already build markup dynamically elsewhere in
- * this codebase: clone → wire attributes with plain setAttribute() calls (never string-
- * interpolated into HTML text, so nothing here ever needs escaping) → component.initialize() to
- * activate the clone's directives.
+ * sections/sidebar.html's "Content" panel: clone → wire attributes via setAttribute() (never
+ * string-interpolated into HTML text) → component.initialize() to activate the clone's directives.
  *
- * Every control's own inner markup stays in its own <template id="editrix-control-*"> — this file
- * only knows which element(s) inside that clone need which binding. Adding a new control type
- * means adding its <template> plus one entry below; nothing else changes.
+ * Each control's own markup stays in its own <template id="editrix-control-*">; adding a new
+ * control type means adding its template plus one entry below.
  */
 
-import { renderFillControl } from './fill';
 import { renderRepeaterControl } from './repeater';
 
 /**
@@ -31,14 +24,10 @@ function cloneTemplate(id) {
   return template.content.cloneNode(true);
 }
 
-// Control types whose own markup reads better stacked in its own column (url/media/slider) rather
-// than sharing the title's row (text/switcher/select/color/dimensions) — see fields.scss's
-// ".editrix-field-row" rule.
-const ROW_TYPES = new Set(['url', 'media', 'slider', 'fill', 'repeater']);
+// Control types whose markup reads better stacked in its own column rather than sharing the title's row — see fields.scss's ".editrix-field-row" rule.
+const ROW_TYPES = new Set(['url', 'media', 'slider', 'repeater']);
 
-// One renderer per control type — each returns that type's own markup (a clone of its own
-// <template>, fully wired via setAttribute()), so renderField() below never needs to know a
-// type's internal structure.
+// One renderer per control type — returns that type's own wired markup, so renderField() below never needs to know a type's internal structure.
 const CONTROL_RENDERERS = {
   text(name) {
     const el = cloneTemplate('editrix-control-text');
@@ -102,16 +91,7 @@ const CONTROL_RENDERERS = {
     return el;
   },
 
-  // The "fill" control's own markup/wiring is involved enough (a repeater of popovers, each with
-  // its own type-switch tabs) to live in its own module — see controls/fill.js's header comment
-  // for why it's built imperatively rather than the way every renderer above builds a fixed shape.
-  fill(name) {
-    return renderFillControl(name);
-  },
-
-  // The generic "repeater" control — same "built imperatively, value drives DOM shape" situation
-  // as "fill" above, generalized to whatever fields a given repeater declares. See controls/
-  // repeater.js's own header comment.
+  // Rows are built imperatively since a repeater's DOM shape depends on its value — see controls/repeater.js's own header comment.
   repeater(name) {
     return renderRepeaterControl(name);
   },
@@ -119,18 +99,13 @@ const CONTROL_RENDERERS = {
 
 /**
  * Renders one full control instance: the shared wrapper (title/tooltip/control slot/description,
- * "#editrix-field-template") around whichever control type's own markup. A field definition's own
- * shape is flat — "name"/"title"/"tooltip" plus "type"/"default"/"description" and whatever else
- * that particular control type reads off its own definition (e.g. "min"/"max"/"step" for slider(),
- * "options" for select()) all sit at the same level — so "rest" here is exactly e.field()'s own
- * 4th argument (plugins/editrix/controls/base.js), unpacked rather than nested under its own key.
+ * "#editrix-field-template") around whichever control type's own markup.
  *
  * @param {Object} def
  * @param {string} def.name - The setting's key, unique across the whole panel.
  * @param {string} def.title
  * @param {string} def.tooltip
- * @param {Object} rest - type/default/description/condition/disabled/responsive, plus whatever
- *   the control type itself needs — same shape e.field() reads as its own 4th argument.
+ * @param {Object} rest - type/default/description/condition/disabled/responsive, plus type-specific options.
  * @returns {HTMLElement} The `.editrix-control` wrapper, fully wired, not yet inserted into the DOM.
  */
 export function renderField({ name, title, tooltip, ...rest }) {

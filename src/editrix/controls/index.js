@@ -2,21 +2,19 @@ import { createControlsBase } from './base';
 import { createDataControls } from './data';
 import { createMultiValueControls } from './multi-value';
 import { createUnitControls } from './unit';
-import { createFillControl } from './fill';
 import { createRepeaterControl } from './repeater';
 
 /**
- * Assembles the whole control system into one object to spread into `Youla.data('editrix', () =>
- * ({ ...createControlsSystem(), ...the rest of editrix's own state }))` — see youla-editrix.js.
+ * Assembles the whole control system into one object to spread into
+ * `Youla.data('editrix', () => ({ ...createControlsSystem(), ... }))` — see youla-editrix.js.
  *
- * Kept as several small factories (base/data/multi-value/unit) rather than one file so each
- * category can grow independently; merged here, in dev, with a collision check, so two control
- * factories accidentally sharing a name fails loudly instead of one silently shadowing the other.
+ * Kept as several small factories rather than one file so each category can grow independently;
+ * merged here with a collision check, so two factories accidentally sharing a name fail loudly.
  *
  * @returns {Object}
  */
 export function createControlsSystem() {
-  const parts = [createControlsBase(), createDataControls(), createMultiValueControls(), createUnitControls(), createFillControl(), createRepeaterControl()];
+  const parts = [createControlsBase(), createDataControls(), createMultiValueControls(), createUnitControls(), createRepeaterControl()];
   const merged = {};
 
   parts.forEach((part) => {

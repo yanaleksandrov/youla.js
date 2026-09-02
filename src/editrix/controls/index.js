@@ -3,6 +3,7 @@ import { createDataControls } from './data';
 import { createMultiValueControls } from './multi-value';
 import { createUnitControls } from './unit';
 import { createRepeaterControl } from './repeater';
+import { createSectionRepeaterControl } from './section-repeater';
 
 /**
  * Assembles the whole control system into one object to spread into
@@ -14,7 +15,7 @@ import { createRepeaterControl } from './repeater';
  * @returns {Object}
  */
 export function createControlsSystem() {
-  const parts = [createControlsBase(), createDataControls(), createMultiValueControls(), createUnitControls(), createRepeaterControl()];
+  const parts = [createControlsBase(), createDataControls(), createMultiValueControls(), createUnitControls(), createRepeaterControl(), createSectionRepeaterControl()];
   const merged = {};
 
   parts.forEach((part) => {

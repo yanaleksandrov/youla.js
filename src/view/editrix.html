@@ -22,6 +22,13 @@
 
     <%= _.template(require('./editrix/sidebar.html').default)(data) %>
 
+    <%= _.template(require('./editrix/controls/text.html').default)(data) %>
+    <%= _.template(require('./editrix/controls/switcher.html').default)(data) %>
+    <%= _.template(require('./editrix/controls/select.html').default)(data) %>
+    <%= _.template(require('./editrix/controls/color.html').default)(data) %>
+    <%= _.template(require('./editrix/controls/url.html').default)(data) %>
+    <%= _.template(require('./editrix/controls/slider.html').default)(data) %>
+    <%= _.template(require('./editrix/controls/dimensions.html').default)(data) %>
     <%= _.template(require('./editrix/controls/repeater.html').default)(data) %>
 
     <div class="editrix-preview" v-bind="e.canvas"></div>
@@ -113,6 +120,11 @@
             {
               "heading": "Content",
               "tooltip": "Settings for the heading's own text and how it's aligned",
+              "repeatable": false,
+              "name": "heading",
+              "min": null,
+              "max": null,
+              "default": null,
               "fields": [
                 {
                   "name": "align",
@@ -120,13 +132,22 @@
                   "tooltip": "Text alignment inside the block",
                   "type": "select",
                   "default": "left",
-                  "options": { "left": "Left", "center": "Center", "right": "Right", "justify": "Justify" },
-                  "description": ""
+                  "value": "center",
+                  "description": "",
+                  "condition": null,
+                  "responsive": false,
+                  "options": { "left": "Left!!!", "center": "Center", "right": "Right", "justify": "Justify" }
                 }
               ]
             },
             {
               "heading": "Style",
+              "tooltip": "",
+              "repeatable": false,
+              "name": "",
+              "min": null,
+              "max": null,
+              "default": null,
               "fields": [
                 {
                   "name": "accent_color",
@@ -134,7 +155,9 @@
                   "tooltip": "Used for links and highlights",
                   "type": "color",
                   "default": "#1069fb",
-                  "description": ""
+                  "description": "",
+                  "condition": null,
+                  "responsive": false
                 }
               ]
             }
@@ -149,23 +172,22 @@
             {
               "heading": "Content",
               "tooltip": "Settings for what the image shows and where it links to",
+              "repeatable": false,
+              "name": "image",
+              "min": null,
+              "max": null,
+              "default": null,
               "fields": [
-                {
-                  "name": "image",
-                  "title": "Image",
-                  "tooltip": "What the block shows",
-                  "type": "media",
-                  "default": { "url": "", "alt": "" },
-                  "description": "A plain URL field stands in for the media library for now"
-                },
                 {
                   "name": "caption",
                   "title": "Caption",
                   "tooltip": "Shown underneath the image",
                   "type": "text",
                   "default": "Add a caption",
-                  "placeholder": "Enter a caption…",
-                  "description": ""
+                  "description": "",
+                  "condition": null,
+                  "responsive": false,
+                  "placeholder": "Enter a caption…"
                 },
                 {
                   "name": "show_caption",
@@ -173,7 +195,9 @@
                   "tooltip": "Hide it without deleting the text",
                   "type": "switcher",
                   "default": true,
-                  "description": ""
+                  "description": "",
+                  "condition": null,
+                  "responsive": false
                 },
                 {
                   "name": "link",
@@ -181,7 +205,9 @@
                   "tooltip": "Where the image goes when clicked",
                   "type": "url",
                   "default": { "url": "", "is_external": false, "nofollow": false },
-                  "description": "Leave empty for no link"
+                  "description": "Leave empty for no link",
+                  "condition": null,
+                  "responsive": false
                 },
                 {
                   "name": "width",
@@ -189,29 +215,34 @@
                   "tooltip": "How wide the image is",
                   "type": "slider",
                   "default": { "size": 100, "unit": "%" },
+                  "description": "",
+                  "condition": null,
+                  "responsive": false,
                   "min": 0,
                   "max": 100,
-                  "step": 1,
-                  "description": ""
+                  "step": 1
                 }
               ]
             },
             {
               "heading": "Style",
+              "tooltip": "",
+              "repeatable": true,
+              "name": "styles",
+              "min": null,
+              "max": null,
+              "default": null,
               "fields": [
                 {
-                  "name": "background_fill",
+                  "name": "fill",
                   "title": "",
-                  "tooltip": "Figma-style multi-fill list — add, reorder, hide or remove as many layers as needed",
-                  "type": "repeater",
-                  "hideable": true,
-                  "default": [
-                    { "visible": true, "fill": { "type": "solid", "color": "#000000", "alpha": 100, "image": null, "video": null } }
-                  ],
-                  "fields": [
-                    { "name": "fill", "title": "", "type": "fill", "default": { "type": "solid", "color": "#1069FB", "alpha": 100, "image": null, "video": null } }
-                  ],
-                  "description": ""
+                  "tooltip": "",
+                  "type": "fill",
+                  "default": { "type": "solid", "color": "#1069FB", "alpha": 100, "image": null, "video": null },
+                  "description": "",
+                  "condition": null,
+                  "responsive": false,
+                  "sources": null
                 }
               ]
             }
@@ -226,26 +257,112 @@
             {
               "heading": "Content",
               "tooltip": "Add, remove and reorder the FAQ's own questions and answers",
+              "repeatable": false,
+              "name": "content",
+              "min": null,
+              "max": null,
+              "default": null,
               "fields": [
                 {
                   "name": "items",
                   "title": "",
                   "tooltip": "",
                   "type": "repeater",
-                  "min": 0,
-                  "max": 5,
                   "default": [
                     { "question": "What is Youla.js?", "answer": "A lightweight reactive layer for building admin UIs.", "highlighted": false, "accent_color": "#1069fb" },
-                    { "question": "Is it free to use?", "answer": "Yes — it ships under the MIT license.", "highlighted": true, "accent_color": "#1069fb" },
                     { "question": "Is it free to use?", "answer": "Yes — it ships under the MIT license.", "highlighted": true, "accent_color": "#1069fb" }
                   ],
+                  "description": "Each item can hold its own set of fields — add as many, of whatever type, as a given repeater needs.",
+                  "condition": null,
+                  "responsive": false,
+                  "min": 0,
+                  "max": 5,
+                  "disabled": false,
                   "fields": [
-                    { "name": "question", "title": "Question", "type": "text", "default": "New question", "placeholder": "Enter a question…" },
-                    { "name": "answer", "title": "Answer", "type": "text", "default": "", "placeholder": "Enter an answer…" },
-                    { "name": "highlighted", "title": "Highlight", "type": "switcher", "default": false },
-                    { "name": "accent_color", "title": "Accent color", "type": "color", "default": "#1069fb" }
-                  ],
-                  "description": "Each item can hold its own set of fields — add as many, of whatever type, as a given repeater needs."
+                    {
+                      "name": "question",
+                      "title": "Question",
+                      "tooltip": "",
+                      "type": "text",
+                      "default": "New question",
+                      "description": "",
+                      "condition": null,
+                      "responsive": false,
+                      "placeholder": "Enter a question…"
+                    },
+                    {
+                      "name": "answer",
+                      "title": "Answer",
+                      "tooltip": "",
+                      "type": "text",
+                      "default": "",
+                      "description": "",
+                      "condition": null,
+                      "responsive": false,
+                      "placeholder": "Enter an answer…"
+                    },
+                    {
+                      "name": "highlighted",
+                      "title": "Highlight",
+                      "tooltip": "",
+                      "type": "switcher",
+                      "default": false,
+                      "description": "",
+                      "condition": null,
+                      "responsive": false
+                    },
+                    {
+                      "name": "accent_color",
+                      "title": "Accent color",
+                      "tooltip": "",
+                      "type": "color",
+                      "default": "#1069fb",
+                      "description": "",
+                      "condition": { "highlighted": true },
+                      "responsive": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "editrix-links": {
+          "label": "Links",
+          "icon": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 256 256\"><rect x=\"40\" y=\"88\" width=\"104\" height=\"80\" rx=\"40\" fill=\"none\" stroke=\"#000\" stroke-width=\"14\"/><rect x=\"112\" y=\"88\" width=\"104\" height=\"80\" rx=\"40\" fill=\"none\" stroke=\"#000\" stroke-width=\"14\"/></svg>",
+          "html": "<nav class=\"links-block\"><p>Links list — configure its items in the sidebar.</p></nav>",
+          "scheme": null,
+          "sections": [
+            {
+              "heading": "Content",
+              "tooltip": "Add, remove and reorder the block's own links — a repeatable section, so \"+\" lives in this section's own header and every link's fields always show in full",
+              "repeatable": true,
+              "name": "links",
+              "min": 0,
+              "max": 99,
+              "default": [],
+              "fields": [
+                {
+                  "name": "label",
+                  "title": "Label",
+                  "tooltip": "Shown as the link's own text",
+                  "type": "text",
+                  "default": "New link",
+                  "description": "",
+                  "condition": null,
+                  "responsive": false,
+                  "placeholder": "Enter a label…"
+                },
+                {
+                  "name": "url",
+                  "title": "URL",
+                  "tooltip": "Where this link points to",
+                  "type": "text",
+                  "default": "",
+                  "description": "",
+                  "condition": null,
+                  "responsive": false,
+                  "placeholder": "https://…"
                 }
               ]
             }

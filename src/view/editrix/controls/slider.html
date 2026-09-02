@@ -1,0 +1,15 @@
+<!-- The "slider" control's own markup (controls/render.js's CONTROL_RENDERERS.slider) — kept in its
+     own partial, like every other control type here, since html-webpack-plugin doesn't wire
+     require() for templates nested inside sidebar.html's own text (see repeater.html). -->
+
+<template id="editrix-control-slider">
+  <div class="editrix-slider">
+    <input type="range" data-part="range">
+    <span class="editrix-slider-affix" data-part="prefix"></span>
+    <input type="number" class="editrix-inputs-box editrix-slider-input" data-part="size">
+    <span class="editrix-slider-affix" data-part="suffix"></span>
+    <select class="editrix-inputs-box editrix-slider-unit" data-part="unit">
+      <option v-each="unit in units" :value="unit" v-text="unit"></option>
+    </select>
+  </div>
+</template>

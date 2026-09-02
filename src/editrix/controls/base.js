@@ -2,7 +2,7 @@
  * The control system's shared core: the settings/definition registry, condition/responsive
  * resolution, and the wrapper chrome (label/tooltip/description) every control type is built on.
  *
- * A control's "definition" (label, tooltip, description, default, condition, disabled, responsive,
+ * A control's "definition" (label, tooltip, description, default, value, condition, responsive,
  * plus whatever the control type needs) is the object literal passed as a factory's second
  * argument, right there in markup; its *value* lives separately, in `settings[name]`.
  *
@@ -11,6 +11,14 @@
 
 // CSS length units every unit control's <select> offers — see unitSelect() and "units" below.
 const CONTROL_UNITS = ['px', '%', 'em', 'rem', 'vw', 'vh'];
+
+// A field's own starting point: an explicit "value" — the backend's actual current content for
+// this specific field, as opposed to "default" (what a brand-new/never-edited field starts as) —
+// wins wherever "default" would otherwise apply. Absent "value" (the common case — most fields
+// don't carry backend content, just an authoring default), this is exactly "default".
+function initialValue(def) {
+  return def?.value !== undefined ? def.value : def?.default;
+}
 
 export function createControlsBase() {
   return {
@@ -40,12 +48,13 @@ export function createControlsBase() {
     },
 
     /**
-     * Registers/refreshes "name"'s control definition, and seeds its value's default the first
-     * time it's used. field() is the only caller — every control instance registers once, on its wrapper.
+     * Registers/refreshes "name"'s control definition, and seeds its value (an explicit "value",
+     * falling back to "default" — see initialValue() above) the first time it's used. field() is
+     * the only caller — every control instance registers once, on its wrapper.
      *
      * @param {string} name - The setting's key, unique across the whole panel.
      * @param {string} type - The control type (used for the `editrix-field--<type>` class).
-     * @param {Object} [options] - label/tooltip/description/default/condition/disabled/responsive, plus type-specific options.
+     * @param {Object} [options] - label/tooltip/description/default/value/condition/responsive, plus type-specific options.
      * @returns {Object} The definition, for the calling factory's own use.
      */
     registerControl(name, type, options = {}) {
@@ -58,7 +67,7 @@ export function createControlsBase() {
 
       const bucket = this.blockSettings();
       if (bucket[name] === undefined) {
-        bucket[name] = def.responsive ? {} : def.default;
+        bucket[name] = def.responsive ? {} : initialValue(def);
       }
       return def;
     },
@@ -76,9 +85,9 @@ export function createControlsBase() {
 
       if (def?.responsive) {
         const value = (raw || {})[this.responsiveDevice];
-        return value !== undefined ? value : def.default;
+        return value !== undefined ? value : initialValue(def);
       }
-      return raw !== undefined ? raw : def?.default;
+      return raw !== undefined ? raw : initialValue(def);
     },
 
     /**
@@ -141,7 +150,7 @@ export function createControlsBase() {
      * @param {string} name - The setting's key, unique across the whole panel.
      * @param {string} [title] - The control's label.
      * @param {string} [tooltip] - Extra help text, shown by fieldTooltip()'s icon on click.
-     * @param {Object} [options] - type/default/condition/disabled/responsive/description, plus type-specific options.
+     * @param {Object} [options] - type/default/value/condition/responsive/description, plus type-specific options.
      * @returns {Object} The wrapper's bindings.
      */
     field(name, title, tooltip, options = {}) {
@@ -153,10 +162,7 @@ export function createControlsBase() {
         },
         ':class'() {
           const def = this._controls[name];
-          return {
-            [`editrix-field--${def?.type}`]: true,
-            'is-disabled': !!def?.disabled,
-          };
+          return { [`editrix-field--${def?.type}`]: true };
         },
         ':data-title'() {
           return this._controls[name]?.label || '';
@@ -200,7 +206,7 @@ export function createControlsBase() {
       };
     },
 
-    // Compound values: shared by every multi-value/unit control (url, media, dimensions, slider, ...), whose setting is one object with several named parts.
+    // Compound values: shared by every multi-value/unit control (url, dimensions, slider, ...), whose setting is one object with several named parts.
 
     // v-bind="e.part(name, 'url')" on a text-like input for one part of a compound value.
     part(name, key) {

@@ -14,9 +14,6 @@ export function createDataControls() {
         ':placeholder'() {
           return this._controls[name]?.placeholder ?? '';
         },
-        ':disabled'() {
-          return !!this._controls[name]?.disabled;
-        },
         '@input'(e) {
           this.setValue(name, e.target.value);
         },
@@ -29,9 +26,6 @@ export function createDataControls() {
         ':checked'() {
           return !!this.getValue(name);
         },
-        ':disabled'() {
-          return !!this._controls[name]?.disabled;
-        },
         '@change'(e) {
           this.setValue(name, e.target.checked);
         },
@@ -39,18 +33,14 @@ export function createDataControls() {
     },
 
     /**
-     * A single-select dropdown. `<option>`s are hand-written (sidebar.html's own
-     * "#editrix-control-select" template), not `v-each`'d off `options` — v-each's dependency
-     * check would re-render (and reset) the list on every selection change. `options` is still
-     * passed to field() as documentation of what the field means.
+     * A single-select dropdown. `<option>`s are built once, imperatively, from the field's own
+     * declared `options` map (controls/render.js's CONTROL_RENDERERS.select) rather than `v-each`'d —
+     * v-each's dependency check would re-render (and reset) the list on every selection change.
      */
     select(name) {
       return {
         ':value'() {
           return this.getValue(name) ?? '';
-        },
-        ':disabled'() {
-          return !!this._controls[name]?.disabled;
         },
         '@change'(e) {
           this.setValue(name, e.target.value);
@@ -69,7 +59,6 @@ export function createDataControls() {
 
           return {
             sources: ['solid'],
-            disabled: !!this._controls[name]?.disabled,
             onChange: (hex) => this.setValue(name, hex),
           };
         },

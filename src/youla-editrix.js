@@ -10,7 +10,8 @@ import { titleSchema } from './editrix/prosemirror/schemes/title';
 
 import { createControlsSystem } from './editrix/controls';
 import { renderField } from './editrix/controls/render';
-import { createSortableItem } from './editrix/sortable';
+import { renderSectionRepeaterItems, renderSectionRepeaterAdd } from './editrix/controls/section-repeater';
+import { createSortableItem, createDragSource, createDropTarget } from './editrix/sortable';
 
 // Block type registry keyed by type: { label, icon, html, scheme, sections }. Populated once from backend data in the 'youla:init' listener below.
 let BLOCKS = {};
@@ -23,14 +24,6 @@ const SIDEBAR_TAB_DESCRIPTIONS = {
   blocks: 'Drag blocks onto the canvas',
   patterns: 'Insert a ready-made block pattern',
   content: "Edit the selected block's settings",
-};
-
-// Classes toggled on a canvas container while something is being dragged over/from it.
-const DRAG_CLASSES = {
-  start: 'editrix-dragging-start',
-  over: 'editrix-dragging-over',
-  top: 'editrix-dragging-top',
-  bottom: 'editrix-dragging-bottom',
 };
 
 const CONTAINER_TOOLS_HTML = `
@@ -48,7 +41,7 @@ const CONTAINER_TOOLS_HTML = `
   </ul>
 `;
 
-// Flattened `{ blockType: { fieldName: default } }` map, read by readBlockSettings() so a freshly dropped block shows its declared defaults. Computed once BLOCKS is populated — see 'youla:init' below.
+// Flattened `{ blockType: { fieldName: initialValue } }` map, read by readBlockSettings() so a block shows its actual starting content — an explicit "value" (the backend's real content for this field) if declared, else "default" — even before its own Content panel (and so registerControl()'s own identical fallback, controls/base.js) has ever run for it. Computed once BLOCKS is populated — see 'youla:init' below.
 let DEFAULT_BLOCK_SETTINGS = {};
 
 /**
@@ -61,13 +54,10 @@ function computeDefaultBlockSettings(blocks) {
   return Object.fromEntries(
     Object.entries(blocks).map(([blockType, { sections }]) => [
       blockType,
-      Object.fromEntries(sections.flatMap((section) => section.fields).map(({ name, default: value }) => [name, value])),
+      Object.fromEntries(sections.flatMap((section) => section.fields).map(({ name, default: defaultValue, value }) => [name, value !== undefined ? value : defaultValue])),
     ]),
   );
 }
-
-// Block currently being dragged, or palette item about to spawn one. Kept outside reactive data since it's rebuilt every drag and never rendered.
-let dragSession = null;
 
 // Stable id assigned to a block the first time its container() @load fires, used to key its settings.
 let blockIdSeq = 0;
@@ -87,24 +77,8 @@ function readBlockSettings(component, el) {
 }
 
 /**
- * Returns a new "blocks" array with "element" repositioned immediately before/after "anchor". Omitting "anchor" (or one no longer present) appends "element" at the end.
- *
- * @param {HTMLElement[]} blocks - The canvas' current block elements, in DOM order.
- * @param {HTMLElement} element - The block being placed.
- * @param {HTMLElement} [anchor] - The block it's being dropped on, if any.
- * @param {boolean} [after] - Whether "element" lands after (vs before) "anchor".
- * @returns {HTMLElement[]} The reordered array.
- */
-function reorderBlocks(blocks, element, anchor, after) {
-  const withoutElement = blocks.filter((block) => block !== element);
-  const anchorIndex = withoutElement.indexOf(anchor);
-  const insertIndex = anchorIndex === -1 ? withoutElement.length : anchorIndex + (after ? 1 : 0);
-
-  return [...withoutElement.slice(0, insertIndex), element, ...withoutElement.slice(insertIndex)];
-}
-
-/**
- * Builds the DOM element a palette item's blockType drops in as.
+ * Builds the DOM element a palette item's blockType drops in as — createDropTarget()'s own
+ * createItem() (canvas, below) wraps this to also supply the { element, value } shape it expects.
  *
  * @param {string} blockType - A BLOCKS key (see paletteItem()).
  * @returns {HTMLElement|null} The new element, or null if "blockType" isn't registered.
@@ -121,47 +95,6 @@ function createBlock(blockType) {
   element.dataset.blockType = blockType;
   element.setAttribute('v-bind', block.scheme !== null ? `e.container('${block.scheme}')` : 'e.container()');
   return element;
-}
-
-/**
- * Drops whatever's being dragged — a fresh palette item or an existing block — into the canvas, before/after "anchor" (or at the end if omitted). Shared by canvas() and container()'s drop handlers.
- *
- * @param {Object} component - The reactive `this` from whichever v-bind handler is dropping.
- * @param {HTMLElement} canvasEl - The canvas element blocks live in (.editrix-preview).
- * @param {HTMLElement} [anchor] - The existing block being dropped on, if any.
- * @param {boolean} [after] - Whether the dropped element lands after "anchor".
- */
-function placeDroppedBlock(component, canvasEl, anchor, after) {
-  const session = dragSession;
-  dragSession = null;
-
-  if (!session || session.element === anchor) {
-    return;
-  }
-
-  let element = session.element;
-  if (session.blockType) {
-    element = createBlock(session.blockType);
-    if (!element) {
-      return;
-    }
-  }
-
-  element.classList.remove(DRAG_CLASSES.start);
-  element.remove();
-
-  if (anchor) {
-    anchor.insertAdjacentElement(after ? 'afterend' : 'beforebegin', element);
-  } else {
-    canvasEl.appendChild(element);
-  }
-
-  component.blocks = reorderBlocks(component.blocks, element, anchor, after);
-
-  // Brand new element — wire up its v-bind/@load the same way v-each wires up a cloned item.
-  if (session.blockType) {
-    component.$root.__x.initialize(element);
-  }
 }
 
 /**
@@ -339,7 +272,7 @@ document.addEventListener('youla:init', () => {
     blocks: [],
     zoom: ZOOM_DEFAULT,
 
-    // v-bind="e.canvas" on .editrix-preview — ctrl+wheel/ctrl+0 zoom, plus the drop target of last resort when a container's own handler doesn't catch the drop first.
+    // v-bind="e.canvas" on .editrix-preview — ctrl+wheel/ctrl+0 zoom, plus createDropTarget() (sortable.js) so a palette item (paletteItem(), below) dragged in materializes as a real block and rides the same reordering every block already has via container()'s own createSortableItem().
     canvas: {
       '@wheel.prevent.ctrl'(e) {
         this.zoom = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, this.zoom + (e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP)));
@@ -350,10 +283,16 @@ document.addEventListener('youla:init', () => {
       ':style'() {
         return `zoom: ${this.zoom}%`;
       },
-      '@dragover.prevent'() {},
-      '@drop.prevent'() {
-        placeDroppedBlock(this, this.$el);
-      },
+      ...createDropTarget({
+        read: (component) => component.blocks,
+        write: (component, blocks) => {
+          component.blocks = blocks;
+        },
+        createItem(component, blockType) {
+          const element = createBlock(blockType);
+          return element && { element, value: element };
+        },
+      }),
       // A block's own "@click.stop" (container(), below) keeps this from firing on a block click — so this only means the canvas background was clicked, i.e. deselect.
       '@click'() {
         this.activeBlock = null;
@@ -376,22 +315,14 @@ document.addEventListener('youla:init', () => {
     // Sidebar > block palette (view/editrix/sidebar.html) — `v-each="block in blockList"` renders one ".editrix-blocks-item" per BLOCKS entry.
     blockList: BLOCK_LIST,
 
-    // v-bind="e.paletteItem(block.type)" on each palette entry — dragging it onto the canvas spawns a new block from BLOCKS[blockType] (see placeDroppedBlock()).
+    // v-bind="e.paletteItem(block.type)" on each palette entry — createDragSource() (sortable.js) starts a drag session canvas()'s own createDropTarget() picks up, materializing a new block from BLOCKS[blockType] (createBlock()) the moment it's dragged over the canvas.
     paletteItem(blockType) {
-      return {
-        ':draggable': 'true',
-        '@dragstart'(e) {
-          dragSession = { element: null, blockType };
-          e.dataTransfer.effectAllowed = 'copy';
-          e.dataTransfer.setData('text/plain', blockType);
-        },
-      };
+      return createDragSource(blockType);
     },
 
-    // Canvas > block container — v-bind="e.container()", or v-bind="e.container('h1')" to also mount a rich-text editor. Handles drag/drop reordering, hover tools, and toolbox panel switching.
+    // Canvas > block container — v-bind="e.container()", or v-bind="e.container('h1')" to also mount a rich-text editor. createSortableItem() (sortable.js) handles drag-to-reorder among sibling blocks; this only adds hover tools and toolbox panel switching on top.
     container(scheme) {
       return {
-        ':draggable': 'true',
         // Only fields a block type actually declares apply here — readBlockSettings() returns undefined for the rest, a safe no-op for setProperty().
         ':style'() {
           const settings = readBlockSettings(this, this.$el);
@@ -400,6 +331,10 @@ document.addEventListener('youla:init', () => {
             textAlign: settings.align,
             '--editrix-accent': settings.accent_color,
           };
+        },
+        // Reactive, not maintained by hand — always the block's current position in `blocks`, kept correct across add/remove/reorder for free, the same "data-index" createSortableItem()'s own commit reads back on drop.
+        ':data-index'() {
+          return this.blocks.indexOf(this.$el);
         },
         '@load'() {
           if (!this.blocks.includes(this.$el)) {
@@ -411,38 +346,15 @@ document.addEventListener('youla:init', () => {
           if (scheme !== undefined) {
             mountEditor(this.$el, scheme);
           }
+          // <img>/<a> are natively draggable in every browser, regardless of the container's own "draggable" — left alone, a block's own image (editrix-image, say) competes with createSortableItem()'s drag on the container around it, so which one actually wins the gesture is inconsistent. Only the container itself should ever start a drag.
+          this.$el.querySelectorAll('img, a').forEach((el) => el.setAttribute('draggable', 'false'));
         },
-        '@dragstart'() {
-          dragSession = { element: this.$el, blockType: null };
-          this.$el.classList.add(DRAG_CLASSES.start);
-        },
-        '@dragleave'() {
-          this.$el.classList.remove(DRAG_CLASSES.over, DRAG_CLASSES.top, DRAG_CLASSES.bottom);
-        },
-        '@dragover.prevent.stop'(e) {
-          if (!dragSession) {
-            return;
-          }
-
-          const { top, height } = this.$el.getBoundingClientRect();
-          const after = e.clientY > top + height / 2;
-
-          this.$el.classList.add(DRAG_CLASSES.over);
-          this.$el.classList.toggle(DRAG_CLASSES.top, !after);
-          this.$el.classList.toggle(DRAG_CLASSES.bottom, after);
-        },
-        '@drop.prevent.stop'(e) {
-          this.$el.classList.remove(DRAG_CLASSES.over, DRAG_CLASSES.top, DRAG_CLASSES.bottom);
-
-          const { top, height } = this.$el.getBoundingClientRect();
-          const after = e.clientY > top + height / 2;
-
-          placeDroppedBlock(this, this.$el.parentElement, this.$el, after);
-        },
-        '@dragend'() {
-          this.$el.classList.remove(DRAG_CLASSES.start, DRAG_CLASSES.over, DRAG_CLASSES.top, DRAG_CLASSES.bottom);
-          dragSession = null;
-        },
+        ...createSortableItem({
+          read: (component) => component.blocks,
+          write: (component, blocks) => {
+            component.blocks = blocks;
+          },
+        }),
         '@mouseenter'() {
           if (this.$el.querySelector(':scope > .editrix-container-tools')) {
             return;
@@ -489,7 +401,9 @@ document.addEventListener('youla:init', () => {
         this.$el.querySelectorAll('input').forEach((input) => input._x_filler?.destroy());
         this.$el.innerHTML = '';
 
-        (BLOCKS[blockType]?.sections || []).forEach(({ heading, tooltip, fields }) => {
+        (BLOCKS[blockType]?.sections || []).forEach(({
+          heading, tooltip, fields, repeatable, name, min, max, default: defaultValue,
+        }) => {
           const section = document.createElement('div');
           section.className = 'editrix-section';
           section.innerHTML = `
@@ -505,10 +419,20 @@ document.addEventListener('youla:init', () => {
             section.querySelector('.editrix-section-head__title').append(tooltipIcon);
           }
 
-          section.querySelector('.editrix-section-body').append(...fields.map(renderField));
+          const headButtons = [];
 
-          // Move a repeater control's own "+"/expand-all buttons out of the control body and into the section heading row, matching every other section's .editrix-section-buttons.
-          const headButtons = section.querySelectorAll('[data-part="toggle-all"], [data-part="add"]');
+          // "repeatable: true" (controls/section-repeater.js) makes the whole section repeat its own `fields` as one item's template, instead of rendering them once — "name"/"min"/"max"/"default" sit alongside "heading"/"tooltip" on the section itself. Its own "+" belongs in the section head from the start, there's no relocating to do.
+          if (repeatable) {
+            const limits = { min, max, default: defaultValue };
+            section.querySelector('.editrix-section-body').append(renderSectionRepeaterItems(name, limits, fields));
+            headButtons.push(renderSectionRepeaterAdd(name, limits, fields));
+          } else {
+            section.querySelector('.editrix-section-body').append(...fields.map(renderField));
+
+            // Move a repeater control's own expand-all button out of the control body and into the section heading row, matching every other section's .editrix-section-buttons.
+            headButtons.push(...section.querySelectorAll('[data-part="toggle-all"]'));
+          }
+
           if (headButtons.length) {
             const buttons = document.createElement('div');
             buttons.className = 'editrix-section-buttons';

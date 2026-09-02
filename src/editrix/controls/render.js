@@ -1,10 +1,12 @@
 /**
- * Renders control instances at runtime by cloning the <template> library shipped in
- * sections/sidebar.html's "Content" panel: clone → wire attributes via setAttribute() (never
- * string-interpolated into HTML text) → component.initialize() to activate the clone's directives.
+ * Renders control instances at runtime by cloning a <template>: clone → wire attributes via
+ * setAttribute() (never string-interpolated into HTML text) → component.initialize() to activate
+ * the clone's directives.
  *
- * Each control's own markup stays in its own <template id="editrix-control-*">; adding a new
- * control type means adding its template plus one entry below.
+ * Each control's own markup lives in its own partial under view/editrix/controls/<type>.html (one
+ * <template id="editrix-control-*"> each), required directly from view/editrix.html rather than
+ * nested inside sidebar.html's own text — see repeater.html's own comment for why. Adding a new
+ * control type means adding its partial, requiring it from editrix.html, plus one entry below.
  */
 
 import { renderRepeaterControl } from './repeater';
@@ -19,13 +21,13 @@ function cloneTemplate(id) {
   const template = document.getElementById(id);
 
   if (!template) {
-    throw new Error(`Youla.js: no <template id="${id}"> found — is sections/sidebar.html's field template library missing this control type?`);
+    throw new Error(`Youla.js: no <template id="${id}"> found — is view/editrix/controls/${id.replace('editrix-control-', '')}.html missing, or not required from view/editrix.html?`);
   }
   return template.content.cloneNode(true);
 }
 
 // Control types whose markup reads better stacked in its own column rather than sharing the title's row — see fields.scss's ".editrix-field-row" rule.
-const ROW_TYPES = new Set(['url', 'media', 'slider', 'repeater']);
+const ROW_TYPES = new Set(['url', 'slider', 'repeater']);
 
 // One renderer per control type — returns that type's own wired markup, so renderField() below never needs to know a type's internal structure.
 const CONTROL_RENDERERS = {
@@ -41,9 +43,19 @@ const CONTROL_RENDERERS = {
     return el;
   },
 
-  select(name) {
+  // "options" (an { value: label } map) builds the actual <option>s here, once, at render time — the field's own static config, not reactive state, so no need for a v-each. select.html's own template ships with none.
+  select(name, title, rest) {
     const el = cloneTemplate('editrix-control-select');
-    el.querySelector('select').setAttribute('v-bind', `e.select(${JSON.stringify(name)})`);
+    const select = el.querySelector('select');
+
+    select.setAttribute('v-bind', `e.select(${JSON.stringify(name)})`);
+    Object.entries(rest.options || {}).forEach(([value, label]) => {
+      const option = document.createElement('option');
+      option.value = value;
+      option.textContent = label;
+      select.append(option);
+    });
+
     return el;
   },
 
@@ -58,13 +70,6 @@ const CONTROL_RENDERERS = {
     el.querySelector('[data-part="url"]').setAttribute('v-bind', `e.part(${JSON.stringify(name)}, 'url')`);
     el.querySelector('[data-part="is_external"]').setAttribute('v-bind', `e.partSwitch(${JSON.stringify(name)}, 'is_external')`);
     el.querySelector('[data-part="nofollow"]').setAttribute('v-bind', `e.partSwitch(${JSON.stringify(name)}, 'nofollow')`);
-    return el;
-  },
-
-  media(name) {
-    const el = cloneTemplate('editrix-control-media');
-    el.querySelector('[data-part="preview"]').setAttribute(':style', `'background-image:url(' + (getValue(${JSON.stringify(name)})?.url || '') + ')'`);
-    el.querySelector('[data-part="url"]').setAttribute('v-bind', `e.part(${JSON.stringify(name)}, 'url')`);
     return el;
   },
 
@@ -105,7 +110,7 @@ const CONTROL_RENDERERS = {
  * @param {string} def.name - The setting's key, unique across the whole panel.
  * @param {string} def.title
  * @param {string} def.tooltip
- * @param {Object} rest - type/default/description/condition/disabled/responsive, plus type-specific options.
+ * @param {Object} rest - type/default/value/description/condition/responsive, plus type-specific options.
  * @returns {HTMLElement} The `.editrix-control` wrapper, fully wired, not yet inserted into the DOM.
  */
 export function renderField({ name, title, tooltip, ...rest }) {
@@ -124,7 +129,7 @@ export function renderField({ name, title, tooltip, ...rest }) {
 
   const controlSlot = field.querySelector('.editrix-field__control');
   controlSlot.classList.toggle('editrix-field-row', ROW_TYPES.has(rest.type));
-  controlSlot.append(renderControl(name, title));
+  controlSlot.append(renderControl(name, title, rest));
 
   return wrapper;
 }

@@ -1,0 +1,60 @@
+// Styles for the repeatable section (controls/section-repeater.js) — a section that repeats its own
+// `fields` as N always-expanded items, as opposed to repeater.scss's collapsible rows.
+.editrix-section-items {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+}
+
+// Drag handle and remove flank a column of the item's own fields, stacked one per line — see createSectionRepeaterItem() (section-repeater.js).
+.editrix-section-item {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 2px 10px;
+	transition: opacity 0.2s, background-color 0.2s;
+
+	&:hover {
+		background-color: #f5f5f5;
+	}
+
+	&.is-dragging {
+		opacity: 0.4;
+	}
+
+	&__handle,
+	&__remove {
+		flex-shrink: 0;
+		font-size: 12px;
+	}
+
+	&__handle {
+		color: #b4b4b4;
+		cursor: grab;
+	}
+
+	&__remove {
+		color: #929292;
+		cursor: pointer;
+		visibility: hidden;
+		opacity: 0;
+		transition: all 0.2s;
+
+		&:hover {
+			color: #ff0000;
+		}
+	}
+
+	&:hover &__remove {
+		visibility: visible;
+		opacity: 1;
+	}
+
+	&__fields {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		flex: 1;
+		min-width: 0;
+	}
+}

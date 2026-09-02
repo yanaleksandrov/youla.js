@@ -1,15 +1,13 @@
-<!-- The "repeater" control's own markup (controls/repeater.js) — kept in its own partial since
-     html-webpack-plugin doesn't wire require() for templates nested inside sidebar.html's own
-     text. Parts a script needs are marked with "data-part"; a row's own declared fields are
-     appended into "[data-part='body']" at runtime. The visibility icon only shows for a
-     "hideable: true" repeater — see repeaterVisibility()'s own "v-show". -->
-
 <template id="editrix-control-repeater">
   <div class="editrix-repeater">
     <div class="editrix-repeater-list" data-part="list"></div>
 
     <i class="ph ph-caret-double-down" data-part="toggle-all" title="Expand all"></i>
-    <i class="ph ph-plus" data-part="add" title="Add item"></i>
+
+    <button type="button" class="editrix-repeater__add" data-part="add">
+      <i class="ph ph-plus"></i>
+      <span>Add item</span>
+    </button>
   </div>
 </template>
 
@@ -18,7 +16,6 @@
     <div class="editrix-repeater-item__head" data-part="toggle">
       <i class="ph ph-dots-six-vertical editrix-repeater-item__handle" title="Drag to reorder"></i>
       <span class="editrix-repeater-item__label" data-part="label"></span>
-      <i class="ph ph-caret-down editrix-repeater-item__caret"></i>
       <i class="ph ph-eye editrix-repeater-item__visibility" data-part="visibility" title="Toggle visibility"></i>
       <i class="ph ph-trash editrix-repeater-item__remove" data-part="remove" title="Remove item"></i>
     </div>

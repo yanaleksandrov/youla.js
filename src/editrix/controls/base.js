@@ -1,33 +1,14 @@
 /**
- * The control system's shared core: the settings/definition registry, condition/responsive
- * resolution, and the wrapper chrome (label/tooltip/description) every control type is built on —
- * the one layer every control type depends on, regardless of its own value shape. A compound
- * control's own value parts (url's part()/partSwitch(), slider/dimensions' partNumber()/fieldAffix()/
- * unitSelect()/linkedNumber()/linkToggle()) live in multi-value.js/unit.js instead — see fieldName()
- * below, which is what lets those stay out of here.
- *
- * A control's "definition" (label, tooltip, description, default, value, condition, responsive,
- * plus whatever the control type needs) is the object literal passed as a factory's second
- * argument, right there in markup; its *value* lives separately, in `settings[name]`.
- *
- * @returns {Object} Properties/methods to spread into `Youla.data('editrix', () => ({ ... }))`.
+ * Reads a binding's "name" off the closest ".editrix-field" wrapper's own "data-name" (set
+ * by field() below), instead of taking it as an argument.
  */
-
-// A compound-value part binding (multi-value.js's part()/partSwitch(), unit.js's partNumber()/
-// fieldAffix()/unitSelect()/linkedNumber()/linkToggle()) reads its own setting's "name" off the
-// closest ".editrix-field" wrapper's own "data-name" (set by field() below) rather than taking it
-// as an argument — lets those controls' own markup (control/url, control/slider, control/
-// dimensions, ...) stay fully static, with no per-render renderer wiring bindings in via
-// setAttribute() (controls/render.js's renderField() still does this for the wrapper itself, since
-// "name" there comes from the field's own declared config, not the DOM).
 export function fieldName(el) {
   return el.closest('.editrix-field').dataset.name;
 }
 
-// A field's own starting point: an explicit "value" — the backend's actual current content for
-// this specific field, as opposed to "default" (what a brand-new/never-edited field starts as) —
-// wins wherever "default" would otherwise apply. Absent "value" (the common case — most fields
-// don't carry backend content, just an authoring default), this is exactly "default".
+/**
+ * An explicit "value" wins over "default" when both are present.
+ */
 function initialValue(def) {
   return def?.value !== undefined ? def.value : def?.default;
 }
@@ -57,9 +38,8 @@ export function createControlsBase() {
     },
 
     /**
-     * Registers/refreshes "name"'s control definition, and seeds its value (an explicit "value",
-     * falling back to "default" — see initialValue() above) the first time it's used. field() is
-     * the only caller — every control instance registers once, on its wrapper.
+     * Registers/refreshes "name"'s control definition and seeds its value on first use. field()
+     * is the only caller.
      *
      * @param {string} name - The setting's key, unique across the whole panel.
      * @param {string} type - The control type (used for the `editrix-field--<type>` class).
@@ -152,9 +132,8 @@ export function createControlsBase() {
     },
 
     /**
-     * The one reusable template every control is built from — v-bind="e.field(...)" on a
-     * control's outer `.editrix-field`, registering the control and returning its show/class/title
-     * bindings; pair with `v-bind="e.fieldTooltip(name)"` for the tooltip icon.
+     * The wrapper every control is built from — v-bind="e.field(...)" on `.editrix-field`,
+     * registering the control and returning its show/class/title/name bindings.
      *
      * @param {string} name - The setting's key, unique across the whole panel.
      * @param {string} [title] - The control's label.
@@ -182,7 +161,10 @@ export function createControlsBase() {
       };
     },
 
-    // v-bind="e.fieldTooltip(name)" on a control's "?" icon — reuses v-tooltip, triggered on click since the icon itself is the target; hidden without tooltip text.
+    /**
+     * v-bind="e.fieldTooltip(name)" on a control's "?" icon — reuses v-tooltip, triggered on
+     * click since the icon itself is the target; hidden without tooltip text.
+     */
     fieldTooltip(name) {
       return {
         'v-show'() {
@@ -194,7 +176,10 @@ export function createControlsBase() {
       };
     },
 
-    // v-bind="e.fieldDescription(name)" on `.editrix-field__description` — hidden without a description.
+    /**
+     * v-bind="e.fieldDescription(name)" on `.editrix-field__description` — hidden without a
+     * description.
+     */
     fieldDescription(name) {
       return {
         'v-show'() {

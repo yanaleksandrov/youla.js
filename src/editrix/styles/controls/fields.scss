@@ -91,7 +91,7 @@
 	}
 }
 
-// Stacks the sub-fields of a compound control (url/text_shadow/...) with a consistent gap.
+// Stacks a compound control's sub-fields (url, ...) in a column.
 .editrix-field-row {
 	display: flex;
 	flex-direction: column;
@@ -118,7 +118,7 @@ input[type="range"] {
 	accent-color: #1069fb;
 }
 
-// Compact range control (controls/render.js's slider() renderer) — bare track+thumb with the numeric value to the right, instead of Ranger's default full-width layout.
+// Compact range control (control/slider) — bare track+thumb with the value to the right, not Ranger's default full-width layout.
 .editrix-slider {
 	display: flex;
 	align-items: center;

@@ -1,18 +1,11 @@
-/**
- * The "color" control — Figma-style swatch + hex + alpha (v-filler), cloned from
- * "editrix-control-color" by convention (controls/render.js's renderField(), no renderer registered
- * for "color"). Its own binding is fully static (control/color/index.html) — "name" comes from the
- * closest ".editrix-field" wrapper's own "data-name" (controls/base.js's field()), not an argument.
- * (control/repeater/index.js reuses this same template for its own "color"/"fill" item fields,
- * overwriting this "v-bind" with its own "e.repeaterField(...)" — see createRepeaterFieldControl()'s
- * own comment.)
- */
+// The "color" control — Figma-style swatch + hex + alpha (v-filler). Fully static markup
+// (control/color/index.html); "name" comes from the closest ".editrix-field" wrapper's "data-name".
+// Reused by control/repeater's own "color"/"fill" item fields, which overwrite this "v-bind".
 
 import { fieldName } from '../../controls/base';
 
 export function createColorControl() {
   return {
-    // v-bind="e.color()" — locked to solid color; replaces the old native <input type="color">, which has no alpha or palette.
     color() {
       return {
         'v-filler'() {

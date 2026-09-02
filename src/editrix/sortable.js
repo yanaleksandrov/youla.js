@@ -1,52 +1,22 @@
-/**
- * Generic HTML5 drag-and-drop engine for a list of sibling elements — shared app-wide by every
- * reorderable/droppable list (repeater rows, repeatable-section items, generic thumbnail lists,
- * the block canvas, and whatever comes next):
- *
- *   - createSortableItem() — v-bind for one item, reordering it live within its own list.
- *   - createDragSource() / createDropTarget() — a pair for dragging a *new* item in from outside
- *     the list entirely (a sidebar palette, say) into one that accepts them.
- *
- * Both pieces share one mechanism (handleDragover() below): a dragged element gets ".is-dragging";
- * every dragover within the list — whether it lands on the list itself or bubbles up from one of
- * its items — recomputes and applies its correct position live (animated via animateReorder()), so
- * dropping between two existing items works the same as dropping at the very end. The final DOM
- * order is read back into the backing array once the drag ends.
- *
- * A foreign item (createDropTarget()'s own) materializes into the DOM the moment its drag first
- * reaches a registered list, wherever within it — a list only gets registered (dropTargets, below)
- * once, up front (on "@load"), specifically so a dragover that bubbles up from one of the list's own
- * *items* (createSortableItem() — most of the list's own area, once it has any items in it) can
- * still trigger materialization; waiting for a dragover to land on the empty list itself would miss
- * most real drops.
- */
-
+// Generic HTML5 drag-and-drop engine shared by every reorderable/droppable list.
+// createSortableItem() reorders an item in its own list; createDragSource()/createDropTarget() drag a new item in from elsewhere; both drive handleDragover() below.
 import { animateReorder } from './animate-reorder';
 
-// Registered drop targets, keyed by list element — { createItem }. Populated by createDropTarget()'s
-// own "@load" (fires synchronously as soon as its list mounts, well before any drag), so
-// handleDragover() can materialize a foreign item into a list even when the triggering dragover
-// bubbled up from one of that list's *items* rather than landing on the list itself.
+// List → { createItem }, registered by createDropTarget()'s "@load" so a dragover bubbling up from one of the list's own items can still materialize a foreign drag.
 const dropTargets = new WeakMap();
 
-// The foreign drag currently in flight, if any — { payload, element }. Module-scoped (not per-list)
-// so any createDragSource() pairs with any createDropTarget() elsewhere in the app, the same way a
-// native OS drag works across unrelated windows. "element" is set once some list materializes the
-// dragged payload; createDragSource()'s own "@dragend" uses it to clean up a materialized-but-
-// never-dropped item (dragged back out, or released somewhere with no matching drop target).
+// The foreign drag in flight, if any — { payload, element }; module-scoped so any source/target pair works, like a native OS drag.
 let foreignDrag = null;
 
-// A materialized item's own array value, keyed by its DOM element — read back on drop instead of
-// index-mapping into the old array, since a freshly inserted item has no meaningful old index.
+// A materialized item's own array value, keyed by its element — it has no meaningful old index to map back to.
 const foreignItemValues = new WeakMap();
 
 /**
- * Finds the child a dragging/materializing item should land before, given a pointer position — the
- * list-level equivalent of "am I above or below this one row".
+ * Finds the child a dragging item should land before, given a pointer position.
  *
  * @param {HTMLElement} list
  * @param {number} clientY
- * @param {HTMLElement} [exclude] - The dragging item itself, so it doesn't get measured against its own current slot.
+ * @param {HTMLElement} [exclude] - The dragging item itself.
  * @returns {HTMLElement|null} null means "at the end".
  */
 function childBefore(list, clientY, exclude) {
@@ -55,7 +25,9 @@ function childBefore(list, clientY, exclude) {
   return rows.find((row) => clientY <= row.getBoundingClientRect().top + row.offsetHeight / 2) || null;
 }
 
-// Repositions an already-dragging element within "list" to match "clientY", animated — a no-op if it's already there. Shared by every dragover, regardless of whether it landed on the list itself or one of its items.
+/**
+ * Repositions the dragging element within "list" to match "clientY", animated; no-op if already there.
+ */
 function reposition(list, clientY, dragging) {
   const before = childBefore(list, clientY, dragging);
 
@@ -85,7 +57,7 @@ function handleDragover(component, list, clientY) {
     return;
   }
 
-  // Nothing dragging in this list yet — either it's a native reorder whose own item will handle it directly, or a foreign drag not yet materialized anywhere (a previous list already claimed it otherwise).
+  // Nothing dragging yet — either a native reorder (its own item handles it) or a foreign drag not yet materialized here.
   if (!foreignDrag || foreignDrag.element) {
     return;
   }
@@ -112,10 +84,10 @@ function handleDragover(component, list, clientY) {
   component.$root.__x.initialize(element);
 }
 
-// Shared by createSortableItem()'s "@dragend" and createDropTarget()'s "@drop" — strips ".is-dragging"
-// and reads the list's final DOM order back into its backing array. A row materialized by
-// createDropTarget() (no meaningful old index of its own) resolves through foreignItemValues instead
-// of "items[index]" — found and cleared here, before the class that marks it is gone.
+/**
+ * Shared by "@dragend"/"@drop" — strips ".is-dragging" and writes the list's final DOM order back;
+ * a materialized row resolves via foreignItemValues instead of its old index.
+ */
 function commitOrder(component, list, read, write) {
   const dragging = list.querySelector('.is-dragging');
   dragging?.classList.remove('is-dragging');
@@ -134,11 +106,10 @@ function commitOrder(component, list, read, write) {
   });
 }
 
-// The one "drop" handler behind both createSortableItem() and createDropTarget() — a real "drop"
-// can land on *any* element currently under the pointer, which, once a dragging/materialized item
-// has been repositioned there by handleDragover(), is very often that item itself (dropping between
-// two existing items, say) rather than the list's own background. Committing only needs to happen
-// once per list regardless of which element the event actually landed on, so both call this.
+/**
+ * Shared "drop" handler — the event can land on any element under the pointer (often the dragged
+ * item itself once repositioned), so both factories below call this to commit once per list.
+ */
 function handleDrop(component, list, read, write) {
   if (!list.querySelector('.is-dragging')) {
     return;
@@ -165,12 +136,18 @@ export function createSortableItem({ read, write }) {
       // Pin the cursor explicitly — left unset, the browser's own drag cursor can flicker between the drag icon and "not-allowed" on every dragover tick.
       e.dataTransfer.effectAllowed = 'move';
     },
-    // ".stop" keeps this from also reaching an ancestor createDropTarget()'s own "@dragover" — handleDragover() above already does everything needed for this list from here, whether that means repositioning or (for a still-unmaterialized foreign drag) materializing.
+    /**
+     * ".stop" keeps this from also reaching an ancestor createDropTarget()'s own "@dragover" —
+     * handleDragover() above already covers this list.
+     */
     '@dragover.prevent.stop'(e) {
       e.dataTransfer.dropEffect = 'move';
       handleDragover(this, this.$el.parentElement, e.clientY);
     },
-    // Real "drop" events land wherever the pointer actually is — very often this very item, once handleDragover() has repositioned it (or a materialized foreign item) to sit under the pointer. ".stop" for the same reason as "@dragover" above; commits here too (not just "@dragend" below) so a foreign item — whose "@dragend" never fires on it, only on its own createDragSource() origin — still gets committed when its drop lands on itself.
+    /**
+     * Commits here too (not just "@dragend") since a foreign item's "@dragend" only fires on its
+     * createDragSource() origin, never on itself.
+     */
     '@drop.prevent.stop'() {
       handleDrop(this, this.$el.parentElement, read, write);
     },
@@ -194,11 +171,11 @@ export function createDragSource(payload) {
     '@dragstart'(e) {
       foreignDrag = { payload, element: null };
       e.dataTransfer.effectAllowed = 'copy';
-      // Firefox refuses to start a drag at all without data set on it — the payload itself travels via "foreignDrag", not dataTransfer.
+      // Firefox refuses to start a drag without data set on it — the payload itself travels via "foreignDrag", not dataTransfer.
       e.dataTransfer.setData('text/plain', '');
     },
     '@dragend'() {
-      // Materialized by some list but never actually dropped (dragged back out, or the gesture was cancelled) — a successful drop already cleared "foreignDrag" itself, so this only fires for the leftover case.
+      // Only fires for a materialized-but-never-dropped item — a successful drop already cleared "foreignDrag".
       if (foreignDrag?.element) {
         foreignItemValues.delete(foreignDrag.element);
         foreignDrag.element.remove();
@@ -209,10 +186,9 @@ export function createDragSource(payload) {
 }
 
 /**
- * v-bind for a list that accepts new items dragged in from a createDragSource() elsewhere — the
- * item materializes into the DOM (and is initialized — v-bind attributes and all) the moment its
- * drag first reaches this list, then rides the exact same live positioning as any of the list's own
- * items (handleDragover() above) — dropping between two existing items works the same as at the end.
+ * v-bind for a list that accepts new items dragged in from a createDragSource() elsewhere — the item
+ * materializes into the DOM the moment its drag first reaches this list, then rides the same live
+ * positioning as any of the list's own items (handleDragover() above).
  *
  * @param {Object} options
  * @param {Function} options.read - (component) => current array.
@@ -222,14 +198,18 @@ export function createDragSource(payload) {
  */
 export function createDropTarget({ read, write, createItem }) {
   return {
-    // Registers this list as a valid materialization target up front — a dragover that bubbles up from one of the list's own items (createSortableItem(), most of its area once it holds anything) needs to find this registration too, not just a dragover landing on empty list space.
+    /**
+     * Registers this list up front so a dragover bubbling up from one of its own items still finds it.
+     */
     '@load'() {
       dropTargets.set(this.$el, { createItem });
     },
     '@dragover.prevent'(e) {
       handleDragover(this, this.$el, e.clientY);
     },
-    // Only once the pointer truly leaves this list (not just moves onto one of its own children, which also fires "dragleave") — drop the materialized item so it doesn't linger if the drag heads elsewhere without landing here.
+    /**
+     * Only once the pointer truly leaves the list (not just onto a child, which also fires "dragleave").
+     */
     '@dragleave'(e) {
       if (this.$el.contains(e.relatedTarget)) {
         return;

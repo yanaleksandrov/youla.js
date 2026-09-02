@@ -1,4 +1,4 @@
-// Styles for the repeater control (controls/repeater.js) — a collapsible list of items, each holding whatever fields that repeater declares.
+// Styles for the repeater control (control/repeater) — a collapsible list of items, each holding whatever fields that repeater declares.
 .editrix-repeater {
 	display: flex;
 	flex-direction: column;
@@ -19,7 +19,7 @@
 		width: fit-content;
 		margin: 0 12px 0 auto;
 		padding: 8px;
-		border: 1px dashed #e6e6e6;
+		border: 1px dashed #dadada;
 		border-radius: 6px;
 		background-color: #f8f8f8;
 		color: rgba(0, 0, 0, 0.5);
@@ -53,7 +53,7 @@
 		background-color: #f8f8f8;
 	}
 
-	// An item switched off via repeaterVisibility() (repeater.js) reads as dimmed.
+	// An item switched off via repeaterVisibility() (control/repeater) reads as dimmed.
 	&:has(.ph-eye-slash) {
 		opacity: 0.5;
 	}
@@ -119,9 +119,9 @@
 	&__body {
 		display: none;
 		flex-direction: column;
-		border-top: 1px solid #e6e6e6;
+		border-top: 1px solid #dadada;
 
-		// Trims .editrix-field's usual padding-block for this nested context (see createRepeaterField(), repeater.js).
+		// Trims .editrix-field's usual padding-block for this nested context (see createRepeaterField(), control/repeater).
 		.editrix-field {
 			padding-block: 8px;
 		}
@@ -131,7 +131,7 @@
 		display: flex;
 	}
 
-	// A locked "min:1, max:1" repeater (isLockedToOneItem(), repeater.js) hides the head and forces the body open, since there's no head left to click to set is-open.
+	// A locked "min:1, max:1" repeater (isLockedToOneItem(), control/repeater) hides the head and forces the body open, since there's no head left to click to set is-open.
 	&.is-locked {
 		.editrix-repeater-item__head {
 			display: none;

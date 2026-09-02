@@ -14,12 +14,8 @@ import { createCategoriesControl } from '../control/categories';
 import { createBordersControl } from '../control/borders';
 
 /**
- * Assembles the whole control system into one object to spread into
- * `Youla.data('editrix', () => ({ ...createControlsSystem(options), ... }))` — see youla-editrix.js.
- *
- * Kept as several small factories rather than one file so each category (and each control type,
- * src/editrix/control/<type>) can grow independently; merged here with a collision check, so two
- * factories accidentally sharing a name fail loudly.
+ * Assembles the whole control system into one object, spread into `Youla.data('editrix', ...)`.
+ * Kept as several small factories rather than one file; merged here with a collision check.
  *
  * @param {Object} [options]
  * @param {Object} [options.meta] - statuses/visibilities/discussions/authors — see control/meta's createMetaControl().

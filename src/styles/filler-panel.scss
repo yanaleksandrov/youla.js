@@ -92,7 +92,7 @@
 	height: 16px;
 	border-radius: 50%;
 	background: #fff;
-	border: 1px solid #e6e6e6;
+	border: 1px solid #dadada;
 	color: #8a8f93;
 	font-size: 9px;
 	line-height: 1;
@@ -118,7 +118,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		border: 1px dashed #e6e6e6;
+		border: 1px dashed #dadada;
 		line-height: 1;
 	}
 }
@@ -204,7 +204,7 @@
 	align-items: center;
 	gap: 4px;
 	padding-bottom: 3px;
-	border-bottom: 1px solid #e6e6e6;
+	border-bottom: 1px solid #dadada;
 }
 
 .filler-dialog-tab {
@@ -301,7 +301,7 @@
 		width: 100%;
 		min-width: 0;
 		padding: 4px;
-		border: 1px solid #e6e6e6;
+		border: 1px solid #dadada;
 		outline: none;
 		text-align: center;
 		font-family: var(--mono, ui-monospace, monospace);
@@ -328,7 +328,7 @@
 	display: flex;
 	align-items: center;
 	gap: 8px;
-	border-bottom: 1px solid #e6e6e6;
+	border-bottom: 1px solid #dadada;
 	padding: 8px;
 }
 
@@ -439,7 +439,7 @@
 .filler-dialog-video-fit,
 .filler-dialog-video-rotate {
 	height: 24px;
-	border: 1px solid #e6e6e6;
+	border: 1px solid #dadada;
 	border-radius: 5px;
 	background-color: #fff;
 	color: #1a1a1a;
@@ -494,7 +494,7 @@
 	position: relative;
 	display: block;
 	aspect-ratio: 2 / 1;
-	border: 1px dashed #e6e6e6;
+	border: 1px dashed #dadada;
 	border-radius: 5px;
 	overflow: hidden;
 	cursor: pointer;
@@ -564,7 +564,7 @@
 	width: 18px;
 	height: 18px;
 	padding: 0;
-	border: 1px solid #e6e6e6;
+	border: 1px solid #dadada;
 	background: #fff;
 	color: #8a8f93;
 	font-size: 11px;
@@ -770,7 +770,7 @@
 
 	&:is(select) {
 		padding: 4px 20px 4px 6px;
-		border: 1px solid #e6e6e6;
+		border: 1px solid #dadada;
 		border-radius: 5px;
 		background-color: #fff;
 		outline: none;

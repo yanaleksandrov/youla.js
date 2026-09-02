@@ -1,13 +1,5 @@
-/**
- * "Unit" controls — a compound value that pairs one or more numbers with a CSS length unit
- * (Elementor's slider/dimensions/gaps controls). Their wrapper is just `field(...)` like any other
- * (controls/base.js); partNumber()/fieldAffix()/unitSelect()/linkedNumber()/linkToggle()/
- * sliderRange() below are their parts.
- *
- * Value shapes, for reference:
- *   slider:     { size: 0, unit: 'px' }
- *   dimensions: { top: 0, right: 0, bottom: 0, left: 0, unit: 'px', isLinked: true }
- */
+// "Unit" controls — a compound value pairing one or more numbers with a CSS length unit (Elementor's slider/dimensions/gaps controls). Wrapper is `field(...)` like any other.
+// Value shapes: slider { size: 0, unit: 'px' }; dimensions { top: 0, right: 0, bottom: 0, left: 0, unit: 'px', isLinked: true }.
 
 import { fieldName } from './base';
 
@@ -24,7 +16,6 @@ export function createUnitControls() {
     // Shared with sidebar.html's unit <select> templates (v-each="unit in units").
     units: CONTROL_UNITS,
 
-    // v-bind="e.fieldAffix('prefix'/'suffix')" on static text glued to a control's input (e.g. slider()) — hidden unless the field declares that key.
     fieldAffix(key) {
       return {
         'v-show'() {
@@ -38,8 +29,6 @@ export function createUnitControls() {
       };
     },
 
-    // v-bind="e.partNumber('size')" on a number input for one numeric part — "name" comes from the
-    // closest ".editrix-field" wrapper's own "data-name" (controls/base.js's fieldName()).
     partNumber(key) {
       return {
         ':value'() {
@@ -53,7 +42,6 @@ export function createUnitControls() {
       };
     },
 
-    // v-bind="e.unitSelect()" on the unit <select> a slider/dimensions/gaps control shares.
     unitSelect() {
       return {
         ':value'() {
@@ -67,7 +55,6 @@ export function createUnitControls() {
       };
     },
 
-    // v-bind="e.linkedNumber('top', ['top','right','bottom','left'])" on one side's number input — while linked, editing any part updates every part in "allKeys" together.
     linkedNumber(key, allKeys) {
       return {
         ':value'() {
@@ -86,7 +73,6 @@ export function createUnitControls() {
       };
     },
 
-    // v-bind="e.linkToggle()" on the link/unlink button paired with linkedNumber() above.
     linkToggle() {
       return {
         ':class'() {
@@ -102,10 +88,6 @@ export function createUnitControls() {
       };
     },
 
-    // v-bind="e.dimensionsTitle()" on ".editrix-borders-values" — the widget's own small overlay
-    // label (borders.scss's ".editrix-borders-values:before"), duplicating the field's own outer
-    // title (controls/base.js's field()'s ":data-title") since this value has nowhere shared to
-    // read from except the ".editrix-field" wrapper itself.
     dimensionsTitle() {
       return {
         ':data-title'() {
@@ -114,7 +96,6 @@ export function createUnitControls() {
       };
     },
 
-    // v-bind="e.sliderRange()" on a slider's <input type="range"> — partNumber() plus min/max/step off the control's own definition.
     sliderRange() {
       return {
         ...this.partNumber('size'),

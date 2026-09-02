@@ -1,10 +1,7 @@
 /**
- * Toolbox > "Page" panel's meta control (authors/discussion/visibility/status/published-at) — a
- * fixed, single-instance control (not a name-keyed setting), so its own state and bindings live here
- * rather than going through getValue()/setValue() (controls/base.js). "statuses"/"visibilities"/
- * "discussions"/"authors" come from backend data (youla-editrix.js's readBackendData()).
- */
-/**
+ * Toolbox > "Page" panel's meta control (authors/discussion/visibility/status/published-at) — fixed,
+ * single-instance state, not routed through getValue()/setValue() (controls/base.js).
+ *
  * @param {Object} options
  * @param {Object[]} options.statuses
  * @param {Object[]} options.visibilities
@@ -71,7 +68,10 @@ export function createMetaControl({ statuses, visibilities, discussions, authors
         return this.author;
       },
     },
-    // Authors aren't looped (v-each) in the markup, so click/active-state is parameterized by name: v-bind="e.authorOption('John Doe')"
+    /**
+     * Authors aren't looped (v-each) in the markup, so click/active-state is parameterized by
+     * name: v-bind="e.authorOption('John Doe')".
+     */
     authorOption(name) {
       return {
         '@click': `$el.closest('details').open = false`,

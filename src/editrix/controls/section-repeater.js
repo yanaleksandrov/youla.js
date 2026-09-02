@@ -1,37 +1,5 @@
-/**
- * The "repeatable section" — a section (youla-editrix.js's contentFields()) that repeats its own
- * `fields` as a whole, instead of a single field being a repeater. Meant for a couple of short
- * fields always shown in full (a links list, say), as opposed to control/repeater's classic
- * collapsible repeater, which suits heavier per-item field sets where a scannable summary matters
- * more than seeing everything at once.
- *
- * Declare it on a section, not a field — `name`/`min`/`max`/`default` sit alongside `heading`/
- * `tooltip`, and `fields` becomes the per-item template:
- *
- *   {
- *     heading: 'Content',
- *     repeatable: true,
- *     name: 'links', min: 1, max: 6, default: [{ label: 'Home', url: '#' }],
- *     fields: [
- *       { name: 'label', title: 'Label', type: 'text', default: 'New link' },
- *       { name: 'url', title: 'URL', type: 'text', default: '' },
- *     ],
- *   }
- *
- * "+" lives in the section's own head (there's exactly one, built alongside the section itself —
- * contentFields()), not relocated there from anywhere. Each item is one row — drag handle and remove
- * flanking a column of the item's own fields, stacked one per line (createSectionRepeaterItem()
- * below) — with no separate toolbar/body split. Each field still gets the *full* field() chrome
- * (title/tooltip/description, and — see sectionField() below — "condition") via sectionField()/
- * sectionFieldTooltip()/sectionFieldDescription() below — unlike a classic repeater row's trimmed
- * createRepeaterField() (control/repeater), since there's no collapsed state to save space for. Value
- * dispatch itself (text/switcher/color/fill) is shared, unchanged, with the classic repeater — see
- * createRepeaterFieldControl()/repeaterField() (control/repeater) — only the chrome differs; the
- * value-array plumbing (read/write/patch/min-max/condition) is controls/repeatable.js, shared by
- * both.
- *
- * Value shape: object[], keyed by each field's own `name` — identical to a classic repeater's.
- */
+// The "repeatable section" — declared on a section (`repeatable: true`), it repeats the section's own `fields` as a whole instead of a single field being a repeater.
+// Unlike control/repeater's rows, every item field gets the full field() chrome, sharing value dispatch with repeaterField().
 
 import { createSortableItem } from '../sortable';
 import { createRepeaterFieldControl } from '../control/repeater';
@@ -40,18 +8,17 @@ import {
   readItems, writeItems, patchItemAt, createDefaultItem, itemIndexOf, renumberItems, destroyItemFillers, minItems, maxItems, isItemConditionMet,
 } from './repeatable';
 
-// The declared field definition behind one item field — static per (repeatableName, key) pair, the same for every item, so title/tooltip/description can be read straight off it with no item-index involved.
+/**
+ * The declared field definition behind one item field — same for every item, so no item-index needed.
+ */
 function itemFieldDef(component, repeatableName, key) {
   return (component._controls[repeatableName]?.fields || []).find((field) => field.name === key);
 }
 
 /**
- * Builds one item field's full chrome — a clone of "editrix-field-template" (the same chrome
- * every top-level field uses, controls/render.js's renderField()) around
- * createRepeaterFieldControl()'s raw input, wired to this repeatable section's own item-scoped
- * bindings instead of base.js's field()/fieldTooltip()/fieldDescription() (which would register a
- * stray top-level setting under the field's bare name — item fields aren't unique panel-wide, only
- * within their own repeatable set).
+ * Builds one item field's full chrome — the same "editrix-field-template" every top-level field
+ * uses, but wired to item-scoped bindings instead of base.js's field(), since item fields aren't
+ * unique panel-wide, only within their own repeatable set.
  *
  * @param {string} name - The repeatable section's own setting name.
  * @param {Object} fieldDef - One entry of its own `fields` definition.
@@ -136,7 +103,10 @@ export function renderSectionRepeaterAdd(name, limits, fields) {
   return el;
 }
 
-// Registers the repeatable section's own control definition — min/max/fields, so getValue()/setValue()/minItems()/maxItems() all work through the usual _controls[name] plumbing, same as any other field.
+/**
+ * Registers the repeatable section's own control definition, same _controls[name] plumbing as
+ * any other field.
+ */
 function registerSectionRepeater(component, name, limits, fields) {
   const { min, max, default: defaultValue } = limits;
   component.registerControl(name, 'section-repeater', { min, max, default: defaultValue, fields });
@@ -144,7 +114,10 @@ function registerSectionRepeater(component, name, limits, fields) {
 
 export function createSectionRepeaterControl() {
   return {
-    // v-bind="e.sectionRepeaterList(name, limits, fields)" — registers the repeatable section (see registerSectionRepeater() above), then builds items the first time it's resolved and again whenever the active block changes — same ":data-owner" pattern as repeaterList() (repeater.js), for the same reason (v-each would rebuild every item on each re-render).
+    /**
+     * Registers the section, then builds items via ":data-owner" — same pattern as
+     * repeaterList() (control/repeater), not v-each.
+     */
     sectionRepeaterList(name, limits, fields) {
       registerSectionRepeater(this, name, limits, fields);
 
@@ -168,7 +141,10 @@ export function createSectionRepeaterControl() {
       };
     },
 
-    // v-bind="e.sectionRepeaterAdd(name, limits, fields)" on the section head's "+" icon — hidden once "max" is reached. Registers the same control definition as sectionRepeaterList() above (registerControl() is a no-op past the first call — base.js compares before writing), since this icon can resolve before or after the items list depending on DOM order.
+    /**
+     * The section head's "+" icon — hidden once "max" is reached; registers too, since it may
+     * resolve before the items list.
+     */
     sectionRepeaterAdd(name, limits, fields) {
       registerSectionRepeater(this, name, limits, fields);
 
@@ -195,7 +171,9 @@ export function createSectionRepeaterControl() {
       };
     },
 
-    // v-bind="e.sectionRepeaterItemRoot(name)" on an item's own root — draggable reordering via sortable.js's createSortableItem(), same as repeaterItemRoot() (repeater.js).
+    /**
+     * Draggable reordering via createSortableItem(), same as repeaterItemRoot() (control/repeater).
+     */
     sectionRepeaterItemRoot(name) {
       return createSortableItem({
         read: (component) => readItems(component, name),
@@ -203,7 +181,9 @@ export function createSectionRepeaterControl() {
       });
     },
 
-    // v-bind="e.sectionRepeaterRemove(name)" on an item's trash icon — hidden once "min" is reached.
+    /**
+     * v-bind="e.sectionRepeaterRemove(name)" on an item's trash icon — hidden once "min" is reached.
+     */
     sectionRepeaterRemove(name) {
       return {
         'v-show'() {
@@ -229,7 +209,10 @@ export function createSectionRepeaterControl() {
       };
     },
 
-    // v-bind="e.sectionField(name, 'label')" on one item field's own ".editrix-field" wrapper — the item-scoped counterpart of base.js's field(): "condition" is checked against this same item's own values via isItemConditionMet() (controls/repeatable.js), not top-level settings; "responsive" stays out of scope (no per-device axis makes sense for one item's own field).
+    /**
+     * Item-scoped counterpart of base.js's field() — "condition" is checked against this
+     * item's own values, not top-level settings.
+     */
     sectionField(name, key) {
       return {
         'v-show'() {
@@ -246,7 +229,10 @@ export function createSectionRepeaterControl() {
       };
     },
 
-    // v-bind="e.sectionFieldTooltip(name, 'label')" — item-scoped counterpart of base.js's fieldTooltip().
+    /**
+     * v-bind="e.sectionFieldTooltip(name, 'label')" — item-scoped counterpart of base.js's
+     * fieldTooltip().
+     */
     sectionFieldTooltip(name, key) {
       return {
         'v-show'() {
@@ -258,7 +244,10 @@ export function createSectionRepeaterControl() {
       };
     },
 
-    // v-bind="e.sectionFieldDescription(name, 'label')" — item-scoped counterpart of base.js's fieldDescription().
+    /**
+     * v-bind="e.sectionFieldDescription(name, 'label')" — item-scoped counterpart of base.js's
+     * fieldDescription().
+     */
     sectionFieldDescription(name, key) {
       return {
         'v-show'() {

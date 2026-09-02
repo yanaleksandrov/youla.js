@@ -12,6 +12,15 @@
 	overflow-y: scroll;
 	height: calc(100dvh - 37px);
 
+	&:after {
+		content: '';
+		position: absolute;
+		top: 0;
+		right: 0;
+		height: 100%;
+		border-inline-end: 1px solid #dadada;
+	}
+
 	// Widens the box by the scrollbar's own 8px (matching .editrix *::-webkit-scrollbar in editrix.scss) so the scrollbar overlays the edge instead of shrinking content; WebKit/Blink only, since overflow:overlay isn't supported and Firefox has no equivalent.
 	@supports selector(::-webkit-scrollbar) {
 		width: calc(100% + 8px);
@@ -56,7 +65,7 @@
 
 	&-content {
 		flex: 1;
-		border-left: 1px solid #f1f1f1;
+		border-inline-start: 1px solid #dadada;
 	}
 }
 
@@ -70,5 +79,5 @@
 	background-color: #fff;
 	line-height: 1.15;
 	height: calc(100dvh - 37px);
-	border-inline-start: 1px solid #f1f1f1;
+	border-inline-start: 1px solid #dadada;
 }

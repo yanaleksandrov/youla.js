@@ -19,6 +19,13 @@ let BLOCKS = {};
 // Array form of BLOCKS for `v-each="block in blockList"` (view/editrix/sidebar.html). Populated alongside BLOCKS below.
 let BLOCK_LIST = [];
 
+// Toolbox's own section list — same shape as BLOCKS[type].sections (heading/tooltip/repeatable/
+// name/min/max/default/fields), rendered by the same renderSections() as contentFields() below.
+// Unlike BLOCKS's sections, these never depend on which block is selected, so there's no
+// rebuild-on-change to wire up — toolboxSections() builds it once. Populated once from backend data
+// in the 'youla:init' listener below.
+let TOOLBOX = [];
+
 // Tooltip text for each sidebar tab (sidebarTab(), below).
 const SIDEBAR_TAB_DESCRIPTIONS = {
   blocks: 'Drag blocks onto the canvas',
@@ -95,6 +102,72 @@ function createBlock(blockType) {
   element.dataset.blockType = blockType;
   element.setAttribute('v-bind', block.scheme !== null ? `e.container('${block.scheme}')` : 'e.container()');
   return element;
+}
+
+/**
+ * Builds one ".editrix-section" per entry in "sections" and appends each to "container" — shared by
+ * contentFields() (BLOCKS[blockType].sections, rebuilt whenever the selected block changes) and
+ * toolboxSections() (TOOLBOX, #editrix-data's own top-level "toolbox", built once) below, since both
+ * are the exact same shape: heading/tooltip/repeatable/name/min/max/default/fields.
+ *
+ * @param {HTMLElement} container
+ * @param {Array} sections
+ */
+function renderSections(container, sections) {
+  (sections || []).forEach(({
+    heading, tooltip, fields, repeatable, name, min, max, default: defaultValue,
+  }) => {
+    const section = document.createElement('div');
+    section.className = 'editrix-section';
+
+    const body = document.createElement('div');
+    body.className = 'editrix-section-body';
+
+    const headButtons = [];
+
+    // "repeatable: true" (controls/section-repeater.js) makes the whole section repeat its own `fields` as one item's template, instead of rendering them once — "name"/"min"/"max"/"default" sit alongside "heading"/"tooltip" on the section itself. Its own "+" belongs in the section head from the start, there's no relocating to do.
+    if (repeatable) {
+      const limits = { min, max, default: defaultValue };
+      body.append(renderSectionRepeaterItems(name, limits, fields));
+      headButtons.push(renderSectionRepeaterAdd(name, limits, fields));
+    } else {
+      body.append(...fields.map(renderField));
+
+      // Move a repeater control's own expand-all button out of the control body and into the section heading row, matching every other section's .editrix-section-buttons.
+      headButtons.push(...body.querySelectorAll('[data-part="toggle-all"]'));
+    }
+
+    // Skip the head entirely for a heading-less, tooltip-less section with nothing to put in it (e.g. the toolbox's own "Page" section) — rather than rendering an empty bar for CSS to hide.
+    if (heading || tooltip || headButtons.length) {
+      const head = document.createElement('div');
+      head.className = 'editrix-section-head';
+
+      const title = document.createElement('span');
+      title.className = 'editrix-section-head__title';
+      title.textContent = heading;
+      head.append(title);
+
+      // Section's optional "?" tooltip icon, placed inside the title wrapper so it stays glued to the heading text rather than floating to the row's far end.
+      if (tooltip) {
+        const tooltipIcon = document.createElement('i');
+        tooltipIcon.className = 'ph ph-question editrix-section-head__tooltip';
+        tooltipIcon.setAttribute('v-tooltip.click', JSON.stringify(tooltip));
+        title.append(tooltipIcon);
+      }
+
+      if (headButtons.length) {
+        const buttons = document.createElement('div');
+        buttons.className = 'editrix-section-buttons';
+        headButtons.forEach((button) => buttons.append(button));
+        head.append(buttons);
+      }
+
+      section.append(head);
+    }
+
+    section.append(body);
+    container.append(section);
+  });
 }
 
 /**
@@ -230,8 +303,11 @@ document.addEventListener('youla:init', () => {
     visibilities: VISIBILITIES = [],
     discussions: DISCUSSIONS = [],
     authors: AUTHORS = [],
+    toolbox: TOOLBOX_DATA = [],
     blocks: BLOCKS_DATA = {},
   } = readBackendData('editrix-data');
+
+  TOOLBOX = TOOLBOX_DATA;
 
   // Populate the module-scope registries now that backend data has been read.
   BLOCKS = BLOCKS_DATA;
@@ -251,8 +327,6 @@ document.addEventListener('youla:init', () => {
     tab: 'blocks',
     // Toolbox panel shown for whichever block/container was last clicked on the canvas
     section: 'content',
-    // "Advanced" panel collapse, at the bottom of the toolbox
-    advanced: false,
 
     // Sidebar nav tab buttons/panels (sections/sidebar.html), parameterized by tab name.
     sidebarTab(name) {
@@ -386,7 +460,7 @@ document.addEventListener('youla:init', () => {
       };
     },
 
-    // Sidebar > Content tab — v-bind="e.contentFields" on the panel's mount div. Rebuilds one ".editrix-section" per BLOCKS[blockType]'s `sections` entry whenever the active block's type changes; ":data-owner" doubles as that guard and a record of the current owner type.
+    // Sidebar > Content tab — v-bind="e.contentFields" on the panel's mount div. Rebuilds one ".editrix-section" per BLOCKS[blockType]'s `sections` entry (renderSections() above) whenever the active block's type changes; ":data-owner" doubles as that guard and a record of the current owner type.
     contentFields: {
       ':data-owner'() {
         const activeElement = this.activeBlock && this.blocks.find((block) => block.dataset.blockId === this.activeBlock);
@@ -401,49 +475,8 @@ document.addEventListener('youla:init', () => {
         this.$el.querySelectorAll('input').forEach((input) => input._x_filler?.destroy());
         this.$el.innerHTML = '';
 
-        (BLOCKS[blockType]?.sections || []).forEach(({
-          heading, tooltip, fields, repeatable, name, min, max, default: defaultValue,
-        }) => {
-          const section = document.createElement('div');
-          section.className = 'editrix-section';
-          section.innerHTML = `
-            <div class="editrix-section-head"><span class="editrix-section-head__title">${heading}</span></div>
-            <div class="editrix-section-body"></div>
-          `;
-
-          // Section's optional "?" tooltip icon, placed inside the title wrapper so it stays glued to the heading text rather than floating to the row's far end.
-          if (tooltip) {
-            const tooltipIcon = document.createElement('i');
-            tooltipIcon.className = 'ph ph-question editrix-section-head__tooltip';
-            tooltipIcon.setAttribute('v-tooltip.click', JSON.stringify(tooltip));
-            section.querySelector('.editrix-section-head__title').append(tooltipIcon);
-          }
-
-          const headButtons = [];
-
-          // "repeatable: true" (controls/section-repeater.js) makes the whole section repeat its own `fields` as one item's template, instead of rendering them once — "name"/"min"/"max"/"default" sit alongside "heading"/"tooltip" on the section itself. Its own "+" belongs in the section head from the start, there's no relocating to do.
-          if (repeatable) {
-            const limits = { min, max, default: defaultValue };
-            section.querySelector('.editrix-section-body').append(renderSectionRepeaterItems(name, limits, fields));
-            headButtons.push(renderSectionRepeaterAdd(name, limits, fields));
-          } else {
-            section.querySelector('.editrix-section-body').append(...fields.map(renderField));
-
-            // Move a repeater control's own expand-all button out of the control body and into the section heading row, matching every other section's .editrix-section-buttons.
-            headButtons.push(...section.querySelectorAll('[data-part="toggle-all"]'));
-          }
-
-          if (headButtons.length) {
-            const buttons = document.createElement('div');
-            buttons.className = 'editrix-section-buttons';
-            headButtons.forEach((button) => buttons.append(button));
-            section.querySelector('.editrix-section-head').append(buttons);
-          }
-
-          this.$el.append(section);
-          // Freshly appended section, so it needs its own directives wired up by hand.
-          this.$root.__x.initialize(section);
-        });
+        renderSections(this.$el, BLOCKS[blockType]?.sections);
+        this.$root.__x.initialize(this.$el);
         return blockType;
       },
     },
@@ -472,6 +505,23 @@ document.addEventListener('youla:init', () => {
       },
     },
 
+    // Toolbox — v-bind="e.toolboxSections" on its own mount div (view/editrix/toolbox.html). Builds
+    // TOOLBOX's own sections (#editrix-data, same shape as BLOCKS[type].sections) once, via the same
+    // renderSections() as contentFields() above — unlike contentFields()'s BLOCKS-driven rebuild,
+    // this never needs to rebuild: which sections/fields the toolbox shows never changes at runtime.
+    toolboxSections: {
+      '@load'() {
+        // "@load" fires synchronously while the root's own `new Component(el)` construction is still
+        // in progress, so `this.$root.__x` isn't assigned yet (index.js's `componentInitialize` only
+        // sets `el.__x` after that constructor returns) — defer a tick so it's there by the time
+        // these freshly-appended sections need their own directives wired up.
+        setTimeout(() => {
+          renderSections(this.$el, TOOLBOX);
+          this.$root.__x.initialize(this.$el);
+        }, 0);
+      },
+    },
+
     // Page > Status / visibility / discussion
     status: 'published',
     statuses: STATUSES,
@@ -486,6 +536,9 @@ document.addEventListener('youla:init', () => {
     // Named "discussionStatus" (not "discussion") to avoid shadowing the `v-each="discussion in discussions"` loop variable used in discussionOption() below.
     discussionStatus: DISCUSSIONS[0]?.value || '',
     discussions: DISCUSSIONS,
+
+    // Page > title — v-prop="title" on the "Page" panel's own textarea control (bound dynamically by CONTROL_RENDERERS.textarea, controls/render.js).
+    title: 'Some title for new post about Expansa and hekllo',
 
     // Page > Authors
     author: 'John Doe',

@@ -30,6 +30,15 @@
     <%= _.template(require('./editrix/controls/slider.html').default)(data) %>
     <%= _.template(require('./editrix/controls/dimensions.html').default)(data) %>
     <%= _.template(require('./editrix/controls/repeater.html').default)(data) %>
+    <%= _.template(require('./editrix/controls/textarea.html').default)(data) %>
+    <%= _.template(require('./editrix/controls/gallery.html').default)(data) %>
+    <%= _.template(require('./editrix/controls/meta.html').default)(data) %>
+    <%= _.template(require('./editrix/controls/categories.html').default)(data) %>
+    <%= _.template(require('./editrix/controls/margin.html').default)(data) %>
+    <%= _.template(require('./editrix/controls/padding.html').default)(data) %>
+    <%= _.template(require('./editrix/controls/borders.html').default)(data) %>
+    <%= _.template(require('./editrix/controls/alignment.html').default)(data) %>
+    <%= _.template(require('./editrix/controls/css-classes.html').default)(data) %>
 
     <div class="editrix-preview" v-bind="e.canvas"></div>
 
@@ -110,6 +119,143 @@
           "email": "kovalski@gmail.com"
         }
       ],
+      "toolbox": [
+        {
+          "heading": "",
+          "tooltip": "",
+          "repeatable": false,
+          "name": "page",
+          "min": null,
+          "max": null,
+          "default": null,
+          "fields": [
+            {
+              "name": "title",
+              "title": "",
+              "tooltip": "",
+              "type": "textarea",
+              "default": "",
+              "description": "",
+              "condition": null,
+              "responsive": false,
+              "placeholder": "Add title..."
+            },
+            {
+              "name": "thumbnails",
+              "title": "",
+              "tooltip": "",
+              "type": "gallery",
+              "default": [],
+              "description": "",
+              "condition": null,
+              "responsive": false
+            },
+            {
+              "name": "meta",
+              "title": "",
+              "tooltip": "",
+              "type": "meta",
+              "default": null,
+              "description": "",
+              "condition": null,
+              "responsive": false
+            }
+          ]
+        },
+        {
+          "heading": "Categories",
+          "tooltip": "",
+          "repeatable": false,
+          "name": "categories",
+          "min": null,
+          "max": null,
+          "default": null,
+          "fields": [
+            {
+              "name": "categories",
+              "title": "",
+              "tooltip": "",
+              "type": "categories",
+              "default": null,
+              "description": "",
+              "condition": null,
+              "responsive": false
+            }
+          ]
+        },
+        {
+          "heading": "Position",
+          "tooltip": "",
+          "repeatable": false,
+          "name": "position",
+          "min": null,
+          "max": null,
+          "default": null,
+          "fields": [
+            {
+              "name": "margin",
+              "title": "",
+              "tooltip": "",
+              "type": "margin",
+              "default": null,
+              "description": "",
+              "condition": null,
+              "responsive": false
+            },
+            {
+              "name": "padding",
+              "title": "",
+              "tooltip": "",
+              "type": "padding",
+              "default": null,
+              "description": "",
+              "condition": null,
+              "responsive": false
+            },
+            {
+              "name": "borders",
+              "title": "",
+              "tooltip": "",
+              "type": "borders",
+              "default": null,
+              "description": "",
+              "condition": null,
+              "responsive": false
+            },
+            {
+              "name": "alignment",
+              "title": "",
+              "tooltip": "",
+              "type": "alignment",
+              "default": null,
+              "description": "",
+              "condition": null,
+              "responsive": false
+            }
+          ]
+        },
+        {
+          "heading": "Advanced",
+          "tooltip": "",
+          "repeatable": false,
+          "name": "advanced",
+          "min": null,
+          "max": null,
+          "default": null,
+          "fields": [
+            {
+              "name": "cssClasses",
+              "title": "",
+              "tooltip": "",
+              "type": "css-classes",
+              "default": "",
+              "description": "",
+              "condition": null,
+              "responsive": false
+            }
+          ]
+        }
+      ],
       "blocks": {
         "editrix-heading": {
           "label": "Heading",
@@ -136,7 +282,7 @@
                   "description": "",
                   "condition": null,
                   "responsive": false,
-                  "options": { "left": "Left!!!", "center": "Center", "right": "Right", "justify": "Justify" }
+                  "options": { "left": "Left", "center": "Center", "right": "Right", "justify": "Justify" }
                 }
               ]
             },

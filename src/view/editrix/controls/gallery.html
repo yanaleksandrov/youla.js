@@ -1,0 +1,21 @@
+<!-- The toolbox "Page" panel's featured-image gallery control — see textarea.html's own comment on
+     why there's no own ".editrix-control" wrapper here. "thumbnails"/galleryInput()/galleryRemove()
+     are youla-editrix.js's own bindings. -->
+
+<template id="editrix-control-gallery">
+  <div class="editrix-gallery">
+    <div class="editrix-gallery-items">
+      <div class="editrix-gallery-item" v-each="(thumbnail, index) in thumbnails" :data-index="index" v-bind="e.sortable('thumbnails')">
+        <span class="editrix-gallery-remove" v-bind="e.galleryRemove"><i class="ph ph-trash"></i></span>
+        <img class="editrix-gallery-image" :src="thumbnail" draggable="false">
+      </div>
+    </div>
+    <label class="editrix-gallery-add">
+      <input type="file" accept="image/*" multiple v-bind="e.galleryInput">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="rgba(0, 0, 0, 0.4)" viewBox="0 0 256 256">
+        <path d="M239 54a12 12 0 0 0-10-2l-4 1c-19 5-54 15-97 15S50 58 31 53l-4-1a12 12 0 0 0-15 12v128a12 12 0 0 0 15 12l3-1c19-5 55-15 98-15s79 10 98 15l3 1a12 12 0 0 0 15-12V64a12 12 0 0 0-5-10M22 61l2-1h1l3 1c20 5 56 15 100 15s80-10 100-15l3-1a4 4 0 0 1 5 4v128l-65-64a12 12 0 0 0-17 0l-23 22-47-46a12 12 0 0 0-17 0l-47 47V64zm6 134-3 1a4 4 0 0 1-5-4v-30l53-53a4 4 0 0 1 6 0l72 72-23-1c-44 0-82 10-100 15m135-13-26-26 23-23h5l62 62q-21-7-64-13m33-74a8 8 0 1 1 8 8 8 8 0 0 1-8-8"/>
+      </svg>
+      ADD IMAGE
+    </label>
+  </div>
+</template>

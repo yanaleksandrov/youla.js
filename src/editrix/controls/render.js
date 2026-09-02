@@ -100,6 +100,61 @@ const CONTROL_RENDERERS = {
   repeater(name) {
     return renderRepeaterControl(name);
   },
+
+  // Toolbox > generic multi-line text control — e.g. the "Page" panel's title field. Unlike every
+  // renderer below this one, it IS parametrized by "name" (and an optional "placeholder", rest) —
+  // but still bound straight to a top-level reactive property via "v-prop", not through
+  // getValue()/setValue() (controls/base.js): the toolbox's own section stays visible regardless of
+  // which block is selected, so routing through the block-content settings system (keyed by
+  // "activeBlock") would silently write the title into whichever block happens to be selected.
+  textarea(name, title, rest) {
+    const el = cloneTemplate('editrix-control-textarea');
+    const field = el.querySelector('textarea');
+
+    field.setAttribute('v-prop', name);
+    if (rest?.placeholder) {
+      field.setAttribute('placeholder', rest.placeholder);
+    }
+    return el;
+  },
+
+  // Toolbox controls (youla-editrix.js's toolboxSections, TOOLBOX's own sections — #editrix-data) —
+  // fixed, single-instance controls with their own bindings already baked into their markup
+  // (page-level state like "thumbnails"/"author"/"terms", not a name-keyed setting), so unlike every
+  // renderer above they ignore their arguments. Still mounted via renderField() like any other
+  // field — title/tooltip/description are just left empty, so that chrome stays invisible
+  // (fields.scss's `[data-title=""]` rule) rather than being skipped structurally.
+  gallery() {
+    return cloneTemplate('editrix-control-gallery');
+  },
+
+  meta() {
+    return cloneTemplate('editrix-control-meta');
+  },
+
+  categories() {
+    return cloneTemplate('editrix-control-categories');
+  },
+
+  margin() {
+    return cloneTemplate('editrix-control-margin');
+  },
+
+  padding() {
+    return cloneTemplate('editrix-control-padding');
+  },
+
+  borders() {
+    return cloneTemplate('editrix-control-borders');
+  },
+
+  alignment() {
+    return cloneTemplate('editrix-control-alignment');
+  },
+
+  'css-classes'() {
+    return cloneTemplate('editrix-control-css-classes');
+  },
 };
 
 /**

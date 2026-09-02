@@ -289,7 +289,7 @@ export default class Component {
   /**
    * Performs the component's first render: walks the DOM from "root", attaching listeners and
    * running directives for every element. Idempotent per element ("el.__x_initialized"), since a
-   * directive that inserts child markup (repeaterList() in controls/repeater.js, contentFields()
+   * directive that inserts child markup (repeaterList() in control/repeater, contentFields()
    * in youla-editrix.js) runs within the same domWalk pass that then revisits that markup —
    * without the guard, listeners double-attach and a self-removing handler like repeaterRemove()
    * throws on an already-detached element.

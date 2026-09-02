@@ -1,7 +1,7 @@
 /**
  * The "repeatable section" — a section (youla-editrix.js's contentFields()) that repeats its own
  * `fields` as a whole, instead of a single field being a repeater. Meant for a couple of short
- * fields always shown in full (a links list, say), as opposed to controls/repeater.js's classic
+ * fields always shown in full (a links list, say), as opposed to control/repeater's classic
  * collapsible repeater, which suits heavier per-item field sets where a scannable summary matters
  * more than seeing everything at once.
  *
@@ -24,9 +24,9 @@
  * below) — with no separate toolbar/body split. Each field still gets the *full* field() chrome
  * (title/tooltip/description, and — see sectionField() below — "condition") via sectionField()/
  * sectionFieldTooltip()/sectionFieldDescription() below — unlike a classic repeater row's trimmed
- * createRepeaterField() (repeater.js), since there's no collapsed state to save space for. Value
+ * createRepeaterField() (control/repeater), since there's no collapsed state to save space for. Value
  * dispatch itself (text/switcher/color/fill) is shared, unchanged, with the classic repeater — see
- * createRepeaterFieldControl()/repeaterField() (repeater.js) — only the chrome differs; the
+ * createRepeaterFieldControl()/repeaterField() (control/repeater) — only the chrome differs; the
  * value-array plumbing (read/write/patch/min-max/condition) is controls/repeatable.js, shared by
  * both.
  *
@@ -34,25 +34,11 @@
  */
 
 import { createSortableItem } from '../sortable';
-import { createRepeaterFieldControl } from './repeater';
+import { createRepeaterFieldControl } from '../control/repeater';
+import { cloneTemplateElement } from './template';
 import {
   readItems, writeItems, patchItemAt, createDefaultItem, itemIndexOf, renumberItems, destroyItemFillers, minItems, maxItems, isItemConditionMet,
 } from './repeatable';
-
-/**
- * Clones a single-root <template>'s content by id.
- *
- * @param {string} id
- * @returns {HTMLElement}
- */
-function cloneTemplate(id) {
-  const template = document.getElementById(id);
-
-  if (!template) {
-    throw new Error(`Youla.js: no <template id="${id}"> found — is view/editrix/sidebar.html missing "editrix-field-template"?`);
-  }
-  return template.content.firstElementChild.cloneNode(true);
-}
 
 // The declared field definition behind one item field — static per (repeatableName, key) pair, the same for every item, so title/tooltip/description can be read straight off it with no item-index involved.
 function itemFieldDef(component, repeatableName, key) {
@@ -60,23 +46,20 @@ function itemFieldDef(component, repeatableName, key) {
 }
 
 /**
- * Builds one item field's full chrome — a clone of "editrix-field-template" (the same wrapper
+ * Builds one item field's full chrome — a clone of "editrix-field-template" (the same chrome
  * every top-level field uses, controls/render.js's renderField()) around
  * createRepeaterFieldControl()'s raw input, wired to this repeatable section's own item-scoped
  * bindings instead of base.js's field()/fieldTooltip()/fieldDescription() (which would register a
  * stray top-level setting under the field's bare name — item fields aren't unique panel-wide, only
  * within their own repeatable set).
  *
- * Only the inner ".editrix-field" is kept — its own ".editrix-control" wrapper (width:100%, meant
- * for the section body's grid) is dropped, since this field sits as one cell in the item's own row
- * instead (createSectionRepeaterItem() below).
- *
  * @param {string} name - The repeatable section's own setting name.
  * @param {Object} fieldDef - One entry of its own `fields` definition.
  * @returns {HTMLElement}
  */
 function buildSectionItemField(name, fieldDef) {
-  const field = cloneTemplate('editrix-field-template').querySelector('.editrix-field');
+  const root = cloneTemplateElement('editrix-field-template');
+  const field = root.matches('.editrix-field') ? root : root.querySelector('.editrix-field');
   const nameArg = JSON.stringify(name);
   const keyArg = JSON.stringify(fieldDef.name);
 

@@ -119,6 +119,9 @@ function renderSections(container, sections) {
   }) => {
     const section = document.createElement('div');
     section.className = 'editrix-section';
+    if (name) {
+      section.classList.add(`editrix-section--${name}`);
+    }
 
     const body = document.createElement('div');
     body.className = 'editrix-section-body';
@@ -320,8 +323,8 @@ document.addEventListener('youla:init', () => {
    * @since 1.0
    */
   Youla.data('editrix', () => ({
-    // Control system (label/tooltip/description/condition/responsive + field controls) — see editrix/controls. Spread first so its keys aren't shadowed below.
-    ...createControlsSystem(),
+    // Control system (label/tooltip/description/condition/responsive + field controls) — see editrix/controls and editrix/control/<type>. Spread first so its keys aren't shadowed below.
+    ...createControlsSystem({ meta: { statuses: STATUSES, visibilities: VISIBILITIES, discussions: DISCUSSIONS, authors: AUTHORS } }),
 
     // Sidebar navigation (sections/sidebar.html)
     tab: 'blocks',
@@ -342,11 +345,11 @@ document.addEventListener('youla:init', () => {
       };
     },
 
-    // Canvas (editrix-preview) — every block container currently on it, in DOM order
+    // Canvas (editrix-canvas) — every block container currently on it, in DOM order
     blocks: [],
     zoom: ZOOM_DEFAULT,
 
-    // v-bind="e.canvas" on .editrix-preview — ctrl+wheel/ctrl+0 zoom, plus createDropTarget() (sortable.js) so a palette item (paletteItem(), below) dragged in materializes as a real block and rides the same reordering every block already has via container()'s own createSortableItem().
+    // v-bind="e.canvas" on .editrix-canvas — ctrl+wheel/ctrl+0 zoom, plus createDropTarget() (sortable.js) so a palette item (paletteItem(), below) dragged in materializes as a real block and rides the same reordering every block already has via container()'s own createSortableItem().
     canvas: {
       '@wheel.prevent.ctrl'(e) {
         this.zoom = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, this.zoom + (e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP)));
@@ -522,133 +525,7 @@ document.addEventListener('youla:init', () => {
       },
     },
 
-    // Page > Status / visibility / discussion
-    status: 'published',
-    statuses: STATUSES,
-    // "scheduled" is set automatically by publishedAtInput() below rather than picked directly, but stays in "statuses" so statusSummary() still finds its label.
-    selectableStatuses: STATUSES.filter((stat) => stat.value !== 'scheduled'),
-    // Drives both the publish time and, via publishedAtInput() below, whether "status" is published or scheduled.
-    publishedAt: '2025-03-15T11:44',
-    // Independent of "status" above — public (default)/protected/private, matching WordPress's Status/Visibility split.
-    visibility: 'public',
-    visibilities: VISIBILITIES,
-    password: '',
-    // Named "discussionStatus" (not "discussion") to avoid shadowing the `v-each="discussion in discussions"` loop variable used in discussionOption() below.
-    discussionStatus: DISCUSSIONS[0]?.value || '',
-    discussions: DISCUSSIONS,
-
-    // Page > title — v-prop="title" on the "Page" panel's own textarea control (bound dynamically by CONTROL_RENDERERS.textarea, controls/render.js).
+    // Page > title — v-prop="title" on the "Page" panel's own textarea control (bound dynamically by CONTROL_RENDERERS.textarea, controls/render.js). Stays here rather than in a control/<type> folder since "textarea" is a generic, reusable type (like control/text) that owns no state of its own — "title" is this page's own data, just happening to use it.
     title: 'Some title for new post about Expansa and hekllo',
-
-    // Page > Authors
-    author: 'John Doe',
-    authors: AUTHORS,
-
-    // Page > featured image gallery — each entry is an <img> src (a data: URL once uploaded via galleryInput below).
-    thumbnails: [],
-
-    // Page > Categories (two-level term tree)
-    terms: {
-      lvl1: '',
-      lvl2: '',
-    },
-
-    // Position panel: border-anchored margin controls
-    marginTop: 0,
-    marginEnd: 0,
-    marginBottom: 0,
-    marginStart: 0,
-
-    // Page > featured image gallery "add" control — reads selected images with FileReader and appends each as a data URL to "thumbnails" (by assignment, never .push(), so v-each picks up the change).
-    galleryInput: {
-      '@change'(e) {
-        const files = [...e.target.files].filter((file) => file.type.startsWith('image/'));
-        e.target.value = '';
-
-        files.forEach((file) => {
-          const reader = new FileReader();
-          reader.onload = (event) => {
-            this.thumbnails = [...this.thumbnails, event.target.result];
-          };
-          reader.readAsDataURL(file);
-        });
-      },
-    },
-    // Removes an item by index (from `:data-index`) rather than the DOM node, keeping "thumbnails" the source of truth.
-    galleryRemove: {
-      '@click'() {
-        const index = +this.$el.closest('.editrix-gallery-item').dataset.index;
-        this.thumbnails = this.thumbnails.filter((_, i) => i !== index);
-      },
-    },
-
-    // Page > Status/Authors/Discussion — the 3rd .editrix-control in toolbox.html
-    statusSummary: {
-      'v-text'() {
-        return this.statuses.find((stat) => stat.value === this.status)?.label || this.status;
-      },
-    },
-    // Two-way binding for the "Published At" input, plus flipping "status" to/from "scheduled" based on whether the date is in the future.
-    publishedAtInput: {
-      ':value'() {
-        return this.publishedAt;
-      },
-      '@input'(e) {
-        this.publishedAt = e.target.value;
-
-        if (this.publishedAt && new Date(this.publishedAt) > new Date()) {
-          this.status = 'scheduled';
-        } else if (this.status === 'scheduled') {
-          this.status = 'published';
-        }
-      },
-    },
-    // One entry per `v-each="stat in statuses"` — a plain object still sees "stat" in scope.
-    statusOption: {
-      '@click': "$el.closest('details').open = false",
-      ':class': "status === stat.value && 'active'",
-    },
-    // Same shape as statusSummary() above.
-    visibilitySummary: {
-      'v-text'() {
-        return this.visibilities.find((vision) => vision.value === this.visibility)?.label || this.visibility;
-      },
-    },
-    // Same shape as statusOption() above.
-    visibilityOption: {
-      '@click': "$el.closest('details').open = false",
-      ':class': "visibility === vision.value && 'active'",
-    },
-    authorSummary: {
-      'v-text'() {
-        return this.author;
-      },
-    },
-    // Authors aren't looped (v-each) in the markup, so click/active-state is parameterized by name: v-bind="e.authorOption('John Doe')"
-    authorOption(name) {
-      return {
-        '@click': `$el.closest('details').open = false`,
-        ':class': `author === '${name}' && 'active'`,
-      };
-    },
-    discussionSummary: {
-      'v-text'() {
-        return this.discussionStatus;
-      },
-    },
-    discussionOption: {
-      '@click': "$el.closest('details').open = false",
-      ':class': "discussionStatus === discussion.value && 'active'",
-    },
-
-    // Page > Categories — checking a root term clears the whole tree; checking a child keeps its parent and clears any sibling branch.
-    categoryRootOption: {
-      '@click': "$el.checked && (terms = {lvl1: '', lvl2: ''})",
-    },
-    categoryChildOption(parent) {
-      return {
-        '@click': `$el.checked && (terms = {lvl1: '${parent}', lvl2: ''})`,
-      };
-    },
   }));
 });

@@ -1,0 +1,46 @@
+<template id="editrix-control-categories">
+  <div class="editrix-inputs">
+    <div class="editrix-inputs-item">
+      <div class="editrix-inputs-box">
+        <i class="ph ph-magnifying-glass"></i> <input type="text" placeholder="Type for find..." />
+      </div>
+    </div>
+  </div>
+
+  <ul class="editrix-categories editrix-categories--root">
+    <li class="editrix-categories-items">
+      <label class="editrix-categories-item">
+        <input type="radio" value="electronic" v-prop="terms.lvl1" v-bind="e.categoryRootOption"> Electronic2
+      </label>
+      <ul class="editrix-categories">
+        <li class="editrix-categories-items">
+          <label class="editrix-categories-item">
+            <input type="radio" value="phone" v-prop="terms.lvl2" v-bind="e.categoryChildOption('electronic')"> Phones
+          </label>
+        </li>
+        <li class="editrix-categories-items">
+          <label class="editrix-categories-item">
+            <input type="radio" value="laptops" v-prop="terms.lvl2" v-bind="e.categoryChildOption('electronic')"> Laptops
+          </label>
+        </li>
+      </ul>
+    </li>
+    <li class="editrix-categories-items">
+      <label class="editrix-categories-item">
+        <input type="radio" value="books" v-prop="terms.lvl1" v-bind="e.categoryRootOption"> Books
+      </label>
+      <ul class="editrix-categories">
+        <li class="editrix-categories-items">
+          <label class="editrix-categories-item">
+            <input type="radio" value="drama" v-prop="terms.lvl2" v-bind="e.categoryChildOption('books')"> Drama
+          </label>
+        </li>
+        <li class="editrix-categories-items">
+          <label class="editrix-categories-item">
+            <input type="radio" value="kids" v-prop="terms.lvl2" v-bind="e.categoryChildOption('books')"> For kids
+          </label>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</template>

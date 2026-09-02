@@ -1,0 +1,11 @@
+<template id="editrix-control-slider">
+  <div class="editrix-slider">
+    <input type="range" data-part="range">
+    <span class="editrix-slider-affix" data-part="prefix"></span>
+    <input type="number" class="editrix-inputs-box editrix-slider-input" data-part="size">
+    <span class="editrix-slider-affix" data-part="suffix"></span>
+    <select class="editrix-inputs-box editrix-slider-unit" data-part="unit">
+      <option v-each="unit in units" :value="unit" v-text="unit"></option>
+    </select>
+  </div>
+</template>

@@ -1,6 +1,6 @@
 /**
  * Shared "array of item objects" engine behind every repeatable control on the Content panel — the
- * classic collapsible repeater (controls/repeater.js) and the repeatable section (controls/
+ * classic collapsible repeater (control/repeater) and the repeatable section (controls/
  * section-repeater.js) both store their value as object[] and need the same read/write/patch/
  * min-max plumbing. Only how a row/item is *drawn* differs between the two, so that part stays in
  * each control's own file.

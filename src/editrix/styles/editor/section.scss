@@ -1,8 +1,8 @@
 .editrix-section {
-	padding-block: 10px;
+	padding-block: 8px;
 	border-bottom: 1px solid #e6e6e6;
-	gap: 10px;
 	display: grid;
+	gap: 4px;
 
 	&:last-child {
 		border: 0;
@@ -18,12 +18,8 @@
 		width: 100%;
 		line-height: 1;
 		position: relative;
-		padding-inline: 10px;
+		padding-inline: 12px;
 		height: 24px;
-
-		+ .editrix-control {
-			margin-top: 8px;
-		}
 
 		// Wraps heading text + tooltip icon as one flex item so space-between (above) doesn't split them apart.
 		&__title {

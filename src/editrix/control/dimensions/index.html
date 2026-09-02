@@ -1,0 +1,18 @@
+<template id="editrix-control-dimensions">
+  <div class="editrix-borders">
+    <div class="editrix-borders-values">
+      <input type="number" data-side="top">
+      <input type="number" data-side="right">
+      <input type="number" data-side="bottom">
+      <input type="number" data-side="left">
+    </div>
+    <label class="editrix-borders-buttons">
+      <span class="editrix-buttons-item" title="Link sides together" data-part="link-toggle">
+        <i class="ph ph-link"></i>
+      </span>
+      <select class="editrix-inputs-box" data-part="unit">
+        <option v-each="unit in units" :value="unit" v-text="unit"></option>
+      </select>
+    </label>
+  </div>
+</template>

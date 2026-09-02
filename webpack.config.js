@@ -196,6 +196,12 @@ module.exports = {
         include: path.resolve(__dirname, 'src/view/editrix') + path.sep,
         use: ['raw-loader'],
       },
+      {
+        // Each editrix control's own template — src/editrix/control/<name>/index.html — sits next to its JS, not under src/view.
+        test: /\.html$/,
+        include: path.resolve(__dirname, 'src/editrix/control') + path.sep,
+        use: ['raw-loader'],
+      },
     ],
   },
   optimization: {

@@ -1,14 +1,9 @@
 /**
  * Toolbox > Position section's own "Borders" control — a fixed, single-instance control (not a
  * name-keyed setting), so its own state (border-anchored margin) lives here rather than going
- * through getValue()/setValue() (controls/base.js).
+ * through getValue()/setValue() (controls/base.js). Cloned from "editrix-control-borders" by
+ * convention (controls/render.js's renderField(), no renderer registered for "borders").
  */
-
-import { cloneTemplateFragment } from '../../controls/template';
-
-export function renderBorders() {
-  return cloneTemplateFragment('editrix-control-borders');
-}
 
 export function createBordersControl() {
   return {

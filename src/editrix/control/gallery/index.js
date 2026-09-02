@@ -1,14 +1,9 @@
 /**
  * Toolbox > "Page" panel's featured-image gallery control — a fixed, single-instance control (not a
  * name-keyed setting), so its own state ("thumbnails") and bindings live here rather than going
- * through getValue()/setValue() (controls/base.js).
+ * through getValue()/setValue() (controls/base.js). Cloned from "editrix-control-gallery" by
+ * convention (controls/render.js's renderField(), no renderer registered for "gallery").
  */
-
-import { cloneTemplateFragment } from '../../controls/template';
-
-export function renderGallery() {
-  return cloneTemplateFragment('editrix-control-gallery');
-}
 
 export function createGalleryControl() {
   return {

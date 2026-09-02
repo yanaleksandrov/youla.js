@@ -1,6 +1,10 @@
 /**
  * The control system's shared core: the settings/definition registry, condition/responsive
- * resolution, and the wrapper chrome (label/tooltip/description) every control type is built on.
+ * resolution, and the wrapper chrome (label/tooltip/description) every control type is built on —
+ * the one layer every control type depends on, regardless of its own value shape. A compound
+ * control's own value parts (url's part()/partSwitch(), slider/dimensions' partNumber()/fieldAffix()/
+ * unitSelect()/linkedNumber()/linkToggle()) live in multi-value.js/unit.js instead — see fieldName()
+ * below, which is what lets those stay out of here.
  *
  * A control's "definition" (label, tooltip, description, default, value, condition, responsive,
  * plus whatever the control type needs) is the object literal passed as a factory's second
@@ -9,8 +13,16 @@
  * @returns {Object} Properties/methods to spread into `Youla.data('editrix', () => ({ ... }))`.
  */
 
-// CSS length units every unit control's <select> offers — see unitSelect() and "units" below.
-const CONTROL_UNITS = ['px', '%', 'em', 'rem', 'vw', 'vh'];
+// A compound-value part binding (multi-value.js's part()/partSwitch(), unit.js's partNumber()/
+// fieldAffix()/unitSelect()/linkedNumber()/linkToggle()) reads its own setting's "name" off the
+// closest ".editrix-field" wrapper's own "data-name" (set by field() below) rather than taking it
+// as an argument — lets those controls' own markup (control/url, control/slider, control/
+// dimensions, ...) stay fully static, with no per-render renderer wiring bindings in via
+// setAttribute() (controls/render.js's renderField() still does this for the wrapper itself, since
+// "name" there comes from the field's own declared config, not the DOM).
+export function fieldName(el) {
+  return el.closest('.editrix-field').dataset.name;
+}
 
 // A field's own starting point: an explicit "value" — the backend's actual current content for
 // this specific field, as opposed to "default" (what a brand-new/never-edited field starts as) —
@@ -30,9 +42,6 @@ export function createControlsBase() {
 
     // Which breakpoint a `responsive: true` control currently reads/writes — fixed at 'desktop' until a device switcher exists.
     responsiveDevice: 'desktop',
-
-    // Shared with sidebar.html's unit <select> templates (v-each="unit in units").
-    units: CONTROL_UNITS,
 
     // Which block's settings the Content tab reads/writes; null (nothing selected yet) falls back to a shared "__page__" bucket.
     activeBlock: null,
@@ -167,6 +176,9 @@ export function createControlsBase() {
         ':data-title'() {
           return this._controls[name]?.label || '';
         },
+        ':data-name'() {
+          return name;
+        },
       };
     },
 
@@ -190,99 +202,6 @@ export function createControlsBase() {
         },
         'v-text'() {
           return this._controls[name]?.description;
-        },
-      };
-    },
-
-    // v-bind="e.fieldAffix(name, 'prefix'/'suffix')" on static text glued to a control's input (e.g. slider()) — hidden unless the field declares that key.
-    fieldAffix(name, key) {
-      return {
-        'v-show'() {
-          return !!this._controls[name]?.[key];
-        },
-        'v-text'() {
-          return this._controls[name]?.[key] || '';
-        },
-      };
-    },
-
-    // Compound values: shared by every multi-value/unit control (url, dimensions, slider, ...), whose setting is one object with several named parts.
-
-    // v-bind="e.part(name, 'url')" on a text-like input for one part of a compound value.
-    part(name, key) {
-      return {
-        ':value'() {
-          return (this.getValue(name) || {})[key] ?? '';
-        },
-        '@input'(e) {
-          this.patchValue(name, { [key]: e.target.value });
-        },
-      };
-    },
-
-    // v-bind="e.partNumber(name, 'blur')" on a number input for one numeric part.
-    partNumber(name, key) {
-      return {
-        ':value'() {
-          return (this.getValue(name) || {})[key] ?? 0;
-        },
-        '@input'(e) {
-          this.patchValue(name, { [key]: parseFloat(e.target.value) || 0 });
-        },
-      };
-    },
-
-    // v-bind="e.partSwitch(name, 'is_external')" on a checkbox for one boolean part.
-    partSwitch(name, key) {
-      return {
-        ':checked'() {
-          return !!(this.getValue(name) || {})[key];
-        },
-        '@change'(e) {
-          this.patchValue(name, { [key]: e.target.checked });
-        },
-      };
-    },
-
-    // v-bind="e.unitSelect(name)" on the unit <select> a slider/dimensions/gaps control shares.
-    unitSelect(name) {
-      return {
-        ':value'() {
-          return (this.getValue(name) || {}).unit ?? 'px';
-        },
-        '@change'(e) {
-          this.patchValue(name, { unit: e.target.value });
-        },
-      };
-    },
-
-    // v-bind="e.linkedNumber(name, 'top', ['top','right','bottom','left'])" on one side's number input — while linked, editing any part updates every part in "allKeys" together.
-    linkedNumber(name, key, allKeys) {
-      return {
-        ':value'() {
-          return (this.getValue(name) || {})[key] ?? 0;
-        },
-        '@input'(e) {
-          const value = parseFloat(e.target.value) || 0;
-          const current = this.getValue(name) || {};
-
-          this.patchValue(name, current.isLinked
-            ? Object.fromEntries(allKeys.map((k) => [k, value]))
-            : { [key]: value });
-        },
-      };
-    },
-
-    // v-bind="e.linkToggle(name)" on the link/unlink button paired with linkedNumber() above.
-    linkToggle(name) {
-      return {
-        ':class'() {
-          return {
-            'is-linked': !!(this.getValue(name) || {}).isLinked
-          };
-        },
-        '@click'() {
-          this.patchValue(name, { isLinked: !(this.getValue(name) || {}).isLinked });
         },
       };
     },

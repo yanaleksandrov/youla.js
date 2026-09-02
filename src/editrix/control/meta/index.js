@@ -4,13 +4,6 @@
  * rather than going through getValue()/setValue() (controls/base.js). "statuses"/"visibilities"/
  * "discussions"/"authors" come from backend data (youla-editrix.js's readBackendData()).
  */
-
-import { cloneTemplateFragment } from '../../controls/template';
-
-export function renderMeta() {
-  return cloneTemplateFragment('editrix-control-meta');
-}
-
 /**
  * @param {Object} options
  * @param {Object[]} options.statuses

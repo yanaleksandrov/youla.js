@@ -27,7 +27,12 @@
  * A repeater's DOM shape depends on its *value* (row count), so — unlike text()/switcher()/color()
  * (control/text, control/switcher, control/color), whose markup is fixed — rows are built once and
  * only touched again on add/remove/reorder or when the active block changes. v-each was ruled out for
- * rows: it rebuilds every clone on each re-render, closing whatever row a user has open.
+ * rows: it rebuilds every clone on each re-render, closing whatever row a user has open. Every row's
+ * own chrome binding (repeaterItemRoot()/repeaterToggle()/repeaterLabel()/repeaterVisibility()/
+ * repeaterRemove() below) is still fully static in editrix-repeater-item-template (this file's own
+ * index.html) and takes no "name" — it's read off the closest ".editrix-field" wrapper's own
+ * "data-name" (controls/base.js's fieldName()), same as every other control — so createRepeaterItem()
+ * below only ever has to set what's genuinely per-row: "data-index".
  *
  * A repeater's own row chrome (drag handle, echoed label, collapsible body) suits item shapes with
  * several/heavier fields, where a scannable summary matters more than seeing everything at once. For
@@ -39,6 +44,7 @@
 
 import { createSortableItem } from '../../sortable';
 import { cloneTemplateElement } from '../../controls/template';
+import { fieldName } from '../../controls/base';
 import {
   readItems, writeItems, patchItemAt, createDefaultItem, itemIndexOf, renumberItems, destroyItemFillers, minItems, maxItems, isItemConditionMet,
 } from '../../controls/repeatable';
@@ -52,7 +58,7 @@ const REPEATER_FIELD_TEMPLATES = {
   fill: 'editrix-control-color',
 };
 
-// True once a repeater is locked to exactly one permanent item ("min: 1, max: 1") — see createRepeaterItem()'s own comment.
+// True once a repeater is locked to exactly one permanent item ("min: 1, max: 1") — see repeaterItemRoot()'s own ":class".
 function isLockedToOneItem(component, name) {
   return minItems(component, name) === 1 && maxItems(component, name) === 1;
 }
@@ -102,6 +108,13 @@ export function createRepeaterFieldControl(name, fieldDef) {
  * field declares one) still works — see repeaterFieldVisibility() below — checked against this same
  * item's own values, not top-level settings.
  *
+ * "name" is still passed explicitly here (and into repeaterField()/repeaterFieldVisibility() below),
+ * unlike the row's own chrome — this wrapper reuses the ".editrix-field" class for its title/
+ * description CSS (fields.scss), so fieldName()'s "closest('.editrix-field')" would stop right here
+ * instead of reaching the repeater's own outer field wrapper, and this one never gets a "data-name"
+ * (it isn't a real registered control — same reason section-repeater.js's sectionField() takes
+ * "name" explicitly instead of deriving it).
+ *
  * @param {string} name - The repeater control's own setting name.
  * @param {Object} fieldDef - One entry of the repeater's own `fields` definition.
  * @returns {HTMLElement}
@@ -122,30 +135,20 @@ function createRepeaterField(name, fieldDef) {
 
 /**
  * Builds one repeater row — drag handle, a collapsible head (label + optional visibility toggle),
- * remove, and its declared fields inside the collapsible body.
- *
- * "locked" (a "min: 1, max: 1" repeater) hides the head entirely in CSS (repeater.scss) — a
- * permanently-single item has nothing to drag/collapse/remove down to, so the row reads as a plain,
- * always-expanded field group. The visibility icon is always present in markup; its own "v-show"
- * (repeaterVisibility() below) decides whether it renders.
+ * remove, and its declared fields inside the collapsible body. The row's own chrome bindings
+ * (root/toggle/label/visibility/remove, including the "is-locked" state) are already static in
+ * "editrix-repeater-item-template" (this file's own index.html) — only "data-index" (this row's
+ * position) and its declared fields genuinely depend on this particular call.
  *
  * @param {string} name
  * @param {number} index
  * @param {Object[]} fields - The repeater's own `fields` definition.
- * @param {boolean} locked
  * @returns {HTMLElement}
  */
-function createRepeaterItem(name, index, fields, locked) {
+function createRepeaterItem(name, index, fields) {
   const el = cloneTemplateElement('editrix-repeater-item-template');
-  const nameArg = JSON.stringify(name);
 
   el.dataset.index = index;
-  el.classList.toggle('is-locked', locked);
-  el.setAttribute('v-bind', `e.repeaterItemRoot(${nameArg})`);
-  el.querySelector('[data-part="toggle"]').setAttribute('v-bind', `e.repeaterToggle(${nameArg})`);
-  el.querySelector('[data-part="label"]').setAttribute('v-bind', `e.repeaterLabel(${nameArg}, ${JSON.stringify(fields[0]?.name || '')})`);
-  el.querySelector('[data-part="visibility"]').setAttribute('v-bind', `e.repeaterVisibility(${nameArg})`);
-  el.querySelector('[data-part="remove"]').setAttribute('v-bind', `e.repeaterRemove(${nameArg})`);
 
   const body = el.querySelector('[data-part="body"]');
   fields.forEach((fieldDef) => body.append(createRepeaterField(name, fieldDef)));
@@ -153,33 +156,14 @@ function createRepeaterItem(name, index, fields, locked) {
   return el;
 }
 
-/**
- * Builds the repeater control's own outer shell: the list's mount point, the expand/collapse-all
- * button, and an "Add item" button below the list. Registered as CONTROL_RENDERERS.repeater
- * (controls/render.js); contentFields() (youla-editrix.js) relocates the expand/collapse-all button
- * into the section head — "add" always stays below the list.
- *
- * @param {string} name
- * @returns {HTMLElement}
- */
-export function renderRepeater(name) {
-  const el = cloneTemplateElement('editrix-control-repeater');
-  const nameArg = JSON.stringify(name);
-
-  el.querySelector('[data-part="list"]').setAttribute('v-bind', `e.repeaterList(${nameArg})`);
-  el.querySelector('[data-part="toggle-all"]').setAttribute('v-bind', `e.repeaterToggleAll(${nameArg})`);
-  el.querySelector('[data-part="add"]').setAttribute('v-bind', `e.repeaterAdd(${nameArg})`);
-
-  return el;
-}
-
 export function createRepeaterControl() {
   return {
-    // v-bind="e.repeaterList(name)" — builds this field's rows the first time it's resolved, and again whenever the active block changes (see this file's header comment for why ":data-owner", not v-each, builds them).
+    // v-bind="e.repeaterList()" — builds this field's rows the first time it's resolved, and again whenever the active block changes (see this file's header comment for why ":data-owner", not v-each, builds them).
     // "@dragover.prevent"/"@drop.prevent" make the list itself a valid drop target too, in case some bit of its own box isn't covered by a row.
-    repeaterList(name) {
+    repeaterList() {
       return {
         ':data-owner'() {
+          const name = fieldName(this.$el);
           const owner = this.activeBlock || '__page__';
 
           if (this.$el.dataset.owner !== owner) {
@@ -188,9 +172,8 @@ export function createRepeaterControl() {
             this.$el.innerHTML = '';
 
             const fields = this._controls[name]?.fields || [];
-            const locked = isLockedToOneItem(this, name);
             readItems(this, name).forEach((item, index) => {
-              const row = createRepeaterItem(name, index, fields, locked);
+              const row = createRepeaterItem(name, index, fields);
               this.$el.append(row);
               this.$root.__x.initialize(row);
             });
@@ -205,13 +188,15 @@ export function createRepeaterControl() {
       };
     },
 
-    // v-bind="e.repeaterAdd(name)" on the "Add item" button below the list — hidden once "max" (default: unlimited) is reached, so a locked ("min: 1, max: 1") repeater never shows it.
-    repeaterAdd(name) {
+    // v-bind="e.repeaterAdd()" on the "Add item" button below the list — hidden once "max" (default: unlimited) is reached, so a locked ("min: 1, max: 1") repeater never shows it.
+    repeaterAdd() {
       return {
         'v-show'() {
+          const name = fieldName(this.$el);
           return readItems(this, name).length < maxItems(this, name);
         },
         '@click'() {
+          const name = fieldName(this.$el);
           const items = readItems(this, name);
 
           // Belt-and-braces against "v-show" being bypassed by a stray click right at the "max" boundary.
@@ -225,22 +210,30 @@ export function createRepeaterControl() {
           writeItems(this, name, [...items, createDefaultItem(fields)]);
 
           const list = this.$el.closest('.editrix-repeater').querySelector('[data-part="list"]');
-          const row = createRepeaterItem(name, index, fields, isLockedToOneItem(this, name));
+          const row = createRepeaterItem(name, index, fields);
+
+          // Open right away — a freshly added item is empty, so its fields are exactly what the user is about to fill in next.
+          row.classList.add('is-open');
           list.append(row);
           this.$root.__x.initialize(row);
         },
       };
     },
 
-    // v-bind="e.repeaterItemRoot(name)" on a row's own root — draggable reordering via sortable.js's createSortableItem(), animated by animateReorder(). Needs ".editrix-repeater-item" to declare its own "transform" transition (repeater.scss).
-    repeaterItemRoot(name) {
-      return createSortableItem({
-        read: (component) => readItems(component, name),
-        write: (component, items) => writeItems(component, name, items),
-      });
+    // v-bind="e.repeaterItemRoot()" on a row's own root (editrix-repeater-item-template) — draggable reordering via sortable.js's createSortableItem(), animated by animateReorder(); ":class" hides the row's own head in CSS (repeater.scss) once the repeater is locked to exactly one permanent item ("min: 1, max: 1") — nothing left to drag/collapse/remove down to, so the row reads as a plain, always-expanded field group. Needs ".editrix-repeater-item" to declare its own "transform" transition (repeater.scss).
+    repeaterItemRoot() {
+      return {
+        ...createSortableItem({
+          read: (component) => readItems(component, fieldName(component.$el)),
+          write: (component, items) => writeItems(component, fieldName(component.$el), items),
+        }),
+        ':class'() {
+          return { 'is-locked': isLockedToOneItem(this, fieldName(this.$el)) };
+        },
+      };
     },
 
-    // v-bind="e.repeaterToggle(name)" on a row's head — expands/collapses its body; a plain DOM class, not part of the reactive value.
+    // v-bind="e.repeaterToggle()" on a row's head — expands/collapses its body; a plain DOM class, not part of the reactive value.
     repeaterToggle() {
       return {
         '@click.stop.prevent'() {
@@ -249,8 +242,8 @@ export function createRepeaterControl() {
       };
     },
 
-    // v-bind="e.repeaterToggleAll(name)" — expands every row if any is collapsed, otherwise collapses all; icon/title are set directly since there's no reactive state to bind them to.
-    repeaterToggleAll(name) {
+    // v-bind="e.repeaterToggleAll()" — expands every row if any is collapsed, otherwise collapses all; icon/title are set directly since there's no reactive state to bind them to. Takes no "name" (unlike every other binding here): contentFields() (youla-editrix.js's renderSections()) relocates this icon out of the field and into the section head, so it works purely off the DOM, via the closest ".editrix-section", not ".editrix-field".
+    repeaterToggleAll() {
       return {
         '@click'() {
           const list = this.$el.closest('.editrix-section')?.querySelector('[data-part="list"]');
@@ -266,10 +259,12 @@ export function createRepeaterControl() {
       };
     },
 
-    // v-bind="e.repeaterLabel(name, 'question')" — echoes the row's first declared field back as its summary (Elementor's own repeater does the same), falling back to "Item N" once empty.
-    repeaterLabel(name, key) {
+    // v-bind="e.repeaterLabel()" on a row's own label — echoes the row's first declared field back as its summary (Elementor's own repeater does the same), falling back to "Item N" once empty.
+    repeaterLabel() {
       return {
         'v-text'() {
+          const name = fieldName(this.$el);
+          const key = this._controls[name]?.fields?.[0]?.name || '';
           const index = itemIndexOf(this.$el);
           const value = key ? readItems(this, name)[index]?.[key] : undefined;
 
@@ -278,17 +273,19 @@ export function createRepeaterControl() {
       };
     },
 
-    // v-bind="e.repeaterVisibility(name)" on a row's eye icon — hides an item without removing it (Figma's own per-fill toggle); opt-in per repeater via "disabled" (isHideable() above). Toggles a reserved top-level "visible" key, not a declared field.
-    repeaterVisibility(name) {
+    // v-bind="e.repeaterVisibility()" on a row's eye icon — hides an item without removing it (Figma's own per-fill toggle); opt-in per repeater via "disabled" (isHideable() above). Toggles a reserved top-level "visible" key, not a declared field.
+    repeaterVisibility() {
       return {
         'v-show'() {
-          return isHideable(this, name);
+          return isHideable(this, fieldName(this.$el));
         },
         ':class'() {
+          const name = fieldName(this.$el);
           const visible = itemVisible(readItems(this, name)[itemIndexOf(this.$el)]);
           return { 'ph-eye': visible, 'ph-eye-slash': !visible };
         },
         '@click.stop.prevent'() {
+          const name = fieldName(this.$el);
           const index = itemIndexOf(this.$el);
           const visible = itemVisible(readItems(this, name)[index]);
           patchItemAt(this, name, index, { visible: !visible });
@@ -296,13 +293,15 @@ export function createRepeaterControl() {
       };
     },
 
-    // v-bind="e.repeaterRemove(name)" on a row's trash icon — hidden once "min" (default: 0) is reached. A locked ("min: 1, max: 1") repeater hides the whole row instead (createRepeaterItem()), so this guard never actually fires there.
-    repeaterRemove(name) {
+    // v-bind="e.repeaterRemove()" on a row's trash icon — hidden once "min" (default: 0) is reached. A locked ("min: 1, max: 1") repeater hides the whole row instead (repeaterItemRoot()'s own ":class"), so this guard never actually fires there.
+    repeaterRemove() {
       return {
         'v-show'() {
+          const name = fieldName(this.$el);
           return readItems(this, name).length > minItems(this, name);
         },
         '@click.stop.prevent'() {
+          const name = fieldName(this.$el);
           const items = readItems(this, name);
 
           // Same belt-and-braces as repeaterAdd()'s own "max" guard.
@@ -322,7 +321,7 @@ export function createRepeaterControl() {
       };
     },
 
-    // v-bind="e.repeaterFieldVisibility(name, 'accent_color')" on an item field's own ".editrix-field" wrapper (createRepeaterField() above) — item-scoped counterpart of base.js's field() "v-show", via isItemConditionMet() (controls/repeatable.js): the field's declared "condition" is checked against this same item's own values, not top-level settings.
+    // v-bind="e.repeaterFieldVisibility(name, 'accent_color')" on an item field's own ".editrix-field" wrapper (createRepeaterField() above) — item-scoped counterpart of base.js's field() "v-show", via isItemConditionMet() (controls/repeatable.js): the field's declared "condition" is checked against this same item's own values, not top-level settings. Takes "name" explicitly — see createRepeaterField()'s own comment for why fieldName() can't reach it here.
     repeaterFieldVisibility(name, key) {
       return {
         'v-show'() {
@@ -334,7 +333,7 @@ export function createRepeaterControl() {
       };
     },
 
-    // v-bind="e.repeaterField(name, 'question')" — dispatches on the field's declared type, mirroring control/text/control/switcher/control/color but reading/writing this item's own slot instead of a top-level setting. Shared by classic repeater rows (createRepeaterField() above) and repeatable-section items (section-repeater.js) alike — see createRepeaterFieldControl()'s own comment.
+    // v-bind="e.repeaterField(name, 'question')" — dispatches on the field's declared type, mirroring control/text/control/switcher/control/color but reading/writing this item's own slot instead of a top-level setting. Shared by classic repeater rows (createRepeaterField() above) and repeatable-section items (section-repeater.js) alike — see createRepeaterFieldControl()'s own comment. Takes "name" explicitly — same reason as repeaterFieldVisibility() above.
     repeaterField(name, key) {
       const fieldDef = (this._controls[name]?.fields || []).find((field) => field.name === key);
 

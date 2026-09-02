@@ -525,7 +525,7 @@ document.addEventListener('youla:init', () => {
       },
     },
 
-    // Page > title — v-prop="title" on the "Page" panel's own textarea control (bound dynamically by CONTROL_RENDERERS.textarea, controls/render.js). Stays here rather than in a control/<type> folder since "textarea" is a generic, reusable type (like control/text) that owns no state of its own — "title" is this page's own data, just happening to use it.
+    // Page > title — read/written by the "Page" panel's own textarea control via "this[name]" (control/textarea's createTextareaControl()). Stays here rather than in a control/<type> folder since "textarea" is a generic, reusable type (like control/text) that owns no state of its own — "title" is this page's own data, just happening to use it.
     title: 'Some title for new post about Expansa and hekllo',
   }));
 });

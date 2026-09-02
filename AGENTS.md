@@ -54,3 +54,4 @@ Follow these rules whenever you write or modify code comments:
 * Prefer clear code over explanatory comments whenever possible.
 * CSS comments should be concise and short — no more than one line.
 * The library is evolving, so the descriptions may contain functions, behaviors, or elements that no longer exist. The comments should be kept up to date.
+  * Don't add comments to the HTML.

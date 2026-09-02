@@ -1,28 +1,25 @@
 /**
- * The "text" control — a plain text <input>, dispatched by CONTROL_RENDERERS.text (controls/render.js).
+ * The "text" control — a plain text <input>, cloned from "editrix-control-text" by convention
+ * (controls/render.js's renderField(), no renderer registered for "text"). Its own binding is fully
+ * static (control/text/index.html) — "name" comes from the closest ".editrix-field" wrapper's own
+ * "data-name" (controls/base.js's field()), not an argument.
  */
 
-import { cloneTemplateFragment } from '../../controls/template';
-
-export function renderText(name) {
-  const el = cloneTemplateFragment('editrix-control-text');
-  el.querySelector('input').setAttribute('v-bind', `e.text(${JSON.stringify(name)})`);
-  return el;
-}
+import { fieldName } from '../../controls/base';
 
 export function createTextControl() {
   return {
-    // v-bind="e.text(name)" on a plain text <input>.
-    text(name) {
+    // v-bind="e.text()" on a plain text <input>.
+    text() {
       return {
         ':value'() {
-          return this.getValue(name) ?? '';
+          return this.getValue(fieldName(this.$el)) ?? '';
         },
         ':placeholder'() {
-          return this._controls[name]?.placeholder ?? '';
+          return this._controls[fieldName(this.$el)]?.placeholder ?? '';
         },
         '@input'(e) {
-          this.setValue(name, e.target.value);
+          this.setValue(fieldName(this.$el), e.target.value);
         },
       };
     },

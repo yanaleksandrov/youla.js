@@ -1,10 +1,10 @@
 <template id="editrix-control-slider">
   <div class="editrix-slider">
-    <input type="range" data-part="range">
-    <span class="editrix-slider-affix" data-part="prefix"></span>
-    <input type="number" class="editrix-inputs-box editrix-slider-input" data-part="size">
-    <span class="editrix-slider-affix" data-part="suffix"></span>
-    <select class="editrix-inputs-box editrix-slider-unit" data-part="unit">
+    <input type="range" v-bind="e.sliderRange()">
+    <span class="editrix-slider-affix" v-bind="e.fieldAffix('prefix')"></span>
+    <input type="number" class="editrix-inputs-box editrix-slider-input" v-bind="e.partNumber('size')">
+    <span class="editrix-slider-affix" v-bind="e.fieldAffix('suffix')"></span>
+    <select class="editrix-inputs-box editrix-slider-unit" v-bind="e.unitSelect()">
       <option v-each="unit in units" :value="unit" v-text="unit"></option>
     </select>
   </div>

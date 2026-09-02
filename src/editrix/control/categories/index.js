@@ -1,14 +1,9 @@
 /**
  * Toolbox > Categories section's own control (a two-level term tree) — a fixed, single-instance
  * control (not a name-keyed setting), so its own state ("terms") and bindings live here rather than
- * going through getValue()/setValue() (controls/base.js).
+ * going through getValue()/setValue() (controls/base.js). Cloned from "editrix-control-categories"
+ * by convention (controls/render.js's renderField(), no renderer registered for "categories").
  */
-
-import { cloneTemplateFragment } from '../../controls/template';
-
-export function renderCategories() {
-  return cloneTemplateFragment('editrix-control-categories');
-}
 
 export function createCategoriesControl() {
   return {

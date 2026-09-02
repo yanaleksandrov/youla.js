@@ -1,25 +1,22 @@
 /**
- * The "switcher" control — a checkbox toggle, dispatched by CONTROL_RENDERERS.switcher (controls/render.js).
+ * The "switcher" control — a checkbox toggle, cloned from "editrix-control-switcher" by convention
+ * (controls/render.js's renderField(), no renderer registered for "switcher"). Its own binding is
+ * fully static (control/switcher/index.html) — "name" comes from the closest ".editrix-field"
+ * wrapper's own "data-name" (controls/base.js's field()), not an argument.
  */
 
-import { cloneTemplateFragment } from '../../controls/template';
-
-export function renderSwitcher(name) {
-  const el = cloneTemplateFragment('editrix-control-switcher');
-  el.querySelector('input').setAttribute('v-bind', `e.switcher(${JSON.stringify(name)})`);
-  return el;
-}
+import { fieldName } from '../../controls/base';
 
 export function createSwitcherControl() {
   return {
-    // v-bind="e.switcher(name)" on a checkbox <input>.
-    switcher(name) {
+    // v-bind="e.switcher()" on a checkbox <input>.
+    switcher() {
       return {
         ':checked'() {
-          return !!this.getValue(name);
+          return !!this.getValue(fieldName(this.$el));
         },
         '@change'(e) {
-          this.setValue(name, e.target.checked);
+          this.setValue(fieldName(this.$el), e.target.checked);
         },
       };
     },

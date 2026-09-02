@@ -3,6 +3,7 @@ import { createMultiValueControls } from './multi-value';
 import { createUnitControls } from './unit';
 import { createSectionRepeaterControl } from './section-repeater';
 import { createTextControl } from '../control/text';
+import { createTextareaControl } from '../control/textarea';
 import { createSwitcherControl } from '../control/switcher';
 import { createSelectControl } from '../control/select';
 import { createColorControl } from '../control/color';
@@ -30,6 +31,7 @@ export function createControlsSystem({ meta } = {}) {
     createMultiValueControls(),
     createUnitControls(),
     createTextControl(),
+    createTextareaControl(),
     createSwitcherControl(),
     createSelectControl(),
     createColorControl(),

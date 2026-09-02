@@ -1811,7 +1811,7 @@ class Filler {
 
   /**
    * Releases attachFloating's window/document listeners and detaches the floating panel.
-   * Call before removing a filler's `<input>` from the DOM (e.g. controls/repeater.js rebuilding a row), or it leaks.
+   * Call before removing a filler's `<input>` from the DOM (e.g. control/repeater rebuilding a row), or it leaks.
    */
   destroy() {
     this.closeDialog();

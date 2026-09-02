@@ -1,122 +1,24 @@
-/**
- * Renders control instances at runtime by cloning the <template> library shipped in
- * sections/sidebar.html's "Content" panel: clone → wire attributes via setAttribute() (never
- * string-interpolated into HTML text) → component.initialize() to activate the clone's directives.
- *
- * Each control's own markup stays in its own <template id="editrix-control-*">; adding a new
- * control type means adding its template plus one entry below.
- */
+// Renders control instances at runtime by cloning a <template>. Each control's own markup lives in its own folder under src/editrix/control/<type>/index.html, required from view/editrix.html.
+// "editrix-control-<type>" is cloned by convention — every type's own bindings read their "name" off the closest ".editrix-field" wrapper's "data-name".
 
-import { renderRepeaterControl } from './repeater';
+import { cloneTemplateFragment } from './template';
+
+// Types whose markup reads better stacked in its own column — see fields.scss's ".editrix-field-row".
+const ROW_TYPES = new Set(['url', 'slider', 'repeater']);
 
 /**
- * Clones a <template>'s content by id.
- *
- * @param {string} id
- * @returns {DocumentFragment}
- */
-function cloneTemplate(id) {
-  const template = document.getElementById(id);
-
-  if (!template) {
-    throw new Error(`Youla.js: no <template id="${id}"> found — is sections/sidebar.html's field template library missing this control type?`);
-  }
-  return template.content.cloneNode(true);
-}
-
-// Control types whose markup reads better stacked in its own column rather than sharing the title's row — see fields.scss's ".editrix-field-row" rule.
-const ROW_TYPES = new Set(['url', 'media', 'slider', 'repeater']);
-
-// One renderer per control type — returns that type's own wired markup, so renderField() below never needs to know a type's internal structure.
-const CONTROL_RENDERERS = {
-  text(name) {
-    const el = cloneTemplate('editrix-control-text');
-    el.querySelector('input').setAttribute('v-bind', `e.text(${JSON.stringify(name)})`);
-    return el;
-  },
-
-  switcher(name) {
-    const el = cloneTemplate('editrix-control-switcher');
-    el.querySelector('input').setAttribute('v-bind', `e.switcher(${JSON.stringify(name)})`);
-    return el;
-  },
-
-  select(name) {
-    const el = cloneTemplate('editrix-control-select');
-    el.querySelector('select').setAttribute('v-bind', `e.select(${JSON.stringify(name)})`);
-    return el;
-  },
-
-  color(name) {
-    const el = cloneTemplate('editrix-control-color');
-    el.querySelector('input').setAttribute('v-bind', `e.color(${JSON.stringify(name)})`);
-    return el;
-  },
-
-  url(name) {
-    const el = cloneTemplate('editrix-control-url');
-    el.querySelector('[data-part="url"]').setAttribute('v-bind', `e.part(${JSON.stringify(name)}, 'url')`);
-    el.querySelector('[data-part="is_external"]').setAttribute('v-bind', `e.partSwitch(${JSON.stringify(name)}, 'is_external')`);
-    el.querySelector('[data-part="nofollow"]').setAttribute('v-bind', `e.partSwitch(${JSON.stringify(name)}, 'nofollow')`);
-    return el;
-  },
-
-  media(name) {
-    const el = cloneTemplate('editrix-control-media');
-    el.querySelector('[data-part="preview"]').setAttribute(':style', `'background-image:url(' + (getValue(${JSON.stringify(name)})?.url || '') + ')'`);
-    el.querySelector('[data-part="url"]').setAttribute('v-bind', `e.part(${JSON.stringify(name)}, 'url')`);
-    return el;
-  },
-
-  slider(name) {
-    const el = cloneTemplate('editrix-control-slider');
-    el.querySelector('[data-part="range"]').setAttribute('v-bind', `e.sliderRange(${JSON.stringify(name)})`);
-    el.querySelector('[data-part="prefix"]').setAttribute('v-bind', `e.fieldAffix(${JSON.stringify(name)}, 'prefix')`);
-    el.querySelector('[data-part="size"]').setAttribute('v-bind', `e.partNumber(${JSON.stringify(name)}, 'size')`);
-    el.querySelector('[data-part="suffix"]').setAttribute('v-bind', `e.fieldAffix(${JSON.stringify(name)}, 'suffix')`);
-    el.querySelector('[data-part="unit"]').setAttribute('v-bind', `e.unitSelect(${JSON.stringify(name)})`);
-    return el;
-  },
-
-  dimensions(name, title) {
-    const el = cloneTemplate('editrix-control-dimensions');
-
-    el.querySelectorAll('[data-side]').forEach((input) => {
-      input.setAttribute('v-bind', `e.linkedNumber(${JSON.stringify(name)}, ${JSON.stringify(input.dataset.side)}, dimensionSides)`);
-    });
-
-    el.querySelector('[data-part="link-toggle"]').setAttribute('v-bind', `e.linkToggle(${JSON.stringify(name)})`);
-    el.querySelector('[data-part="unit"]').setAttribute('v-bind', `e.unitSelect(${JSON.stringify(name)})`);
-    el.querySelector('.editrix-borders-values').setAttribute('data-title', title);
-    return el;
-  },
-
-  // Rows are built imperatively since a repeater's DOM shape depends on its value — see controls/repeater.js's own header comment.
-  repeater(name) {
-    return renderRepeaterControl(name);
-  },
-};
-
-/**
- * Renders one full control instance: the shared wrapper (title/tooltip/control slot/description,
- * "#editrix-field-template") around whichever control type's own markup.
+ * Renders one full control instance: the shared chrome around the control type's own markup.
  *
  * @param {Object} def
  * @param {string} def.name - The setting's key, unique across the whole panel.
  * @param {string} def.title
  * @param {string} def.tooltip
- * @param {Object} rest - type/default/description/condition/disabled/responsive, plus type-specific options.
- * @returns {HTMLElement} The `.editrix-control` wrapper, fully wired, not yet inserted into the DOM.
+ * @param {Object} rest - type/default/value/description/condition/responsive, plus type-specific options.
+ * @returns {HTMLElement} The template's root element (its `.editrix-field`, or a wrapper around it), fully wired, not yet inserted into the DOM.
  */
 export function renderField({ name, title, tooltip, ...rest }) {
-  const renderControl = CONTROL_RENDERERS[rest.type];
-
-  if (!renderControl) {
-    throw new Error(`Youla.js: no control renderer registered for type "${rest.type}" (field "${name}").`);
-  }
-
-  const wrapper = cloneTemplate('editrix-field-template').firstElementChild;
-  const field = wrapper.querySelector('.editrix-field');
+  const root = cloneTemplateFragment('editrix-field-template').firstElementChild;
+  const field = root.matches('.editrix-field') ? root : root.querySelector('.editrix-field');
 
   field.setAttribute('v-bind', `e.field(${JSON.stringify(name)}, ${JSON.stringify(title)}, ${JSON.stringify(tooltip)}, ${JSON.stringify(rest)})`);
   field.querySelector('.editrix-field__tooltip').setAttribute('v-bind', `e.fieldTooltip(${JSON.stringify(name)})`);
@@ -124,7 +26,8 @@ export function renderField({ name, title, tooltip, ...rest }) {
 
   const controlSlot = field.querySelector('.editrix-field__control');
   controlSlot.classList.toggle('editrix-field-row', ROW_TYPES.has(rest.type));
-  controlSlot.append(renderControl(name, title));
+  // cloneTemplateFragment() throws its own "no <template>" error for a genuinely unknown type.
+  controlSlot.append(cloneTemplateFragment(`editrix-control-${rest.type}`));
 
-  return wrapper;
+  return root;
 }

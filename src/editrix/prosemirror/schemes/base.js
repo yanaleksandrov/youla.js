@@ -1,6 +1,6 @@
 import { Schema } from 'prosemirror-model';
 
-/** NodeSpecs for this schema — see https://prosemirror.net/docs/ref/#model.NodeSpec */
+// NodeSpecs for this schema — see https://prosemirror.net/docs/ref/#model.NodeSpec
 const nodes = {
   doc: {
     content: 'block+'
@@ -54,7 +54,6 @@ const nodes = {
   text: {
     group: 'inline'
   },
-  // Inline image; attrs are src, alt, and title (alt/title default to null).
   image: {
     inline: true,
     attrs: {
@@ -87,9 +86,8 @@ const nodes = {
   }
 };
 
-/** MarkSpecs for this schema — see https://prosemirror.net/docs/ref/#model.MarkSpec */
+// MarkSpecs for this schema — see https://prosemirror.net/docs/ref/#model.MarkSpec
 const marks = {
-  // Link mark; href and title attrs (title defaults to null).
   link: {
     attrs: {
       href: { validate: 'string' },
@@ -130,8 +128,6 @@ const marks = {
   }
 };
 
-/**
- * Roughly matches CommonMark's document schema, minus lists (see prosemirror-schema-list).
- * Extend or read `spec.nodes`/`spec.marks` to reuse pieces elsewhere.
- */
+// Roughly matches CommonMark's document schema, minus lists (see prosemirror-schema-list).
+// Extend or read `spec.nodes`/`spec.marks` to reuse pieces elsewhere.
 export const baseSchema = new Schema({ nodes, marks });

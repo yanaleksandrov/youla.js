@@ -1,4 +1,4 @@
-// Styles for the repeater control (controls/repeater.js) — a collapsible list of items, each holding whatever fields that repeater declares.
+// Styles for the repeater control (control/repeater) — a collapsible list of items, each holding whatever fields that repeater declares.
 .editrix-repeater {
 	display: flex;
 	flex-direction: column;
@@ -10,6 +10,35 @@
 		flex-direction: column;
 		gap: 0;
 	}
+
+	&__add {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 6px;
+		width: fit-content;
+		margin: 0 12px 0 auto;
+		padding: 8px;
+		border: 1px dashed #dadada;
+		border-radius: 6px;
+		background-color: #f8f8f8;
+		color: rgba(0, 0, 0, 0.5);
+		font: inherit;
+		font-size: 10px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.25s;
+
+		&:hover {
+			background-color: #f4f4f4;
+			border-color: rgba(0, 0, 0, 0.5);
+			color: rgba(0, 0, 0, 0.75);
+		}
+
+		i {
+			font-size: 12px;
+		}
+	}
 }
 
 .editrix-repeater-item {
@@ -20,7 +49,11 @@
 		opacity: 0.4;
 	}
 
-	// An item switched off via repeaterVisibility() (repeater.js) reads as dimmed.
+	&.is-open {
+		background-color: #f8f8f8;
+	}
+
+	// An item switched off via repeaterVisibility() (control/repeater) reads as dimmed.
 	&:has(.ph-eye-slash) {
 		opacity: 0.5;
 	}
@@ -47,20 +80,11 @@
 		flex: 1;
 		min-width: 0;
 		color: #2d2d2d;
+		font-weight: 600;
 		font-size: 12px;
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
-	}
-
-	&__caret {
-		color: #929292;
-		font-size: 11px;
-		transition: transform 0.2s;
-	}
-
-	&.is-open &__caret {
-		transform: rotate(180deg);
 	}
 
 	// Unlike __remove below, stays visible outright so an item switched off keeps reading as "off".
@@ -95,9 +119,9 @@
 	&__body {
 		display: none;
 		flex-direction: column;
-		border-top: 1px solid #e6e6e6;
+		border-top: 1px solid #dadada;
 
-		// Trims .editrix-field's usual padding-block for this nested context (see createRepeaterField(), repeater.js).
+		// Trims .editrix-field's usual padding-block for this nested context (see createRepeaterField(), control/repeater).
 		.editrix-field {
 			padding-block: 8px;
 		}
@@ -107,7 +131,7 @@
 		display: flex;
 	}
 
-	// A locked "min:1, max:1" repeater (isLockedToOneItem(), repeater.js) hides the head and forces the body open, since there's no head left to click to set is-open.
+	// A locked "min:1, max:1" repeater (isLockedToOneItem(), control/repeater) hides the head and forces the body open, since there's no head left to click to set is-open.
 	&.is-locked {
 		.editrix-repeater-item__head {
 			display: none;

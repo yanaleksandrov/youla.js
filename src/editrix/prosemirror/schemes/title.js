@@ -25,7 +25,6 @@ const nodes = {
     parseDOM: [{ tag: 'pre', preserveWhitespace: 'full' }],
     toDOM: () => ['pre'],
   },
-  // Inline image; attrs are src, alt, and title (alt/title default to null).
   image: {
     inline: true,
     attrs: {

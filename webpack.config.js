@@ -25,6 +25,26 @@ const parseHtmlPages = dir => {
   }, []);
 }
 
+// The scss entries under parseEntries('scss', 'css') below (e.g. "css/styles") produce a CSS file
+// via MiniCssExtractPlugin but, since every webpack entry is inherently JS, also an accompanying
+// (empty) JS chunk — CleanWebpackPlugin's own cleanAfterEveryBuildPatterns already deletes that
+// "**/styles.js" file post-build, but html-webpack-plugin has already injected a <script> tag for it
+// by then, left dangling (404) in every generated page. Strips just that script tag; the CSS <link>
+// for the same entry is untouched.
+class StripCssScriptTagsPlugin {
+  apply(compiler) {
+    compiler.hooks.compilation.tap('StripCssScriptTagsPlugin', (compilation) => {
+      HtmlWebpackPlugin.getHooks(compilation).alterAssetTagGroups.tap('StripCssScriptTagsPlugin', (data) => {
+        const isDanglingCssScript = tag => tag.tagName === 'script' && /^css\//.test(tag.attributes?.src || '');
+
+        data.headTags = data.headTags.filter(tag => !isDanglingCssScript(tag));
+        data.bodyTags = data.bodyTags.filter(tag => !isDanglingCssScript(tag));
+        return data;
+      });
+    });
+  }
+}
+
 const parseHtmlParts = dir => {
   return fs.readdirSync(path.resolve(__dirname, dir)).map(file => {
     const [name, extension] = file.split('.');
@@ -65,6 +85,7 @@ module.exports = {
     new MiniCssExtractPlugin({
       filename: '[name].css',
     }),
+    new StripCssScriptTagsPlugin(),
     new CopyPlugin({
       patterns: [
         {
@@ -173,6 +194,12 @@ module.exports = {
       {
         test: /\.html$/,
         include: path.resolve(__dirname, 'src/view/editrix') + path.sep,
+        use: ['raw-loader'],
+      },
+      {
+        // Each editrix control's own template — src/editrix/control/<name>/index.html — sits next to its JS, not under src/view.
+        test: /\.html$/,
+        include: path.resolve(__dirname, 'src/editrix/control') + path.sep,
         use: ['raw-loader'],
       },
     ],

@@ -1,9 +1,9 @@
-// Generic control-system chrome (title/tooltip/description/responsive/disabled) shared by every control type — see controls/base.js's field().
+// Generic control-system chrome (title/tooltip/description/responsive) shared by every control type — see controls/base.js's field().
 .editrix-field {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
-	gap: 8px;
+	gap: 4px;
 
 	&:before {
 		content: attr(data-title);
@@ -16,11 +16,6 @@
 
 	&[data-title=""]:before {
 		display: none;
-	}
-
-	&.is-disabled {
-		opacity: 0.5;
-		pointer-events: none;
 	}
 
 	&__tooltip {
@@ -96,7 +91,7 @@
 	}
 }
 
-// Stacks the sub-fields of a compound control (url/media/text_shadow/...) with a consistent gap.
+// Stacks a compound control's sub-fields (url, ...) in a column.
 .editrix-field-row {
 	display: flex;
 	flex-direction: column;
@@ -118,24 +113,12 @@
 	}
 }
 
-// Live preview swatch/thumbnail next to a media control's input.
-.editrix-field-preview {
-	width: 24px;
-	height: 24px;
-	min-width: 24px;
-	border-radius: 4px;
-	border: 1px solid #e6e6e6;
-	background-size: cover;
-	background-position: center;
-	overflow: hidden;
-}
-
 input[type="range"] {
 	width: 100%;
 	accent-color: #1069fb;
 }
 
-// Compact range control (controls/render.js's slider() renderer) — bare track+thumb with the numeric value to the right, instead of Ranger's default full-width layout.
+// Compact range control (control/slider) — bare track+thumb with the value to the right, not Ranger's default full-width layout.
 .editrix-slider {
 	display: flex;
 	align-items: center;

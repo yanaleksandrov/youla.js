@@ -1,20 +1,43 @@
 import { createControlsBase } from './base';
-import { createDataControls } from './data';
 import { createMultiValueControls } from './multi-value';
 import { createUnitControls } from './unit';
-import { createRepeaterControl } from './repeater';
+import { createSectionRepeaterControl } from './section-repeater';
+import { createTextControl } from '../control/text';
+import { createTextareaControl } from '../control/textarea';
+import { createSwitcherControl } from '../control/switcher';
+import { createSelectControl } from '../control/select';
+import { createColorControl } from '../control/color';
+import { createRepeaterControl } from '../control/repeater';
+import { createGalleryControl } from '../control/gallery';
+import { createMetaControl } from '../control/meta';
+import { createCategoriesControl } from '../control/categories';
+import { createBordersControl } from '../control/borders';
 
 /**
- * Assembles the whole control system into one object to spread into
- * `Youla.data('editrix', () => ({ ...createControlsSystem(), ... }))` — see youla-editrix.js.
+ * Assembles the whole control system into one object, spread into `Youla.data('editrix', ...)`.
+ * Kept as several small factories rather than one file; merged here with a collision check.
  *
- * Kept as several small factories rather than one file so each category can grow independently;
- * merged here with a collision check, so two factories accidentally sharing a name fail loudly.
- *
+ * @param {Object} [options]
+ * @param {Object} [options.meta] - statuses/visibilities/discussions/authors — see control/meta's createMetaControl().
  * @returns {Object}
  */
-export function createControlsSystem() {
-  const parts = [createControlsBase(), createDataControls(), createMultiValueControls(), createUnitControls(), createRepeaterControl()];
+export function createControlsSystem({ meta } = {}) {
+  const parts = [
+    createControlsBase(),
+    createMultiValueControls(),
+    createUnitControls(),
+    createTextControl(),
+    createTextareaControl(),
+    createSwitcherControl(),
+    createSelectControl(),
+    createColorControl(),
+    createRepeaterControl(),
+    createSectionRepeaterControl(),
+    createGalleryControl(),
+    createMetaControl(meta),
+    createCategoriesControl(),
+    createBordersControl(),
+  ];
   const merged = {};
 
   parts.forEach((part) => {

@@ -3,13 +3,12 @@
 @import 'editor/editor';
 @import 'editor/blocks';
 @import 'editor/tooltip';
-@import 'editor/preview';
+@import 'editor/canvas';
 @import 'editor/toolbar';
 @import 'editor/sidebar';
 @import 'editor/section';
 
 @import 'controls/details';
-@import 'controls/control';
 @import 'controls/buttons';
 @import 'controls/borders';
 @import 'controls/inputs';
@@ -17,12 +16,13 @@
 @import 'controls/categories';
 @import 'controls/fields';
 @import 'controls/repeater';
+@import 'controls/section-repeater';
 
 .editrix-list {
 	margin: 0;
 	list-style: none;
 	display: grid;
-	border-bottom: 1px solid #e6e6e6;
+	border-bottom: 1px solid #dadada;
 	padding: 2px;
 	gap: 2px;
 

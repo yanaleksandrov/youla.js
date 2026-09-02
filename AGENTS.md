@@ -48,9 +48,11 @@ Follow these rules whenever you write or modify code comments:
 
 * Keep comments concise and add them **only when they provide useful information that cannot be understood directly from the code**.
 * Do not add comments that simply restate what the code does.
+* Function comments should be implemented using multiline `/**` comments; everything else should use single-line `//` comments.
 * Inline comments starting with `\\` **must always be single-line comments**. Never split them across multiple lines.
 * DocBlock comments should be implemented using `/*` and descriptions must be concise and limited to **2–3 lines maximum** with `@param` and etc.
 * Avoid verbose explanations inside comments and DocBlocks.
 * Prefer clear code over explanatory comments whenever possible.
 * CSS comments should be concise and short — no more than one line.
 * The library is evolving, so the descriptions may contain functions, behaviors, or elements that no longer exist. The comments should be kept up to date.
+  * Don't add comments to the HTML.

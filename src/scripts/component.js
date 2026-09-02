@@ -129,7 +129,8 @@ export default class Component {
 
         deps.push(prop);
 
-        if (typeof target[prop] === 'object' && target[prop] !== null) {
+        // Same exclusion as reactivity.js's own wrap(): a DOM node read off tracked data (e.g. one array entry of a "blocks" list) must come back raw, or identity checks against it (indexOf/includes/===, e.g. against "$el") always fail — every read returns a *new* wrapper, never equal to anything else, wrapped or not.
+        if (typeof target[prop] === 'object' && target[prop] !== null && !(target[prop] instanceof Node)) {
           return makeProxy(target[prop]);
         }
 
@@ -142,10 +143,10 @@ export default class Component {
     // Magic variables skip the tracking proxy since wrapping a DOM element would break native calls like $el.closest(); they're layered onto $data instead (see withMagicVariables).
     const { magicVariables, otherVariables } = splitMagicVariables(additionalHelperVariables);
 
-    // "v-each" loop variables are passed to saferEval as separate parameters rather than properties of $data, so wrap object-valued ones the same way or property reads on them go untracked.
+    // "v-each" loop variables are passed to saferEval as separate parameters rather than properties of $data, so wrap object-valued ones the same way or property reads on them go untracked. Same DOM-node exclusion as makeProxy()'s own recursive case above — a "v-each" over a list of elements shouldn't wrap them either.
     const trackedHelperVariables = Object.fromEntries(
       Object.entries(otherVariables).map(([key, value]) => [
-        key, (typeof value === 'object' && value !== null) ? makeProxy(value) : value
+        key, (typeof value === 'object' && value !== null && !(value instanceof Node)) ? makeProxy(value) : value
       ])
     );
 
@@ -288,7 +289,7 @@ export default class Component {
   /**
    * Performs the component's first render: walks the DOM from "root", attaching listeners and
    * running directives for every element. Idempotent per element ("el.__x_initialized"), since a
-   * directive that inserts child markup (repeaterList() in controls/repeater.js, contentFields()
+   * directive that inserts child markup (repeaterList() in control/repeater, contentFields()
    * in youla-editrix.js) runs within the same domWalk pass that then revisits that markup —
    * without the guard, listeners double-attach and a self-removing handler like repeaterRemove()
    * throws on an already-detached element.

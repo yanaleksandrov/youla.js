@@ -3,7 +3,7 @@
 	$max-width: 800px;
 
 	padding: 0 calc(50% - (#{$max-width} / 2));
-	transition: border 0.15s;
+	transition: border 0.15s, opacity 0.2s, transform 0.2s;
 	border: 1px solid transparent;
 	position: relative;
 
@@ -25,40 +25,9 @@
 		margin-bottom: 4px;
 	}
 
-	&.editrix-dragging-start {
+	// Drag-to-reorder (editrix/sortable.js's createSortableItem()/createDropTarget()) — the "transform" transition above is what makes animateReorder()'s FLIP technique read as a smooth slide, same as every other sortable list (repeater.scss, section-repeater.scss, gallery.scss).
+	&.is-dragging {
 		opacity: 0.4;
-
-		&.editrix-dragging-over {
-			content: none !important;
-		}
-	}
-
-	&.editrix-dragging-over {
-
-		&:after {
-			position: absolute;
-			height: 4px;
-			background-color: $tools-color;
-			left: 0;
-			right: 0;
-		}
-
-		&.editrix-dragging-top:after {
-			content: '';
-			top: -2px;
-		}
-
-		&.editrix-dragging-bottom:after {
-			content: '';
-			bottom: -2px;
-		}
-	}
-
-	&.editrix-dragging-start.editrix-dragging-over {
-
-		&:after {
-			content: none;
-		}
 	}
 
 	&-tools {
@@ -118,32 +87,6 @@
 
 		&:last-child {
 			border-start-end-radius: 5px;
-		}
-	}
-}
-
-.editor {
-	margin: 48px;
-	position: relative;
-	border-radius: 4px;
-	border: 1px solid #e6e6e6;
-	display: grid;
-
-	&-content {
-		min-height: 2em;
-		padding: 10.4px 12px;
-		outline: none;
-
-		p {
-			margin-block: 8px;
-
-			&:first-child {
-				margin-top: 0;
-			}
-
-			&:last-child {
-				margin-bottom: 0;
-			}
 		}
 	}
 }

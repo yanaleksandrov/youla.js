@@ -202,6 +202,14 @@ module.exports = {
         include: path.resolve(__dirname, 'src/editrix/control') + path.sep,
         use: ['raw-loader'],
       },
+      {
+        // Each block's own template — src/editrix/blocks/<type>/index.html — a "<template id=...>",
+        // required from view/editrix.html the same way control templates are (see webpack.config.js's
+        // own comment above), and cloned at runtime via editrix/controls/template.js.
+        test: /\.html$/,
+        include: path.resolve(__dirname, 'src/editrix/blocks') + path.sep,
+        use: ['raw-loader'],
+      },
     ],
   },
   optimization: {

@@ -15,12 +15,15 @@ import { createControlsSystem } from './editrix/controls';
 import { renderField } from './editrix/controls/render';
 import { renderSectionRepeaterItems, renderSectionRepeaterAdd } from './editrix/controls/section-repeater';
 import { createSortableItem, createDragSource, createDropTarget } from './editrix/sortable';
+import { cloneTemplateFragment } from './editrix/controls/template';
 
-// Block type registry keyed by type: { label, icon, html, sections }. Populated once from backend
-// data in the 'youla:init' listener below. A block's own "html" opts individual elements into live
-// rich-text editing by giving them a "data-editable" attribute (see mountEditor() below) — pair it
-// with "data-name" to persist that field's content into settings, and "data-placeholder" to show
-// prompt text while it's empty.
+// Block type registry keyed by type: { label, icon, sections }. Populated once from backend data in
+// the 'youla:init' listener below. A block's own markup isn't in here — it's a "<template id=
+// "editrix-block-<type>">" (src/editrix/blocks/<type>/index.html, required from view/editrix.html
+// same as a control's own template — see webpack.config.js), cloned by createBlock() below. Opt
+// individual elements into live rich-text editing with a "data-editable" attribute (see mountEditor()
+// below) — pair it with "data-name" to persist that field's content into settings, and
+// "data-placeholder" to show prompt text while it's empty.
 let BLOCKS = {};
 
 // Array form of BLOCKS for `v-each="block in blockList"` (view/editrix/sidebar.html). Populated alongside BLOCKS below.
@@ -131,7 +134,18 @@ function createBlock(blockType) {
 
   const element = document.createElement('div');
   element.className = 'editrix-container';
-  element.innerHTML = block.html;
+
+  // A migrated block type (src/editrix/blocks/<type>/) carries its markup as a "<template id=
+  // "editrix-block-<type-without-its-'editrix-'-prefix>">" instead (e.g. "editrix-heading" ->
+  // "editrix-block-heading", matching the folder name) — the rest still have it inline as
+  // BLOCKS[type].html until they migrate too.
+  const templateId = `editrix-block-${blockType.replace(/^editrix-/, '')}`;
+  if (document.getElementById(templateId)) {
+    element.appendChild(cloneTemplateFragment(templateId));
+  } else {
+    element.innerHTML = block.html;
+  }
+
   element.dataset.blockType = blockType;
   element.setAttribute('v-bind', 'e.container()');
   return element;
@@ -570,7 +584,10 @@ document.addEventListener('youla:init', () => {
           } else if (!this.$el.matches(':hover')) {
             this.$el.querySelector(':scope > .editrix-container-tools')?.remove();
           }
-          return { 'is-active': isActive };
+          // "is-reversed" is another safe no-op for a block type that doesn't declare a "reverse"
+          // field (see heading/config.json's own "Layout" section for the one that does).
+          const settings = readBlockSettings(this, this.$el);
+          return { 'is-active': isActive, 'is-reversed': !!settings.reverse };
         },
         '@load'() {
           if (!this.blocks.includes(this.$el)) {
@@ -629,6 +646,23 @@ document.addEventListener('youla:init', () => {
         },
         '@contextmenu.prevent'() {
           this.tab = 'blocks';
+        },
+      };
+    },
+
+    /**
+     * v-bind="e.blockImage()" on an <img data-name="..."> inside a block's own markup (see
+     * editrix/blocks/<type>/index.html) — reactively mirrors that field's own setting (an
+     * editrix/control/image value: `{ dataUrl, fit, rotation, ...filters }`) onto "src", falling
+     * back to the element's own "data-default-src" while nothing's been picked yet.
+     */
+    blockImage() {
+      return {
+        ':src'() {
+          const name = this.$el.dataset.name;
+          const settings = readBlockSettings(this, this.$el.closest('.editrix-container'));
+
+          return settings[name]?.dataUrl || this.$el.dataset.defaultSrc;
         },
       };
     },

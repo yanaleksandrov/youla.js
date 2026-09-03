@@ -7,6 +7,7 @@ import { createTextareaControl } from '../control/textarea';
 import { createSwitcherControl } from '../control/switcher';
 import { createSelectControl } from '../control/select';
 import { createColorControl } from '../control/color';
+import { createImageControl } from '../control/image';
 import { createRepeaterControl } from '../control/repeater';
 import { createGalleryControl } from '../control/gallery';
 import { createMetaControl } from '../control/meta';
@@ -31,6 +32,7 @@ export function createControlsSystem({ meta } = {}) {
     createSwitcherControl(),
     createSelectControl(),
     createColorControl(),
+    createImageControl(),
     createRepeaterControl(),
     createSectionRepeaterControl(),
     createGalleryControl(),

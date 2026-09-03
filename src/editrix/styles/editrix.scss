@@ -8,6 +8,10 @@
 @import 'editor/sidebar';
 @import 'editor/section';
 
+// Per-block-type styles — each block's own folder under editrix/blocks/<type>/, alongside its
+// index.html (markup) and config.json (sidebar fields).
+@import '../blocks/heading/index';
+
 @import 'controls/details';
 @import 'controls/buttons';
 @import 'controls/borders';

@@ -578,10 +578,18 @@ export class Filler {
 
   addListeners() {
     const { el, alphaInput } = this;
-    // Image/video mode has no hex value to select or type — open the dialog instead of the dropdown.
+    // Image/video mode has no hex value to select or type — open the dialog instead of the dropdown,
+    // and — only on that initial open (not a refocus while it's already open), and only while
+    // nothing's been picked yet — jump straight to the OS file picker too, since picking a file is
+    // the very next thing anyone opening an empty one wants to do. Once a file's set, focusing back
+    // in is for tweaking it (crop/filters/replace), not another forced picker.
     el.addEventListener('focus', () => {
       if (this.source !== 'solid') {
+        const wasOpen = this.dialogOpen;
         this.openDialog();
+        if (!wasOpen && !this[this.source]?.dataUrl) {
+          this.mediaRefs[this.source]?.uploadInput?.click();
+        }
         return;
       }
       el.select();

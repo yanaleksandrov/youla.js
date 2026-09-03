@@ -213,10 +213,15 @@ function commitForeignDrop(component, list) {
     return true;
   }
 
-  const { element, value } = built;
-  list.insertBefore(element, before);
-  foreignItemValues.set(element, value);
-  component.$root.__x.initialize(element);
+  // One or several, in order — a pattern (createItem() building more than one at once) lands as
+  // that many consecutive real items, all before the same anchor: each insertBefore(x, before)
+  // lands x immediately ahead of "before", so repeating it keeps every earlier one exactly where
+  // it landed, ahead of this one.
+  built.forEach(({ element, value }) => {
+    list.insertBefore(element, before);
+    foreignItemValues.set(element, value);
+    component.$root.__x.initialize(element);
+  });
 
   commitOrder(component, list, read, write);
   return true;
@@ -327,7 +332,8 @@ export function createSortableItem({
  * session any createDropTarget() elsewhere in the app can pick up; pair the two by agreeing on what
  * "payload" means and what createDropTarget()'s own createItem() does with it.
  *
- * @param {*} payload - Whatever a matching createDropTarget()'s createItem() needs to build one — e.g. a block type string.
+ * @param {*} payload - Whatever a matching createDropTarget()'s createItem() needs to build one or
+ *   more items from — e.g. a block type string, or an array of them for a pattern.
  * @returns {Object} Directive object to spread into the source element's own v-bind().
  */
 export function createDragSource(payload) {
@@ -357,7 +363,9 @@ export function createDragSource(payload) {
  * @param {Object} options
  * @param {Function} options.read - (component) => current array.
  * @param {Function} options.write - (component, nextArray) => void.
- * @param {Function} options.createItem - (component, payload) => { element, value } to accept the drop, or a falsy value to reject it.
+ * @param {Function} options.createItem - (component, payload) => [{ element, value }, ...] to accept
+ *   the drop (one entry lands one item; several land that many, together, in order — a pattern), or
+ *   a falsy value to reject it.
  * @returns {Object} Directive object to spread into the list's own v-bind().
  */
 export function createDropTarget({ read, write, createItem }) {

@@ -88,25 +88,9 @@
         <div class="editrix-blocks" v-bind="e.sidebarPanel('patterns')" hidden>
           <div class="editrix-inputs-box"><i class="ph ph-magnifying-glass"></i> <input placeholder="Type for find..."></div>
 
-          <div class="editrix-blocks-item" v-bind="e.paletteItem('editrix-heading')">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256">
-              <path d="M112 44a4 4 0 0 0-4 4v20H24a12 12 0 0 0-12 12v96a12 12 0 0 0 12 12h84v20a4 4 0 0 0 8 0V48a4 4 0 0 0-4-4ZM24 180a4 4 0 0 1-4-4V80a4 4 0 0 1 4-4h84v104ZM244 80v96a12 12 0 0 1-12 12h-88a4 4 0 0 1 0-8h88a4 4 0 0 0 4-4V80a4 4 0 0 0-4-4h-88a4 4 0 0 1 0-8h88a12 12 0 0 1 12 12ZM84 112a4 4 0 0 1-4 4H68v28a4 4 0 0 1-8 0v-28H48a4 4 0 0 1 0-8h32a4 4 0 0 1 4 4Z"/>
-            </svg>
-            Home Page 1
-          </div>
-          <div class="editrix-blocks-item" v-bind="e.paletteItem('editrix-image')">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256">
-              <rect x="28" y="48" width="200" height="160" rx="14" fill="none" stroke="#000" stroke-width="14"/>
-              <circle cx="88" cy="104" r="16"/>
-              <path d="M52 176 L100 124 L136 160 L180 108 L204 176 Z"/>
-            </svg>
-            Home Page 2
-          </div>
-          <div class="editrix-blocks-item" v-bind="e.paletteItem('editrix-heading')">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256">
-              <path d="M112 44a4 4 0 0 0-4 4v20H24a12 12 0 0 0-12 12v96a12 12 0 0 0 12 12h84v20a4 4 0 0 0 8 0V48a4 4 0 0 0-4-4ZM24 180a4 4 0 0 1-4-4V80a4 4 0 0 1 4-4h84v104ZM244 80v96a12 12 0 0 1-12 12h-88a4 4 0 0 1 0-8h88a4 4 0 0 0 4-4V80a4 4 0 0 0-4-4h-88a4 4 0 0 1 0-8h88a12 12 0 0 1 12 12ZM84 112a4 4 0 0 1-4 4H68v28a4 4 0 0 1-8 0v-28H48a4 4 0 0 1 0-8h32a4 4 0 0 1 4 4Z"/>
-            </svg>
-            Home Page 3
+          <div class="editrix-blocks-item" v-each="pattern in patternList" v-bind="e.patternItem(pattern.blocks)">
+            <span v-html="pattern.icon"></span>
+            <span v-text="pattern.label"></span>
           </div>
         </div>
         <div class="editrix-blocks" v-bind="e.sidebarPanel('content')" hidden>
@@ -586,7 +570,27 @@
             }
           ]
         }
-      }
+      },
+      "patterns": [
+        {
+          "key": "heading-image",
+          "label": "Heading + Image",
+          "icon": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 256 256\"><path d=\"M208 90H48a14 14 0 0 0-14 14v96a14 14 0 0 0 14 14h160a14 14 0 0 0 14-14v-96a14 14 0 0 0-14-14Zm2 110a2 2 0 0 1-2 2H48a2 2 0 0 1-2-2v-96a2 2 0 0 1 2-2h160a2 2 0 0 1 2 2ZM50 64a6 6 0 0 1 6-6h144a6 6 0 0 1 0 12H56a6 6 0 0 1-6-6Zm16-32a6 6 0 0 1 6-6h112a6 6 0 0 1 0 12H72a6 6 0 0 1-6-6Z\"/></svg>",
+          "blocks": ["editrix-heading", "editrix-image"]
+        },
+        {
+          "key": "heading-faq",
+          "label": "Heading + FAQ",
+          "icon": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 256 256\"><path d=\"M208 90H48a14 14 0 0 0-14 14v96a14 14 0 0 0 14 14h160a14 14 0 0 0 14-14v-96a14 14 0 0 0-14-14Zm2 110a2 2 0 0 1-2 2H48a2 2 0 0 1-2-2v-96a2 2 0 0 1 2-2h160a2 2 0 0 1 2 2ZM50 64a6 6 0 0 1 6-6h144a6 6 0 0 1 0 12H56a6 6 0 0 1-6-6Zm16-32a6 6 0 0 1 6-6h112a6 6 0 0 1 0 12H72a6 6 0 0 1-6-6Z\"/></svg>",
+          "blocks": ["editrix-heading", "editrix-faq"]
+        },
+        {
+          "key": "heading-image-links",
+          "label": "Heading + Image + Links",
+          "icon": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 256 256\"><path d=\"M208 90H48a14 14 0 0 0-14 14v96a14 14 0 0 0 14 14h160a14 14 0 0 0 14-14v-96a14 14 0 0 0-14-14Zm2 110a2 2 0 0 1-2 2H48a2 2 0 0 1-2-2v-96a2 2 0 0 1 2-2h160a2 2 0 0 1 2 2ZM50 64a6 6 0 0 1 6-6h144a6 6 0 0 1 0 12H56a6 6 0 0 1-6-6Zm16-32a6 6 0 0 1 6-6h112a6 6 0 0 1 0 12H72a6 6 0 0 1-6-6Z\"/></svg>",
+          "blocks": ["editrix-heading", "editrix-image", "editrix-links"]
+        }
+      ]
     }
   </script>
 

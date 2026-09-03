@@ -19,6 +19,11 @@ let BLOCKS = {};
 // Array form of BLOCKS for `v-each="block in blockList"` (view/editrix/sidebar.html). Populated alongside BLOCKS below.
 let BLOCK_LIST = [];
 
+// Patterns — a named, pre-composed set of block types (view/editrix.html's own "patterns" data),
+// each just `{ key, label, icon, blocks: [blockType, ...] }`. Dragged in via patternItem() below,
+// which materializes every listed block type, in order, in one drop — see canvas's own createItem().
+let PATTERN_LIST = [];
+
 // Toolbox's own section list (same shape as BLOCKS[type].sections) — built once by toolboxSections(), unlike contentFields()'s per-block rebuild. Populated in the 'youla:init' listener below.
 let TOOLBOX = [];
 
@@ -193,6 +198,19 @@ function renderSections(container, sections) {
 }
 
 /**
+ * True while "el" (typically the current keydown target) is a normal text-entry context — an
+ * <input>/<textarea>, or anywhere inside a contenteditable region (ProseMirror's own rich-text
+ * blocks included) — so canvas's own "Delete" handler below doesn't hijack the key from ordinary
+ * text editing and only removes the active block when the user isn't actually typing.
+ *
+ * @param {HTMLElement} [el]
+ * @returns {boolean}
+ */
+function isEditableTarget(el) {
+  return !!el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
+}
+
+/**
  * Removes "el" from the canvas along with its settings, clearing "activeBlock" if it pointed at "el".
  *
  * @param {Object} component - The reactive `this` from whichever v-bind handler is deleting.
@@ -331,12 +349,14 @@ document.addEventListener('youla:init', () => {
     authors: AUTHORS = [],
     toolbox: TOOLBOX_DATA = [],
     blocks: BLOCKS_DATA = {},
+    patterns: PATTERNS_DATA = [],
   } = readBackendData('editrix-data');
 
   TOOLBOX = TOOLBOX_DATA;
 
   BLOCKS = BLOCKS_DATA;
   BLOCK_LIST = Object.entries(BLOCKS).map(([type, { label, icon }]) => ({ type, label, icon }));
+  PATTERN_LIST = PATTERNS_DATA;
   DEFAULT_BLOCK_SETTINGS = computeDefaultBlockSettings(BLOCKS);
 
   /**
@@ -381,6 +401,21 @@ document.addEventListener('youla:init', () => {
       '@keydown.window.ctrl.0'() {
         this.zoom = ZOOM_DEFAULT;
       },
+      /**
+       * Deletes the selected block — skipped while "$event.target" is itself a normal text-entry
+       * context (isEditableTarget()), so pressing Delete to edit a heading's text, or a field
+       * elsewhere in the sidebar, doesn't also remove the whole block out from under it.
+       */
+      '@keydown.window.delete'(e) {
+        if (!this.activeBlock || isEditableTarget(e.target)) {
+          return;
+        }
+
+        const block = this.blocks.find((b) => b.dataset.blockId === this.activeBlock);
+        if (block) {
+          deleteBlock(this, block);
+        }
+      },
       ':style'() {
         return `zoom: ${this.zoom}%`;
       },
@@ -389,9 +424,12 @@ document.addEventListener('youla:init', () => {
         write: (component, blocks) => {
           component.blocks = blocks;
         },
-        createItem(component, blockType) {
-          const element = createBlock(blockType);
-          return element && { element, value: element };
+        // "payload" is a single block type (paletteItem()) or an array of them, in order (a
+        // pattern — patternItem()) — normalized to a list either way, so a pattern materializes as
+        // that many real blocks landing together, in one drop.
+        createItem(component, payload) {
+          const elements = (Array.isArray(payload) ? payload : [payload]).map(createBlock).filter(Boolean);
+          return elements.length ? elements.map((element) => ({ element, value: element })) : null;
         },
       }),
       /**
@@ -426,6 +464,17 @@ document.addEventListener('youla:init', () => {
      */
     paletteItem(blockType) {
       return createDragSource(blockType);
+    },
+
+    // Sidebar > patterns palette (view/editrix.html) — `v-each="pattern in patternList"` renders one ".editrix-blocks-item" per PATTERN_LIST entry.
+    patternList: PATTERN_LIST,
+
+    /**
+     * v-bind="e.patternItem(pattern.blocks)" — same drag session as paletteItem(), just carrying
+     * an array of block types instead of one; canvas's own createItem() materializes all of them.
+     */
+    patternItem(blockTypes) {
+      return createDragSource(blockTypes);
     },
 
     /**

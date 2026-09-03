@@ -45,5 +45,5 @@
 	// hovered, or positionOverlay()'s own "before" calculation would need to exclude it as a target too.
 	pointer-events: none;
 	transition: top 0.12s ease;
-	z-index: 5;
+	z-index: 3;
 }

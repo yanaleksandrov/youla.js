@@ -35,13 +35,15 @@
 	}
 
 	&-tools {
-		position: sticky;
-		top: 8px;
-		margin: 0 auto -22px;
-		padding: 0;
 		display: flex;
-		list-style: none;
 		font-size: 12px;
+		list-style: none;
+		margin: 0 auto;
+		left: 0;
+		right: 0;
+		padding: 0;
+		position: absolute;
+		top: 0;
 		width: fit-content;
 
 		&:before,

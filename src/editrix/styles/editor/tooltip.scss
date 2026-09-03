@@ -1,80 +1,99 @@
-.tooltip {
-	position: absolute;
-	z-index: 99;
-	background: #fff;
-	border: 1px solid silver;
-	border-radius: 4px;
-	margin-bottom: 8px;
+// The ProseMirror selection toolbar (editrix/prosemirror/toolbar.js) — a ".v-tooltip" element
+// (youla-tooltip.js) with this modifier on top, so it shares its box, border and bounce animation.
+// Compounded with ".v-tooltip" itself (rather than ".v-tooltip--toolbar" alone) so its padding/gap
+// reliably win over that base rule regardless of stylesheet import order.
+.v-tooltip.v-tooltip--toolbar {
 	display: flex;
 	align-items: center;
 	padding: 4px;
-	gap: 4px 8px;
-	flex-flow: wrap;
+	gap: 2px;
+}
 
-	&:before {
-		content: "";
-		height: 0;
-		width: 0;
-		position: absolute;
-		left: 50%;
-		margin-left: -5px;
-		bottom: -6px;
-		border: 5px solid transparent;
-		border-bottom-width: 0;
-		border-top-color: silver;
+.v-tooltip-toolbar__btn {
+	border: 0;
+	outline: none;
+	cursor: pointer;
+	background-color: transparent;
+	color: inherit;
+	height: 28px;
+	width: 28px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 16px;
+	border-radius: 6px;
+	transition: background-color 0.15s;
+
+	&:hover {
+		background-color: rgba(0, 0, 0, 0.05);
 	}
 
-	&:after {
-		content: "";
-		height: 0;
-		width: 0;
-		position: absolute;
-		left: 50%;
-		margin-left: -5px;
-		bottom: -4.5px;
-		border: 5px solid transparent;
-		border-bottom-width: 0;
-		border-top-color: white;
+	&.is-active {
+		background-color: rgba(16, 105, 251, 0.12);
+		color: #1069fb;
+	}
+}
+
+.v-tooltip-toolbar__select {
+	border: 0;
+	outline: none;
+	cursor: pointer;
+	background-color: transparent;
+	color: inherit;
+	height: 28px;
+	padding: 0 4px;
+	font-size: 12px;
+	border-radius: 6px;
+	transition: background-color 0.15s;
+
+	&:hover {
+		background-color: rgba(0, 0, 0, 0.05);
+	}
+}
+
+.v-tooltip-toolbar__input {
+	border: 1px solid var(--v-tooltip-border, #dfe2e3);
+	outline: none;
+	background-color: transparent;
+	color: inherit;
+	height: 28px;
+	min-width: 200px;
+	padding: 0 8px;
+	font-size: 12px;
+	border-radius: 6px;
+
+	&:focus {
+		border-color: #1069fb;
+	}
+}
+
+// The shortcut hint inside a toolbar button's own description tooltip (toolbar.js's describeButton()).
+.v-tooltip-toolbar__hotkey {
+	display: inline-block;
+	margin-top: 2px;
+	opacity: 0.65;
+	font-size: 0.9em;
+}
+
+// Rendered by editrix/prosemirror/placeholder.js in place of an empty field.
+.editrix-placeholder {
+	color: #9a9a9a;
+	pointer-events: none;
+	user-select: none;
+}
+
+// Any block field opted into inline editing via "data-editable" (youla-editrix.js's mountEditor()).
+[data-editable] {
+	outline: none;
+	cursor: text;
+
+	&:hover {
+		outline: 1px dashed rgba(16, 105, 251, 0.35);
+		outline-offset: 2px;
 	}
 
-	&-group {
-		display: flex;
-		align-items: center;
-		position: relative;
-
-		&:after {
-			content: '';
-			border-right: 1px solid #cdcdcd;
-			position: absolute;
-			top: 8px;
-			bottom: 8px;
-			right: -4px;
-		}
-
-		&:last-child {
-
-			&:after {
-				content: none;
-			}
-		}
-	}
-
-	&-btn {
-		border: 0;
-		outline: none;
-		cursor: pointer;
-		background-color: transparent;
-		height: 28px;
-		width: 28px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-size: 16px;
-		transition: all 0.2s;
-		border-radius: 4px;
-
-		&:hover {
-			background-color: rgba(0, 0, 0, 0.05);
-		}
+	&:focus {
+		outline: 1px solid #1069fb;
+		outline-offset: 2px;
 	}
 }

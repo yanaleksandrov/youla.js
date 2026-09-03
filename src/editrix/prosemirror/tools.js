@@ -1,134 +1,38 @@
-export const blockTools = {
-  blockquote: {
-    title: 'Blockquote',
-    icon: 'ph ph-quotes',
-    hotKey: '%%%+Shift+B',
-    keymap: 'Mod-Shift-b',
-  },
-  heading: {
-    title: 'Heading',
-    icon: 'ph ph-text-h',
-    hotKey: '%%%+Shift+H',
-    keymap: 'Mod-Shift-h',
-  },
-  list: {
-    bulletList: {
-      title: 'Bullet List',
-      icon: 'ph ph-list-bullets',
-      hotKey: '%%%+Shift+8',
-      keymap: 'Mod-Shift-8',
-    },
-    orderedList: {
-      title: 'Ordered List',
-      icon: 'ph ph-list-numbers',
-      hotKey: '%%%+Shift+7',
-      keymap: 'Mod-Shift-7',
-    },
-  },
-  horizontalRule: {
-    title: 'Horizontal Rule',
-    icon: 'ph ph-line-horizontal',
-    hotKey: '%%%+Shift+-',
-    keymap: 'Mod-Shift--',
-  },
-};
+// Toolbar tools for a ProseMirror-backed text field (see toolbar.js) — one declarative list per
+// kind, trimmed at runtime to whatever marks/nodes the field's own scheme (schemes/rich.js,
+// schemes/plain.js) actually defines. Both schemes share the same complete inline mark set
+// (schemes/marks.js), so every mark tool below applies equally to a heading and to body text —
+// NODE_TOOLS is what actually differs: a "plain" (single-line) field has no block nodes to switch
+// between, e.g. a heading can never contain a paragraph, so it naturally loses every entry there.
+//
+// "heading" and "link" aren't listed here — toolbar.js gives each its own dedicated UI (a level
+// <select>, and a small URL editor) instead of a plain toggle button.
+//
+// "description" is shown in a real v-tooltip (youla-tooltip.js) on hover, alongside the tool's own
+// keyboard shortcut — see toolbar.js's describeButton().
 
-export const inlineTools = {
-  textFormat: {
-    bold: {
-      title: 'Bold',
-      icon: 'ph ph-text-b',
-      hotKey: '%%%+B',
-      keymap: 'Mod-b',
-    },
-    italic: {
-      title: 'Italic',
-      icon: 'ph ph-text-italic',
-      hotKey: '%%%+I',
-      keymap: 'Mod-i',
-    },
-    underline: {
-      title: 'Underline',
-      icon: 'ph ph-text-underline',
-      hotKey: '%%%+U',
-      keymap: 'Mod-u',
-    },
-    strikethrough: {
-      title: 'Strikethrough',
-      icon: 'ph ph-text-strikethrough',
-      hotKey: '%%%+Shift+X',
-      keymap: 'Mod-Shift-x',
-    },
-  },
-  subscriptSuperscript: {
-    subscript: {
-      title: 'Subscript',
-      icon: 'ph ph-text-subscript',
-      hotKey: '%%%+,',
-      keymap: 'Mod-,',
-    },
-    superscript: {
-      title: 'Superscript',
-      icon: 'ph ph-text-superscript',
-      hotKey: '%%%+.',
-      keymap: 'Mod-.',
-    },
-  },
-  codeAndLink: {
-    code: {
-      title: 'Code',
-      icon: 'ph ph-code',
-      hotKey: '%%%+E',
-      keymap: 'Mod-e',
-    },
-    link: {
-      title: 'Insert Link',
-      icon: 'ph ph-link',
-      hotKey: '%%%+K',
-      keymap: 'Mod-k',
-    },
-  },
-  undoRedo: {
-    undo: {
-      title: 'Undo',
-      icon: 'ph ph-arrow-counter-clockwise',
-      hotKey: '%%%+Z',
-      keymap: 'Mod-z',
-    },
-    redo: {
-      title: 'Redo',
-      icon: 'ph ph-arrow-clockwise',
-      hotKey: '%%%+Shift+Z',
-      keymap: 'Mod-Shift-z',
-    },
-  },
-  textAlign: {
-    alignLeft: {
-      title: 'Align Left',
-      icon: 'ph ph-text-align-left',
-      hotKey: '%%%+Shift+L',
-      keymap: 'Mod-Shift-l',
-    },
-    alignCenter: {
-      title: 'Align Center',
-      icon: 'ph ph-text-align-center',
-      hotKey: '%%%+Shift+E',
-      keymap: 'Mod-Shift-e',
-    },
-    alignRight: {
-      title: 'Align Right',
-      icon: 'ph ph-text-align-right',
-      hotKey: '%%%+Shift+R',
-      keymap: 'Mod-Shift-r',
-    },
-  },
-};
+// Mark tools — toggled with toggleMark(schema.marks[name]).
+export const MARK_TOOLS = [
+  { name: 'strong', title: 'Bold', description: 'Make the selected text bold', icon: 'ph ph-text-b', shortcut: 'Mod-b' },
+  { name: 'em', title: 'Italic', description: 'Make the selected text italic', icon: 'ph ph-text-italic', shortcut: 'Mod-i' },
+  { name: 'underline', title: 'Underline', description: 'Underline the selected text', icon: 'ph ph-text-underline', shortcut: 'Mod-u' },
+  { name: 'strike', title: 'Strikethrough', description: 'Cross out the selected text', icon: 'ph ph-text-strikethrough', shortcut: 'Mod-Shift-x' },
+  { name: 'subscript', title: 'Subscript', description: 'Lower the selected text below the baseline', icon: 'ph ph-text-subscript', shortcut: 'Mod-,' },
+  { name: 'superscript', title: 'Superscript', description: 'Raise the selected text above the baseline', icon: 'ph ph-text-superscript', shortcut: 'Mod-.' },
+  { name: 'code', title: 'Code', description: 'Format the selected text as inline code', icon: 'ph ph-code', shortcut: 'Mod-e' },
+];
 
-export const titleTools = {
-  textFormat: Object.fromEntries(
-    Object.entries(inlineTools.textFormat)
-      .filter(([key]) => key !== 'bold')
-  ),
-  subscriptSuperscript: inlineTools.subscriptSuperscript,
-  codeAndLink: inlineTools.codeAndLink,
-}
+// Block-structure tools — "wrap: true" wraps the selection (blockquote); "insert: true" inserts a
+// standalone node at the selection (horizontal_rule).
+export const NODE_TOOLS = [
+  { name: 'blockquote', title: 'Blockquote', description: 'Turn the selection into a blockquote', icon: 'ph ph-quotes', wrap: true, shortcut: 'Mod-Shift-b' },
+  { name: 'horizontal_rule', title: 'Horizontal Rule', description: 'Insert a horizontal divider', icon: 'ph ph-line-horizontal', insert: true, shortcut: 'Mod-Shift--' },
+];
+
+// The link mark — handled separately from MARK_TOOLS, since applying it needs a URL first.
+export const LINK_TOOL = { name: 'link', title: 'Link', description: 'Add or edit a link', icon: 'ph ph-link', shortcut: 'Mod-k' };
+
+// Levels offered by the toolbar's own heading <select> — only shown when the schema defines a
+// "heading" node (i.e. the "rich" scheme; a heading field is itself already a fixed level, so it
+// has no use for this).
+export const HEADING_LEVELS = [1, 2, 3, 4, 5, 6];

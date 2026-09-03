@@ -285,20 +285,24 @@ function handleDrop(component, list, read, write) {
  *   Toggles the "draggable" IDL property on "@mousedown", since — unlike the attribute set once by
  *   ":draggable" below — a *descendant*'s own "draggable=false" does NOT stop the browser from
  *   still finding this row (the nearest draggable=true ancestor) and dragging it instead; only
- *   flipping the row's own property before the gesture starts actually prevents that.
+ *   flipping the row's own property before the gesture starts actually prevents that. Mutually
+ *   exclusive with "exclude" below — a row only ever needs one or the other.
+ * @param {string} [options.exclude] - The inverse of "handle": a CSS selector for descendants that
+ *   should keep their own normal browser behavior, with everything else still starting a drag (a
+ *   canvas block's own "[data-editable]" text, say) — same IDL-property toggle, just negated.
  * @param {boolean} [options.placeholder] - Track the drop position with a separate placeholder
  *   instead of live-moving the row itself (canvas blocks only, for now) — see handleDragover()'s
  *   own reorder branch. Off by default: gallery/repeater/section-repeater rows keep moving live.
  * @returns {Object} Directive object to spread into a row's own v-bind().
  */
 export function createSortableItem({
-  read, write, handle, placeholder: usePlaceholder = false,
+  read, write, handle, exclude, placeholder: usePlaceholder = false,
 }) {
   return {
     ':draggable': 'true',
-    ...(handle && {
+    ...((handle || exclude) && {
       '@mousedown'(e) {
-        this.$el.draggable = !!e.target.closest(handle);
+        this.$el.draggable = handle ? !!e.target.closest(handle) : !e.target.closest(exclude);
       },
     }),
     '@dragstart'(e) {

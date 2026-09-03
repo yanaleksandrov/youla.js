@@ -1,19 +1,26 @@
 import { EditorState } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
-import { history, undo, redo } from 'prosemirror-history';
+import { DOMParser as ProseMirrorDOMParser } from 'prosemirror-model';
+import { history } from 'prosemirror-history';
 import { keymap } from 'prosemirror-keymap';
 import { baseKeymap } from 'prosemirror-commands';
 
-import { tooltip } from './editrix/prosemirror/tooltip';
-import { baseSchema } from './editrix/prosemirror/schemes/base';
-import { titleSchema } from './editrix/prosemirror/schemes/title';
+import { selectionToolbar, textToolKeymap } from './editrix/prosemirror/toolbar';
+import { textInputRules } from './editrix/prosemirror/input-rules';
+import { placeholder } from './editrix/prosemirror/placeholder';
+import { richSchema } from './editrix/prosemirror/schemes/rich';
+import { plainSchema } from './editrix/prosemirror/schemes/plain';
 
 import { createControlsSystem } from './editrix/controls';
 import { renderField } from './editrix/controls/render';
 import { renderSectionRepeaterItems, renderSectionRepeaterAdd } from './editrix/controls/section-repeater';
 import { createSortableItem, createDragSource, createDropTarget } from './editrix/sortable';
 
-// Block type registry keyed by type: { label, icon, html, scheme, sections }. Populated once from backend data in the 'youla:init' listener below.
+// Block type registry keyed by type: { label, icon, html, sections }. Populated once from backend
+// data in the 'youla:init' listener below. A block's own "html" opts individual elements into live
+// rich-text editing by giving them a "data-editable" attribute (see mountEditor() below) — pair it
+// with "data-name" to persist that field's content into settings, and "data-placeholder" to show
+// prompt text while it's empty.
 let BLOCKS = {};
 
 // Array form of BLOCKS for `v-each="block in blockList"` (view/editrix/sidebar.html). Populated alongside BLOCKS below.
@@ -126,7 +133,7 @@ function createBlock(blockType) {
   element.className = 'editrix-container';
   element.innerHTML = block.html;
   element.dataset.blockType = blockType;
-  element.setAttribute('v-bind', block.scheme !== null ? `e.container('${block.scheme}')` : 'e.container()');
+  element.setAttribute('v-bind', 'e.container()');
   return element;
 }
 
@@ -225,47 +232,96 @@ function deleteBlock(component, el) {
   }
   delete component.settings[id];
 
+  el.querySelectorAll('[data-editable]').forEach((field) => field._prosemirrorView?.destroy());
+
   component.blocks = component.blocks.filter((block) => block !== el);
   el.remove();
 }
 
-/**
- * Mounts a ProseMirror rich-text editor onto "el" — "h1" gets the title scheme (Enter inserts a
- * line break instead of splitting the block), anything else gets the base scheme.
- *
- * @param {HTMLElement} el - The element to mount the editor onto.
- * @param {string} scheme - "h1", or anything else for the base scheme.
- */
-function mountEditor(el, scheme) {
-  let schema = baseSchema;
-  const plugins = [];
+// A block's own "data-editable" attribute (see BLOCKS[type].html) picks one of these schemes:
+// "rich" allows paragraphs and other block structure, "plain" is a single line of inline-formatted
+// text. Placement matters — "rich" goes on a wrapper whose children are block-level (e.g. a <div>
+// around a <p>), "plain" goes directly on the leaf text element itself (e.g. an <h1>).
+const EDITABLE_SCHEMES = { rich: richSchema, plain: plainSchema };
 
-  if (scheme === 'h1') {
-    schema = titleSchema;
-    plugins.push(keymap({
+/**
+ * Strips the clipboard cruft Word/Google Docs wrap pasted content in (conditional comments, and
+ * <meta>/<style>/<script>/<xml> tags) before it reaches ProseMirror's own DOMParser — which already
+ * discards any tag or attribute its schema doesn't recognize, so this only has to handle the noise
+ * that would otherwise survive as stray whitespace or empty nodes.
+ *
+ * @param {string} html
+ * @returns {string}
+ */
+function sanitizePastedHTML(html) {
+  return html
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/<(meta|link|style|script|xml)[^>]*>[\s\S]*?<\/\1>/gi, '')
+    .replace(/<(meta|link)\b[^>]*>/gi, '');
+}
+
+/**
+ * Mounts a ProseMirror rich-text editor directly onto "el", taking over its existing children as
+ * the editor's own starting content — a no-op if "el" is already mounted, or its own
+ * "data-editable" value doesn't match a known scheme.
+ *
+ * @param {HTMLElement} el - The element to mount the editor onto; keeps its own tag/attributes.
+ * @param {string} schemeName - "rich" or "plain" — see EDITABLE_SCHEMES above.
+ * @param {Object} [options]
+ * @param {string} [options.placeholder] - Shown in place of "el" when it's empty.
+ * @param {(html: string) => void} [options.onUpdate] - Called with "el"'s own innerHTML after
+ *   every change, so a caller can persist it (see container()'s own "@load" below).
+ */
+function mountEditor(el, schemeName, options = {}) {
+  if (el._prosemirrorView) {
+    return;
+  }
+
+  const schema = EDITABLE_SCHEMES[schemeName];
+  if (!schema) {
+    console.warn(`Youla.js: unknown data-editable scheme "${schemeName}".`);
+    return;
+  }
+
+  const { placeholder: placeholderText, onUpdate } = options;
+
+  const plugins = [
+    keymap(textToolKeymap(schema)),
+    history(),
+    keymap(baseKeymap),
+    textInputRules(schema),
+    selectionToolbar(),
+  ];
+
+  if (placeholderText) {
+    plugins.push(placeholder(placeholderText));
+  }
+
+  // A "plain" field has no paragraph to split into — Enter inserts a line break instead. Takes
+  // priority over baseKeymap's own Enter (splitBlock), which would otherwise try first and fail.
+  if (schemeName === 'plain') {
+    plugins.unshift(keymap({
       Enter: (state, dispatch) => {
-        const { $from } = state.selection;
-        if (!$from.parent.type.spec.code) {
-          dispatch(state.tr.replaceSelectionWith(state.schema.nodes.hard_break.create()).scrollIntoView());
-          return true;
-        }
-        return false;
+        dispatch(state.tr.replaceSelectionWith(schema.nodes.hard_break.create()).scrollIntoView());
+        return true;
       },
     }));
   }
 
-  new EditorView(el, {
+  el._prosemirrorView = new EditorView({ mount: el }, {
     state: EditorState.create({
+      doc: ProseMirrorDOMParser.fromSchema(schema).parse(el),
       schema,
-      plugins: [
-        history(),
-        keymap(baseKeymap),
-        keymap({ 'Mod-z': undo, 'Mod-y': redo }),
-        tooltip(),
-        ...plugins,
-      ],
+      plugins,
     }),
-  }).dom.classList.add('editor-content');
+    transformPastedHTML: sanitizePastedHTML,
+    dispatchTransaction(tr) {
+      this.updateState(this.state.apply(tr));
+      if (tr.docChanged) {
+        onUpdate?.(el.innerHTML);
+      }
+    },
+  });
 }
 
 /**
@@ -478,10 +534,10 @@ document.addEventListener('youla:init', () => {
     },
 
     /**
-     * Canvas > block container — v-bind="e.container()", or v-bind="e.container('h1')" to also
-     * mount a rich-text editor.
+     * Canvas > block container — v-bind="e.container()". Any of the block's own elements carrying
+     * a "data-editable" attribute (see BLOCKS[type].html) gets mounted as a live ProseMirror field.
      */
-    container(scheme) {
+    container() {
       return {
         /**
          * A style set to undefined (a field the block type doesn't declare) is a safe no-op.
@@ -523,9 +579,17 @@ document.addEventListener('youla:init', () => {
           if (!this.$el.dataset.blockId) {
             this.$el.dataset.blockId = nextBlockId();
           }
-          if (scheme !== undefined) {
-            mountEditor(this.$el, scheme);
-          }
+          this.$el.querySelectorAll('[data-editable]').forEach((field) => {
+            const blockId = this.$el.dataset.blockId;
+            const name = field.dataset.name;
+
+            mountEditor(field, field.dataset.editable, {
+              placeholder: field.dataset.placeholder,
+              onUpdate: name ? (html) => {
+                (this.settings[blockId] ??= {})[name] = html;
+              } : undefined,
+            });
+          });
           // Prevents a block's own <img>/<a> (natively draggable, with their own native drag/drop
           // cursor handling baked into the browser) from competing with the container's own drag —
           // "draggable=false" alone stops them from becoming their own drag source, but a *foreign*
@@ -543,6 +607,9 @@ document.addEventListener('youla:init', () => {
             component.blocks = blocks;
           },
           placeholder: true,
+          // Otherwise the browser's own native drag detection can win a mousedown that starts
+          // inside a live text field (even directly on its own text) over ordinary text selection.
+          exclude: '[data-editable]',
         }),
         '@mouseenter'() {
           mountContainerTools(this, this.$el);

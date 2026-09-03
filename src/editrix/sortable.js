@@ -103,11 +103,14 @@ function positionOverlay(list, clientY, placeholder, extraExclude = []) {
  * @param {Object} component
  * @param {HTMLElement} list
  * @param {number} clientY
- * @returns {boolean} True once "list" actually did something with this dragover — tracked a reorder
- *   or foreign placeholder here — false when there's nothing here for it (e.g. a reorder hovering a
- *   list other than its own source, or a foreign payload this list's createItem() rejects). Callers
- *   use this to decide whether to preventDefault(): skipping it for "false" is what lets the
- *   browser show its native "not allowed" cursor instead of falsely promising a drop.
+ * @returns {string|false} The "dropEffect" to show for this dragover once "list" actually did
+ *   something with it — "move" for a reorder (it's relocating the SAME item), "copy" for a foreign
+ *   drag (the palette item stays put; a new instance lands here) — or false when there's nothing
+ *   here for it (e.g. a reorder hovering a list other than its own source, or a foreign payload this
+ *   list's createItem() rejects). Callers use this both to decide whether to preventDefault() —
+ *   skipping it for "false" is what lets the browser show its native "not allowed" cursor instead of
+ *   falsely promising a drop — and to set "dataTransfer.dropEffect" so the cursor's own icon (move
+ *   vs. copy) actually matches which of the two is happening, instead of always showing "move".
  */
 function handleDragover(component, list, clientY) {
   if (reorderDrag) {
@@ -124,7 +127,7 @@ function handleDragover(component, list, clientY) {
       // the pointer — see createSortableItem()'s own "placeholder" option.
       repositionInFlow(list, clientY, reorderDrag.source);
     }
-    return true;
+    return 'move';
   }
 
   if (!foreignDrag) {
@@ -139,7 +142,7 @@ function handleDragover(component, list, clientY) {
   // Already tracking this exact list — just follow the pointer.
   if (foreignDrag.placeholder?.parentElement === list) {
     positionOverlay(list, clientY, foreignDrag.placeholder);
-    return true;
+    return 'copy';
   }
 
   // Entering a list its placeholder isn't in yet (including the very first tick of the drag) —
@@ -152,7 +155,7 @@ function handleDragover(component, list, clientY) {
   foreignDrag.placeholder?.remove();
   foreignDrag.placeholder = createPlaceholder();
   positionOverlay(list, clientY, foreignDrag.placeholder);
-  return true;
+  return 'copy';
 }
 
 /**
@@ -302,9 +305,10 @@ export function createSortableItem({
       e.dataTransfer.effectAllowed = 'move';
     },
     '@dragover.stop'(e) {
-      if (handleDragover(this, this.$el.parentElement, e.clientY)) {
+      const effect = handleDragover(this, this.$el.parentElement, e.clientY);
+      if (effect) {
         e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
+        e.dataTransfer.dropEffect = effect;
       }
     },
     '@drop.prevent.stop'() {
@@ -362,26 +366,32 @@ export function createDropTarget({ read, write, createItem }) {
       dropTargets.set(this.$el, { createItem, read, write });
     },
     '@dragover'(e) {
-      if (handleDragover(this, this.$el, e.clientY)) {
+      const effect = handleDragover(this, this.$el, e.clientY);
+      if (effect) {
         e.preventDefault();
+        e.dataTransfer.dropEffect = effect;
       }
     },
+    /**
+     * "relatedTarget" is only trusted when it names a real element outside this list — genuinely
+     * leaving to somewhere else (the sidebar, say) — and cleans up synchronously right then; there's
+     * no race to protect against there. A null "relatedTarget" is deliberately IGNORED here instead
+     * of deferring a cleanup for it (an earlier version did, via setTimeout): it fires ambiguously —
+     * most confusingly, right as the drag itself ends (drop or cancel) — and racing that cleanup
+     * against createDragSource()'s own "@dragend" fallback (which also runs "soon" after) meant
+     * whichever happened to win nulled out "foreignDrag" first. When the deferred cleanup won, the
+     * fallback found nothing left to commit and the drop silently did nothing. "@dragend" is the
+     * sole, reliable authority for how a drag actually concluded — nothing needs to race it here.
+     */
     '@dragleave'(e) {
-      if (this.$el.contains(e.relatedTarget)) {
+      if (!e.relatedTarget || this.$el.contains(e.relatedTarget)) {
         return;
       }
 
-      const { placeholder } = foreignDrag || {};
-      if (placeholder?.parentElement !== this.$el) {
-        return;
+      if (foreignDrag?.placeholder?.parentElement === this.$el) {
+        foreignDrag.placeholder.remove();
+        foreignDrag.placeholder = null;
       }
-
-      setTimeout(() => {
-        if (foreignDrag?.placeholder === placeholder && placeholder.parentElement === this.$el) {
-          placeholder.remove();
-          foreignDrag.placeholder = null;
-        }
-      }, 0);
     },
     '@drop.prevent'() {
       handleDrop(this, this.$el, read, write);

@@ -1,6 +1,11 @@
 const PLACEMENTS = ['top', 'bottom', 'left', 'right', 'auto'];
 const TRIGGERS   = ['hover', 'click', 'focus'];
 
+// A "style-<name>" modifier (e.g. "v-tooltip.style-error") maps to a "v-tooltip--<name>" class on
+// the tooltip element (syncClasses()), the same way ".top" maps to "v-tooltip--top" — open-ended
+// rather than a fixed list like PLACEMENTS/TRIGGERS, since new skins are purely a CSS concern.
+const VARIANT_PREFIX = 'style-';
+
 const OFFSET = 8;
 const MARGIN = 4;
 
@@ -117,8 +122,8 @@ function computePosition(anchorRect, size, placement, viewport, offset = OFFSET)
 
 // A tooltip's DOM element, positioning, triggers, and lifecycle. Cached as `el._x_tooltip`.
 class TooltipInstance {
-  constructor(el, content, placement, trigger, delay = 250) {
-    Object.assign(this, { el, content, placement, trigger, delay, visible: false });
+  constructor(el, content, placement, trigger, delay = 250, variant = null) {
+    Object.assign(this, { el, content, placement, trigger, delay, variant, visible: false });
 
     // Only inserted into the DOM while shown — see show()/hide().
     this.tooltip = Object.assign(document.createElement('div'), {
@@ -158,6 +163,14 @@ class TooltipInstance {
     if (this.visible) {
       this.reposition();
     }
+  }
+
+  updateVariant(variant) {
+    if (this.variant === variant) {
+      return;
+    }
+    this.variant = variant;
+    this.syncClasses();
   }
 
   updateTrigger(trigger) {
@@ -239,6 +252,9 @@ class TooltipInstance {
     }
     if (this.resolvedPlacement) {
       classes.push(`${TOOLTIP_CLASS}--${this.resolvedPlacement}`);
+    }
+    if (this.variant) {
+      classes.push(`${TOOLTIP_CLASS}--${this.variant}`);
     }
     this.tooltip.className = classes.join(' ');
   }
@@ -339,13 +355,14 @@ document.addEventListener('youla:init', ()=> {
   Youla.directive('tooltip', (el, output, { modifiers, duration }) => {
     const placement = modifiers.find(m => PLACEMENTS.includes(m)) || 'auto';
     const trigger   = modifiers.find(m => TRIGGERS.includes(m)) || 'hover';
+    const variant   = modifiers.find(m => m.startsWith(VARIANT_PREFIX))?.slice(VARIANT_PREFIX.length) || null;
 
     const delay   = duration?.unit === 'ms' ? duration.value : 250;
     const content = output == null ? '' : String(output);
 
     const instance = el._x_tooltip;
     if (!instance) {
-      el._x_tooltip = new TooltipInstance(el, content, placement, trigger, delay);
+      el._x_tooltip = new TooltipInstance(el, content, placement, trigger, delay, variant);
       return;
     }
 
@@ -353,5 +370,6 @@ document.addEventListener('youla:init', ()=> {
     instance.updatePlacement(placement);
     instance.updateTrigger(trigger);
     instance.updateDelay(delay);
+    instance.updateVariant(variant);
   });
 });

@@ -178,6 +178,7 @@ export function createSectionRepeaterControl() {
       return createSortableItem({
         read: (component) => readItems(component, name),
         write: (component, items) => writeItems(component, name, items),
+        handle: '.editrix-section-item__handle',
       });
     },
 

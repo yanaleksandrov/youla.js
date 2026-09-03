@@ -2,10 +2,9 @@
 	flex: 1;
 	min-height: 100dvh;
 	background-color: #f5f5f5;
-	border-left: 1px solid #f1f1f1;
-	border-right: 1px solid #f1f1f1;
+	// Containing block for .editrix-drop-placeholder's own absolute positioning below.
+	position: relative;
 
-	// No blocks yet — youla-editrix.js appends every ".editrix-container" directly into this element, so ":empty" tracks "nothing on the canvas" on its own, no JS state needed.
 	&:empty {
 		display: flex;
 		flex-direction: column;
@@ -27,4 +26,24 @@
 			font-weight: 500;
 		}
 	}
+}
+
+// Marks where a dragged block (new, from the sidebar, or an existing one being reordered) would
+// land — a pure overlay, positioned via "top" (sortable.js's own positionOverlay()), centered on
+// the boundary line via the transform below. Never a real flow child moved via insertBefore(), so
+// hovering it never shifts the blocks on either side of it — only the drop actually does.
+.editrix-drop-placeholder {
+	position: absolute;
+	left: 0;
+	right: 0;
+	height: 6px;
+	transform: translateY(-50%);
+	border-radius: 3px;
+	background-color: #1069fb;
+	opacity: 0.45;
+	// Passes dragover/drop through to whatever's underneath — it must never become the thing being
+	// hovered, or positionOverlay()'s own "before" calculation would need to exclude it as a target too.
+	pointer-events: none;
+	transition: top 0.12s ease;
+	z-index: 5;
 }

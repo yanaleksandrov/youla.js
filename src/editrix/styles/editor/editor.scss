@@ -4,11 +4,16 @@
 
 	padding: 0 calc(50% - (#{$max-width} / 2));
 	transition: border 0.15s, opacity 0.2s, transform 0.2s;
-	border: 1px solid transparent;
 	position: relative;
+	// A block shorter than this leaves no safe room to click below the sticky "-tools" bar (top:8px
+	// + its own 22px) without hitting the edit/delete icons instead — worst case, a click meant to
+	// select the block deletes it. Keeps a tall-enough floor regardless of a block type's own content.
+	min-height: 48px;
 
-	&:hover {
-		border: 1px solid $tools-color;
+	&:hover,
+	&.is-active {
+		outline: 1px solid $tools-color;
+		outline-offset: -1px;
 	}
 
 	button,
@@ -25,17 +30,14 @@
 		margin-bottom: 4px;
 	}
 
-	// Drag-to-reorder (editrix/sortable.js's createSortableItem()/createDropTarget()) — the "transform" transition above is what makes animateReorder()'s FLIP technique read as a smooth slide, same as every other sortable list (repeater.scss, section-repeater.scss, gallery.scss).
 	&.is-dragging {
 		opacity: 0.4;
 	}
 
 	&-tools {
-		position: absolute;
-		top: -22px;
-		left: 0;
-		right: 0;
-		margin: 0 auto;
+		position: sticky;
+		top: 8px;
+		margin: 0 auto -22px;
 		padding: 0;
 		display: flex;
 		list-style: none;
@@ -46,22 +48,22 @@
 		&:after {
 			content: '';
 			position: absolute;
-			top: 2px;
-			border-block-start: 20px solid transparent;
-			border-block-end: 0 none transparent;
+			bottom: 2px;
+			border-block-start: 0 none transparent;
+			border-block-end: 20px solid transparent;
 			transition: all .15s;
 		}
 
 		&:before {
-			right: calc(100% - 1px);
-			border-inline-start: 0 none transparent;
-			border-inline-end: 12px solid $tools-color;
-		}
-
-		&:after {
 			left: calc(100% - 1px);
 			border-inline-start: 12px solid $tools-color;
 			border-inline-end: 0 none transparent;
+		}
+
+		&:after {
+			right: calc(100% - 1px);
+			border-inline-start: 0 none transparent;
+			border-inline-end: 12px solid $tools-color;
 		}
 	}
 
@@ -82,11 +84,11 @@
 		}
 
 		&:first-child {
-			border-start-start-radius: 5px;
+			border-end-start-radius: 5px;
 		}
 
 		&:last-child {
-			border-start-end-radius: 5px;
+			border-end-end-radius: 5px;
 		}
 	}
 }

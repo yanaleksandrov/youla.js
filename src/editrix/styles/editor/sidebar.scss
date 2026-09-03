@@ -11,6 +11,7 @@
 	border-inline-end: 1px solid #f1f1f1;
 	overflow-y: scroll;
 	height: calc(100dvh - 37px);
+	z-index: 1;
 
 	&:after {
 		content: '';

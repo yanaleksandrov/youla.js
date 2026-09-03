@@ -37,6 +37,11 @@
       <td>Задержка (только для <code>.hover</code>)</td>
       <td><code>250</code> мс</td>
     </tr>
+    <tr>
+      <td><code>.style-error</code> <code>.style-warning</code> <code>.style-success</code> — или свой <code>.style-&lt;имя&gt;</code></td>
+      <td>Стиль</td>
+      <td>обычный</td>
+    </tr>
   </tbody>
 </table>
 
@@ -196,6 +201,39 @@
   </div>
 </div>
 
+<h2>Стили</h2>
+
+<p>
+  Модификатор <code>.style-&lt;имя&gt;</code> добавляет подсказке класс <code>v-tooltip--&lt;имя&gt;</code> —
+  так же, как <code>.top</code> добавляет <code>v-tooltip--top</code>. Готовые
+  <code>.style-error</code>, <code>.style-warning</code> и <code>.style-success</code> уже описаны
+  в <code>styles.scss</code>; свой вариант достаточно объявить в CSS — модификатор ничего не
+  проверяет по списку, любое имя после <code>style-</code> просто становится классом.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo tooltip-row" v-data>
+      <div v-tooltip="'Обычная подсказка'" class="tooltip-anchor">обычная</div>
+      <div v-tooltip.style-error="'Что-то пошло не так'" class="tooltip-anchor">style-error</div>
+      <div v-tooltip.style-warning="'Стоит проверить перед продолжением'" class="tooltip-anchor">style-warning</div>
+      <div v-tooltip.style-success="'Сохранено'" class="tooltip-anchor">style-success</div>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;div v-tooltip=&quot;&#39;Обычная подсказка&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;обычная&lt;/div&gt;
+&lt;div v-tooltip.style-error=&quot;&#39;Что-то пошло не так&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;style-error&lt;/div&gt;
+&lt;div v-tooltip.style-warning=&quot;&#39;Стоит проверить перед продолжением&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;style-warning&lt;/div&gt;
+&lt;div v-tooltip.style-success=&quot;&#39;Сохранено&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;style-success&lt;/div&gt;
+</pre>
+  </div>
+</div>
+
 <h2>Особые случаи</h2>
 
 <p>
@@ -300,7 +338,7 @@ document.addEventListener(&#39;youla:init&#39;, () =&gt; {
     },
     field: {
       &#39;v-prop&#39;: &#39;email&#39;,
-      &#39;v-tooltip.bottom.focus&#39;: &#39;error()&#39;,
+      &#39;v-tooltip.bottom.focus.style-error&#39;: &#39;error()&#39;,
       &#39;:class&#39;: `{ &#39;tooltip-anchor--invalid&#39;: error() }`,
     },
   }));
@@ -328,7 +366,7 @@ document.addEventListener('youla:init', () => {
     },
     field: {
       'v-prop': 'email',
-      'v-tooltip.bottom.focus': 'error()',
+      'v-tooltip.bottom.focus.style-error': 'error()',
       ':class': `{ 'tooltip-anchor--invalid': error() }`,
     },
   }));

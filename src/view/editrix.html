@@ -110,8 +110,7 @@
           </div>
         </div>
         <div class="editrix-blocks" v-bind="e.sidebarPanel('content')" hidden>
-          <div class="editrix-blocks-empty" v-show="!activeBlock">Select a block on the canvas to edit its settings.</div>
-          <div class="editrix-fields" v-show="activeBlock" v-bind="e.contentFields"></div>
+          <div class="editrix-fields" v-bind="e.contentFields"></div>
 
           <!-- Every other control type's own <template> lives in its own partial under editrix/controls/ (see repeater.html's own comment for why) — required directly from editrix.html, not nested here. -->
           <template id="editrix-field-template">
@@ -124,24 +123,6 @@
         </div>
       </div>
     </div>
-
-    <%= _.template(require('../editrix/control/text/index.html').default)(data) %>
-    <%= _.template(require('../editrix/control/switcher/index.html').default)(data) %>
-    <%= _.template(require('../editrix/control/select/index.html').default)(data) %>
-    <%= _.template(require('../editrix/control/color/index.html').default)(data) %>
-    <%= _.template(require('../editrix/control/url/index.html').default)(data) %>
-    <%= _.template(require('../editrix/control/slider/index.html').default)(data) %>
-    <%= _.template(require('../editrix/control/dimensions/index.html').default)(data) %>
-    <%= _.template(require('../editrix/control/repeater/index.html').default)(data) %>
-    <%= _.template(require('../editrix/control/textarea/index.html').default)(data) %>
-    <%= _.template(require('../editrix/control/gallery/index.html').default)(data) %>
-    <%= _.template(require('../editrix/control/meta/index.html').default)(data) %>
-    <%= _.template(require('../editrix/control/categories/index.html').default)(data) %>
-    <%= _.template(require('../editrix/control/margin/index.html').default)(data) %>
-    <%= _.template(require('../editrix/control/padding/index.html').default)(data) %>
-    <%= _.template(require('../editrix/control/borders/index.html').default)(data) %>
-    <%= _.template(require('../editrix/control/alignment/index.html').default)(data) %>
-    <%= _.template(require('../editrix/control/css-classes/index.html').default)(data) %>
 
     <div class="editrix-canvas" v-bind="e.canvas"></div>
 
@@ -618,5 +599,23 @@
       }
     }
   </script>
+
+  <%= _.template(require('../editrix/control/text/index.html').default)(data) %>
+  <%= _.template(require('../editrix/control/switcher/index.html').default)(data) %>
+  <%= _.template(require('../editrix/control/select/index.html').default)(data) %>
+  <%= _.template(require('../editrix/control/color/index.html').default)(data) %>
+  <%= _.template(require('../editrix/control/url/index.html').default)(data) %>
+  <%= _.template(require('../editrix/control/slider/index.html').default)(data) %>
+  <%= _.template(require('../editrix/control/dimensions/index.html').default)(data) %>
+  <%= _.template(require('../editrix/control/repeater/index.html').default)(data) %>
+  <%= _.template(require('../editrix/control/textarea/index.html').default)(data) %>
+  <%= _.template(require('../editrix/control/gallery/index.html').default)(data) %>
+  <%= _.template(require('../editrix/control/meta/index.html').default)(data) %>
+  <%= _.template(require('../editrix/control/categories/index.html').default)(data) %>
+  <%= _.template(require('../editrix/control/margin/index.html').default)(data) %>
+  <%= _.template(require('../editrix/control/padding/index.html').default)(data) %>
+  <%= _.template(require('../editrix/control/borders/index.html').default)(data) %>
+  <%= _.template(require('../editrix/control/alignment/index.html').default)(data) %>
+  <%= _.template(require('../editrix/control/css-classes/index.html').default)(data) %>
 </body>
 </html>

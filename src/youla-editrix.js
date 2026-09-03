@@ -44,6 +44,32 @@ const CONTAINER_TOOLS_HTML = `
   </ul>
 `;
 
+/**
+ * Inserts CONTAINER_TOOLS_HTML as "el"'s first child and wires its edit/delete buttons, unless it's
+ * already there — shared by container()'s "@mouseenter" (hover) and ":data-active" (selection) below,
+ * since a block can gain tools from either.
+ *
+ * @param {Object} component - The reactive `this` from whichever binding is mounting.
+ * @param {HTMLElement} el - A block's own `.editrix-container` element.
+ */
+function mountContainerTools(component, el) {
+  if (el.querySelector(':scope > .editrix-container-tools')) {
+    return;
+  }
+  el.insertAdjacentHTML('afterbegin', CONTAINER_TOOLS_HTML);
+
+  const tools = el.querySelector(':scope > .editrix-container-tools');
+  tools.querySelector('[data-action="edit"]').addEventListener('click', (e) => {
+    e.stopPropagation();
+    component.activeBlock = el.dataset.blockId;
+    component.tab = 'content';
+  });
+  tools.querySelector('[data-action="delete"]').addEventListener('click', (e) => {
+    e.stopPropagation();
+    deleteBlock(component, el);
+  });
+}
+
 // Flattened `{ blockType: { fieldName: initialValue } }` map, read by readBlockSettings() so a block shows real starting content before its Content panel has ever registered it. Computed once BLOCKS is populated (see 'youla:init' below).
 let DEFAULT_BLOCK_SETTINGS = {};
 
@@ -177,6 +203,7 @@ function deleteBlock(component, el) {
 
   if (component.activeBlock === id) {
     component.activeBlock = null;
+    component.tab = 'blocks';
   }
   delete component.settings[id];
 
@@ -333,7 +360,7 @@ document.addEventListener('youla:init', () => {
       return {
         ':class': `{'active': tab === '${name}'}`,
         '@click': `tab = '${name}'`,
-        'v-tooltip.hover.2000ms': JSON.stringify(SIDEBAR_TAB_DESCRIPTIONS[name] || ''),
+        'v-tooltip.style-dark.hover.2000ms': JSON.stringify(SIDEBAR_TAB_DESCRIPTIONS[name] || ''),
       };
     },
     sidebarPanel(name) {
@@ -373,6 +400,7 @@ document.addEventListener('youla:init', () => {
        */
       '@click'() {
         this.activeBlock = null;
+        this.tab = 'blocks';
       },
     },
 
@@ -424,6 +452,21 @@ document.addEventListener('youla:init', () => {
         ':data-index'() {
           return this.blocks.indexOf(this.$el);
         },
+        /**
+         * Reactively mirrors "activeBlock" onto this block, so CSS can pin its tools bar while
+         * selected — and, unlike "@mouseenter"/"@mouseleave" below, keeps the tools mounted for as
+         * long as the block stays selected, even once the cursor leaves it.
+         */
+        ':class'() {
+          const isActive = this.activeBlock === this.$el.dataset.blockId;
+
+          if (isActive) {
+            mountContainerTools(this, this.$el);
+          } else if (!this.$el.matches(':hover')) {
+            this.$el.querySelector(':scope > .editrix-container-tools')?.remove();
+          }
+          return { 'is-active': isActive };
+        },
         '@load'() {
           if (!this.blocks.includes(this.$el)) {
             this.blocks = [...this.blocks, this.$el];
@@ -434,34 +477,31 @@ document.addEventListener('youla:init', () => {
           if (scheme !== undefined) {
             mountEditor(this.$el, scheme);
           }
-          // Prevents a block's own <img>/<a> (natively draggable) from competing with the container's own drag.
-          this.$el.querySelectorAll('img, a').forEach((el) => el.setAttribute('draggable', 'false'));
+          // Prevents a block's own <img>/<a> (natively draggable, with their own native drag/drop
+          // cursor handling baked into the browser) from competing with the container's own drag —
+          // "draggable=false" alone stops them from becoming their own drag source, but a *foreign*
+          // drag hovering one can still show the browser's own "not allowed" cursor and refuse to
+          // drop, even once our own dragover handler on the container has accepted it. Routing
+          // pointer events around them entirely (they carry no interaction of their own) avoids that.
+          this.$el.querySelectorAll('img, a').forEach((el) => {
+            el.setAttribute('draggable', 'false');
+            el.style.pointerEvents = 'none';
+          });
         },
         ...createSortableItem({
           read: (component) => component.blocks,
           write: (component, blocks) => {
             component.blocks = blocks;
           },
+          placeholder: true,
         }),
         '@mouseenter'() {
-          if (this.$el.querySelector(':scope > .editrix-container-tools')) {
-            return;
-          }
-          this.$el.insertAdjacentHTML('afterbegin', CONTAINER_TOOLS_HTML);
-
-          const tools = this.$el.querySelector(':scope > .editrix-container-tools');
-          tools.querySelector('[data-action="edit"]').addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.activeBlock = this.$el.dataset.blockId;
-            this.tab = 'content';
-          });
-          tools.querySelector('[data-action="delete"]').addEventListener('click', (e) => {
-            e.stopPropagation();
-            deleteBlock(this, this.$el);
-          });
+          mountContainerTools(this, this.$el);
         },
         '@mouseleave'() {
-          this.$el.querySelector(':scope > .editrix-container-tools')?.remove();
+          if (this.activeBlock !== this.$el.dataset.blockId) {
+            this.$el.querySelector(':scope > .editrix-container-tools')?.remove();
+          }
         },
         /**
          * ".stop" keeps this from also reaching canvas()'s own "@click" above, which would
@@ -537,6 +577,6 @@ document.addEventListener('youla:init', () => {
     },
 
     // Page > title — read/written directly by the "Page" panel's textarea control (control/textarea's createTextareaControl()).
-    title: 'Some title for new post about Expansa and hekllo',
+    title: 'Some title for new post about Expansa and hello',
   }));
 });

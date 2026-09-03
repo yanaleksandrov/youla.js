@@ -5,18 +5,33 @@ export const marks = {
   link: {
     attrs: {
       href: { validate: 'string' },
-      title: { default: null, validate: 'string|null' }
+      title: { default: null, validate: 'string|null' },
+      // "target" is "_blank" or null (same tab); "rel" is a space-separated token string (e.g.
+      // "noopener noreferrer nofollow") or null — see toolbar.js's link editor for how these are set.
+      target: { default: null, validate: 'string|null' },
+      rel: { default: null, validate: 'string|null' }
     },
     inclusive: false,
     parseDOM: [
       {
         tag: 'a[href]',
         getAttrs(dom) {
-          return { href: dom.getAttribute('href'), title: dom.getAttribute('title') };
+          return {
+            href: dom.getAttribute('href'),
+            title: dom.getAttribute('title'),
+            target: dom.getAttribute('target'),
+            rel: dom.getAttribute('rel')
+          };
         }
       }
     ],
-    toDOM(node) { let { href, title } = node.attrs; return ['a', { href, title }, 0]; }
+    toDOM(node) {
+      let { href, title, target, rel } = node.attrs;
+      const attrs = { href, title };
+      if (target) attrs.target = target;
+      if (rel) attrs.rel = rel;
+      return ['a', attrs, 0];
+    }
   },
   em: {
     parseDOM: [
@@ -29,7 +44,6 @@ export const marks = {
   strong: {
     parseDOM: [
       { tag: 'strong' },
-      // Google Docs wraps pasted content in `<b>` with font-weight normal; don't treat that as strong.
       { tag: 'b', getAttrs: (node) => node.style.fontWeight !== 'normal' && null },
       { style: 'font-weight=400', clearMark: m => m.type.name === 'strong' },
       { style: 'font-weight', getAttrs: (value) => /^(bold(er)?|[5-9]\d{2,})$/.test(value) && null },
@@ -50,8 +64,6 @@ export const marks = {
     ],
     toDOM: () => ['s', 0]
   },
-  // Mutually exclusive — applying one clears the other, matching how every other rich-text editor
-  // treats sub/superscript.
   subscript: {
     excludes: 'superscript',
     parseDOM: [{ tag: 'sub' }, { style: 'vertical-align=sub' }],
@@ -65,5 +77,17 @@ export const marks = {
   code: {
     parseDOM: [{ tag: 'code' }],
     toDOM: () => ['code', 0]
+  },
+  // Text color and highlight — CSS-based like underline/strike above, rather than baking a fixed
+  // palette into the schema, so any hex the toolbar's color picker (toolbar.js) produces round-trips.
+  color: {
+    attrs: { color: { validate: 'string' } },
+    parseDOM: [{ style: 'color', getAttrs: (value) => ({ color: value }) }],
+    toDOM(node) { return ['span', { style: `color: ${node.attrs.color}` }, 0]; }
+  },
+  highlight: {
+    attrs: { color: { validate: 'string' } },
+    parseDOM: [{ style: 'background-color', getAttrs: (value) => ({ color: value }) }],
+    toDOM(node) { return ['span', { style: `background-color: ${node.attrs.color}` }, 0]; }
   }
 };

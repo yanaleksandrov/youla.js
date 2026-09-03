@@ -24,6 +24,33 @@ const nodes = {
     parseDOM: [{ tag: 'hr' }],
     toDOM: () => ['hr']
   },
+  // Hand-written rather than pulled in via prosemirror-schema-list's addListNodes() — see
+  // toolbar.js's block-type <select> (which offers both list types alongside Text/Heading) and its
+  // wrapInList/liftListItem/sinkListItem/splitListItem keymap for how these are actually used.
+  bullet_list: {
+    content: 'list_item+',
+    group: 'block',
+    parseDOM: [{ tag: 'ul' }],
+    toDOM: () => ['ul', 0]
+  },
+  ordered_list: {
+    content: 'list_item+',
+    group: 'block',
+    attrs: { order: { default: 1, validate: 'number' } },
+    parseDOM: [{
+      tag: 'ol',
+      getAttrs(dom) { return { order: dom.hasAttribute('start') ? +dom.getAttribute('start') : 1 }; }
+    }],
+    toDOM(node) { return node.attrs.order === 1 ? ['ol', 0] : ['ol', { start: node.attrs.order }, 0]; }
+  },
+  list_item: {
+    // "block*" (not "inline*") lets an item hold more than one paragraph, or nest another list/
+    // blockquote inside it — matches prosemirror-schema-list's own default list_item content.
+    content: 'paragraph block*',
+    defining: true,
+    parseDOM: [{ tag: 'li' }],
+    toDOM: () => ['li', 0]
+  },
   heading: {
     attrs: { level: { default: 1, validate: 'number' } },
     content: 'inline*',
@@ -87,7 +114,7 @@ const nodes = {
   }
 };
 
-// The "rich" text scheme — paragraphs, headings, blockquotes, images and other block-level
-// structure, plus every inline mark (marks.js). Roughly matches CommonMark's document schema,
-// minus lists (see prosemirror-schema-list).
+// The "rich" text scheme — paragraphs, headings, blockquotes, bulleted/ordered lists, images and
+// other block-level structure, plus every inline mark (marks.js). Roughly matches CommonMark's
+// document schema.
 export const richSchema = new Schema({ nodes, marks });

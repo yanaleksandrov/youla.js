@@ -22,7 +22,10 @@ const classNames = (prefix, suffixes) => Object.fromEntries(
   Object.entries(suffixes).map(([key, suffix]) => [key, suffix ? `${prefix}-${suffix}` : prefix]),
 );
 
-class Filler {
+// Exported so other UI built outside the v-data/directive system (e.g. the ProseMirror selection
+// toolbar's Text Color/Highlight editor, editrix/prosemirror/toolbar.js) can attach a real filler
+// to an <input> it built by hand, the same way the "v-filler" directive below does.
+export class Filler {
   static DEFAULTS = {
     classes: {
       ...classNames('filler', {

@@ -9,6 +9,8 @@ const CODE_RULE = /(?:^|\s)`([^`]+)`$/;
 
 const HEADING_RULE = /^(#{1,6})\s$/;
 const BLOCKQUOTE_RULE = /^\s*>\s$/;
+const BULLET_LIST_RULE = /^\s*([-+*])\s$/;
+const ORDERED_LIST_RULE = /^\s*(\d+)\.\s$/;
 const HORIZONTAL_RULE_RULE = /^(?:---|\*\*\*)$/;
 
 /**
@@ -55,8 +57,8 @@ function horizontalRuleInputRule(nodeType) {
 
 /**
  * This schema's own markdown-style shortcuts — "**bold**", "*italic*", "`code`" for whichever
- * marks it defines, plus "# ", "> " and "---" for whichever block nodes it defines. A "plain"
- * scheme naturally keeps only the mark shortcuts, since it has no block nodes to switch into.
+ * marks it defines, plus "# ", "> ", "- "/"* "/"+ " and "---" for whichever block nodes it defines.
+ * A "plain" scheme naturally keeps only the mark shortcuts, since it has no block nodes to switch into.
  *
  * @param {import('prosemirror-model').Schema} schema
  * @returns {Array<InputRule>}
@@ -78,6 +80,19 @@ export function buildInputRules(schema) {
   }
   if (schema.nodes.blockquote) {
     rules.push(wrappingInputRule(BLOCKQUOTE_RULE, schema.nodes.blockquote));
+  }
+  if (schema.nodes.bullet_list) {
+    rules.push(wrappingInputRule(BULLET_LIST_RULE, schema.nodes.bullet_list));
+  }
+  if (schema.nodes.ordered_list) {
+    rules.push(wrappingInputRule(
+      ORDERED_LIST_RULE,
+      schema.nodes.ordered_list,
+      (match) => ({ order: +match[1] }),
+      // "2. " right after an existing ordered list continues it (order N+1) instead of starting a
+      // new nested one — matches prosemirror's own example-setup behavior for this rule.
+      (match, node) => node.childCount + node.attrs.order === +match[1],
+    ));
   }
   if (schema.nodes.horizontal_rule) {
     rules.push(horizontalRuleInputRule(schema.nodes.horizontal_rule));

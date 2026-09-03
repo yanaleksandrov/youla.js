@@ -67,6 +67,74 @@
 	}
 }
 
+// The "More formatting" overflow menu (toolbar.js's renderToolbar()) — everything but Bold/
+// Underline/Link/the block-structure buttons collapses in here instead of its own toolbar button.
+.v-tooltip-toolbar__more {
+	position: relative;
+}
+
+.v-tooltip-toolbar__menu {
+	position: absolute;
+	top: calc(100% + 4px);
+	right: 0;
+	display: flex;
+	flex-direction: column;
+	min-width: 180px;
+	padding: 4px;
+	background-color: var(--v-tooltip-bg, #fff);
+	border: 1px solid var(--v-tooltip-border, #dfe2e3);
+	border-radius: 8px;
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+	z-index: 1;
+}
+
+.v-tooltip-toolbar__menu-item {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	border: 0;
+	outline: none;
+	cursor: pointer;
+	background-color: transparent;
+	color: inherit;
+	padding: 6px 8px;
+	font-size: 12px;
+	text-align: left;
+	white-space: nowrap;
+	border-radius: 6px;
+	transition: background-color 0.15s;
+
+	i {
+		font-size: 16px;
+		flex: none;
+	}
+
+	&:hover {
+		background-color: rgba(0, 0, 0, 0.05);
+	}
+
+	&.is-active {
+		background-color: rgba(16, 105, 251, 0.12);
+		color: #1069fb;
+	}
+}
+
+// The link editor's "New tab" / "Nofollow" checkboxes (toolbar.js's renderLink()).
+.v-tooltip-toolbar__checkbox {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	font-size: 12px;
+	white-space: nowrap;
+	cursor: pointer;
+	padding: 0 2px;
+
+	input {
+		margin: 0;
+		cursor: pointer;
+	}
+}
+
 // The shortcut hint inside a toolbar button's own description tooltip (toolbar.js's describeButton()).
 .v-tooltip-toolbar__hotkey {
 	display: inline-block;
@@ -87,13 +155,9 @@
 	outline: none;
 	cursor: text;
 
+	&:focus,
 	&:hover {
-		outline: 1px dashed rgba(16, 105, 251, 0.35);
-		outline-offset: 2px;
-	}
-
-	&:focus {
-		outline: 1px solid #1069fb;
-		outline-offset: 2px;
+		outline: 1px dotted rgba(0, 0, 0, 0.25);
+		outline-offset: -1px;
 	}
 }

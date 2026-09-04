@@ -22,9 +22,13 @@ const foreignItemValues = new WeakMap();
  * ".is-dragging", never "draggable", never framework-initialized: a *real*, repeatedly-repositioned
  * dragging element is what a native drag session would otherwise keep re-targeting itself once it's
  * under the cursor, breaking further dragover (or the eventual "drop") on some browsers.
+ *
+ * @param {HTMLElement} list - Built in "list"'s own document, not necessarily this script's own —
+ *   the canvas's own list lives inside its iframe's separate document (see youla-editrix.js's
+ *   getCanvasList()).
  */
-function createPlaceholder() {
-  const el = document.createElement('div');
+function createPlaceholder(list) {
+  const el = list.ownerDocument.createElement('div');
   el.className = 'editrix-drop-placeholder';
   return el;
 }
@@ -120,7 +124,7 @@ function handleDragover(component, list, clientY) {
     }
 
     if (reorderDrag.usePlaceholder) {
-      reorderDrag.placeholder ??= createPlaceholder();
+      reorderDrag.placeholder ??= createPlaceholder(list);
       positionOverlay(list, clientY, reorderDrag.placeholder, [reorderDrag.source]);
     } else {
       // Legacy behavior (gallery/repeater/section-repeater): the source row itself is what tracks
@@ -153,7 +157,7 @@ function handleDragover(component, list, clientY) {
   }
 
   foreignDrag.placeholder?.remove();
-  foreignDrag.placeholder = createPlaceholder();
+  foreignDrag.placeholder = createPlaceholder(list);
   positionOverlay(list, clientY, foreignDrag.placeholder);
   return 'copy';
 }

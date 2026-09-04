@@ -46,7 +46,7 @@ let BLOCK_LIST = [];
 
 // Patterns — a named, pre-composed set of block types (view/editrix.html's own "patterns" data),
 // each just `{ key, label, icon, blocks: [blockType, ...] }`. Dragged in via patternItem() below,
-// which materializes every listed block type, in order, in one drop — see canvas's own createItem().
+// which materializes every listed block type, in order, in one drop — see canvasList's own createItem().
 let PATTERN_LIST = [];
 
 // Toolbox's own section list (same shape as BLOCKS[type].sections) — built once by toolboxSections(), unlike contentFields()'s per-block rebuild. Populated in the 'youla:init' listener below.
@@ -135,24 +135,92 @@ function readBlockSettings(component, el) {
 }
 
 /**
+ * The canvas <iframe> element — a singleton, like BLOCKS/collab above.
+ *
+ * @returns {HTMLIFrameElement|null}
+ */
+function getCanvasFrame() {
+  return document.querySelector('.editrix-canvas');
+}
+
+/**
+ * Lazily builds the canvas iframe's own document — a real CSS/DOM isolation boundary between block
+ * content (and, eventually, an arbitrary theme's own stylesheet) and the editor chrome's own styles,
+ * neither of which shares a cascade with the other once block markup lives here instead of the
+ * parent document. An "about:blank" iframe already has a minimal document synchronously, before its
+ * own (never-fired-here) "load" event — so this never has to wait on anything.
+ *
+ * @param {HTMLIFrameElement} iframeEl
+ * @returns {Document}
+ */
+function getCanvasDocument(iframeEl) {
+  return iframeEl.contentDocument;
+}
+
+// The canvas iframe's own list root (an "editrix-canvas-list" div, its own document's <body>'s only
+// child) — set up once per iframe by getCanvasList() below, keyed so a hot-reload re-running
+// canvas()'s own "@load" doesn't rebuild it.
+const canvasLists = new WeakMap();
+
+/**
+ * The canvas's own drop-target list root, building it (and the iframe's <head>/<body> around it)
+ * the first time it's needed. "createDropTarget()"'s directives (canvasList, below) are wired onto
+ * it manually via initialize() rather than left for auto-discovery, since the parent's own
+ * MutationObserver (Youla's componentWatch) only ever watches the parent document's <body> — an
+ * iframe's separate document is invisible to it. Mirrors the existing contentFields()/
+ * toolboxSections() pattern of building markup imperatively, then calling initialize() once.
+ *
+ * @param {Object} component - The reactive `this` from canvas()'s own "@load".
+ * @param {HTMLIFrameElement} iframeEl
+ * @returns {HTMLElement}
+ */
+function getCanvasList(component, iframeEl) {
+  const existing = canvasLists.get(iframeEl);
+  if (existing) {
+    return existing;
+  }
+
+  const doc = getCanvasDocument(iframeEl);
+
+  const link = doc.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = '/css/editrix-canvas.css';
+  doc.head.append(link);
+
+  const list = doc.createElement('div');
+  list.className = 'editrix-canvas-list';
+  list.setAttribute('v-bind', 'e.canvasList');
+  doc.body.append(list);
+
+  canvasLists.set(iframeEl, list);
+  component.$root.__x.initialize(list);
+  return list;
+}
+
+/**
  * Builds the DOM element a palette item's blockType drops in as.
  *
  * @param {string} blockType - A BLOCKS key (see paletteItem()).
+ * @param {Document} [targetDocument] - The block lands in the canvas iframe's own document, not
+ *   this script's own — only the block's own <template> (required from view/editrix.html) stays
+ *   looked up in the parent document, since that's where markup templates are still defined.
  * @returns {HTMLElement|null} The new element, or null if "blockType" isn't registered.
  */
-function createBlock(blockType) {
+function createBlock(blockType, targetDocument = document) {
   const block = BLOCKS[blockType];
   if (!block) {
     return null;
   }
 
-  const element = document.createElement('div');
+  const element = targetDocument.createElement('div');
   element.className = 'editrix-container';
 
   // A migrated block type (src/editrix/blocks/<type>/) carries its markup as a "<template id=
   // "editrix-block-<type-without-its-'editrix-'-prefix>">" instead (e.g. "editrix-heading" ->
   // "editrix-block-heading", matching the folder name) — the rest still have it inline as
-  // BLOCKS[type].html until they migrate too.
+  // BLOCKS[type].html until they migrate too. cloneTemplateFragment() always reads the template from
+  // the parent document; appendChild() below re-homes the cloned fragment into "targetDocument"
+  // automatically (standard DOM node-insertion behavior across documents).
   const templateId = `editrix-block-${blockType.replace(/^editrix-/, '')}`;
   if (document.getElementById(templateId)) {
     element.appendChild(cloneTemplateFragment(templateId));
@@ -307,8 +375,15 @@ function deleteBlock(component, el) {
  * @param {string} [css] - Raw CSS using "selector" as a placeholder; a style tag is removed if this is falsy.
  */
 function syncCustomCss(blockId, css) {
+  // The block itself now renders inside the canvas iframe's own document — the scoped <style> tag
+  // has to live there too, or its selector never matches anything in this (parent) document.
+  const canvasDocument = getCanvasFrame()?.contentDocument;
+  if (!canvasDocument) {
+    return;
+  }
+
   const tagId = `editrix-custom-css-${blockId}`;
-  let tag = document.getElementById(tagId);
+  let tag = canvasDocument.getElementById(tagId);
 
   if (!css) {
     tag?.remove();
@@ -316,9 +391,9 @@ function syncCustomCss(blockId, css) {
   }
 
   if (!tag) {
-    tag = document.createElement('style');
+    tag = canvasDocument.createElement('style');
     tag.id = tagId;
-    document.head.append(tag);
+    canvasDocument.head.append(tag);
   }
 
   const scopedCss = css.replace(/\bselector\b/g, `.editrix-container[data-block-id="${blockId}"]`);
@@ -481,7 +556,9 @@ function syncBlockLockState(component, el, currentUserId) {
   let overlay = el.querySelector(':scope > .editrix-lock-overlay');
   if (lockedByOther) {
     if (!overlay) {
-      overlay = document.createElement('div');
+      // "el" now typically lives in the canvas iframe's own document, not this script's — build the
+      // overlay there too.
+      overlay = el.ownerDocument.createElement('div');
       overlay.className = 'editrix-lock-overlay';
       el.prepend(overlay);
     }
@@ -572,11 +649,41 @@ function startNumberDrag(handle, input, startEvent) {
 
 document.addEventListener('youla:init', () => {
 
-  // Canvas zoom bounds/step, ctrl+wheel-ed in the "canvas" v-bind below
+  // Canvas zoom bounds/step, ctrl+wheel-ed in the "canvasList" v-bind below
   const ZOOM_MIN = 50;
   const ZOOM_MAX = 150;
   const ZOOM_STEP = 10;
   const ZOOM_DEFAULT = 100;
+
+  /**
+   * The "Delete"/"ctrl+0" keyboard shortcuts — shared between canvas() (fires while focus sits in
+   * the parent chrome, e.g. a sidebar field) and canvasList() (fires while focus sits inside the
+   * canvas iframe's own window instead, e.g. a selected block) — a keydown never crosses that
+   * boundary on its own, so both need their own copy of the same directives rather than one shared
+   * DOM listener.
+   */
+  function canvasKeyboardShortcuts() {
+    return {
+      '@keydown.window.ctrl.0'() {
+        this.zoom = ZOOM_DEFAULT;
+      },
+      /**
+       * Deletes the selected block — skipped while "$event.target" is itself a normal text-entry
+       * context (isEditableTarget()), so pressing Delete to edit a heading's text, or a field
+       * elsewhere in the sidebar, doesn't also remove the whole block out from under it.
+       */
+      '@keydown.window.delete'(e) {
+        if (!this.activeBlock || isEditableTarget(e.target)) {
+          return;
+        }
+
+        const block = this.blocks.find((b) => b.dataset.blockId === this.activeBlock);
+        if (block) {
+          deleteBlock(this, block);
+        }
+      },
+    };
+  }
 
   /**
    * Reads editrix's backend data out of a `#editrix-data` JSON block (view/editrix.html) — a
@@ -682,31 +789,51 @@ document.addEventListener('youla:init', () => {
       collab?.broadcastChange(blockId, this.settings[blockId]);
     },
 
-    // v-bind="e.canvas" — ctrl+wheel/ctrl+0 zoom, plus createDropTarget() so a dragged palette item materializes as a real block.
+    // v-bind="e.canvas" — on the canvas <iframe> itself, in the parent document. Just builds the
+    // iframe's own document/list root (getCanvasList()) once on load — every other interactive
+    // directive (zoom, deselect-on-background-click, the drop target itself) lives on that list root
+    // instead (canvasList, below): a wheel/click/keydown over the iframe's own rendered content fires
+    // inside *its* document, never on this outer <iframe> element, and you can't appendChild() into
+    // an <iframe> element itself anyway, only into its contentDocument.
     canvas: {
+      '@load'() {
+        // Deferred a tick, like toolboxSections()'s own "@load" below: it fires while the root's own
+        // Component construction is still in progress, before "$root.__x" is assigned — and
+        // getCanvasList() needs it to initialize() the list root it builds.
+        setTimeout(() => {
+          getCanvasList(this, this.$el);
+        }, 0);
+      },
+      // Still needs to work while focus sits in the parent chrome (a sidebar field, say) —
+      // canvasList's own copy (below) covers focus inside the canvas itself.
+      ...canvasKeyboardShortcuts(),
+    },
+
+    // v-bind="e.canvasList" — on the canvas iframe's own list root (getCanvasList()), wired up
+    // manually rather than auto-discovered, since it lives in a different document than the one
+    // Youla's own MutationObserver watches. Owns zoom, deselect-on-background-click, and
+    // createDropTarget() so a dragged palette item materializes as a real block inside the canvas's
+    // own document.
+    canvasList: {
+      ...canvasKeyboardShortcuts(),
       '@wheel.prevent.ctrl'(e) {
         this.zoom = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, this.zoom + (e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP)));
       },
-      '@keydown.window.ctrl.0'() {
-        this.zoom = ZOOM_DEFAULT;
-      },
-      /**
-       * Deletes the selected block — skipped while "$event.target" is itself a normal text-entry
-       * context (isEditableTarget()), so pressing Delete to edit a heading's text, or a field
-       * elsewhere in the sidebar, doesn't also remove the whole block out from under it.
-       */
-      '@keydown.window.delete'(e) {
-        if (!this.activeBlock || isEditableTarget(e.target)) {
-          return;
-        }
-
-        const block = this.blocks.find((b) => b.dataset.blockId === this.activeBlock);
-        if (block) {
-          deleteBlock(this, block);
-        }
-      },
       ':style'() {
         return `zoom: ${this.zoom}%`;
+      },
+      // Drives ".is-empty" (editrix-canvas.scss) — a plain div, unlike the outer <iframe>, so its own
+      // ":empty" would've worked too, but this stays consistent with everything else here being
+      // driven off "blocks" rather than the DOM.
+      ':class'() {
+        return { 'is-empty': this.blocks.length === 0 };
+      },
+      /**
+       * A block's own "@click.stop" (container(), below) keeps this from firing on a block
+       * click — so this only means the canvas background was clicked, i.e. deselect.
+       */
+      '@click'() {
+        setActiveBlock(this, null);
       },
       ...createDropTarget({
         read: (component) => component.blocks,
@@ -717,17 +844,13 @@ document.addEventListener('youla:init', () => {
         // pattern — patternItem()) — normalized to a list either way, so a pattern materializes as
         // that many real blocks landing together, in one drop.
         createItem(component, payload) {
-          const elements = (Array.isArray(payload) ? payload : [payload]).map(createBlock).filter(Boolean);
+          const canvasDocument = getCanvasDocument(getCanvasFrame());
+          const elements = (Array.isArray(payload) ? payload : [payload])
+            .map((blockType) => createBlock(blockType, canvasDocument))
+            .filter(Boolean);
           return elements.length ? elements.map((element) => ({ element, value: element })) : null;
         },
       }),
-      /**
-       * A block's own "@click.stop" (container(), below) keeps this from firing on a block
-       * click — so this only means the canvas background was clicked, i.e. deselect.
-       */
-      '@click'() {
-        setActiveBlock(this, null);
-      },
     },
 
     // Toolbar > zoom dropdown — v-bind="e.zoomSummary" on the <summary>, v-bind="e.zoomOption(75)" on each preset.
@@ -747,7 +870,7 @@ document.addEventListener('youla:init', () => {
     blockList: BLOCK_LIST,
 
     /**
-     * v-bind="e.paletteItem(block.type)" — starts a drag session canvas()'s own
+     * v-bind="e.paletteItem(block.type)" — starts a drag session canvasList's own
      * createDropTarget() picks up, materializing a new block once dragged onto the canvas.
      */
     paletteItem(blockType) {
@@ -759,7 +882,7 @@ document.addEventListener('youla:init', () => {
 
     /**
      * v-bind="e.patternItem(pattern.blocks)" — same drag session as paletteItem(), just carrying
-     * an array of block types instead of one; canvas's own createItem() materializes all of them.
+     * an array of block types instead of one; canvasList's own createItem() materializes all of them.
      */
     patternItem(blockTypes) {
       return createDragSource(blockTypes);
@@ -848,16 +971,33 @@ document.addEventListener('youla:init', () => {
             el.style.pointerEvents = 'none';
           });
         },
-        ...createSortableItem({
-          read: (component) => component.blocks,
-          write: (component, blocks) => {
-            component.blocks = blocks;
-          },
-          placeholder: true,
-          // Otherwise the browser's own native drag detection can win a mousedown that starts
-          // inside a live text field (even directly on its own text) over ordinary text selection.
-          exclude: '[data-editable]',
-        }),
+        ...(() => {
+          const sortable = createSortableItem({
+            read: (component) => component.blocks,
+            write: (component, blocks) => {
+              component.blocks = blocks;
+            },
+            placeholder: true,
+            // Otherwise the browser's own native drag detection can win a mousedown that starts
+            // inside a live text field (even directly on its own text) over ordinary text selection.
+            exclude: '[data-editable]',
+          });
+
+          return {
+            ...sortable,
+            /**
+             * Selects the block being dragged, in addition to sortable's own reorder setup — a
+             * completed native drag never fires the "click" that "@click.stop" below relies on (the
+             * browser suppresses it once a real drag has happened), so without this, reordering a
+             * block that wasn't already selected leaves the sidebar's Content tab showing nothing
+             * (or a stale previous block) until a separate, ordinary click.
+             */
+            '@dragstart'(e) {
+              setActiveBlock(this, this.$el.dataset.blockId);
+              sortable['@dragstart'].call(this, e);
+            },
+          };
+        })(),
         // Overrides createSortableItem()'s own ':draggable': 'true' above — a later object-literal
         // key wins — so a block someone else is editing can't be dragged out from under them.
         ':draggable'() {

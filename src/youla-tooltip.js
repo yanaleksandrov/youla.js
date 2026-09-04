@@ -77,6 +77,47 @@ function ensureGlobalListeners() {
 }
 
 /**
+ * Translates a rect measured in "el"'s own window (getBoundingClientRect(), ProseMirror's
+ * coordsAtPos(), etc.) into the top-level window's own viewport coordinates — a no-op unless "el"
+ * lives inside a same-origin iframe (the editrix canvas, say). A tooltip/toolbar is always appended
+ * to the *top* document's <body> (this script never runs a second copy inside the iframe), so its
+ * own "top"/"left" have to be expressed in that document's coordinate space regardless of which
+ * document its anchor actually renders in — otherwise it lands offset by wherever the iframe itself
+ * sits on the page.
+ *
+ * @param {Element} el - The anchor element (or, for a text selection, the editor's own DOM node).
+ * @param {{top: number, left: number, bottom?: number, right?: number}} rect
+ * @returns {{top: number, left: number, bottom?: number, right?: number}}
+ */
+export function toTopViewportRect(el, rect) {
+  let view = el.ownerDocument.defaultView;
+  let offsetTop = 0;
+  let offsetLeft = 0;
+
+  // Walks every iframe boundary between "el" and the top window, not just one — correct even if a
+  // canvas were ever nested another level deep.
+  while (view && view.frameElement) {
+    const frameRect = view.frameElement.getBoundingClientRect();
+    offsetTop += frameRect.top;
+    offsetLeft += frameRect.left;
+    view = view.frameElement.ownerDocument.defaultView;
+  }
+
+  if (!offsetTop && !offsetLeft) {
+    return rect;
+  }
+
+  const translated = { ...rect, top: rect.top + offsetTop, left: rect.left + offsetLeft };
+  if ('bottom' in rect) {
+    translated.bottom = rect.bottom + offsetTop;
+  }
+  if ('right' in rect) {
+    translated.right = rect.right + offsetLeft;
+  }
+  return translated;
+}
+
+/**
  * Resolves a tooltip's position next to "anchorRect" for the given placement, clamped to the viewport.
  *
  * @param {object} anchorRect - The trigger element's bounding box.
@@ -235,7 +276,7 @@ export class TooltipInstance {
   }
 
   reposition() {
-    const anchorRect = this.el.getBoundingClientRect();
+    const anchorRect = toTopViewportRect(this.el, this.el.getBoundingClientRect());
     const size        = { width: this.tooltip.offsetWidth, height: this.tooltip.offsetHeight };
     // visualViewport reflects the actually-visible area on iOS Safari; innerWidth/innerHeight don't.
     const vv          = window.visualViewport;

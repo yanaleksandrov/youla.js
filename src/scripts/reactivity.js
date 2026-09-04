@@ -1,3 +1,5 @@
+import { isNode } from './dom';
+
 /**
  * Well-known symbol every proxy in this module (and component.js's own dependency-tracking
  * proxy, which cooperates with it) responds to by handing back its raw, unwrapped target.
@@ -27,7 +29,7 @@ export function toRaw(value) {
  */
 export function makeObservable(data, onChange) {
   const wrap = (target) => {
-    if (target === null || typeof target !== 'object' || target instanceof Node) {
+    if (target === null || typeof target !== 'object' || isNode(target)) {
       return target;
     }
 

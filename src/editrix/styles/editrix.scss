@@ -1,6 +1,5 @@
 @import 'editor/editrix';
 @import 'editor/icons';
-@import 'editor/editor';
 @import 'editor/blocks';
 @import 'editor/tooltip';
 @import 'editor/canvas';
@@ -8,9 +7,10 @@
 @import 'editor/sidebar';
 @import 'editor/section';
 
-// Per-block-type styles — each block's own folder under editrix/blocks/<type>/, alongside its
-// index.html (markup) and config.json (sidebar fields).
-@import '../blocks/heading/index';
+// "editor/editor" (the ".editrix-container" block chrome) and every block type's own content
+// styles (editrix/blocks/<type>/index.scss) live in src/editrix-canvas.scss instead — they decorate
+// DOM that actually renders inside the canvas <iframe>, not this document. See that file's own
+// comment, and getCanvasList() in youla-editrix.js.
 
 @import 'controls/details';
 @import 'controls/buttons';

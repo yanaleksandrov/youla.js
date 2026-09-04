@@ -7,7 +7,9 @@ import {
   MARK_TOOLS, LINK_TOOL, HEADING_LEVELS, LIST_TYPES, BLOCKQUOTE_TYPE,
   COLOR_TOOL, HIGHLIGHT_TOOL,
 } from './tools';
-import { TOOLTIP_CLASS, EXIT_FALLBACK, computePosition, TooltipInstance } from '../../youla-tooltip';
+import {
+  TOOLTIP_CLASS, EXIT_FALLBACK, computePosition, toTopViewportRect, TooltipInstance,
+} from '../../youla-tooltip';
 import { Filler } from '../../youla-filler';
 
 // Added to TOOLTIP_CLASS alongside the usual placement/animation classes, so the toolbar picks up
@@ -763,14 +765,15 @@ class SelectionToolbar {
     const start = view.coordsAtPos(from);
     const end = view.coordsAtPos(to);
 
-    // Bounding box of the selection's own coords — coordsAtPos() returns screen coordinates, and a
-    // backwards or multi-line selection can put "end" above/left of "start".
-    const anchorRect = {
+    // Bounding box of the selection's own coords — coordsAtPos() returns screen coordinates relative
+    // to the editor's own window (the canvas iframe's, typically), and a backwards or multi-line
+    // selection can put "end" above/left of "start".
+    const anchorRect = toTopViewportRect(view.dom, {
       top: Math.min(start.top, end.top),
       bottom: Math.max(start.bottom, end.bottom),
       left: Math.min(start.left, end.left),
       right: Math.max(start.right, end.right),
-    };
+    });
     anchorRect.width = anchorRect.right - anchorRect.left;
     anchorRect.height = anchorRect.bottom - anchorRect.top;
 

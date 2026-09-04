@@ -18,8 +18,7 @@
           "type": "image",
           "default": null,
           "description": "",
-          "condition": null,
-          "responsive": false
+          "condition": null
         },
         {
           "name": "avatar",
@@ -28,8 +27,7 @@
           "type": "image",
           "default": null,
           "description": "",
-          "condition": null,
-          "responsive": false
+          "condition": null
         }
       ]
     },
@@ -49,8 +47,7 @@
           "type": "switcher",
           "default": false,
           "description": "",
-          "condition": null,
-          "responsive": false
+          "condition": null
         }
       ]
     },
@@ -70,8 +67,7 @@
           "type": "color",
           "default": "#1069fb",
           "description": "",
-          "condition": null,
-          "responsive": false
+          "condition": null
         }
       ]
     }

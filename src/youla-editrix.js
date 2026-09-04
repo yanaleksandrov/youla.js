@@ -167,19 +167,27 @@ function createBlock(blockType) {
 
 /**
  * Builds one ".editrix-section" per entry in "sections", appended to "container" — shared by
- * contentFields() and toolboxSections() below, since both use the same section shape.
+ * contentFields() and toolboxSections() below, since both use the same section shape. A section's
+ * own `condition` (same shape as a field's — see controls/base.js's isConditionMet()) hides the
+ * whole section, letting one field toggle a group of others rather than just itself.
  *
  * @param {HTMLElement} container
  * @param {Array} sections
  */
 function renderSections(container, sections) {
   (sections || []).forEach(({
-    heading, tooltip, fields, repeatable, name, min, max, default: defaultValue,
+    heading, tooltip, fields, repeatable, name, min, max, default: defaultValue, condition,
   }) => {
     const section = document.createElement('div');
     section.className = 'editrix-section';
     if (name) {
       section.classList.add(`editrix-section--${name}`);
+    }
+
+    // Elementor-style condition (controls/base.js's isConditionMet()), same shape as a field's own
+    // `condition` — hides the whole section, e.g. `{ show_advanced: true }`, `{ 'layout!': 'boxed' }`.
+    if (condition) {
+      section.setAttribute('v-show', `e.isConditionMet(${JSON.stringify(condition)})`);
     }
 
     const body = document.createElement('div');
@@ -280,11 +288,43 @@ function deleteBlock(component, el) {
     setActiveBlock(component, null);
   }
   delete component.settings[id];
+  syncCustomCss(id, null);
 
   el.querySelectorAll('[data-editable]').forEach((field) => field._prosemirrorView?.destroy());
 
   component.blocks = component.blocks.filter((block) => block !== el);
   el.remove();
+}
+
+/**
+ * Publishes a block's own Custom CSS (control/custom-css) as a scoped <style> tag in <head>, one
+ * per block id so multiple blocks' own CSS never collides — removed once the block has none left
+ * (including on delete, see deleteBlock() above). Every "selector" in the author's own CSS is
+ * replaced with one that targets this block's own root element, matching Elementor's own
+ * Custom CSS convention.
+ *
+ * @param {string} blockId
+ * @param {string} [css] - Raw CSS using "selector" as a placeholder; a style tag is removed if this is falsy.
+ */
+function syncCustomCss(blockId, css) {
+  const tagId = `editrix-custom-css-${blockId}`;
+  let tag = document.getElementById(tagId);
+
+  if (!css) {
+    tag?.remove();
+    return;
+  }
+
+  if (!tag) {
+    tag = document.createElement('style');
+    tag.id = tagId;
+    document.head.append(tag);
+  }
+
+  const scopedCss = css.replace(/\bselector\b/g, `.editrix-container[data-block-id="${blockId}"]`);
+  if (tag.textContent !== scopedCss) {
+    tag.textContent = scopedCss;
+  }
 }
 
 // A block's own "data-editable" attribute (see BLOCKS[type].html) picks one of these schemes:
@@ -736,6 +776,8 @@ document.addEventListener('youla:init', () => {
          */
         ':style'() {
           const settings = readBlockSettings(this, this.$el);
+
+          syncCustomCss(this.$el.dataset.blockId, settings.customCss);
 
           return {
             textAlign: settings.align,

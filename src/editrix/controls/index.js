@@ -13,6 +13,7 @@ import { createGalleryControl } from '../control/gallery';
 import { createMetaControl } from '../control/meta';
 import { createCategoriesControl } from '../control/categories';
 import { createBordersControl } from '../control/borders';
+import { createCustomCssControl } from '../control/custom-css';
 
 /**
  * Assembles the whole control system into one object, spread into `Youla.data('editrix', ...)`.
@@ -39,6 +40,7 @@ export function createControlsSystem({ meta } = {}) {
     createMetaControl(meta),
     createCategoriesControl(),
     createBordersControl(),
+    createCustomCssControl(),
   ];
   const merged = {};
 

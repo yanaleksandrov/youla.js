@@ -1,0 +1,9 @@
+<template id="editrix-control-custom-css">
+  <div class="editrix-code">
+    <pre class="editrix-code__gutter" aria-hidden="true"><code v-bind="e.customCssGutter()"></code></pre>
+    <div class="editrix-code__body">
+      <pre class="editrix-code__highlight" aria-hidden="true"><code v-bind="e.customCssHighlight()"></code></pre>
+      <textarea class="editrix-code__input" spellcheck="false" autocomplete="off" autocapitalize="off" wrap="off" placeholder="selector {&#10;  transform: rotate(-2deg);&#10;}" v-bind="e.customCssEditor()"></textarea>
+    </div>
+  </div>
+</template>

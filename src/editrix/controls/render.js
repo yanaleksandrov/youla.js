@@ -13,7 +13,7 @@ const ROW_TYPES = new Set(['url', 'slider', 'repeater']);
  * @param {string} def.name - The setting's key, unique across the whole panel.
  * @param {string} def.title
  * @param {string} def.tooltip
- * @param {Object} rest - type/default/value/description/condition/responsive, plus type-specific options.
+ * @param {Object} rest - type/default/value/description/condition, plus type-specific options.
  * @returns {HTMLElement} The template's root element (its `.editrix-field`, or a wrapper around it), fully wired, not yet inserted into the DOM.
  */
 export function renderField({ name, title, tooltip, ...rest }) {

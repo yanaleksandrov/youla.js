@@ -21,9 +21,6 @@ export function createControlsBase() {
     // Every block's current control values, keyed by block id (youla-editrix.js's container() via `this.activeBlock`) then control name; use getValue()/setValue() rather than reading this directly.
     settings: {},
 
-    // Which breakpoint a `responsive: true` control currently reads/writes — fixed at 'desktop' until a device switcher exists.
-    responsiveDevice: 'desktop',
-
     // Which block's settings the Content tab reads/writes; null (nothing selected yet) falls back to a shared "__page__" bucket.
     activeBlock: null,
 
@@ -43,7 +40,7 @@ export function createControlsBase() {
      *
      * @param {string} name - The setting's key, unique across the whole panel.
      * @param {string} type - The control type (used for the `editrix-field--<type>` class).
-     * @param {Object} [options] - label/tooltip/description/default/value/condition/responsive, plus type-specific options.
+     * @param {Object} [options] - label/tooltip/description/default/value/condition, plus type-specific options.
      * @returns {Object} The definition, for the calling factory's own use.
      */
     registerControl(name, type, options = {}) {
@@ -56,14 +53,13 @@ export function createControlsBase() {
 
       const bucket = this.blockSettings();
       if (bucket[name] === undefined) {
-        bucket[name] = def.responsive ? {} : initialValue(def);
+        bucket[name] = initialValue(def);
       }
       return def;
     },
 
     /**
-     * Reads a control's current value on the active block, resolving the active device first if
-     * it's responsive.
+     * Reads a control's current value on the active block.
      *
      * @param {string} name
      * @returns {*}
@@ -72,29 +68,19 @@ export function createControlsBase() {
       const def = this._controls[name];
       const raw = this.blockSettings()[name];
 
-      if (def?.responsive) {
-        const value = (raw || {})[this.responsiveDevice];
-        return value !== undefined ? value : initialValue(def);
-      }
       return raw !== undefined ? raw : initialValue(def);
     },
 
     /**
-     * Writes a control's current value on the active block, scoped to the active device first if
-     * it's responsive.
+     * Writes a control's current value on the active block.
      *
      * @param {string} name
      * @param {*} value
      */
     setValue(name, value) {
-      const def = this._controls[name];
       const bucket = this.blockSettings();
 
-      if (def?.responsive) {
-        bucket[name] = { ...(bucket[name] || {}), [this.responsiveDevice]: value };
-      } else {
-        bucket[name] = value;
-      }
+      bucket[name] = value;
 
       // Relays the change to other connected clients — a no-op for a page-level (__page__ bucket)
       // control, since only per-block content is collaboratively locked/broadcast (see editrix/collab
@@ -145,7 +131,7 @@ export function createControlsBase() {
      * @param {string} name - The setting's key, unique across the whole panel.
      * @param {string} [title] - The control's label.
      * @param {string} [tooltip] - Extra help text, shown by fieldTooltip()'s icon on click.
-     * @param {Object} [options] - type/default/value/condition/responsive/description, plus type-specific options.
+     * @param {Object} [options] - type/default/value/condition/description, plus type-specific options.
      * @returns {Object} The wrapper's bindings.
      */
     field(name, title, tooltip, options = {}) {

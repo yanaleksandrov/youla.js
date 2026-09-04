@@ -74,6 +74,10 @@
           </svg>
           Patterns
         </div>
+        <div class="editrix-sidebar-tab" v-bind="e.sidebarTab('page')">
+          <i class="ph ph-gear-six" style="font-size: 14px;"></i>
+          Page
+        </div>
       </div>
 
       <div class="editrix-sidebar-content">
@@ -104,6 +108,14 @@
               <div class="editrix-field__description"></div>
             </div>
           </template>
+        </div>
+        <div class="editrix-blocks" v-bind="e.sidebarPanel('page')" hidden>
+          <div class="editrix-inputs-box"><i class="ph ph-magnifying-glass"></i> <input placeholder="Type for find..."></div>
+
+          <div class="editrix-blocks-item" v-each="block in blockList" v-bind="e.paletteItem(block.type)">
+            <span v-html="block.icon"></span>
+            <span v-text="block.label"></span>
+          </div>
         </div>
       </div>
     </div>
@@ -209,7 +221,6 @@
               "default": "",
               "description": "",
               "condition": null,
-              "responsive": false,
               "placeholder": "Add title..."
             },
             {
@@ -219,8 +230,7 @@
               "type": "gallery",
               "default": [],
               "description": "",
-              "condition": null,
-              "responsive": false
+              "condition": null
             },
             {
               "name": "meta",
@@ -229,8 +239,7 @@
               "type": "meta",
               "default": null,
               "description": "",
-              "condition": null,
-              "responsive": false
+              "condition": null
             }
           ]
         },
@@ -250,8 +259,7 @@
               "type": "categories",
               "default": null,
               "description": "",
-              "condition": null,
-              "responsive": false
+              "condition": null
             }
           ]
         },
@@ -271,8 +279,7 @@
               "type": "margin",
               "default": null,
               "description": "",
-              "condition": null,
-              "responsive": false
+              "condition": null
             },
             {
               "name": "padding",
@@ -281,8 +288,7 @@
               "type": "padding",
               "default": null,
               "description": "",
-              "condition": null,
-              "responsive": false
+              "condition": null
             },
             {
               "name": "borders",
@@ -291,8 +297,7 @@
               "type": "borders",
               "default": null,
               "description": "",
-              "condition": null,
-              "responsive": false
+              "condition": null
             }
           ]
         },
@@ -312,8 +317,16 @@
               "type": "css-classes",
               "default": "",
               "description": "",
-              "condition": null,
-              "responsive": false
+              "condition": null
+            },
+            {
+              "name": "customCss",
+              "title": "Custom CSS",
+              "tooltip": "Write CSS using \"selector\" in place of this element's own class — e.g. \"selector { color: red; }\"",
+              "type": "custom-css",
+              "default": "",
+              "description": "Applies only to this element, live as you type",
+              "condition": null
             }
           ]
         }
@@ -341,8 +354,7 @@
                   "type": "switcher",
                   "default": true,
                   "description": "",
-                  "condition": null,
-                  "responsive": false
+                  "condition": null
                 },
                 {
                   "name": "link",
@@ -351,8 +363,7 @@
                   "type": "url",
                   "default": { "url": "", "is_external": false, "nofollow": false },
                   "description": "Leave empty for no link",
-                  "condition": null,
-                  "responsive": false
+                  "condition": null
                 },
                 {
                   "name": "width",
@@ -362,7 +373,6 @@
                   "default": { "size": 100, "unit": "%" },
                   "description": "",
                   "condition": null,
-                  "responsive": false,
                   "min": 0,
                   "max": 100,
                   "step": 1
@@ -386,7 +396,6 @@
                   "default": { "type": "solid", "color": "#1069FB", "alpha": 100, "image": null, "video": null },
                   "description": "",
                   "condition": null,
-                  "responsive": false,
                   "sources": null
                 }
               ]
@@ -418,7 +427,6 @@
                   ],
                   "description": "Each item can hold its own set of fields — add as many, of whatever type, as a given repeater needs.",
                   "condition": null,
-                  "responsive": false,
                   "min": 0,
                   "max": 5,
                   "disabled": false,
@@ -431,7 +439,6 @@
                       "default": "New question",
                       "description": "",
                       "condition": null,
-                      "responsive": false,
                       "placeholder": "Enter a question…"
                     },
                     {
@@ -442,7 +449,6 @@
                       "default": "",
                       "description": "",
                       "condition": null,
-                      "responsive": false,
                       "placeholder": "Enter an answer…"
                     },
                     {
@@ -452,8 +458,7 @@
                       "type": "switcher",
                       "default": false,
                       "description": "",
-                      "condition": null,
-                      "responsive": false
+                      "condition": null
                     },
                     {
                       "name": "accent_color",
@@ -462,8 +467,7 @@
                       "type": "color",
                       "default": "#1069fb",
                       "description": "",
-                      "condition": { "highlighted": true },
-                      "responsive": false
+                      "condition": { "highlighted": true }
                     }
                   ]
                 }
@@ -493,7 +497,6 @@
                   "default": "New link",
                   "description": "",
                   "condition": null,
-                  "responsive": false,
                   "placeholder": "Enter a label…"
                 },
                 {
@@ -504,7 +507,6 @@
                   "default": "",
                   "description": "",
                   "condition": null,
-                  "responsive": false,
                   "placeholder": "https://…"
                 }
               ]
@@ -554,5 +556,6 @@
   <%= _.template(require('../editrix/control/padding/index.html').default)(data) %>
   <%= _.template(require('../editrix/control/borders/index.html').default)(data) %>
   <%= _.template(require('../editrix/control/css-classes/index.html').default)(data) %>
+  <%= _.template(require('../editrix/control/custom-css/index.html').default)(data) %>
 </body>
 </html>

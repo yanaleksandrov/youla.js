@@ -32,6 +32,33 @@
 		font-size: 10.5px;
 	}
 
+	&-presence {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		padding-inline: 8px;
+
+		&-item {
+			width: 22px;
+			height: 22px;
+			border-radius: 50%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 10px;
+			font-weight: 600;
+			color: #fff;
+			background-color: var(--editrix-presence-color, #9e9e9e);
+			border: 2px solid #fff;
+			box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+			margin-inline-start: -8px;
+
+			&:first-child {
+				margin-inline-start: 0;
+			}
+		}
+	}
+
 	&-link {
 		display: flex;
 		align-items: center;

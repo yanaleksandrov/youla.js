@@ -17,6 +17,21 @@ import { renderSectionRepeaterItems, renderSectionRepeaterAdd } from './editrix/
 import { createSortableItem, createDragSource, createDropTarget } from './editrix/sortable';
 import { cloneTemplateFragment } from './editrix/controls/template';
 
+import { createCollab } from './editrix/collab';
+import { createWsTransport } from './editrix/collab/transport-ws';
+import { colorForUser } from './editrix/collab/presence';
+import { isLockedByOther } from './editrix/collab/lock';
+
+// Dev-only relay (server/collab-dev-server.js) for the presence + soft-lock collaboration feature —
+// a real host backend swaps this URL, and editrix/collab/transport-ws.js, for its own realtime
+// transport; nothing else in this file depends on WebSocket directly.
+const COLLAB_WS_URL = 'ws://localhost:4000';
+
+// The current page's live collaboration session (editrix/collab), or null before connectCollab()
+// runs / after it's torn down. Kept at module scope, like BLOCKS/blockIdSeq below, so its internal
+// timers/socket are never wrapped by makeObservable's reactivity Proxy.
+let collab = null;
+
 // Block type registry keyed by type: { label, icon, sections }. Populated once from backend data in
 // the 'youla:init' listener below. A block's own markup isn't in here — it's a "<template id=
 // "editrix-block-<type>">" (src/editrix/blocks/<type>/index.html, required from view/editrix.html
@@ -76,8 +91,7 @@ function mountContainerTools(component, el) {
   const tools = el.querySelector(':scope > .editrix-container-tools');
   tools.querySelector('[data-action="edit"]').addEventListener('click', (e) => {
     e.stopPropagation();
-    component.activeBlock = el.dataset.blockId;
-    component.tab = 'content';
+    setActiveBlock(component, el.dataset.blockId);
   });
   tools.querySelector('[data-action="delete"]').addEventListener('click', (e) => {
     e.stopPropagation();
@@ -232,6 +246,25 @@ function isEditableTarget(el) {
 }
 
 /**
+ * Centralizes every place that changes which block is selected, so a lock is released on the block
+ * being left and acquired on the one being entered (see editrix/collab — createCollab()'s
+ * acquireLock/releaseLock). "collab" is null (a no-op) until connectCollab() has run.
+ *
+ * @param {Object} component - The reactive `this` from whichever v-bind handler is selecting.
+ * @param {string|null} blockId - The block being selected, or null to deselect.
+ */
+function setActiveBlock(component, blockId) {
+  if (component.activeBlock && component.activeBlock !== blockId) {
+    collab?.releaseLock(component.activeBlock);
+  }
+  component.activeBlock = blockId;
+  component.tab = blockId ? 'content' : 'blocks';
+  if (blockId) {
+    collab?.acquireLock(blockId);
+  }
+}
+
+/**
  * Removes "el" from the canvas along with its settings, clearing "activeBlock" if it pointed at "el".
  *
  * @param {Object} component - The reactive `this` from whichever v-bind handler is deleting.
@@ -240,9 +273,11 @@ function isEditableTarget(el) {
 function deleteBlock(component, el) {
   const id = el.dataset.blockId;
 
+  // Unconditional: harmless even if this client never held a lock on "id" (a block can be deleted
+  // from a hover-only state, never selected — see mountContainerTools()'s own delete button).
+  collab?.releaseLock(id);
   if (component.activeBlock === id) {
-    component.activeBlock = null;
-    component.tab = 'blocks';
+    setActiveBlock(component, null);
   }
   delete component.settings[id];
 
@@ -285,6 +320,9 @@ function sanitizePastedHTML(html) {
  * @param {string} [options.placeholder] - Shown in place of "el" when it's empty.
  * @param {(html: string) => void} [options.onUpdate] - Called with "el"'s own innerHTML after
  *   every change, so a caller can persist it (see container()'s own "@load" below).
+ * @param {() => void} [options.onFocus] - Called when the field gains focus — container()'s "@load"
+ *   uses this to acquire a collab lock on the field's own block.
+ * @param {() => void} [options.onBlur] - The onFocus's counterpart, releasing that lock.
  */
 function mountEditor(el, schemeName, options = {}) {
   if (el._prosemirrorView) {
@@ -297,7 +335,9 @@ function mountEditor(el, schemeName, options = {}) {
     return;
   }
 
-  const { placeholder: placeholderText, onUpdate } = options;
+  const {
+    placeholder: placeholderText, onUpdate, onFocus, onBlur,
+  } = options;
 
   const plugins = [
     keymap(textToolKeymap(schema)),
@@ -329,6 +369,16 @@ function mountEditor(el, schemeName, options = {}) {
       plugins,
     }),
     transformPastedHTML: sanitizePastedHTML,
+    handleDOMEvents: {
+      focus: () => {
+        onFocus?.();
+        return false;
+      },
+      blur: () => {
+        onBlur?.();
+        return false;
+      },
+    },
     dispatchTransaction(tr) {
       this.updateState(this.state.apply(tr));
       if (tr.docChanged) {
@@ -336,6 +386,105 @@ function mountEditor(el, schemeName, options = {}) {
       }
     },
   });
+}
+
+/**
+ * Merges an incoming "change:block" patch (editrix/collab) into a block's local settings. Every
+ * sidebar-driven field picks this up on its own — getValue()/readBlockSettings()/etc. (controls/
+ * base.js) are plain reactive getters over "settings" — so this only has extra work for rich-text
+ * fields: ProseMirror owns its own doc state rather than being re-rendered by a reactive binding,
+ * so a patched field is destroyed and remounted with the new HTML instead.
+ *
+ * @param {Object} component
+ * @param {string} blockId
+ * @param {Object} patch
+ */
+function applyRemoteChange(component, blockId, patch) {
+  component.settings[blockId] = { ...component.settings[blockId], ...patch };
+
+  const el = component.blocks.find((block) => block.dataset.blockId === blockId);
+  el?.querySelectorAll('[data-editable]').forEach((field) => {
+    const name = field.dataset.name;
+    if (!name || !Object.prototype.hasOwnProperty.call(patch, name)) {
+      return;
+    }
+
+    field._prosemirrorView?.destroy();
+    delete field._prosemirrorView;
+    field.innerHTML = patch[name];
+    mountEditor(field, field.dataset.editable, {
+      placeholder: field.dataset.placeholder,
+      onUpdate: (html) => {
+        (component.settings[blockId] ??= {})[name] = html;
+        component.broadcastChange(blockId);
+      },
+      onFocus: () => collab?.acquireLock(blockId),
+      onBlur: () => collab?.releaseLock(blockId),
+    });
+  });
+}
+
+/**
+ * Reflects "component.locks[el.dataset.blockId]" onto "el": a bordered overlay naming the other
+ * user while it's locked by someone else, and — for any rich-text field mounted inside it —
+ * ProseMirror's own live "editable" prop, flipped via view.setProps() rather than a remount, since
+ * the document itself doesn't change, only whether it currently accepts input.
+ *
+ * @param {Object} component
+ * @param {HTMLElement} el - A block's own ".editrix-container" element.
+ * @param {string} [currentUserId]
+ */
+function syncBlockLockState(component, el, currentUserId) {
+  const lock = component.locks[el.dataset.blockId];
+  const lockedByOther = !!lock && lock.userId !== currentUserId;
+
+  let overlay = el.querySelector(':scope > .editrix-lock-overlay');
+  if (lockedByOther) {
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.className = 'editrix-lock-overlay';
+      el.prepend(overlay);
+    }
+    overlay.style.setProperty('--editrix-lock-color', colorForUser(lock.userId));
+    overlay.textContent = `${lock.userName} is editing`;
+  } else {
+    overlay?.remove();
+  }
+
+  el.querySelectorAll('[data-editable]').forEach((field) => {
+    field._prosemirrorView?.setProps({ editable: () => !lockedByOther });
+  });
+}
+
+/**
+ * Opens (once) the current page's collaboration session and wires its callbacks into the reactive
+ * component. Guarded against double-connect (e.g. a hot-reload re-running the presence bar's
+ * "@load") since "collab" lives at module scope — see its own declaration above.
+ *
+ * @param {Object} component
+ * @param {string} pageId
+ * @param {Object} [user] - {id, name, avatarUrl}; connecting is skipped entirely without one, since
+ *   there's no identity to present or lock blocks under.
+ */
+function connectCollab(component, pageId, user) {
+  if (collab || !user) {
+    return;
+  }
+
+  collab = createCollab({
+    pageId,
+    user,
+    transport: createWsTransport(COLLAB_WS_URL),
+    onPresenceChange: (users) => {
+      component.presentUsers = users;
+    },
+    onLockChange: (locks) => {
+      component.locks = locks;
+    },
+    onRemoteChange: (blockId, settings) => applyRemoteChange(component, blockId, settings),
+  });
+
+  window.addEventListener('beforeunload', () => collab?.destroy());
 }
 
 /**
@@ -420,7 +569,15 @@ document.addEventListener('youla:init', () => {
     toolbox: TOOLBOX_DATA = [],
     blocks: BLOCKS_DATA = {},
     patterns: PATTERNS_DATA = [],
+    pageId: PAGE_ID = 'default',
+    currentUser: CURRENT_USER_DATA = null,
   } = readBackendData('editrix-data');
+
+  // "?user=<id>" overrides the seed's identity — a manual-testing convenience so two browser tabs
+  // can present as two different collaborators (see server/collab-dev-server.js's own doc comment)
+  // without editing #editrix-data between them. Never meant for production use.
+  const testUserId = new URLSearchParams(location.search).get('user');
+  const CURRENT_USER = testUserId && CURRENT_USER_DATA ? { ...CURRENT_USER_DATA, id: testUserId, name: testUserId } : CURRENT_USER_DATA;
 
   TOOLBOX = TOOLBOX_DATA;
 
@@ -462,6 +619,28 @@ document.addEventListener('youla:init', () => {
     // Canvas (editrix-canvas) — every block container currently on it, in DOM order
     blocks: [],
     zoom: ZOOM_DEFAULT,
+
+    // Collaboration (editrix/collab) — other users currently on this page, and the current per-block lock map ({blockId: {userId, userName, acquiredAt}}). Populated by connectCollab()'s callbacks (see presenceBar below); colorForUser() lets templates render a lock/avatar's swatch without any color ever crossing the wire.
+    presentUsers: [],
+    locks: {},
+    colorForUser,
+
+    // Toolbar > presence avatars — v-bind="e.presenceBar"; connects this page's collab session once on load.
+    presenceBar: {
+      '@load'() {
+        connectCollab(this, PAGE_ID, CURRENT_USER);
+      },
+    },
+
+    /**
+     * Relays "blockId"'s current settings to every other connected client — the shared funnel both
+     * controls/base.js's setValue() (sidebar fields) and container()'s own rich-text onUpdate call.
+     *
+     * @param {string} blockId
+     */
+    broadcastChange(blockId) {
+      collab?.broadcastChange(blockId, this.settings[blockId]);
+    },
 
     // v-bind="e.canvas" — ctrl+wheel/ctrl+0 zoom, plus createDropTarget() so a dragged palette item materializes as a real block.
     canvas: {
@@ -507,8 +686,7 @@ document.addEventListener('youla:init', () => {
        * click — so this only means the canvas background was clicked, i.e. deselect.
        */
       '@click'() {
-        this.activeBlock = null;
-        this.tab = 'blocks';
+        setActiveBlock(this, null);
       },
     },
 
@@ -587,7 +765,14 @@ document.addEventListener('youla:init', () => {
           // "is-reversed" is another safe no-op for a block type that doesn't declare a "reverse"
           // field (see heading/config.json's own "Layout" section for the one that does).
           const settings = readBlockSettings(this, this.$el);
-          return { 'is-active': isActive, 'is-reversed': !!settings.reverse };
+
+          syncBlockLockState(this, this.$el, CURRENT_USER?.id);
+
+          return {
+            'is-active': isActive,
+            'is-reversed': !!settings.reverse,
+            'is-locked': isLockedByOther(this.locks, this.$el.dataset.blockId, CURRENT_USER?.id),
+          };
         },
         '@load'() {
           if (!this.blocks.includes(this.$el)) {
@@ -604,7 +789,10 @@ document.addEventListener('youla:init', () => {
               placeholder: field.dataset.placeholder,
               onUpdate: name ? (html) => {
                 (this.settings[blockId] ??= {})[name] = html;
+                this.broadcastChange(blockId);
               } : undefined,
+              onFocus: () => collab?.acquireLock(blockId),
+              onBlur: () => collab?.releaseLock(blockId),
             });
           });
           // Prevents a block's own <img>/<a> (natively draggable, with their own native drag/drop
@@ -628,6 +816,11 @@ document.addEventListener('youla:init', () => {
           // inside a live text field (even directly on its own text) over ordinary text selection.
           exclude: '[data-editable]',
         }),
+        // Overrides createSortableItem()'s own ':draggable': 'true' above — a later object-literal
+        // key wins — so a block someone else is editing can't be dragged out from under them.
+        ':draggable'() {
+          return !isLockedByOther(this.locks, this.$el.dataset.blockId, CURRENT_USER?.id);
+        },
         '@mouseenter'() {
           mountContainerTools(this, this.$el);
         },
@@ -641,8 +834,7 @@ document.addEventListener('youla:init', () => {
          * immediately deselect.
          */
         '@click.stop'() {
-          this.activeBlock = this.$el.dataset.blockId;
-          this.tab = 'content';
+          setActiveBlock(this, this.$el.dataset.blockId);
         },
         '@contextmenu.prevent'() {
           this.tab = 'blocks';

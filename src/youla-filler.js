@@ -17,6 +17,10 @@ const PALETTE = [
   { name: 'Yellow', hex: '#FFEB3B' },
 ];
 
+// Exported so other code that needs a small set of visually-distinct colors (e.g. editrix/collab's
+// presence/lock avatars) can reuse this one instead of inventing a second palette.
+export const FILLER_PALETTE = PALETTE;
+
 // Expands `{ key: suffix }` into `{ key: prefix-suffix }`; an empty suffix maps to the bare prefix.
 const classNames = (prefix, suffixes) => Object.fromEntries(
   Object.entries(suffixes).map(([key, suffix]) => [key, suffix ? `${prefix}-${suffix}` : prefix]),

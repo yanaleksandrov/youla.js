@@ -95,6 +95,13 @@ export function createControlsBase() {
       } else {
         bucket[name] = value;
       }
+
+      // Relays the change to other connected clients — a no-op for a page-level (__page__ bucket)
+      // control, since only per-block content is collaboratively locked/broadcast (see editrix/collab
+      // and youla-editrix.js's own broadcastChange()).
+      if (this.activeBlock) {
+        this.broadcastChange(this.activeBlock);
+      }
     },
 
     /**

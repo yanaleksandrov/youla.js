@@ -52,12 +52,16 @@ let PATTERN_LIST = [];
 // Toolbox's own section list (same shape as BLOCKS[type].sections) — built once by toolboxSections(), unlike contentFields()'s per-block rebuild. Populated in the 'youla:init' listener below.
 let TOOLBOX = [];
 
-// Tooltip text for each sidebar tab (sidebarTab(), below).
-const SIDEBAR_TAB_DESCRIPTIONS = {
-  blocks: 'Drag blocks onto the canvas',
-  patterns: 'Insert a ready-made block pattern',
-  content: "Edit the selected block's settings",
-};
+// Sidebar nav "Page" tab's own section list (same shape as TOOLBOX above) — built once by
+// pageFields(), below. Populated in the 'youla:init' listener below.
+let PAGE_FIELDS = [];
+
+// Sidebar nav tab list (view/editrix.html's own "sidebarTabs" data) — `{ name, label, icon, tooltip }`
+// per tab, rendered via `v-each="navTab in sidebarTabs"` (view/editrix.html). Populated in the
+// 'youla:init' listener below, same as BLOCK_LIST/PATTERN_LIST/TOOLBOX above. The "content" tab
+// (shown once a block is selected — see setActiveBlock()) has no nav button of its own, so it's
+// never part of this list.
+let SIDEBAR_TABS = [];
 
 const CONTAINER_TOOLS_HTML = `
   <ul class="editrix-container-tools">
@@ -241,8 +245,11 @@ function createBlock(blockType, targetDocument = document) {
  *
  * @param {HTMLElement} container
  * @param {Array} sections
+ * @param {boolean} [dark] - Every tooltip in the editor is style-dark except the toolbox's own
+ *   (view/editrix.html's ".editrix-toolbox", built via toolboxSections() below) — pass true for
+ *   every other caller (contentFields(), pageFields()).
  */
-function renderSections(container, sections) {
+function renderSections(container, sections, dark = false) {
   (sections || []).forEach(({
     heading, tooltip, fields, repeatable, name, min, max, default: defaultValue, condition,
   }) => {
@@ -269,7 +276,7 @@ function renderSections(container, sections) {
       body.append(renderSectionRepeaterItems(name, limits, fields));
       headButtons.push(renderSectionRepeaterAdd(name, limits, fields));
     } else {
-      body.append(...fields.map(renderField));
+      body.append(...fields.map((field) => renderField({ ...field, dark })));
 
       // Relocate the repeater's own expand-all button into the section heading row, matching every other section's .editrix-section-buttons.
       headButtons.push(...body.querySelectorAll('[data-part="toggle-all"]'));
@@ -289,7 +296,7 @@ function renderSections(container, sections) {
       if (tooltip) {
         const tooltipIcon = document.createElement('i');
         tooltipIcon.className = 'ph ph-question editrix-section-head__tooltip';
-        tooltipIcon.setAttribute('v-tooltip.click', JSON.stringify(tooltip));
+        tooltipIcon.setAttribute(`v-tooltip.click${dark ? '.style-dark' : ''}`, JSON.stringify(tooltip));
         title.append(tooltipIcon);
       }
 
@@ -716,6 +723,9 @@ document.addEventListener('youla:init', () => {
     toolbox: TOOLBOX_DATA = [],
     blocks: BLOCKS_DATA = {},
     patterns: PATTERNS_DATA = [],
+    sidebarTabs: SIDEBAR_TABS_DATA = [],
+    pageFields: PAGE_FIELDS_DATA = [],
+    positionSection: POSITION_SECTION_DATA = null,
     pageId: PAGE_ID = 'default',
     currentUser: CURRENT_USER_DATA = null,
   } = readBackendData('editrix-data');
@@ -727,11 +737,18 @@ document.addEventListener('youla:init', () => {
   const CURRENT_USER = testUserId && CURRENT_USER_DATA ? { ...CURRENT_USER_DATA, id: testUserId, name: testUserId } : CURRENT_USER_DATA;
 
   TOOLBOX = TOOLBOX_DATA;
+  PAGE_FIELDS = PAGE_FIELDS_DATA;
 
-  BLOCKS = BLOCKS_DATA;
+  // Every block type gets the same "Position" section (view/editrix.html's own "positionSection"
+  // data) tacked onto its own — so margin/padding/borders show up in every block's Content tab
+  // without each block type's own config having to declare it itself.
+  BLOCKS = POSITION_SECTION_DATA
+    ? Object.fromEntries(Object.entries(BLOCKS_DATA).map(([type, block]) => [type, { ...block, sections: [...(block.sections || []), POSITION_SECTION_DATA] }]))
+    : BLOCKS_DATA;
   BLOCK_LIST = Object.entries(BLOCKS).map(([type, { label, icon }]) => ({ type, label, icon }));
   PATTERN_LIST = PATTERNS_DATA;
   DEFAULT_BLOCK_SETTINGS = computeDefaultBlockSettings(BLOCKS);
+  SIDEBAR_TABS = SIDEBAR_TABS_DATA;
 
   /**
    * Editrix: the page builder's root component, mounted on `v-data="editrix as e"` (view/editrix.html).
@@ -747,14 +764,24 @@ document.addEventListener('youla:init', () => {
     // Toolbox panel shown for whichever block/container was last clicked on the canvas
     section: 'content',
 
+    // Sidebar > nav tabs (view/editrix.html) — `v-each="navTab in sidebarTabs"` renders one
+    // ".editrix-sidebar-tab" per SIDEBAR_TABS entry.
+    sidebarTabs: SIDEBAR_TABS,
+
     /**
-     * Sidebar nav tab buttons/panels (sections/sidebar.html), parameterized by tab name.
+     * Sidebar nav tab buttons/panels (sections/sidebar.html), parameterized by tab name — "tooltip"
+     * comes straight from that tab's own sidebarTabs entry (view/editrix.html), empty for a tab (like
+     * "content") that isn't in that list.
      */
-    sidebarTab(name) {
+    sidebarTab(name, tooltip) {
       return {
         ':class': `{'active': tab === '${name}'}`,
         '@click': `tab = '${name}'`,
-        'v-tooltip.style-dark.hover.2000ms': JSON.stringify(SIDEBAR_TAB_DESCRIPTIONS[name] || ''),
+        // Plain "hover" (v-tooltip's own 250ms default) — unlike describeButton()'s deliberate 2s
+        // delay for the ProseMirror toolbar's own per-button hints (a fast-moving toolbar the user
+        // is scanning), these are a handful of always-visible, static nav icons; a 2s wait read as
+        // "the tooltip doesn't work" rather than a considered delay.
+        'v-tooltip.style-dark.hover': JSON.stringify(tooltip || ''),
       };
     },
     sidebarPanel(name) {
@@ -1056,7 +1083,7 @@ document.addEventListener('youla:init', () => {
         this.$el.querySelectorAll('input').forEach((input) => input._x_filler?.destroy());
         this.$el.innerHTML = '';
 
-        renderSections(this.$el, BLOCKS[blockType]?.sections);
+        renderSections(this.$el, BLOCKS[blockType]?.sections, true);
         this.$root.__x.initialize(this.$el);
         return blockType;
       },
@@ -1095,6 +1122,17 @@ document.addEventListener('youla:init', () => {
         // Deferred a tick: "@load" fires while the root's own Component construction is still in progress, before "$root.__x" is assigned.
         setTimeout(() => {
           renderSections(this.$el, TOOLBOX);
+          this.$root.__x.initialize(this.$el);
+        }, 0);
+      },
+    },
+
+    // Sidebar > "Page" tab (view/editrix.html) — v-bind="e.pageFields"; builds PAGE_FIELDS's own
+    // sections once via renderSections(), mirroring toolboxSections() above.
+    pageFields: {
+      '@load'() {
+        setTimeout(() => {
+          renderSections(this.$el, PAGE_FIELDS, true);
           this.$root.__x.initialize(this.$el);
         }, 0);
       },

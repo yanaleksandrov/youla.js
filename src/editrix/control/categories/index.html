@@ -1,13 +1,9 @@
 <template id="editrix-control-categories">
-  <div class="editrix-inputs">
-    <div class="editrix-inputs-item">
-      <div class="editrix-inputs-box">
-        <i class="ph ph-magnifying-glass"></i> <input type="text" placeholder="Type for find..." />
-      </div>
-    </div>
-  </div>
+  <label class="editrix-inputs-box">
+    <i class="ph ph-magnifying-glass"></i> <input type="text" placeholder="Type for find..." />
+  </label>
 
-  <ul class="editrix-categories editrix-categories--root">
+  <ul class="editrix-categories">
     <li class="editrix-categories-items">
       <label class="editrix-categories-item">
         <input type="radio" value="electronic" v-prop="terms.lvl1" v-bind="e.categoryRootOption"> Electronic2

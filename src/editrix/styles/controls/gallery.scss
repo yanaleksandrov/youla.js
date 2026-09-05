@@ -3,10 +3,7 @@
 	display: grid;
 	width: 100%;
 	position: relative;
-
-	&:has(:nth-child(n+7)) {
-		width: calc(100% + 8px);
-	}
+	padding: 0 12px;
 
 	&-remove {
 		font-size: 12px;
@@ -59,11 +56,12 @@
 	&-add {
 		background-color: #f8f8f8;
 		border-radius: 6px;
-		max-height: 48px;
+		max-height: 72px;
 		padding: 10px;
 		border: 1px dashed #dadada;
 		display: flex;
 		align-items: center;
+		justify-content: center;
 		flex-direction: column;
 		gap: 4px;
 		font-size: 8px;

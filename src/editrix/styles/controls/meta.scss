@@ -1,0 +1,81 @@
+// Toolbox > "Page" panel's meta control (editrix/control/meta) — keeps every row (Authors,
+// Discussion, Visibility, Password, Status, Published At, Slug) the same height regardless of
+// whether the row ends in a <details> summary or a plain input, without touching .editrix-details
+// itself (shared with every other dropdown in the toolbox).
+.editrix-meta {
+	display: flex;
+	flex-direction: column;
+	padding-inline: 12px;
+
+	input,
+	select {
+		background-color: transparent;
+		field-sizing: content;
+		width: fit-content;
+		min-height: 24px !important;
+		padding: 0 !important;
+	}
+
+	.editrix-meta-row {
+		min-height: 24px;
+		display: flex;
+		gap: 8px;
+		justify-content: space-between;
+		align-items: baseline;
+	}
+
+	.editrix-meta-label {
+		color: #00000080;
+		user-select: none;
+		flex: 1;
+		white-space: nowrap;
+	}
+
+	.editrix-inputs-box,
+	.editrix-details-summary {
+		min-height: 24px;
+		flex-wrap: wrap;
+		gap: 2px;
+	}
+
+	.editrix-details {
+		flex: 1;
+		display: flex;
+		justify-content: flex-end;
+		min-width: 0;
+	}
+
+	// Authors' summary shows one removable chip per selected entry instead of plain text — scrolls
+	// horizontally rather than growing the row's height when there are more than a couple of them.
+	.editrix-meta-authors-summary {
+		overflow-x: auto;
+		overflow-y: hidden;
+		scrollbar-width: none;
+
+		&::-webkit-scrollbar {
+			display: none;
+		}
+	}
+
+	.editrix-meta-author-chip {
+		display: inline-flex;
+		align-items: center;
+		flex: none;
+		gap: 4px;
+		padding: 3px 6px;
+		border-radius: 4px;
+		background-color: #f0f0f0;
+		font-size: 11px;
+		white-space: nowrap;
+
+		i {
+			font-size: 10px;
+			color: #00000080;
+			cursor: pointer;
+
+			&:hover {
+				color: #ff0000;
+			}
+		}
+	}
+}

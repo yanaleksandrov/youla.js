@@ -155,15 +155,16 @@ export function createControlsBase() {
     },
 
     /**
-     * v-bind="e.fieldTooltip(name)" on a control's "?" icon — reuses v-tooltip, triggered on
-     * click since the icon itself is the target; hidden without tooltip text.
+     * v-bind="e.fieldTooltip(name, dark)" on a control's "?" icon — reuses v-tooltip, triggered on
+     * click since the icon itself is the target; hidden without tooltip text. "dark" (renderField(),
+     * editrix/controls/render.js) is style-dark everywhere except the toolbox.
      */
-    fieldTooltip(name) {
+    fieldTooltip(name, dark) {
       return {
         'v-show'() {
           return !!this._controls[name]?.tooltip;
         },
-        'v-tooltip.click'() {
+        [`v-tooltip.click${dark ? '.style-dark' : ''}`]() {
           return this._controls[name]?.tooltip;
         },
       };

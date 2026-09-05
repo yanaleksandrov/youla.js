@@ -1,96 +1,84 @@
 <template id="editrix-control-meta">
-  <div class="editrix-inputs">
-    <div class="editrix-inputs-label">Authors</div>
-    <details class="editrix-details" v-bind="e.detailsAutoClose">
-      <summary class="editrix-details-summary" v-bind="e.authorSummary">John Doe</summary>
-      <div class="editrix-details-content">
-        <div class="editrix-list">
-          <label class="editrix-list-item" v-bind="e.authorOption('John Doe')">
-            <input type="radio" v-prop="author" value="John Doe" checked>
-            <i class="ph ph-user"></i> John Doe
-            <span class="editrix-list-caption">john@gmail.com</span>
-          </label>
-
-          <label class="editrix-list-item" v-bind="e.authorOption('Nina Kovalski')">
-            <input type="radio" v-prop="author" value="Nina Kovalski">
-            <i class="ph ph-user"></i> Nina Kovalski
-            <span class="editrix-list-caption">kovalski@gmail.com</span>
-          </label>
-
-          <label class="editrix-list-item" v-bind="e.authorOption('Yan Aleksandrov')">
-            <input type="radio" v-prop="author" value="Yan Aleksandrov">
-            <i class="ph ph-user"></i> Yan Aleksandrov
-            <span class="editrix-list-caption">kovalski@gmail.com</span>
-          </label>
+  <div class="editrix-meta">
+    <div class="editrix-meta-row">
+      <div class="editrix-meta-label">Authors</div>
+      <details class="editrix-details" v-bind="e.detailsAutoClose">
+        <summary class="editrix-details-summary editrix-meta-authors-summary">
+          <span v-each="name in selectedAuthors" class="editrix-meta-author-chip">
+            <span v-text="name"></span>
+            <i class="ph ph-x" v-bind="e.authorSummary(name)"></i>
+          </span>
+        </summary>
+        <div class="editrix-details-content">
+          <div class="editrix-list editrix-list--authors">
+            <label v-each="a in authors" class="editrix-list-item" v-bind="e.authorOption(a)">
+              <i class="ph ph-user"></i> <span v-text="a.name"></span>
+              <span class="editrix-list-caption" v-text="a.email"></span>
+            </label>
+          </div>
         </div>
-      </div>
-    </details>
-  </div>
+      </details>
+    </div>
 
-  <div class="editrix-inputs">
-    <div class="editrix-inputs-label">Discussion</div>
-    <details class="editrix-details" v-bind="e.detailsAutoClose">
-      <summary class="editrix-details-summary" v-bind="e.discussionSummary">Open</summary>
-      <div class="editrix-details-content">
-        <div class="editrix-list">
-          <label v-each="discussion in discussions" class="editrix-list-item" v-bind="e.discussionOption">
-            <input type="radio" :value="discussion.value" v-prop="discussionStatus">
-            <i :class="discussion.icon"></i> <span v-text="discussion.label"></span>
-            <span class="editrix-list-caption" v-text="discussion.caption"></span>
-          </label>
+    <div class="editrix-meta-row">
+      <div class="editrix-meta-label">Discussion</div>
+      <details class="editrix-details" v-bind="e.detailsAutoClose">
+        <summary class="editrix-details-summary" v-bind="e.discussionSummary">Open</summary>
+        <div class="editrix-details-content">
+          <div class="editrix-list">
+            <label v-each="discussion in discussions" class="editrix-list-item" v-bind="e.discussionOption">
+              <input type="radio" :value="discussion.value" v-prop="discussionStatus">
+              <i :class="discussion.icon"></i> <span v-text="discussion.label"></span>
+              <span class="editrix-list-caption" v-text="discussion.caption"></span>
+            </label>
+          </div>
         </div>
-      </div>
-    </details>
-  </div>
+      </details>
+    </div>
 
-  <div class="editrix-inputs">
-    <div class="editrix-inputs-label">Visibility</div>
+    <div class="editrix-meta-row">
+      <div class="editrix-meta-label">Visibility</div>
 
-    <details class="editrix-details" v-bind="e.detailsAutoClose">
-      <summary class="editrix-details-summary" v-bind="e.visibilitySummary">Public</summary>
-      <div class="editrix-details-content">
-        <div class="editrix-list editrix-list--visibility">
-          <label v-each="vision in visibilities" class="editrix-list-item" v-bind="e.visibilityOption">
-            <input type="radio" :value="vision.value" v-prop="visibility">
-            <i :class="vision.icon"></i> <span v-text="vision.label"></span>
-            <span class="editrix-list-caption" v-text="vision.caption"></span>
-          </label>
+      <details class="editrix-details" v-bind="e.detailsAutoClose">
+        <summary class="editrix-details-summary" v-bind="e.visibilitySummary">Public</summary>
+        <div class="editrix-details-content">
+          <div class="editrix-list editrix-list--visibility">
+            <label v-each="vision in visibilities" class="editrix-list-item" v-bind="e.visibilityOption">
+              <input type="radio" :value="vision.value" v-prop="visibility">
+              <i :class="vision.icon"></i> <span v-text="vision.label"></span>
+              <span class="editrix-list-caption" v-text="vision.caption"></span>
+            </label>
+          </div>
         </div>
-      </div>
-    </details>
-  </div>
+      </details>
+    </div>
 
-  <div class="editrix-section" v-show="visibility === 'protected'" hidden>
-    <div class="editrix-inputs">
-      <div class="editrix-inputs-item">
-        <div class="editrix-inputs-label">Password</div>
-        <div class="editrix-inputs-box">
-          <input type="password" v-prop="password" placeholder="Use a secure password">
-        </div>
+    <div class="editrix-meta-row" v-show="visibility === 'protected'" hidden>
+      <div class="editrix-meta-label">Password</div>
+      <div class="editrix-meta-row-box">
+        <input type="password" v-prop="password" placeholder="Use a secure password">
       </div>
     </div>
-  </div>
 
-  <div class="editrix-inputs">
-    <div class="editrix-inputs-label">Status</div>
+    <div class="editrix-meta-row">
+      <div class="editrix-meta-label">Status</div>
 
-    <details class="editrix-details" v-bind="e.detailsAutoClose">
-      <summary class="editrix-details-summary" v-bind="e.statusSummary">Published</summary>
-      <div class="editrix-details-content">
-        <div class="editrix-list editrix-list--status">
-          <label v-each="stat in selectableStatuses" class="editrix-list-item" v-bind="e.statusOption">
-            <input type="radio" :value="stat.value" v-prop="status">
-            <i :class="stat.icon"></i> <span v-text="stat.label"></span>
-            <span class="editrix-list-caption" v-text="stat.caption"></span>
-          </label>
+      <details class="editrix-details" v-bind="e.detailsAutoClose">
+        <summary class="editrix-details-summary" v-bind="e.statusSummary">Published</summary>
+        <div class="editrix-details-content">
+          <div class="editrix-list editrix-list--status">
+            <label v-each="stat in selectableStatuses" class="editrix-list-item" v-bind="e.statusOption">
+              <input type="radio" :value="stat.value" v-prop="status">
+              <i :class="stat.icon"></i> <span v-text="stat.label"></span>
+              <span class="editrix-list-caption" v-text="stat.caption"></span>
+            </label>
+          </div>
         </div>
-      </div>
-    </details>
-  </div>
+      </details>
+    </div>
 
-  <div class="editrix-inputs">
-    <div class="editrix-inputs-label">Published At</div>
-    <div class="editrix-inputs-box">
+    <div class="editrix-meta-row">
+      <div class="editrix-meta-label">Published At</div>
       <input type="datetime-local" v-bind="e.publishedAtInput">
     </div>
   </div>

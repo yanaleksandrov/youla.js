@@ -1,12 +1,12 @@
 /**
- * Toolbox > "Page" panel's meta control (authors/discussion/visibility/status/published-at) — fixed,
- * single-instance state, not routed through getValue()/setValue() (controls/base.js).
+ * Toolbox > "Page" panel's meta control (authors/discussion/visibility/status/slug/published-at) —
+ * fixed, single-instance state, not routed through getValue()/setValue() (controls/base.js).
  *
  * @param {Object} options
  * @param {Object[]} options.statuses
  * @param {Object[]} options.visibilities
  * @param {Object[]} options.discussions
- * @param {Object[]} options.authors
+ * @param {Object[]} options.authors - `{ name, email }` entries; at least one must stay selected in "selectedAuthors".
  */
 export function createMetaControl({ statuses, visibilities, discussions, authors }) {
   return {
@@ -24,8 +24,11 @@ export function createMetaControl({ statuses, visibilities, discussions, authors
     discussionStatus: discussions[0]?.value || '',
     discussions,
 
-    author: 'John Doe',
+    // At least one entry always stays in here — enforced by authorOption() below, not by validation.
+    selectedAuthors: authors[0] ? [authors[0].name] : [],
     authors,
+
+    slug: '',
 
     statusSummary: {
       'v-text'() {
@@ -63,19 +66,45 @@ export function createMetaControl({ statuses, visibilities, discussions, authors
       '@click': "$el.closest('details').open = false",
       ':class': "visibility === vision.value && 'active'",
     },
-    authorSummary: {
-      'v-text'() {
-        return this.author;
-      },
+    /**
+     * v-bind="e.authorSummary(name)" on each selected author's "x" icon (the summary shows one
+     * removable chip per entry in "selectedAuthors" instead of plain text) — removes that author
+     * directly, without opening the dropdown. ".stop.prevent" keeps the click from also toggling
+     * the <details> open, since the icon sits inside its <summary>.
+     */
+    authorSummary(name) {
+      return {
+        '@click.stop.prevent'() {
+          if (this.selectedAuthors.length > 1) {
+            this.selectedAuthors = this.selectedAuthors.filter((n) => n !== name);
+          }
+        },
+      };
     },
     /**
-     * Authors aren't looped (v-each) in the markup, so click/active-state is parameterized by
-     * name: v-bind="e.authorOption('John Doe')".
+     * v-bind="e.authorOption(a)" for each `v-each="a in authors"` entry. Authors allows multiple
+     * (toggled on click, no checkbox input), so — unlike statusOption()/visibilityOption()/
+     * discussionOption() below — this doesn't close the details on click, and refuses to remove
+     * the last remaining author (removing one is otherwise also available directly from the
+     * summary's chips via authorSummary() above).
      */
-    authorOption(name) {
+    authorOption(a) {
       return {
-        '@click': `$el.closest('details').open = false`,
-        ':class': `author === '${name}' && 'active'`,
+        // "checked" (not "active") — editrix.scss gives it the same hover highlight but, unlike
+        // "active", doesn't set pointer-events: none; unlike a single-select radio row, several
+        // entries here can be highlighted at once and each must stay clickable to remove it again.
+        ':class'() {
+          return this.selectedAuthors.includes(a.name) && 'checked';
+        },
+        '@click'() {
+          const isSelected = this.selectedAuthors.includes(a.name);
+
+          if (isSelected && this.selectedAuthors.length > 1) {
+            this.selectedAuthors = this.selectedAuthors.filter((name) => name !== a.name);
+          } else if (!isSelected) {
+            this.selectedAuthors = [...this.selectedAuthors, a.name];
+          }
+        },
       };
     },
     discussionSummary: {

@@ -67,8 +67,9 @@ function describeButton(el, description, shortcut) {
   // "auto" (not "top") — the toolbar itself can sit right at the top of the viewport (selecting
   // text near the top of the page), leaving no room above a button for its own hint; computePosition
   // (youla-tooltip.js) then picks whichever side actually has space, instead of clamping "top" down
-  // over the button it's describing.
-  el._x_tooltip = new TooltipInstance(el, content, 'auto', 'hover', DESCRIPTION_DELAY);
+  // over the button it's describing. "dark" — every tooltip in the editor is style-dark except the
+  // toolbox's own, and this one belongs to the selection toolbar, not the toolbox.
+  el._x_tooltip = new TooltipInstance(el, content, 'auto', 'hover', DESCRIPTION_DELAY, 'dark');
 }
 
 function markActive(state, type) {
@@ -249,9 +250,16 @@ class SelectionToolbar {
     // ProseMirror only calls update() from an actual transaction on this view — clicking outside
     // it entirely (the canvas, another block, a sidebar field) never dispatches one, so losing
     // focus is the only signal that the selection is no longer "in" this field. Skipped when focus
-    // is moving into the toolbar itself (e.g. into the link editor's own <input>).
+    // is moving into the toolbar itself (e.g. into the link editor's own <input>, or the block-type
+    // <select> opening its dropdown). "view.dom" lives in the canvas iframe's own document while
+    // "this.el" lives in the top document (see reposition()'s own toTopViewportRect comment), so this
+    // is always a cross-document focus change — browsers never populate a blur event's relatedTarget
+    // across a frame boundary, it's null every time, so that alone can't tell a real "focus left the
+    // editor" from "focus moved into this.el". document.activeElement (read in the top document,
+    // same as this.el) still reflects the new focus target by the time this handler runs, so check
+    // that too instead of relying on relatedTarget.
     this.onBlur = (e) => {
-      if (!this.el.contains(e.relatedTarget)) {
+      if (!this.el.contains(e.relatedTarget) && !this.el.contains(document.activeElement)) {
         this.hide();
       }
     };

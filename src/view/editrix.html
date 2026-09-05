@@ -62,21 +62,13 @@
 
     <div class="editrix-sidebar">
       <div class="editrix-sidebar-nav">
-        <div class="editrix-sidebar-tab" v-bind="e.sidebarTab('blocks')">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 256 256">
-            <path d="m223 68-88-48a14 14 0 0 0-14 0L33 68a14 14 0 0 0-7 12v96a14 14 0 0 0 7 12l88 48a14 14 0 0 0 14 0l88-48a14 14 0 0 0 7-12V80a14 14 0 0 0-7-12Zm-96-38a2 2 0 0 1 2 0l84 46-85 46-85-46ZM39 178a2 2 0 0 1-1-2V87l84 46v90Zm178 0-83 45v-90l84-46v89a2 2 0 0 1-1 2Z"/>
-          </svg>
-          Blocks
-        </div>
-        <div class="editrix-sidebar-tab" v-bind="e.sidebarTab('patterns')">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 256 256">
-            <path d="M208 90H48a14 14 0 0 0-14 14v96a14 14 0 0 0 14 14h160a14 14 0 0 0 14-14v-96a14 14 0 0 0-14-14Zm2 110a2 2 0 0 1-2 2H48a2 2 0 0 1-2-2v-96a2 2 0 0 1 2-2h160a2 2 0 0 1 2 2ZM50 64a6 6 0 0 1 6-6h144a6 6 0 0 1 0 12H56a6 6 0 0 1-6-6Zm16-32a6 6 0 0 1 6-6h112a6 6 0 0 1 0 12H72a6 6 0 0 1-6-6Z"/>
-          </svg>
-          Patterns
-        </div>
-        <div class="editrix-sidebar-tab" v-bind="e.sidebarTab('page')">
-          <i class="ph ph-gear-six" style="font-size: 14px;"></i>
-          Page
+        <!-- Loop var is "navTab", not "tab" — "tab" is itself a reactive data property (the active
+             tab name), and a "with($data)" block's own property always shadows a same-named v-each
+             loop variable (a function parameter), so referencing "tab.icon" etc. here would silently
+             resolve to that string instead of the loop item. -->
+        <div class="editrix-sidebar-tab" v-each="navTab in sidebarTabs" v-bind="e.sidebarTab(navTab.name, navTab.tooltip)">
+          <span v-html="navTab.icon"></span>
+          <span v-text="navTab.label"></span>
         </div>
       </div>
 
@@ -110,12 +102,7 @@
           </template>
         </div>
         <div class="editrix-blocks" v-bind="e.sidebarPanel('page')" hidden>
-          <div class="editrix-inputs-box"><i class="ph ph-magnifying-glass"></i> <input placeholder="Type for find..."></div>
-
-          <div class="editrix-blocks-item" v-each="block in blockList" v-bind="e.paletteItem(block.type)">
-            <span v-html="block.icon"></span>
-            <span v-text="block.label"></span>
-          </div>
+          <div class="editrix-fields" v-bind="e.pageFields"></div>
         </div>
       </div>
     </div>
@@ -133,6 +120,26 @@
         "name": "Yan Aleksandrov",
         "avatarUrl": null
       },
+      "sidebarTabs": [
+        {
+          "name": "blocks",
+          "label": "Blocks",
+          "icon": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 256 256\"><path d=\"m223 68-88-48a14 14 0 0 0-14 0L33 68a14 14 0 0 0-7 12v96a14 14 0 0 0 7 12l88 48a14 14 0 0 0 14 0l88-48a14 14 0 0 0 7-12V80a14 14 0 0 0-7-12Zm-96-38a2 2 0 0 1 2 0l84 46-85 46-85-46ZM39 178a2 2 0 0 1-1-2V87l84 46v90Zm178 0-83 45v-90l84-46v89a2 2 0 0 1-1 2Z\"/></svg>",
+          "tooltip": "Drag blocks onto the canvas"
+        },
+        {
+          "name": "patterns",
+          "label": "Patterns",
+          "icon": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 256 256\"><path d=\"M208 90H48a14 14 0 0 0-14 14v96a14 14 0 0 0 14 14h160a14 14 0 0 0 14-14v-96a14 14 0 0 0-14-14Zm2 110a2 2 0 0 1-2 2H48a2 2 0 0 1-2-2v-96a2 2 0 0 1 2-2h160a2 2 0 0 1 2 2ZM50 64a6 6 0 0 1 6-6h144a6 6 0 0 1 0 12H56a6 6 0 0 1-6-6Zm16-32a6 6 0 0 1 6-6h112a6 6 0 0 1 0 12H72a6 6 0 0 1-6-6Z\"/></svg>",
+          "tooltip": "Insert a ready-made block pattern"
+        },
+        {
+          "name": "page",
+          "label": "Page",
+          "icon": "<i class=\"ph ph-gear-six\" style=\"font-size: 14px;\"></i>",
+          "tooltip": ""
+        }
+      ],
       "statuses": [
         {
           "value": "published",
@@ -262,45 +269,47 @@
               "condition": null
             }
           ]
-        },
-        {
-          "heading": "Position",
-          "tooltip": "",
-          "repeatable": false,
-          "name": "position",
-          "min": null,
-          "max": null,
-          "default": null,
-          "fields": [
-            {
-              "name": "margin",
-              "title": "Margin",
-              "tooltip": "",
-              "type": "margin",
-              "default": null,
-              "description": "",
-              "condition": null
-            },
-            {
-              "name": "padding",
-              "title": "Padding",
-              "tooltip": "",
-              "type": "padding",
-              "default": null,
-              "description": "",
-              "condition": null
-            },
-            {
-              "name": "borders",
-              "title": "",
-              "tooltip": "",
-              "type": "borders",
-              "default": null,
-              "description": "",
-              "condition": null
-            }
-          ]
-        },
+        }
+      ],
+      "positionSection": {
+        "heading": "Position",
+        "tooltip": "",
+        "repeatable": false,
+        "name": "position",
+        "min": null,
+        "max": null,
+        "default": null,
+        "fields": [
+          {
+            "name": "margin",
+            "title": "Margin",
+            "tooltip": "",
+            "type": "margin",
+            "default": null,
+            "description": "",
+            "condition": null
+          },
+          {
+            "name": "padding",
+            "title": "Padding",
+            "tooltip": "",
+            "type": "padding",
+            "default": null,
+            "description": "",
+            "condition": null
+          },
+          {
+            "name": "borders",
+            "title": "",
+            "tooltip": "",
+            "type": "borders",
+            "default": null,
+            "description": "",
+            "condition": null
+          }
+        ]
+      },
+      "pageFields": [
         {
           "heading": "Advanced",
           "tooltip": "",

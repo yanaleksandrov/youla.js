@@ -1,6 +1,8 @@
 .editrix-toolbar {
 	height: 36px;
-	min-width: 100%;
+	// Spans every column of the .editrix grid (editor/editrix.scss) so it always fills its own row,
+	// however many columns that grid ends up with.
+	grid-column: 1 / -1;
 	border-bottom: 1px solid #dadada;
 	background-color: #fff;
 	padding-block: 4px;
@@ -27,9 +29,8 @@
 		justify-content: space-between;
 		position: relative;
 		user-select: none;
-		width: 240px;
 		padding-inline: 16px;
-		font-size: 10.5px;
+		font-size: 11px;
 	}
 
 	&-presence {

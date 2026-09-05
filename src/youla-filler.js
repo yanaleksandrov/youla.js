@@ -17,8 +17,8 @@ const PALETTE = [
   { name: 'Yellow', hex: '#FFEB3B' },
 ];
 
-// Exported so other code that needs a small set of visually-distinct colors (e.g. editrix/collab's
-// presence/lock avatars) can reuse this one instead of inventing a second palette.
+// Exported so other code that needs a small set of visually-distinct colors can reuse this one
+// instead of inventing a second palette.
 export const FILLER_PALETTE = PALETTE;
 
 // Expands `{ key: suffix }` into `{ key: prefix-suffix }`; an empty suffix maps to the bare prefix.
@@ -26,9 +26,8 @@ const classNames = (prefix, suffixes) => Object.fromEntries(
   Object.entries(suffixes).map(([key, suffix]) => [key, suffix ? `${prefix}-${suffix}` : prefix]),
 );
 
-// Exported so other UI built outside the v-data/directive system (e.g. the ProseMirror selection
-// toolbar's Text Color/Highlight editor, editrix/prosemirror/toolbar.js) can attach a real filler
-// to an <input> it built by hand, the same way the "v-filler" directive below does.
+// Exported so other UI built outside the v-data/directive system can attach a real filler to an
+// <input> it built by hand, the same way the "v-filler" directive below does.
 export class Filler {
   static DEFAULTS = {
     classes: {

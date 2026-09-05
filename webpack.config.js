@@ -25,8 +25,8 @@ const parseHtmlPages = dir => {
   }, []);
 }
 
-// Every scss entry under parseEntries('scss', 'css') below (e.g. "css/styles", "css/editrix-canvas")
-// produces a CSS file via MiniCssExtractPlugin but, since every webpack entry is inherently JS, also
+// Every scss entry under parseEntries('scss', 'css') below (e.g. "css/styles") produces a CSS file
+// via MiniCssExtractPlugin but, since every webpack entry is inherently JS, also
 // an accompanying (empty) JS chunk — CleanWebpackPlugin's own cleanAfterEveryBuildPatterns already
 // deletes every "css/*.js" file post-build, but html-webpack-plugin has already injected a <script>
 // tag for it by then, left dangling (404) in every generated page. Strips just that script tag; the
@@ -122,7 +122,7 @@ module.exports = {
         // that inject their own styles into a shadow root instead of shipping a global stylesheet.
         test: /\.(sass|scss)$/,
         resourceQuery: /inline/,
-        include: [path.resolve(__dirname, 'src/styles'), path.resolve(__dirname, 'src/editrix-canvas.scss')],
+        include: path.resolve(__dirname, 'src/styles'),
         use: [
           {
             loader: 'css-loader',
@@ -154,7 +154,7 @@ module.exports = {
       {
         test: /\.(sass|scss)$/,
         resourceQuery: { not: [/inline/] },
-        include: [path.resolve(__dirname, 'src/styles'), path.resolve(__dirname, 'src/editrix-canvas.scss')],
+        include: path.resolve(__dirname, 'src/styles'),
         use: [
           {
             loader: MiniCssExtractPlugin.loader,
@@ -189,25 +189,6 @@ module.exports = {
       {
         test: /\.html$/,
         include: path.resolve(__dirname, 'src/view/parts') + path.sep,
-        use: ['raw-loader'],
-      },
-      {
-        test: /\.html$/,
-        include: path.resolve(__dirname, 'src/view/editrix') + path.sep,
-        use: ['raw-loader'],
-      },
-      {
-        // Each editrix control's own template — src/editrix/control/<name>/index.html — sits next to its JS, not under src/view.
-        test: /\.html$/,
-        include: path.resolve(__dirname, 'src/editrix/control') + path.sep,
-        use: ['raw-loader'],
-      },
-      {
-        // Each block's own template — src/editrix/blocks/<type>/index.html — a "<template id=...>",
-        // required from view/editrix.html the same way control templates are (see webpack.config.js's
-        // own comment above), and cloned at runtime via editrix/controls/template.js.
-        test: /\.html$/,
-        include: path.resolve(__dirname, 'src/editrix/blocks') + path.sep,
         use: ['raw-loader'],
       },
     ],

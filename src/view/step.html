@@ -1,26 +1,28 @@
 <% var data = {
-  title: "Мастер форм (v-step)"
+  title: "Мастер форм (v-step, step)"
 }; %>
 <%= _.template(require('./parts/header.html').default)(data) %>
 
-<h1>Мастер форм (v-step)</h1>
+<h1>Мастер форм (v-step, step)</h1>
 
 <p>
-  Директива <code>v-step</code> и метод <code>$step</code> вместе превращают обычную форму в
-  мастер из нескольких шагов: каждый шаг показывается по очереди, а переход к следующему
-  происходит только тогда, когда текущий шаг заполнен правильно.
+  Директива <code>v-step</code> и именованный провайдер <code>Youla.data('step')</code> вместе
+  превращают обычную форму в мастер из нескольких шагов: каждый шаг показывается по очереди, а
+  переход к следующему происходит только тогда, когда текущий шаг заполнен правильно.
 </p>
 
 <p>
   <code>v-step="условие"</code> ставится на каждый шаг и определяет, когда он считается
-  завершённым, — обычно это проверка введённых данных. <code>$step</code> отвечает за само
-  перемещение между шагами (<code>$step.goNext()</code>, <code>$step.goBack()</code>) и за все
-  вопросы вроде «а можно ли идти дальше» (<code>$step.canGoNext()</code>). Пользоваться
-  <code>$step</code> можно где угодно в разметке — в <code>@click</code>, в <code>v-show</code>,
-  в <code>:disabled</code>, в тексте, — он всегда возвращает актуальное состояние мастера.
+  завершённым, — обычно это проверка введённых данных. Провайдер <code>step</code> отвечает за
+  само перемещение между шагами (<code>goNext()</code>, <code>goBack()</code>) и за все вопросы
+  вроде «а можно ли идти дальше» (<code>canGoNext()</code>). Подключите его как
+  <code>v-data="step"</code> — тогда его методы доступны в любом выражении внутри этого компонента
+  без префикса, — в <code>@click</code>, в <code>v-show</code>, в <code>:disabled</code>, в тексте.
+  Поля формы вроде <code>name</code>/<code>email</code> из примера ниже отдельно объявлять не
+  нужно — <code>v-prop</code> сам добавит их в те же данные при первой отрисовке.
 </p>
 
-<h2>Методы $step вкратце</h2>
+<h2>Методы провайдера step вкратце</h2>
 
 <table>
   <tbody>
@@ -67,13 +69,14 @@
   У каждого метода, начинающегося на <code>can</code>/<code>is</code>, есть противоположность:
   <code>cannotGoNext()</code>, <code>cannotGoBack()</code>, <code>isNotFirst()</code>,
   <code>isNotLast()</code>, <code>isUncompleted()</code>. Это просто ради читаемости — чтобы не
-  писать <code>!$step.canGoNext()</code> в разметке.
+  писать <code>!canGoNext()</code> в разметке.
 </p>
 
 <h2>Прогресс, шаги-точки и полный снимок состояния</h2>
 
 <p>
-  Раз <code>$step</code> можно использовать в любом выражении, из него легко собрать что угодно:
+  Раз методы <code>step</code> можно использовать в любом выражении внутри своего <code>v-data</code>,
+  из них легко собрать что угодно:
   полосу прогресса, кликабельные индикаторы шагов или просто вывести всё состояние целиком —
   например, для отладки.
 </p>
@@ -84,13 +87,13 @@
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" id="step-demo" v-data>
+    <div class="demo" id="step-demo" v-data="step">
       <div class="progress-bar">
-        <i :style="{ width: $step.progress().completion }"></i>
+        <i :style="{ width: progress().completion }"></i>
       </div>
 
       <ul class="dots">
-        <li v-each="n in 3" :class="{ active: $step.isStep(n-1) }" v-text="n"></li>
+        <li v-each="n in 3" :class="{ active: isStep(n-1) }" v-text="n"></li>
       </ul>
 
       <div v-step="name.trim().length > 0">
@@ -109,22 +112,22 @@
       </div>
 
       <p>
-        <button type="button" :disabled="$step.cannotGoBack()" @click="$step.goBack()" disabled>Назад</button>
-        <button type="button" :disabled="$step.cannotGoNext()" @click="$step.goNext()" v-show="$step.isNotLast()" disabled>Далее</button>
+        <button type="button" :disabled="cannotGoBack()" @click="goBack()" disabled>Назад</button>
+        <button type="button" :disabled="cannotGoNext()" @click="goNext()" v-show="isNotLast()" disabled>Далее</button>
       </p>
 
-      <pre v-text="JSON.stringify($step.getState(), null, 2)"></pre>
+      <pre v-text="JSON.stringify(getState(), null, 2)"></pre>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-data&gt;
+&lt;div v-data=&quot;step&quot;&gt;
   &lt;div class=&quot;progress-bar&quot;&gt;
-    &lt;i :style=&quot;{ width: $step.progress().completion }&quot;&gt;&lt;/i&gt;
+    &lt;i :style=&quot;{ width: progress().completion }&quot;&gt;&lt;/i&gt;
   &lt;/div&gt;
 
   &lt;ul class=&quot;dots&quot;&gt;
-    &lt;li v-each=&quot;n in 3&quot; :class=&quot;{ active: $step.isStep(n-1) }&quot; v-text=&quot;n&quot;&gt;&lt;/li&gt;
+    &lt;li v-each=&quot;n in 3&quot; :class=&quot;{ active: isStep(n-1) }&quot; v-text=&quot;n&quot;&gt;&lt;/li&gt;
   &lt;/ul&gt;
 
   &lt;div v-step=&quot;name.trim().length &gt; 0&quot;&gt;
@@ -143,11 +146,11 @@
   &lt;/div&gt;
 
   &lt;p&gt;
-    &lt;button type=&quot;button&quot; :disabled=&quot;$step.cannotGoBack()&quot; @click=&quot;$step.goBack()&quot;&gt;Назад&lt;/button&gt;
-    &lt;button type=&quot;button&quot; :disabled=&quot;$step.cannotGoNext()&quot; @click=&quot;$step.goNext()&quot; v-show=&quot;$step.isNotLast()&quot;&gt;Далее&lt;/button&gt;
+    &lt;button type=&quot;button&quot; :disabled=&quot;cannotGoBack()&quot; @click=&quot;goBack()&quot;&gt;Назад&lt;/button&gt;
+    &lt;button type=&quot;button&quot; :disabled=&quot;cannotGoNext()&quot; @click=&quot;goNext()&quot; v-show=&quot;isNotLast()&quot;&gt;Далее&lt;/button&gt;
   &lt;/p&gt;
 
-  &lt;pre v-text=&quot;JSON.stringify($step.getState(), null, 2)&quot;&gt;&lt;/pre&gt;
+  &lt;pre v-text=&quot;JSON.stringify(getState(), null, 2)&quot;&gt;&lt;/pre&gt;
 &lt;/div&gt;
 </pre>
   </div>
@@ -189,53 +192,5 @@
     transition: width 300ms;
   }
 </style>
-
-<p>
-  Точки-индикаторы кликабельны и вызывают <code>$step.goto(n)</code> напрямую — в отличие от
-  кнопки «Далее», <code>goto()</code> не проверяет завершённость и позволяет перепрыгнуть сразу
-  на любой шаг, даже не заполненный.
-</p>
-
-<h2>Полезные советы</h2>
-
-<p>
-  <code>canGoBack()</code> и <code>isNotFirst()</code> всегда возвращают одно и то же — назад
-  можно перейти, если шаг просто не первый, без каких-либо условий. А вот
-  <code>canGoNext()</code> строже, чем <code>isNotLast()</code>: одного наличия следующего шага
-  недостаточно, текущий шаг должен быть ещё и завершён. Если нужно узнать, есть ли следующий шаг
-  вообще, независимо от завершённости, используйте <code>isNotLast()</code>.
-</p>
-
-<p>
-  Кнопку «Далее» имеет смысл одновременно и дизейблить через <code>:disabled="$step.cannotGoNext()"</code>,
-  и на всякий случай перепроверять условие в самом обработчике —
-  <code>@click="$step.canGoNext() &amp;&amp; $step.goNext()"</code>. Это простая и надёжная
-  привычка для любых похожих кнопок с условием.
-</p>
-
-<p>
-  Шаги нумеруются с нуля в порядке появления в разметке — первый <code>v-step</code> получает
-  номер <code>0</code>, следующий — <code>1</code>, и так далее. Именно этот номер используют
-  <code>goto(index)</code> и <code>isStep(n)</code>.
-</p>
-
-<p>
-  Пока страница только грузится и скрипт ещё не запустился, все шаги — это просто обычные
-  <code>&lt;div&gt;</code>, и браузер на мгновение покажет их все разом. Чтобы шаги, которые
-  должны быть скрыты изначально, не мелькали на экране, добавьте им обычный HTML-атрибут
-  <code>hidden</code> прямо в разметке — на первом шаге его, конечно, быть не должно:
-</p>
-
-<pre>
-&lt;div v-step=&quot;name.trim().length &gt; 0&quot;&gt;...&lt;/div&gt;
-&lt;div v-step=&quot;/.+@.+\..+/.test(email)&quot; hidden&gt;...&lt;/div&gt;
-&lt;div v-step=&quot;true&quot; hidden&gt;...&lt;/div&gt;
-</pre>
-
-<p>
-  Директива сама снимает и возвращает этот атрибут при каждом переходе, так что дальнейшая
-  навигация работает как обычно — <code>hidden</code> нужен только для самого первого рендера,
-  до того как страница вообще успеет что-то нарисовать.
-</p>
 
 <%= _.template(require('./parts/footer.html').default)(data) %>

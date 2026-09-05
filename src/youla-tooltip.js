@@ -9,7 +9,8 @@ const VARIANT_PREFIX = 'style-';
 const OFFSET = 8;
 const MARGIN = 4;
 
-// Exported so other floating elements (e.g. the ProseMirror selection toolbar, editrix/prosemirror/toolbar.js) can style and position themselves exactly like a v-tooltip without duplicating this logic.
+// Exported so other floating elements built outside the v-data/directive system can style and
+// position themselves exactly like a v-tooltip without duplicating this logic.
 export const TOOLTIP_CLASS = 'v-tooltip';
 
 // Fallback removal if the CSS exit animation never fires (e.g. reduced motion).
@@ -163,9 +164,8 @@ export function computePosition(anchorRect, size, placement, viewport, offset = 
 }
 
 // A tooltip's DOM element, positioning, triggers, and lifecycle. Cached as `el._x_tooltip`.
-// Exported so other UI built outside the v-data/directive system (e.g. the ProseMirror selection
-// toolbar, editrix/prosemirror/toolbar.js) can attach a real v-tooltip to an element it built by
-// hand, the same way the "v-tooltip" directive below does.
+// Exported so other UI built outside the v-data/directive system can attach a real v-tooltip to an
+// element it built by hand, the same way the "v-tooltip" directive below does.
 export class TooltipInstance {
   constructor(el, content, placement, trigger, delay = 250, variant = null) {
     Object.assign(this, { el, content, placement, trigger, delay, variant, visible: false });

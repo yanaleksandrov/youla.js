@@ -339,7 +339,7 @@ export default class Component {
    * Re-evaluates every element's bindings, re-running only those whose dependencies changed
    * since the last flush. Clears "concernedData" once the pass completes.
    *
-   * @param {boolean} [force] - Re-runs every binding unconditionally, for state that lives outside the reactive data (see `$step` in youla-extensions.js).
+   * @param {boolean} [force] - Re-runs every binding unconditionally, for state that lives outside the reactive data.
    */
   refresh(force = false) {
     const self = this;

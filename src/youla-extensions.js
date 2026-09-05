@@ -1,153 +1,149 @@
 document.addEventListener('youla:init', ()=> {
   /**
-   * Multi-step wizard: `v-step="condition"` marks a panel's completion state; `$step`
-   * (one state machine per wizard root) drives navigation via `goNext()`/`goBack()`. Registered
-   * as a `Youla.variable()` so it's reachable from any expression, not just `@event` ones.
+   * Multi-step wizard: `v-step="condition"` marks a panel's completion state; the `step`
+   * data provider drives navigation via `goNext()`/`goBack()`. Use it as `v-data="step"` — any
+   * `v-prop`-bound field referenced by a `v-step` condition (e.g. `name`) gets merged in
+   * automatically by hydrateProps(), no need to declare it. It isn't a global `$step`, only local
+   * to that `v-data`; spread it instead (`v-data="{ ...step, total: 0 }"`) only if you need a
+   * field or method that isn't backed by a form input.
    *
    * @since 1.0
    */
   Youla.directive('step', (el, output, _, component) => {
-    const wizard = getWizard(el, component);
+    const wizard = component.data;
     const step   = wizard.getStep(el);
     const isComplete = !!output;
 
     if (step.isComplete !== isComplete) {
       step.isComplete = isComplete;
-      // step lives on el._x_step, outside the wizard's reactive wrapper, so refresh manually.
-      Youla.forceRefresh(wizard.root);
+      // step lives on el._x_step, outside v-data's own reactive wrapper, so refresh manually.
+      component.refresh(true);
     }
   });
-  Youla.variable('step', (root, el) => getWizard(el, { root }));
 
-  function getWizard(el, { root }) {
-    if(!root._x_wizard) {
-      root._x_wizard = Youla.reactive({
-        root,
-        steps: [],
-        currentIndex: 0,
-        progress() {
-          const total   = this.steps.length;
-          const current = Math.min(this.currentIndex + 1, total);
+  Youla.data('step', () => ({
+    steps: [],
+    currentIndex: 0,
+    progress() {
+      const total   = this.steps.length;
+      const current = Math.min(this.currentIndex + 1, total);
 
-          let complete = 0;
-          for(let index = 0; index < current; index++) {
-            if(this.steps[index].isComplete) {
-              complete++;
-            }
-          }
-          return {
-            total, complete, current,
-            incomplete: total - complete,
-            progress: `${Math.floor(current / total * 100)}%`,
-            completion: `${Math.floor(complete / total * 100)}%`,
-            percentage: Math.floor(complete / total * 100),
-          };
-        },
-        stepAt(index) {
-          return this.steps[index] || {
-            el: null,
-            title: null
-          };
-        },
-        current() {
-          return this.stepAt(this.currentIndex);
-        },
-        previous() {
-          return this.stepAt(this.previousIndex());
-        },
-        next() {
-          return this.stepAt(this.nextIndex());
-        },
-        previousIndex() {
-          return this.currentIndex - 1 >= 0 ? this.currentIndex - 1 : null;
-        },
-        nextIndex() {
-          return this.currentIndex + 1 < this.steps.length ? this.currentIndex + 1 : null;
-        },
-        isStep(index) {
-          return Array.isArray(index) ? index.includes(this.currentIndex) : index === this.currentIndex;
-        },
-        isFirst() {
-          return this.previousIndex() === null;
-        },
-        isNotFirst() {
-          return !this.isFirst();
-        },
-        isLast() {
-          return this.nextIndex() === null;
-        },
-        isNotLast() {
-          return !this.isLast();
-        },
-        isCompleted() {
-          return this.current().isComplete && this.nextIndex() === null;
-        },
-        isUncompleted() {
-          return !this.isCompleted();
-        },
-        canGoNext() {
-          return this.current().isComplete && this.nextIndex() !== null;
-        },
-        cannotGoNext() {
-          return !this.canGoNext();
-        },
-        canGoBack() {
-          return this.previousIndex() !== null;
-        },
-        cannotGoBack() {
-          return !this.canGoBack();
-        },
-        getState() {
-          return {
-            currentIndex: this.currentIndex,
-            isFirst: this.isFirst(),
-            isNotFirst: this.isNotFirst(),
-            isLast: this.isLast(),
-            isNotLast: this.isNotLast(),
-            canGoBack: this.canGoBack(),
-            cannotGoBack: this.cannotGoBack(),
-            canGoNext: this.canGoNext(),
-            cannotGoNext: this.cannotGoNext(),
-            isCompleted: this.isCompleted(),
-            isUncompleted: this.isUncompleted(),
-            progress: this.progress(),
-          };
-        },
-        goNext() {
-          this.goto(this.nextIndex());
-        },
-        goBack() {
-          this.goto(this.previousIndex());
-        },
-        goto(index) {
-          if(index !== null && this.steps[index] !== void 0) {
-            this.currentIndex = index;
-          }
-          this.render();
-          return this.current();
-        },
-        render() {
-          this.steps.forEach((step, index) => {
-            const isHidden = index !== this.currentIndex;
-            if(step.el.hidden !== isHidden) {
-              step.el.hidden = isHidden;
-            }
-          });
-        },
-        getStep(el) {
-          let step = el._x_step;
-          if(!step) {
-            step = el._x_step = { el, title: '', isComplete: true };
+      let complete = 0;
+      for(let index = 0; index < current; index++) {
+        if(this.steps[index].isComplete) {
+          complete++;
+        }
+      }
+      return {
+        total, complete, current,
+        incomplete: total - complete,
+        progress: `${Math.floor(current / total * 100)}%`,
+        completion: `${Math.floor(complete / total * 100)}%`,
+        percentage: Math.floor(complete / total * 100),
+      };
+    },
+    stepAt(index) {
+      return this.steps[index] || {
+        el: null,
+        title: null
+      };
+    },
+    current() {
+      return this.stepAt(this.currentIndex);
+    },
+    previous() {
+      return this.stepAt(this.previousIndex());
+    },
+    next() {
+      return this.stepAt(this.nextIndex());
+    },
+    previousIndex() {
+      return this.currentIndex - 1 >= 0 ? this.currentIndex - 1 : null;
+    },
+    nextIndex() {
+      return this.currentIndex + 1 < this.steps.length ? this.currentIndex + 1 : null;
+    },
+    isStep(index) {
+      return Array.isArray(index) ? index.includes(this.currentIndex) : index === this.currentIndex;
+    },
+    isFirst() {
+      return this.previousIndex() === null;
+    },
+    isNotFirst() {
+      return !this.isFirst();
+    },
+    isLast() {
+      return this.nextIndex() === null;
+    },
+    isNotLast() {
+      return !this.isLast();
+    },
+    isCompleted() {
+      return this.current().isComplete && this.nextIndex() === null;
+    },
+    isUncompleted() {
+      return !this.isCompleted();
+    },
+    canGoNext() {
+      return this.current().isComplete && this.nextIndex() !== null;
+    },
+    cannotGoNext() {
+      return !this.canGoNext();
+    },
+    canGoBack() {
+      return this.previousIndex() !== null;
+    },
+    cannotGoBack() {
+      return !this.canGoBack();
+    },
+    getState() {
+      return {
+        currentIndex: this.currentIndex,
+        isFirst: this.isFirst(),
+        isNotFirst: this.isNotFirst(),
+        isLast: this.isLast(),
+        isNotLast: this.isNotLast(),
+        canGoBack: this.canGoBack(),
+        cannotGoBack: this.cannotGoBack(),
+        canGoNext: this.canGoNext(),
+        cannotGoNext: this.cannotGoNext(),
+        isCompleted: this.isCompleted(),
+        isUncompleted: this.isUncompleted(),
+        progress: this.progress(),
+      };
+    },
+    goNext() {
+      this.goto(this.nextIndex());
+    },
+    goBack() {
+      this.goto(this.previousIndex());
+    },
+    goto(index) {
+      if(index !== null && this.steps[index] !== void 0) {
+        this.currentIndex = index;
+      }
+      this.render();
+      return this.current();
+    },
+    render() {
+      this.steps.forEach((step, index) => {
+        const isHidden = index !== this.currentIndex;
+        if(step.el.hidden !== isHidden) {
+          step.el.hidden = isHidden;
+        }
+      });
+    },
+    getStep(el) {
+      let step = el._x_step;
+      if(!step) {
+        step = el._x_step = { el, title: '', isComplete: true };
 
-            this.steps.push(step);
-            this.render();
-          }
-          return step;
-        },
-      }, root);
-    }
-    return root._x_wizard;
-  }
+        this.steps.push(step);
+        this.render();
+      }
+      return step;
+    },
+  }));
 
   /**
    * Copies a string to the clipboard, e.g. `@click="$copy('Some text', ['is-copied'])"`.

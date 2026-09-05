@@ -3,7 +3,7 @@
 }; %>
 <%= _.template(require('./parts/header.html').default)(data) %>
 
-<form class="card card-border" method="post" v-data>
+<form class="card card-border" method="post" v-data="step">
   <!-- step 1 -->
   <div v-step="name.trim()">
     <div class="t-center p-8">
@@ -29,7 +29,7 @@
   </div>
 
   <!-- step 2 -->
-  <div v-step="dbname.trim() && username.trim() && db_password.trim() && hostname.trim() && prefix.trim()" v-show hidden>
+  <div v-step="dbname.trim() && username.trim() && db_password.trim() && hostname.trim() && prefix.trim()" hidden>
     <div class="t-center p-8">
       <h2>Step 1: Database</h2>
       <p class="t-muted">Enter information about connecting to the database here. If you are not sure about it, contact your hosting provider.</p>
@@ -71,7 +71,7 @@
   </div>
 
   <!-- step 3 -->
-  <div v-step="login.trim() && email.trim() && password.trim()" v-show hidden>
+  <div v-step="login.trim() && email.trim() && password.trim()" hidden>
     <div class="t-center p-8">
       <h2>Step 2: Create account</h2>
       <p class="t-muted">The last step. Create a site administrator.</p>
@@ -104,13 +104,13 @@
 
   <!-- buttons -->
   <div class="p-8 df jcsb g-2">
-    <button type="button" class="btn btn--outline" :disabled="$step.cannotGoBack()" @click="$step.goBack()" disabled>
+    <button type="button" class="btn btn--outline" :disabled="cannotGoBack()" @click="goBack()" disabled>
       Back
     </button>
-    <button type="button" class="btn btn--primary" :disabled="$step.cannotGoNext()" v-show="$step.isNotLast()" @click="$step.goNext()" disabled>
+    <button type="button" class="btn btn--primary" :disabled="cannotGoNext()" v-show="isNotLast()" @click="goNext()" disabled>
       Continue
     </button>
-    <button type="submit" class="btn btn--primary" :disabled="$step.isUncompleted()" v-show="$step.isLast()" disabled>
+    <button type="submit" class="btn btn--primary" :disabled="isUncompleted()" v-show="isLast()" disabled>
       Install Grafema
     </button>
   </div>

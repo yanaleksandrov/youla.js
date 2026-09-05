@@ -187,6 +187,7 @@ export function createRepeaterControl() {
         ...createSortableItem({
           read: (component) => readItems(component, fieldName(component.$el)),
           write: (component, items) => writeItems(component, fieldName(component.$el), items),
+          handle: '.editrix-repeater-item__handle',
         }),
         ':class'() {
           return { 'is-locked': isLockedToOneItem(this, fieldName(this.$el)) };

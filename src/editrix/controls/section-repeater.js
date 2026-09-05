@@ -178,6 +178,7 @@ export function createSectionRepeaterControl() {
       return createSortableItem({
         read: (component) => readItems(component, name),
         write: (component, items) => writeItems(component, name, items),
+        handle: '.editrix-section-item__handle',
       });
     },
 
@@ -231,14 +232,15 @@ export function createSectionRepeaterControl() {
 
     /**
      * v-bind="e.sectionFieldTooltip(name, 'label')" — item-scoped counterpart of base.js's
-     * fieldTooltip().
+     * fieldTooltip(). Repeatable sections only ever live in a block's own Content tab, never the
+     * toolbox, so — unlike fieldTooltip() — this is unconditionally style-dark.
      */
     sectionFieldTooltip(name, key) {
       return {
         'v-show'() {
           return !!itemFieldDef(this, name, key)?.tooltip;
         },
-        'v-tooltip.click'() {
+        'v-tooltip.click.style-dark'() {
           return itemFieldDef(this, name, key)?.tooltip;
         },
       };

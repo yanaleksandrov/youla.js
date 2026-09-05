@@ -15,6 +15,8 @@
   "scripts": {
     "watch": "webpack --mode development --watch",
     "start": "webpack serve --mode development --no-client-overlay-warnings",
+    "dev": "concurrently -n webpack,collab -c blue,green \"npm:start\" \"npm run dev:collab-server\"",
+    "dev:collab-server": "node server/collab-dev-server.js",
     "build": "webpack --config webpack.config.js webpack.config.min.js --mode production && prettier --parser html --write dist/*.html",
     "test": "vitest run"
   },
@@ -56,6 +58,8 @@
     "webpack-cli": "^4.10.0",
     "webpack-dev-server": "^4.10.0",
     "jsdom": "^24.1.3",
-    "vitest": "^1.6.1"
+    "vitest": "^1.6.1",
+    "concurrently": "^8.2.2",
+    "ws": "^8.18.0"
   }
 }

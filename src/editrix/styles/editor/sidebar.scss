@@ -11,6 +11,7 @@
 	border-inline-end: 1px solid #f1f1f1;
 	overflow-y: scroll;
 	height: calc(100dvh - 37px);
+	z-index: 1;
 
 	&:after {
 		content: '';
@@ -69,8 +70,46 @@
 	}
 }
 
+// Elementor-style Content/Layout/Advanced sub-tabs (renderContentTabs(), youla-editrix.js) atop the
+// sidebar's own "Content" panel — one row of 3, unlike .editrix-sidebar-tab's vertical icon stack.
+// A segmented control (one shared background, the active button raised out of it) rather than an
+// underlined tab strip, so it doesn't compete with .editrix-sidebar-tab's own underline-free look.
+.editrix-content-tabs {
+	display: flex;
+	position: sticky;
+	top: 0;
+	z-index: 1;
+	margin: 8px 12px;
+	padding: 2px;
+	gap: 2px;
+	border-radius: 6px;
+	background-color: #f0f0f0;
+}
+
+.editrix-content-tab {
+	flex: 1;
+	user-select: none;
+	cursor: pointer;
+	padding: 6px 4px;
+	text-align: center;
+	border-radius: 4px;
+	font-size: 11px;
+	font-weight: 600;
+	color: #8e8e8e;
+	transition: all 0.25s;
+
+	&:hover {
+		color: #2d2d2d;
+	}
+
+	&.active {
+		color: #1069fb;
+		background-color: #fff;
+		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+	}
+}
+
 .editrix-toolbox {
-	max-width: 240px;
 	position: sticky;
 	top: 36px;
 	width: 100%;
@@ -78,6 +117,6 @@
 	font-size: 11.5px;
 	background-color: #fff;
 	line-height: 1.15;
-	height: calc(100dvh - 37px);
+	min-height: calc(100dvh - 37px);
 	border-inline-start: 1px solid #dadada;
 }

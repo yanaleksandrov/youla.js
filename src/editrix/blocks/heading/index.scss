@@ -1,0 +1,76 @@
+// editrix-heading ("Testimonial") — big picture on one side, a quote + author card on the other.
+// "--editrix-accent" is set generically from the block's own "accent_color" field (youla-editrix.js's
+// container() binding), not by anything in this file.
+.heading-block {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 32px;
+	align-items: center;
+
+	@media (max-width: 640px) {
+		grid-template-columns: 1fr;
+	}
+
+	&__media img {
+		display: block;
+		width: 100%;
+		height: auto;
+		border-radius: 12px;
+		object-fit: cover;
+	}
+
+	&__content {
+		display: flex;
+		flex-direction: column;
+		gap: 24px;
+	}
+
+	// Swaps which grid column each side lands in — "reverse" (youla-editrix.js's container()
+	// binding, from the block's own "Layout" section) toggles ".is-reversed" on ".editrix-container",
+	// an ancestor of ".heading-block", not this element itself.
+	.is-reversed & {
+		&__media {
+			order: 2;
+		}
+
+		&__content {
+			order: 1;
+		}
+	}
+
+	&__quote {
+		margin: 0;
+		padding: 0;
+		border: 0;
+		font-size: 1.5rem;
+		line-height: 1.4;
+		font-style: italic;
+
+		p {
+			margin: 0;
+		}
+	}
+
+	&__author {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+	}
+
+	&__avatar {
+		width: 48px;
+		height: 48px;
+		border-radius: 50%;
+		object-fit: cover;
+		flex: none;
+	}
+
+	&__author-name {
+		font-weight: 600;
+	}
+
+	&__author-position {
+		color: var(--editrix-accent, #1069fb);
+		font-size: 0.875rem;
+	}
+}

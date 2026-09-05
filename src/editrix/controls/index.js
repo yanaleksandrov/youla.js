@@ -7,11 +7,13 @@ import { createTextareaControl } from '../control/textarea';
 import { createSwitcherControl } from '../control/switcher';
 import { createSelectControl } from '../control/select';
 import { createColorControl } from '../control/color';
+import { createImageControl } from '../control/image';
 import { createRepeaterControl } from '../control/repeater';
 import { createGalleryControl } from '../control/gallery';
 import { createMetaControl } from '../control/meta';
 import { createCategoriesControl } from '../control/categories';
 import { createBordersControl } from '../control/borders';
+import { createCustomCssControl } from '../control/custom-css';
 
 /**
  * Assembles the whole control system into one object, spread into `Youla.data('editrix', ...)`.
@@ -31,12 +33,14 @@ export function createControlsSystem({ meta } = {}) {
     createSwitcherControl(),
     createSelectControl(),
     createColorControl(),
+    createImageControl(),
     createRepeaterControl(),
     createSectionRepeaterControl(),
     createGalleryControl(),
     createMetaControl(meta),
     createCategoriesControl(),
     createBordersControl(),
+    createCustomCssControl(),
   ];
   const merged = {};
 

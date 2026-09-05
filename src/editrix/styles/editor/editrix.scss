@@ -2,9 +2,9 @@
 	position: relative;
 	min-height: 100dvh;
 	width: 100%;
-	display: flex;
-	flex-flow: wrap;
-	align-content: flex-start;
+	display: grid;
+	grid-template-columns: minmax(0, 288px) minmax(0, 1fr) minmax(0, 240px);
+	align-content: start;
 
 	*::-webkit-scrollbar {
 		background-color: transparent;
@@ -68,6 +68,7 @@
 			background-repeat: no-repeat;
 			background-size: 0.75em;
 			transition: all 0.2s;
+			padding: 0;
 		}
 
 		&[type="radio"] {
@@ -102,7 +103,7 @@
 	textarea {
 		resize: none;
 		overflow: hidden;
-		padding: 6px 0;
+		padding: 6px 12px;
 		min-height: auto !important;
 		line-height: 1.25em;
 		field-sizing: content;

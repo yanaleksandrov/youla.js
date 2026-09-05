@@ -1,0 +1,19 @@
+<template id="editrix-block-heading">
+  <div class="heading-block">
+    <div class="heading-block__media">
+      <img data-name="image" data-default-src="https://placehold.co/600x600" src="https://placehold.co/600x600" alt="" v-bind="e.blockImage()">
+    </div>
+    <div class="heading-block__content">
+      <blockquote class="heading-block__quote" data-editable="rich" data-name="quote" data-placeholder="Add a quote…">
+        <p>Add a quote</p>
+      </blockquote>
+      <div class="heading-block__author">
+        <img class="heading-block__avatar" data-name="avatar" data-default-src="https://placehold.co/64x64" src="https://placehold.co/64x64" alt="" v-bind="e.blockImage()">
+        <div class="heading-block__author-info">
+          <div class="heading-block__author-name" data-editable="plain" data-name="author_name" data-placeholder="Author name">Author name</div>
+          <div class="heading-block__author-position" data-editable="plain" data-name="author_position" data-placeholder="Position, Company">CEO of Company</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>

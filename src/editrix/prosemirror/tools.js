@@ -1,134 +1,35 @@
-export const blockTools = {
-  blockquote: {
-    title: 'Blockquote',
-    icon: 'ph ph-quotes',
-    hotKey: '%%%+Shift+B',
-    keymap: 'Mod-Shift-b',
-  },
-  heading: {
-    title: 'Heading',
-    icon: 'ph ph-text-h',
-    hotKey: '%%%+Shift+H',
-    keymap: 'Mod-Shift-h',
-  },
-  list: {
-    bulletList: {
-      title: 'Bullet List',
-      icon: 'ph ph-list-bullets',
-      hotKey: '%%%+Shift+8',
-      keymap: 'Mod-Shift-8',
-    },
-    orderedList: {
-      title: 'Ordered List',
-      icon: 'ph ph-list-numbers',
-      hotKey: '%%%+Shift+7',
-      keymap: 'Mod-Shift-7',
-    },
-  },
-  horizontalRule: {
-    title: 'Horizontal Rule',
-    icon: 'ph ph-line-horizontal',
-    hotKey: '%%%+Shift+-',
-    keymap: 'Mod-Shift--',
-  },
-};
+// Mark tools — toggled with toggleMark(schema.marks[name]). "primary: true" keeps a button directly
+// on the toolbar (in this array's own order — Bold then Italic); the rest collapse into toolbar.js's
+// own "More formatting" overflow menu.
+export const MARK_TOOLS = [
+  { name: 'strong', title: 'Bold', description: 'Bold Text', icon: 'ph ph-text-b', shortcut: 'Mod-b', primary: true },
+  { name: 'em', title: 'Italic', description: 'Italic text', icon: 'ph ph-text-italic', shortcut: 'Mod-i', primary: true },
+  { name: 'underline', title: 'Underline', description: 'Underline the selected text', icon: 'ph ph-text-underline', shortcut: 'Mod-u' },
+  { name: 'strike', title: 'Strikethrough', description: 'Cross out the selected text', icon: 'ph ph-text-strikethrough', shortcut: 'Mod-Shift-x' },
+  { name: 'subscript', title: 'Subscript', description: 'Lower the selected text below the baseline', icon: 'ph ph-text-subscript', shortcut: 'Mod-,' },
+  { name: 'superscript', title: 'Superscript', description: 'Raise the selected text above the baseline', icon: 'ph ph-text-superscript', shortcut: 'Mod-.' },
+  { name: 'code', title: 'Code', description: 'Format the selected text as inline code', icon: 'ph ph-code', shortcut: 'Mod-e' },
+];
 
-export const inlineTools = {
-  textFormat: {
-    bold: {
-      title: 'Bold',
-      icon: 'ph ph-text-b',
-      hotKey: '%%%+B',
-      keymap: 'Mod-b',
-    },
-    italic: {
-      title: 'Italic',
-      icon: 'ph ph-text-italic',
-      hotKey: '%%%+I',
-      keymap: 'Mod-i',
-    },
-    underline: {
-      title: 'Underline',
-      icon: 'ph ph-text-underline',
-      hotKey: '%%%+U',
-      keymap: 'Mod-u',
-    },
-    strikethrough: {
-      title: 'Strikethrough',
-      icon: 'ph ph-text-strikethrough',
-      hotKey: '%%%+Shift+X',
-      keymap: 'Mod-Shift-x',
-    },
-  },
-  subscriptSuperscript: {
-    subscript: {
-      title: 'Subscript',
-      icon: 'ph ph-text-subscript',
-      hotKey: '%%%+,',
-      keymap: 'Mod-,',
-    },
-    superscript: {
-      title: 'Superscript',
-      icon: 'ph ph-text-superscript',
-      hotKey: '%%%+.',
-      keymap: 'Mod-.',
-    },
-  },
-  codeAndLink: {
-    code: {
-      title: 'Code',
-      icon: 'ph ph-code',
-      hotKey: '%%%+E',
-      keymap: 'Mod-e',
-    },
-    link: {
-      title: 'Insert Link',
-      icon: 'ph ph-link',
-      hotKey: '%%%+K',
-      keymap: 'Mod-k',
-    },
-  },
-  undoRedo: {
-    undo: {
-      title: 'Undo',
-      icon: 'ph ph-arrow-counter-clockwise',
-      hotKey: '%%%+Z',
-      keymap: 'Mod-z',
-    },
-    redo: {
-      title: 'Redo',
-      icon: 'ph ph-arrow-clockwise',
-      hotKey: '%%%+Shift+Z',
-      keymap: 'Mod-Shift-z',
-    },
-  },
-  textAlign: {
-    alignLeft: {
-      title: 'Align Left',
-      icon: 'ph ph-text-align-left',
-      hotKey: '%%%+Shift+L',
-      keymap: 'Mod-Shift-l',
-    },
-    alignCenter: {
-      title: 'Align Center',
-      icon: 'ph ph-text-align-center',
-      hotKey: '%%%+Shift+E',
-      keymap: 'Mod-Shift-e',
-    },
-    alignRight: {
-      title: 'Align Right',
-      icon: 'ph ph-text-align-right',
-      hotKey: '%%%+Shift+R',
-      keymap: 'Mod-Shift-r',
-    },
-  },
-};
+// The link mark — handled separately from MARK_TOOLS, since applying it needs a URL first.
+export const LINK_TOOL = { name: 'link', title: 'Link', description: 'Add or edit a link', icon: 'ph ph-link', shortcut: 'Mod-k' };
 
-export const titleTools = {
-  textFormat: Object.fromEntries(
-    Object.entries(inlineTools.textFormat)
-      .filter(([key]) => key !== 'bold')
-  ),
-  subscriptSuperscript: inlineTools.subscriptSuperscript,
-  codeAndLink: inlineTools.codeAndLink,
-}
+// Levels offered by the toolbar's own block-type <select> — only shown when the schema defines a
+// "heading" node (i.e. the "rich" scheme; a heading field is itself already a fixed level, so it
+// has no use for this).
+export const HEADING_LEVELS = [1, 2, 3, 4, 5, 6];
+
+// The list and blockquote node types offered by that same <select>, each gated on the schema
+// defining it — switching between "paragraph", "heading", "list" and "blockquote" is really one
+// choice, not separate toggle buttons.
+export const LIST_TYPES = [
+  { name: 'bullet_list', title: 'Bulleted List' },
+  { name: 'ordered_list', title: 'Ordered List' },
+];
+export const BLOCKQUOTE_TYPE = { name: 'blockquote', title: 'Blockquote' };
+
+// Marks that need a value before they can be applied — handled by toolbar.js's own popover UI (a
+// Filler-driven swatch, mirroring the link editor), not a plain toggle button, so they live outside
+// MARK_TOOLS.
+export const COLOR_TOOL = { name: 'color', title: 'Text Color', description: "Change the selected text's color", icon: 'ph ph-palette' };
+export const HIGHLIGHT_TOOL = { name: 'highlight', title: 'Highlight', description: 'Highlight the selected text with a background color', icon: 'ph ph-highlighter-circle' };

@@ -1,0 +1,61 @@
+// Compiled separately from styles.scss and loaded into the canvas <iframe>'s own <head> at runtime
+// (see getCanvasList() in youla-editrix.js) — never into the parent editor document. Everything here
+// decorates DOM that actually lives inside that iframe: the block-container chrome overlaid on a
+// selected/hovered/dragging block, and every block type's own content styles. A future arbitrary
+// theme stylesheet is loaded into the same iframe <head>, alongside this — real CSS isolation from
+// the editor chrome, and from the theme, since neither shares a cascade with the parent document.
+@import 'editrix/styles/editor/editor';
+
+// Per-block-type styles — see editrix/styles/editrix.scss's own comment for the folder convention.
+@import 'editrix/blocks/heading/index';
+
+// The iframe document's own base — a browser's default 8px <body> margin would otherwise misalign
+// canvas content against the parent chrome, and the parent's own ".editrix-canvas" background
+// (editor/canvas.scss) doesn't show through an iframe's own (opaque-by-default) document.
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+
+.editrix-canvas-list {
+	position: relative;
+	min-height: 100vh;
+
+	// Drives ".is-empty" (canvasList's own ":class" binding in youla-editrix.js) — moved here, off
+	// the parent's own ".editrix-canvas", since a replaced element like an <iframe> never generates
+	// ::before/::after pseudo-elements at all, regardless of its "display"/"content".
+	&.is-empty {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 12px;
+
+		&:before {
+			content: '';
+			width: 96px;
+			height: 96px;
+			background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Crect x='28' y='60' width='200' height='136' rx='16' fill='none' stroke='%23c9c9c9' stroke-width='10' stroke-dasharray='16 12'/%3E%3Cpath d='M128 108v56M100 136h56' stroke='%23c9c9c9' stroke-width='10' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat center / contain;
+		}
+
+		&:after {
+			content: 'Drag blocks here to get started';
+			color: #9a9a9a;
+			font-size: 13px;
+			font-weight: 500;
+		}
+	}
+}
+
+.editrix-drop-placeholder {
+	position: absolute;
+	left: 0;
+	right: 0;
+	height: 6px;
+	transform: translateY(-50%);
+	background-color: #f3bafd;
+	pointer-events: none;
+	transition: top 0.12s ease;
+	z-index: 3;
+}

@@ -1,4 +1,18 @@
 /**
+ * True if "value" is a DOM node — realm-safe, unlike a bare "instanceof Node": a node created by a
+ * same-origin iframe's own document (the editrix canvas, say) has a prototype chain rooted in
+ * *that* iframe's own "Node" constructor, not this script's, so "value instanceof Node" is false
+ * for it even though it's every bit as much a real node. "nodeType" (a plain number) is on every
+ * Node regardless of which window created it, so duck-typing on it works across that boundary.
+ *
+ * @param {*} value
+ * @returns {boolean}
+ */
+export function isNode(value) {
+  return !!value && typeof value === 'object' && typeof value.nodeType === 'number';
+}
+
+/**
  * Waits for the DOM to finish parsing.
  *
  * @returns {Promise<void>} Resolves once the document is ready.
@@ -42,7 +56,12 @@ export function closestDirective(el, name) {
 /**
  * Walks the DOM tree rooted at "el" depth-first, invoking "callback" for "el" itself and every
  * descendant. Stops at a nested "v-data" component's boundary, and treats a "v-each" template
- * element as a leaf rather than walking into its unrendered children.
+ * element as a leaf rather than walking into its unrendered children. A same-origin "<iframe>"
+ * with content already in it (the editrix canvas, say — see getCanvasList() in youla-editrix.js)
+ * walks straight into its own "<body>" too, transparently: refresh()'s own domWalk(self.root, ...)
+ * is rooted at the app's single top-level element, so without this, anything portaled into an
+ * iframe's separate document would only ever get its very first render (via an explicit
+ * initialize() call) and never react to a later state change again.
  *
  * @param {Element} el - The root element to start walking from.
  * @param {Function} callback - Invoked once for "el" and for each element visited under it.
@@ -51,8 +70,10 @@ export function closestDirective(el, name) {
 export function domWalk(el, callback) {
   callback(el);
 
+  const iframeBody = el.tagName === 'IFRAME' ? el.contentDocument?.body : null;
+
   // Snapshot first: "callback(node)" may alter the DOM, so re-reading "nextElementSibling" could traverse injected markup instead of "el"'s original siblings.
-  const children = Array.from(el.children);
+  const children = Array.from(iframeBody ? iframeBody.children : el.children);
 
   for (const node of children) {
     if (hasDirective(node, 'v-data')) {

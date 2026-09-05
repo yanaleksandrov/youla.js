@@ -25,12 +25,12 @@ const parseHtmlPages = dir => {
   }, []);
 }
 
-// The scss entries under parseEntries('scss', 'css') below (e.g. "css/styles") produce a CSS file
-// via MiniCssExtractPlugin but, since every webpack entry is inherently JS, also an accompanying
-// (empty) JS chunk — CleanWebpackPlugin's own cleanAfterEveryBuildPatterns already deletes that
-// "**/styles.js" file post-build, but html-webpack-plugin has already injected a <script> tag for it
-// by then, left dangling (404) in every generated page. Strips just that script tag; the CSS <link>
-// for the same entry is untouched.
+// Every scss entry under parseEntries('scss', 'css') below (e.g. "css/styles", "css/editrix-canvas")
+// produces a CSS file via MiniCssExtractPlugin but, since every webpack entry is inherently JS, also
+// an accompanying (empty) JS chunk — CleanWebpackPlugin's own cleanAfterEveryBuildPatterns already
+// deletes every "css/*.js" file post-build, but html-webpack-plugin has already injected a <script>
+// tag for it by then, left dangling (404) in every generated page. Strips just that script tag; the
+// CSS <link> for the same entry is untouched.
 class StripCssScriptTagsPlugin {
   apply(compiler) {
     compiler.hooks.compilation.tap('StripCssScriptTagsPlugin', (compilation) => {
@@ -80,7 +80,7 @@ module.exports = {
   plugins: [
     new CleanWebpackPlugin({
       protectWebpackAssets: false,
-      cleanAfterEveryBuildPatterns: ['*.LICENSE.txt', '**/styles.js'],
+      cleanAfterEveryBuildPatterns: ['*.LICENSE.txt', 'css/*.js'],
     }),
     new MiniCssExtractPlugin({
       filename: '[name].css',
@@ -122,7 +122,7 @@ module.exports = {
         // that inject their own styles into a shadow root instead of shipping a global stylesheet.
         test: /\.(sass|scss)$/,
         resourceQuery: /inline/,
-        include: path.resolve(__dirname, 'src/styles'),
+        include: [path.resolve(__dirname, 'src/styles'), path.resolve(__dirname, 'src/editrix-canvas.scss')],
         use: [
           {
             loader: 'css-loader',
@@ -154,7 +154,7 @@ module.exports = {
       {
         test: /\.(sass|scss)$/,
         resourceQuery: { not: [/inline/] },
-        include: path.resolve(__dirname, 'src/styles'),
+        include: [path.resolve(__dirname, 'src/styles'), path.resolve(__dirname, 'src/editrix-canvas.scss')],
         use: [
           {
             loader: MiniCssExtractPlugin.loader,
@@ -200,6 +200,14 @@ module.exports = {
         // Each editrix control's own template — src/editrix/control/<name>/index.html — sits next to its JS, not under src/view.
         test: /\.html$/,
         include: path.resolve(__dirname, 'src/editrix/control') + path.sep,
+        use: ['raw-loader'],
+      },
+      {
+        // Each block's own template — src/editrix/blocks/<type>/index.html — a "<template id=...>",
+        // required from view/editrix.html the same way control templates are (see webpack.config.js's
+        // own comment above), and cloned at runtime via editrix/controls/template.js.
+        test: /\.html$/,
+        include: path.resolve(__dirname, 'src/editrix/blocks') + path.sep,
         use: ['raw-loader'],
       },
     ],

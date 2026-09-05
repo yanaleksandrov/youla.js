@@ -4,11 +4,16 @@
 
 	padding: 0 calc(50% - (#{$max-width} / 2));
 	transition: border 0.15s, opacity 0.2s, transform 0.2s;
-	border: 1px solid transparent;
 	position: relative;
+	// A block shorter than this leaves no safe room to click below the sticky "-tools" bar (top:8px
+	// + its own 22px) without hitting the edit/delete icons instead — worst case, a click meant to
+	// select the block deletes it. Keeps a tall-enough floor regardless of a block type's own content.
+	min-height: 48px;
 
-	&:hover {
-		border: 1px solid $tools-color;
+	&:hover,
+	&.is-active {
+		outline: 1px solid $tools-color;
+		outline-offset: -1px;
 	}
 
 	button,
@@ -25,43 +30,66 @@
 		margin-bottom: 4px;
 	}
 
-	// Drag-to-reorder (editrix/sortable.js's createSortableItem()/createDropTarget()) — the "transform" transition above is what makes animateReorder()'s FLIP technique read as a smooth slide, same as every other sortable list (repeater.scss, section-repeater.scss, gallery.scss).
 	&.is-dragging {
 		opacity: 0.4;
 	}
 
-	&-tools {
+	&.is-locked {
+		outline: 1px solid var(--editrix-lock-color, #9e9e9e);
+		outline-offset: -1px;
+	}
+
+	&-lock-overlay {
 		position: absolute;
-		top: -22px;
+		inset: 0;
+		z-index: 4;
+		cursor: not-allowed;
+
+		// The overlay element's own text is the locking user's name (see syncBlockLockState() in
+		// youla-editrix.js), rendered as a small label pinned to the block's top-left corner.
+		font-size: 10px;
+		font-weight: 600;
+		line-height: 1;
+		color: #fff;
+		padding: 3px 6px;
+		border-end-end-radius: 4px;
+		background-color: var(--editrix-lock-color, #9e9e9e);
+		width: fit-content;
+		height: fit-content;
+	}
+
+	&-tools {
+		display: flex;
+		font-size: 12px;
+		list-style: none;
+		margin: 0 auto;
 		left: 0;
 		right: 0;
-		margin: 0 auto;
 		padding: 0;
-		display: flex;
-		list-style: none;
-		font-size: 12px;
+		position: absolute;
+		top: 0;
 		width: fit-content;
 
 		&:before,
 		&:after {
 			content: '';
 			position: absolute;
-			top: 2px;
-			border-block-start: 20px solid transparent;
-			border-block-end: 0 none transparent;
+			bottom: 2px;
+			border-block-start: 0 none transparent;
+			border-block-end: 20px solid transparent;
 			transition: all .15s;
 		}
 
 		&:before {
-			right: calc(100% - 1px);
-			border-inline-start: 0 none transparent;
-			border-inline-end: 12px solid $tools-color;
-		}
-
-		&:after {
 			left: calc(100% - 1px);
 			border-inline-start: 12px solid $tools-color;
 			border-inline-end: 0 none transparent;
+		}
+
+		&:after {
+			right: calc(100% - 1px);
+			border-inline-start: 0 none transparent;
+			border-inline-end: 12px solid $tools-color;
 		}
 	}
 
@@ -82,11 +110,11 @@
 		}
 
 		&:first-child {
-			border-start-start-radius: 5px;
+			border-end-start-radius: 5px;
 		}
 
 		&:last-child {
-			border-start-end-radius: 5px;
+			border-end-end-radius: 5px;
 		}
 	}
 }

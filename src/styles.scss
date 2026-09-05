@@ -439,18 +439,26 @@ table {
 }
 
 .v-tooltip {
+	// Redefined per "--style-<name>" modifier (variant class below) — everything that gives a
+	// tooltip its color lives here so a variant only has to override these three, not restate the
+	// box and its ":after" tail separately.
+	--v-tooltip-bg: #fff;
+	--v-tooltip-border: var(--expansa-border, #dfe2e3);
+	--v-tooltip-color: inherit;
+
 	position: fixed;
 	top: 0;
 	left: 0;
 	z-index: 999999;
 	max-width: 280px;
 	padding: 0.5rem 0.75rem;
-	background-color: #fff;
+	background-color: var(--v-tooltip-bg);
+	color: var(--v-tooltip-color);
 	font-size: var(--fs-xs);
 	line-height: 1.4;
 	transform-origin: center;
 
-	border: 1px solid var(--expansa-border, #dfe2e3);
+	border: 1px solid var(--v-tooltip-border);
 	border-radius: var(--expansa-border-radius, 10px);
 	corner-shape: superellipse(var(--expansa-corner-shape-superellipse, 1.825));
 
@@ -459,11 +467,11 @@ table {
 		height: 10px;
 		position: absolute;
 		width: 10px;
-		background-color: #fff;
+		background-color: var(--v-tooltip-bg);
 		z-index: 0;
 		transition: 0.2s ease-in-out;
-		border-right: 1px solid var(--expansa-border, #dfe2e3);
-		border-bottom: 1px solid var(--expansa-border, #dfe2e3);
+		border-right: 1px solid var(--v-tooltip-border);
+		border-bottom: 1px solid var(--v-tooltip-border);
 		border-bottom-right-radius: 3px;
 		border-top-left-radius: 8px;
 	}
@@ -499,17 +507,43 @@ table {
 		top: calc(50% - 5px);
 		transform: rotate(-45deg);
 	}
+
+	&--error {
+		--v-tooltip-bg: #fdecea;
+		--v-tooltip-border: #f5b5ab;
+		--v-tooltip-color: #611a15;
+	}
+
+	&--warning {
+		--v-tooltip-bg: #fff4e5;
+		--v-tooltip-border: #ffcc80;
+		--v-tooltip-color: #663c00;
+	}
+
+	&--success {
+		--v-tooltip-bg: #edf7ed;
+		--v-tooltip-border: #a5d6a7;
+		--v-tooltip-color: #1e4620;
+	}
+
+	&--dark {
+		--v-tooltip-bg: #171717;
+		--v-tooltip-border: #171717;
+		--v-tooltip-color: #ffffff;
+	}
 }
 
 @keyframes v-tooltip-bounce-in {
 	0% {
-		opacity: 0; transform: scale(0.25);
+		opacity: 0;
+		transform: scale(0.125);
 	}
 	50% {
-		opacity: 1; transform: scale(1.05);
+		opacity: 1;
+		transform: scale(1.025);
 	}
 	75% {
-		transform: scale(0.95);
+		transform: scale(0.975);
 	}
 	100% {
 		transform: scale(1);

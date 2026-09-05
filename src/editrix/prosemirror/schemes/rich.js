@@ -1,4 +1,5 @@
 import { Schema } from 'prosemirror-model';
+import { marks } from './marks';
 
 // NodeSpecs for this schema — see https://prosemirror.net/docs/ref/#model.NodeSpec
 const nodes = {
@@ -22,6 +23,33 @@ const nodes = {
     group: 'block',
     parseDOM: [{ tag: 'hr' }],
     toDOM: () => ['hr']
+  },
+  // Hand-written rather than pulled in via prosemirror-schema-list's addListNodes() — see
+  // toolbar.js's block-type <select> (which offers both list types alongside Text/Heading) and its
+  // wrapInList/liftListItem/sinkListItem/splitListItem keymap for how these are actually used.
+  bullet_list: {
+    content: 'list_item+',
+    group: 'block',
+    parseDOM: [{ tag: 'ul' }],
+    toDOM: () => ['ul', 0]
+  },
+  ordered_list: {
+    content: 'list_item+',
+    group: 'block',
+    attrs: { order: { default: 1, validate: 'number' } },
+    parseDOM: [{
+      tag: 'ol',
+      getAttrs(dom) { return { order: dom.hasAttribute('start') ? +dom.getAttribute('start') : 1 }; }
+    }],
+    toDOM(node) { return node.attrs.order === 1 ? ['ol', 0] : ['ol', { start: node.attrs.order }, 0]; }
+  },
+  list_item: {
+    // "block*" (not "inline*") lets an item hold more than one paragraph, or nest another list/
+    // blockquote inside it — matches prosemirror-schema-list's own default list_item content.
+    content: 'paragraph block*',
+    defining: true,
+    parseDOM: [{ tag: 'li' }],
+    toDOM: () => ['li', 0]
   },
   heading: {
     attrs: { level: { default: 1, validate: 'number' } },
@@ -86,48 +114,7 @@ const nodes = {
   }
 };
 
-// MarkSpecs for this schema — see https://prosemirror.net/docs/ref/#model.MarkSpec
-const marks = {
-  link: {
-    attrs: {
-      href: { validate: 'string' },
-      title: { default: null, validate: 'string|null' }
-    },
-    inclusive: false,
-    parseDOM: [
-      {
-        tag: 'a[href]',
-        getAttrs(dom) {
-          return { href: dom.getAttribute('href'), title: dom.getAttribute('title') };
-        }
-      }
-    ],
-    toDOM(node) { let { href, title } = node.attrs; return ['a', { href, title }, 0]; }
-  },
-  em: {
-    parseDOM: [
-      { tag: 'i' }, { tag: 'em' },
-      { style: 'font-style=italic' },
-      { style: 'font-style=normal', clearMark: m => m.type.name === 'em' }
-    ],
-    toDOM() { return ['em', 0]; }
-  },
-  strong: {
-    parseDOM: [
-      { tag: 'strong' },
-      // Google Docs wraps pasted content in `<b>` with font-weight normal; don't treat that as strong.
-      { tag: 'b', getAttrs: (node) => node.style.fontWeight !== 'normal' && null },
-      { style: 'font-weight=400', clearMark: m => m.type.name === 'strong' },
-      { style: 'font-weight', getAttrs: (value) => /^(bold(er)?|[5-9]\d{2,})$/.test(value) && null },
-    ],
-    toDOM() { return ['strong', 0]; }
-  },
-  code: {
-    parseDOM: [{ tag: 'code' }],
-    toDOM() { return ['code', 0]; }
-  }
-};
-
-// Roughly matches CommonMark's document schema, minus lists (see prosemirror-schema-list).
-// Extend or read `spec.nodes`/`spec.marks` to reuse pieces elsewhere.
-export const baseSchema = new Schema({ nodes, marks });
+// The "rich" text scheme — paragraphs, headings, blockquotes, bulleted/ordered lists, images and
+// other block-level structure, plus every inline mark (marks.js). Roughly matches CommonMark's
+// document schema.
+export const richSchema = new Schema({ nodes, marks });

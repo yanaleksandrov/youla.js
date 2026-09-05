@@ -1,6 +1,5 @@
 @import 'editor/editrix';
 @import 'editor/icons';
-@import 'editor/editor';
 @import 'editor/blocks';
 @import 'editor/tooltip';
 @import 'editor/canvas';
@@ -8,15 +7,22 @@
 @import 'editor/sidebar';
 @import 'editor/section';
 
+// "editor/editor" (the ".editrix-container" block chrome) and every block type's own content
+// styles (editrix/blocks/<type>/index.scss) live in src/editrix-canvas.scss instead — they decorate
+// DOM that actually renders inside the canvas <iframe>, not this document. See that file's own
+// comment, and getCanvasList() in youla-editrix.js.
+
 @import 'controls/details';
 @import 'controls/buttons';
 @import 'controls/borders';
 @import 'controls/inputs';
 @import 'controls/gallery';
+@import 'controls/meta';
 @import 'controls/categories';
 @import 'controls/fields';
 @import 'controls/repeater';
 @import 'controls/section-repeater';
+@import 'controls/custom-css';
 
 .editrix-list {
 	margin: 0;

@@ -1,4 +1,4 @@
-import { domWalk } from './dom';
+import { domWalk, isNode } from './dom';
 import { debounce } from './timing';
 import { makeObservable, RAW, toRaw } from './reactivity';
 import { saferEval } from './eval';
@@ -130,7 +130,7 @@ export default class Component {
         deps.push(prop);
 
         // Same exclusion as reactivity.js's own wrap(): a DOM node read off tracked data (e.g. one array entry of a "blocks" list) must come back raw, or identity checks against it (indexOf/includes/===, e.g. against "$el") always fail — every read returns a *new* wrapper, never equal to anything else, wrapped or not.
-        if (typeof target[prop] === 'object' && target[prop] !== null && !(target[prop] instanceof Node)) {
+        if (typeof target[prop] === 'object' && target[prop] !== null && !isNode(target[prop])) {
           return makeProxy(target[prop]);
         }
 
@@ -146,7 +146,7 @@ export default class Component {
     // "v-each" loop variables are passed to saferEval as separate parameters rather than properties of $data, so wrap object-valued ones the same way or property reads on them go untracked. Same DOM-node exclusion as makeProxy()'s own recursive case above — a "v-each" over a list of elements shouldn't wrap them either.
     const trackedHelperVariables = Object.fromEntries(
       Object.entries(otherVariables).map(([key, value]) => [
-        key, (typeof value === 'object' && value !== null && !(value instanceof Node)) ? makeProxy(value) : value
+        key, (typeof value === 'object' && value !== null && !isNode(value)) ? makeProxy(value) : value
       ])
     );
 
@@ -393,12 +393,15 @@ export default class Component {
     let options = {};
     let handler = e => this.invokeListener(expression, e, el);
 
+    // "el"'s own document/window, not this script's — matters once "el" lives inside a same-origin
+    // iframe with its own separate document (the editrix canvas, say): a keydown while focus sits
+    // inside that iframe fires on *its* window, never bubbling out to the parent's.
     if (modifiers.includes('window')) {
-      target = window;
+      target = el.ownerDocument.defaultView;
     }
 
     if (modifiers.includes('document')) {
-      target = document;
+      target = el.ownerDocument;
     }
 
     if (modifiers.includes('passive')) {
@@ -422,7 +425,7 @@ export default class Component {
     }
 
     if (modifiers.includes('outside')) {
-      target = document;
+      target = el.ownerDocument;
 
       handler = wrapHandler(handler, (next, e) => {
         // Ignore a click that came from the element or within it.

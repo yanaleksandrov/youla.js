@@ -32,6 +32,12 @@
         <span class="editrix-buttons-item" title="Slugs history"><i class="ph ph-clock-counter-clockwise"></i></span>
       </div>
 
+      <div class="editrix-toolbar-presence" v-bind="e.presenceBar">
+        <div class="editrix-toolbar-presence-item" v-each="user in presentUsers" :title="user.name" :style="{'--editrix-presence-color': e.colorForUser(user.id)}">
+          <span v-text="user.name.slice(0, 1)"></span>
+        </div>
+      </div>
+
       <div class="editrix-toolbar-page">
         Page
 
@@ -56,23 +62,13 @@
 
     <div class="editrix-sidebar">
       <div class="editrix-sidebar-nav">
-        <div class="editrix-sidebar-tab" v-bind="e.sidebarTab('blocks')">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 256 256">
-            <path d="m223 68-88-48a14 14 0 0 0-14 0L33 68a14 14 0 0 0-7 12v96a14 14 0 0 0 7 12l88 48a14 14 0 0 0 14 0l88-48a14 14 0 0 0 7-12V80a14 14 0 0 0-7-12Zm-96-38a2 2 0 0 1 2 0l84 46-85 46-85-46ZM39 178a2 2 0 0 1-1-2V87l84 46v90Zm178 0-83 45v-90l84-46v89a2 2 0 0 1-1 2Z"/>
-          </svg>
-          Blocks
-        </div>
-        <div class="editrix-sidebar-tab" v-bind="e.sidebarTab('patterns')">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 256 256">
-            <path d="M208 90H48a14 14 0 0 0-14 14v96a14 14 0 0 0 14 14h160a14 14 0 0 0 14-14v-96a14 14 0 0 0-14-14Zm2 110a2 2 0 0 1-2 2H48a2 2 0 0 1-2-2v-96a2 2 0 0 1 2-2h160a2 2 0 0 1 2 2ZM50 64a6 6 0 0 1 6-6h144a6 6 0 0 1 0 12H56a6 6 0 0 1-6-6Zm16-32a6 6 0 0 1 6-6h112a6 6 0 0 1 0 12H72a6 6 0 0 1-6-6Z"/>
-          </svg>
-          Patterns
-        </div>
-        <div class="editrix-sidebar-tab" v-bind="e.sidebarTab('content')">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 256 256">
-            <path d="M208 90H48a14 14 0 0 0-14 14v96a14 14 0 0 0 14 14h160a14 14 0 0 0 14-14v-96a14 14 0 0 0-14-14Zm2 110a2 2 0 0 1-2 2H48a2 2 0 0 1-2-2v-96a2 2 0 0 1 2-2h160a2 2 0 0 1 2 2ZM50 64a6 6 0 0 1 6-6h144a6 6 0 0 1 0 12H56a6 6 0 0 1-6-6Zm16-32a6 6 0 0 1 6-6h112a6 6 0 0 1 0 12H72a6 6 0 0 1-6-6Z"/>
-          </svg>
-          Content
+        <!-- Loop var is "navTab", not "tab" — "tab" is itself a reactive data property (the active
+             tab name), and a "with($data)" block's own property always shadows a same-named v-each
+             loop variable (a function parameter), so referencing "tab.icon" etc. here would silently
+             resolve to that string instead of the loop item. -->
+        <div class="editrix-sidebar-tab" v-each="navTab in sidebarTabs" v-bind="e.sidebarTab(navTab.name, navTab.tooltip)">
+          <span v-html="navTab.icon"></span>
+          <span v-text="navTab.label"></span>
         </div>
       </div>
 
@@ -88,30 +84,13 @@
         <div class="editrix-blocks" v-bind="e.sidebarPanel('patterns')" hidden>
           <div class="editrix-inputs-box"><i class="ph ph-magnifying-glass"></i> <input placeholder="Type for find..."></div>
 
-          <div class="editrix-blocks-item" v-bind="e.paletteItem('editrix-heading')">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256">
-              <path d="M112 44a4 4 0 0 0-4 4v20H24a12 12 0 0 0-12 12v96a12 12 0 0 0 12 12h84v20a4 4 0 0 0 8 0V48a4 4 0 0 0-4-4ZM24 180a4 4 0 0 1-4-4V80a4 4 0 0 1 4-4h84v104ZM244 80v96a12 12 0 0 1-12 12h-88a4 4 0 0 1 0-8h88a4 4 0 0 0 4-4V80a4 4 0 0 0-4-4h-88a4 4 0 0 1 0-8h88a12 12 0 0 1 12 12ZM84 112a4 4 0 0 1-4 4H68v28a4 4 0 0 1-8 0v-28H48a4 4 0 0 1 0-8h32a4 4 0 0 1 4 4Z"/>
-            </svg>
-            Home Page 1
-          </div>
-          <div class="editrix-blocks-item" v-bind="e.paletteItem('editrix-image')">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256">
-              <rect x="28" y="48" width="200" height="160" rx="14" fill="none" stroke="#000" stroke-width="14"/>
-              <circle cx="88" cy="104" r="16"/>
-              <path d="M52 176 L100 124 L136 160 L180 108 L204 176 Z"/>
-            </svg>
-            Home Page 2
-          </div>
-          <div class="editrix-blocks-item" v-bind="e.paletteItem('editrix-heading')">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256">
-              <path d="M112 44a4 4 0 0 0-4 4v20H24a12 12 0 0 0-12 12v96a12 12 0 0 0 12 12h84v20a4 4 0 0 0 8 0V48a4 4 0 0 0-4-4ZM24 180a4 4 0 0 1-4-4V80a4 4 0 0 1 4-4h84v104ZM244 80v96a12 12 0 0 1-12 12h-88a4 4 0 0 1 0-8h88a4 4 0 0 0 4-4V80a4 4 0 0 0-4-4h-88a4 4 0 0 1 0-8h88a12 12 0 0 1 12 12ZM84 112a4 4 0 0 1-4 4H68v28a4 4 0 0 1-8 0v-28H48a4 4 0 0 1 0-8h32a4 4 0 0 1 4 4Z"/>
-            </svg>
-            Home Page 3
+          <div class="editrix-blocks-item" v-each="pattern in patternList" v-bind="e.patternItem(pattern.blocks)">
+            <span v-html="pattern.icon"></span>
+            <span v-text="pattern.label"></span>
           </div>
         </div>
         <div class="editrix-blocks" v-bind="e.sidebarPanel('content')" hidden>
-          <div class="editrix-blocks-empty" v-show="!activeBlock">Select a block on the canvas to edit its settings.</div>
-          <div class="editrix-fields" v-show="activeBlock" v-bind="e.contentFields"></div>
+          <div class="editrix-fields" v-bind="e.contentFields"></div>
 
           <!-- Every other control type's own <template> lives in its own partial under editrix/controls/ (see repeater.html's own comment for why) — required directly from editrix.html, not nested here. -->
           <template id="editrix-field-template">
@@ -122,34 +101,45 @@
             </div>
           </template>
         </div>
+        <div class="editrix-blocks" v-bind="e.sidebarPanel('page')" hidden>
+          <div class="editrix-fields" v-bind="e.pageFields"></div>
+        </div>
       </div>
     </div>
 
-    <%= _.template(require('../editrix/control/text/index.html').default)(data) %>
-    <%= _.template(require('../editrix/control/switcher/index.html').default)(data) %>
-    <%= _.template(require('../editrix/control/select/index.html').default)(data) %>
-    <%= _.template(require('../editrix/control/color/index.html').default)(data) %>
-    <%= _.template(require('../editrix/control/url/index.html').default)(data) %>
-    <%= _.template(require('../editrix/control/slider/index.html').default)(data) %>
-    <%= _.template(require('../editrix/control/dimensions/index.html').default)(data) %>
-    <%= _.template(require('../editrix/control/repeater/index.html').default)(data) %>
-    <%= _.template(require('../editrix/control/textarea/index.html').default)(data) %>
-    <%= _.template(require('../editrix/control/gallery/index.html').default)(data) %>
-    <%= _.template(require('../editrix/control/meta/index.html').default)(data) %>
-    <%= _.template(require('../editrix/control/categories/index.html').default)(data) %>
-    <%= _.template(require('../editrix/control/margin/index.html').default)(data) %>
-    <%= _.template(require('../editrix/control/padding/index.html').default)(data) %>
-    <%= _.template(require('../editrix/control/borders/index.html').default)(data) %>
-    <%= _.template(require('../editrix/control/alignment/index.html').default)(data) %>
-    <%= _.template(require('../editrix/control/css-classes/index.html').default)(data) %>
-
-    <div class="editrix-canvas" v-bind="e.canvas"></div>
+    <iframe class="editrix-canvas" v-bind="e.canvas"></iframe>
 
     <div class="editrix-toolbox" v-bind="e.toolboxSections"></div>
   </div>
 
   <script type="application/json" id="editrix-data">
     {
+      "pageId": "home-page",
+      "currentUser": {
+        "id": "user-1",
+        "name": "Yan Aleksandrov",
+        "avatarUrl": null
+      },
+      "sidebarTabs": [
+        {
+          "name": "blocks",
+          "label": "Blocks",
+          "icon": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 256 256\"><path d=\"m223 68-88-48a14 14 0 0 0-14 0L33 68a14 14 0 0 0-7 12v96a14 14 0 0 0 7 12l88 48a14 14 0 0 0 14 0l88-48a14 14 0 0 0 7-12V80a14 14 0 0 0-7-12Zm-96-38a2 2 0 0 1 2 0l84 46-85 46-85-46ZM39 178a2 2 0 0 1-1-2V87l84 46v90Zm178 0-83 45v-90l84-46v89a2 2 0 0 1-1 2Z\"/></svg>",
+          "tooltip": "Drag blocks onto the canvas"
+        },
+        {
+          "name": "patterns",
+          "label": "Patterns",
+          "icon": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 256 256\"><path d=\"M208 90H48a14 14 0 0 0-14 14v96a14 14 0 0 0 14 14h160a14 14 0 0 0 14-14v-96a14 14 0 0 0-14-14Zm2 110a2 2 0 0 1-2 2H48a2 2 0 0 1-2-2v-96a2 2 0 0 1 2-2h160a2 2 0 0 1 2 2ZM50 64a6 6 0 0 1 6-6h144a6 6 0 0 1 0 12H56a6 6 0 0 1-6-6Zm16-32a6 6 0 0 1 6-6h112a6 6 0 0 1 0 12H72a6 6 0 0 1-6-6Z\"/></svg>",
+          "tooltip": "Insert a ready-made block pattern"
+        },
+        {
+          "name": "page",
+          "label": "Page",
+          "icon": "<i class=\"ph ph-gear-six\" style=\"font-size: 14px;\"></i>",
+          "tooltip": ""
+        }
+      ],
       "statuses": [
         {
           "value": "published",
@@ -238,7 +228,6 @@
               "default": "",
               "description": "",
               "condition": null,
-              "responsive": false,
               "placeholder": "Add title..."
             },
             {
@@ -248,8 +237,7 @@
               "type": "gallery",
               "default": [],
               "description": "",
-              "condition": null,
-              "responsive": false
+              "condition": null
             },
             {
               "name": "meta",
@@ -258,8 +246,7 @@
               "type": "meta",
               "default": null,
               "description": "",
-              "condition": null,
-              "responsive": false
+              "condition": null
             }
           ]
         },
@@ -279,62 +266,51 @@
               "type": "categories",
               "default": null,
               "description": "",
-              "condition": null,
-              "responsive": false
+              "condition": null
             }
           ]
-        },
-        {
-          "heading": "Position",
-          "tooltip": "",
-          "repeatable": false,
-          "name": "position",
-          "min": null,
-          "max": null,
-          "default": null,
-          "fields": [
-            {
-              "name": "margin",
-              "title": "Margin",
-              "tooltip": "",
-              "type": "margin",
-              "default": null,
-              "description": "",
-              "condition": null,
-              "responsive": false
-            },
-            {
-              "name": "padding",
-              "title": "Padding",
-              "tooltip": "",
-              "type": "padding",
-              "default": null,
-              "description": "",
-              "condition": null,
-              "responsive": false
-            },
-            {
-              "name": "borders",
-              "title": "",
-              "tooltip": "",
-              "type": "borders",
-              "default": null,
-              "description": "",
-              "condition": null,
-              "responsive": false
-            },
-            {
-              "name": "alignment",
-              "title": "Alignment",
-              "tooltip": "",
-              "type": "alignment",
-              "default": null,
-              "description": "",
-              "condition": null,
-              "responsive": false
-            }
-          ]
-        },
+        }
+      ],
+      "positionSection": {
+        "heading": "Position",
+        "tooltip": "",
+        "repeatable": false,
+        "tab": "advanced",
+        "name": "position",
+        "min": null,
+        "max": null,
+        "default": null,
+        "fields": [
+          {
+            "name": "margin",
+            "title": "Margin",
+            "tooltip": "",
+            "type": "margin",
+            "default": null,
+            "description": "",
+            "condition": null
+          },
+          {
+            "name": "padding",
+            "title": "Padding",
+            "tooltip": "",
+            "type": "padding",
+            "default": null,
+            "description": "",
+            "condition": null
+          },
+          {
+            "name": "borders",
+            "title": "",
+            "tooltip": "",
+            "type": "borders",
+            "default": null,
+            "description": "",
+            "condition": null
+          }
+        ]
+      },
+      "pageFields": [
         {
           "heading": "Advanced",
           "tooltip": "",
@@ -351,159 +327,31 @@
               "type": "css-classes",
               "default": "",
               "description": "",
-              "condition": null,
-              "responsive": false
+              "condition": null
+            },
+            {
+              "name": "customCss",
+              "title": "Custom CSS",
+              "tooltip": "Write CSS using \"selector\" in place of this element's own class — e.g. \"selector { color: red; }\"",
+              "type": "custom-css",
+              "default": "",
+              "description": "Applies only to this element, live as you type",
+              "condition": null
             }
           ]
         }
       ],
       "blocks": {
-        "editrix-heading": {
-          "label": "Heading",
-          "icon": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 256 256\"><path d=\"M112 44a4 4 0 0 0-4 4v20H24a12 12 0 0 0-12 12v96a12 12 0 0 0 12 12h84v20a4 4 0 0 0 8 0V48a4 4 0 0 0-4-4ZM24 180a4 4 0 0 1-4-4V80a4 4 0 0 1 4-4h84v104ZM244 80v96a12 12 0 0 1-12 12h-88a4 4 0 0 1 0-8h88a4 4 0 0 0 4-4V80a4 4 0 0 0-4-4h-88a4 4 0 0 1 0-8h88a12 12 0 0 1 12 12ZM84 112a4 4 0 0 1-4 4H68v28a4 4 0 0 1-8 0v-28H48a4 4 0 0 1 0-8h32a4 4 0 0 1 4 4Z\"/></svg>",
-          "html": "<h1>Add a heading</h1>",
-          "scheme": "h1",
-          "sections": [
-            {
-              "heading": "Content",
-              "tooltip": "Settings for the heading's own text and how it's aligned",
-              "repeatable": false,
-              "name": "heading",
-              "min": null,
-              "max": null,
-              "default": null,
-              "fields": [
-                {
-                  "name": "align",
-                  "title": "Alignment",
-                  "tooltip": "Text alignment inside the block",
-                  "type": "select",
-                  "default": "left",
-                  "value": "center",
-                  "description": "",
-                  "condition": null,
-                  "responsive": false,
-                  "options": { "left": "Left", "center": "Center", "right": "Right", "justify": "Justify" }
-                }
-              ]
-            },
-            {
-              "heading": "Style",
-              "tooltip": "",
-              "repeatable": false,
-              "name": "",
-              "min": null,
-              "max": null,
-              "default": null,
-              "fields": [
-                {
-                  "name": "accent_color",
-                  "title": "Accent color",
-                  "tooltip": "Used for links and highlights",
-                  "type": "color",
-                  "default": "#1069fb",
-                  "description": "",
-                  "condition": null,
-                  "responsive": false
-                }
-              ]
-            }
-          ]
-        },
-        "editrix-image": {
-          "label": "Image",
-          "icon": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 256 256\"><rect x=\"28\" y=\"48\" width=\"200\" height=\"160\" rx=\"14\" fill=\"none\" stroke=\"#000\" stroke-width=\"14\"/><circle cx=\"88\" cy=\"104\" r=\"16\"/><path d=\"M52 176 L100 124 L136 160 L180 108 L204 176 Z\"/></svg>",
-          "html": "<figure><img src=\"https://placehold.co/600x400\" alt=\"\"><figcaption>Add a caption</figcaption></figure>",
-          "scheme": null,
-          "sections": [
-            {
-              "heading": "Content",
-              "tooltip": "Settings for what the image shows and where it links to",
-              "repeatable": false,
-              "name": "image",
-              "min": null,
-              "max": null,
-              "default": null,
-              "fields": [
-                {
-                  "name": "caption",
-                  "title": "Caption",
-                  "tooltip": "Shown underneath the image",
-                  "type": "text",
-                  "default": "Add a caption",
-                  "description": "",
-                  "condition": null,
-                  "responsive": false,
-                  "placeholder": "Enter a caption…"
-                },
-                {
-                  "name": "show_caption",
-                  "title": "Show caption",
-                  "tooltip": "Hide it without deleting the text",
-                  "type": "switcher",
-                  "default": true,
-                  "description": "",
-                  "condition": null,
-                  "responsive": false
-                },
-                {
-                  "name": "link",
-                  "title": "Link",
-                  "tooltip": "Where the image goes when clicked",
-                  "type": "url",
-                  "default": { "url": "", "is_external": false, "nofollow": false },
-                  "description": "Leave empty for no link",
-                  "condition": null,
-                  "responsive": false
-                },
-                {
-                  "name": "width",
-                  "title": "Width",
-                  "tooltip": "How wide the image is",
-                  "type": "slider",
-                  "default": { "size": 100, "unit": "%" },
-                  "description": "",
-                  "condition": null,
-                  "responsive": false,
-                  "min": 0,
-                  "max": 100,
-                  "step": 1
-                }
-              ]
-            },
-            {
-              "heading": "Style",
-              "tooltip": "",
-              "repeatable": true,
-              "name": "styles",
-              "min": null,
-              "max": null,
-              "default": null,
-              "fields": [
-                {
-                  "name": "fill",
-                  "title": "",
-                  "tooltip": "",
-                  "type": "fill",
-                  "default": { "type": "solid", "color": "#1069FB", "alpha": 100, "image": null, "video": null },
-                  "description": "",
-                  "condition": null,
-                  "responsive": false,
-                  "sources": null
-                }
-              ]
-            }
-          ]
-        },
+        "editrix-heading": <%= JSON.stringify(require('../editrix/blocks/heading/config.json')) %>,
         "editrix-faq": {
           "label": "FAQ",
           "icon": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 256 256\"><rect x=\"28\" y=\"48\" width=\"200\" height=\"36\" rx=\"8\" fill=\"none\" stroke=\"#000\" stroke-width=\"14\"/><rect x=\"28\" y=\"110\" width=\"200\" height=\"36\" rx=\"8\" fill=\"none\" stroke=\"#000\" stroke-width=\"14\"/><rect x=\"28\" y=\"172\" width=\"200\" height=\"36\" rx=\"8\" fill=\"none\" stroke=\"#000\" stroke-width=\"14\"/></svg>",
-          "html": "<div class=\"faq-block\"><p>FAQ list — configure its items in the sidebar.</p></div>",
-          "scheme": null,
+          "html": "<div class=\"faq-block\" data-editable=\"rich\" data-name=\"intro\" data-placeholder=\"Add an introduction…\"><p>FAQ list — configure its items in the sidebar.</p></div>",
           "sections": [
             {
               "heading": "Content",
               "tooltip": "Add, remove and reorder the FAQ's own questions and answers",
+              "tab": "content",
               "repeatable": false,
               "name": "content",
               "min": null,
@@ -521,7 +369,6 @@
                   ],
                   "description": "Each item can hold its own set of fields — add as many, of whatever type, as a given repeater needs.",
                   "condition": null,
-                  "responsive": false,
                   "min": 0,
                   "max": 5,
                   "disabled": false,
@@ -534,7 +381,6 @@
                       "default": "New question",
                       "description": "",
                       "condition": null,
-                      "responsive": false,
                       "placeholder": "Enter a question…"
                     },
                     {
@@ -545,7 +391,6 @@
                       "default": "",
                       "description": "",
                       "condition": null,
-                      "responsive": false,
                       "placeholder": "Enter an answer…"
                     },
                     {
@@ -555,8 +400,7 @@
                       "type": "switcher",
                       "default": false,
                       "description": "",
-                      "condition": null,
-                      "responsive": false
+                      "condition": null
                     },
                     {
                       "name": "accent_color",
@@ -565,58 +409,45 @@
                       "type": "color",
                       "default": "#1069fb",
                       "description": "",
-                      "condition": { "highlighted": true },
-                      "responsive": false
+                      "condition": { "highlighted": true }
                     }
                   ]
                 }
               ]
             }
           ]
-        },
-        "editrix-links": {
-          "label": "Links",
-          "icon": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 256 256\"><rect x=\"40\" y=\"88\" width=\"104\" height=\"80\" rx=\"40\" fill=\"none\" stroke=\"#000\" stroke-width=\"14\"/><rect x=\"112\" y=\"88\" width=\"104\" height=\"80\" rx=\"40\" fill=\"none\" stroke=\"#000\" stroke-width=\"14\"/></svg>",
-          "html": "<nav class=\"links-block\"><p>Links list — configure its items in the sidebar.</p></nav>",
-          "scheme": null,
-          "sections": [
-            {
-              "heading": "Content",
-              "tooltip": "Add, remove and reorder the block's own links — a repeatable section, so \"+\" lives in this section's own header and every link's fields always show in full",
-              "repeatable": true,
-              "name": "links",
-              "min": 0,
-              "max": 99,
-              "default": [],
-              "fields": [
-                {
-                  "name": "label",
-                  "title": "Label",
-                  "tooltip": "Shown as the link's own text",
-                  "type": "text",
-                  "default": "New link",
-                  "description": "",
-                  "condition": null,
-                  "responsive": false,
-                  "placeholder": "Enter a label…"
-                },
-                {
-                  "name": "url",
-                  "title": "URL",
-                  "tooltip": "Where this link points to",
-                  "type": "text",
-                  "default": "",
-                  "description": "",
-                  "condition": null,
-                  "responsive": false,
-                  "placeholder": "https://…"
-                }
-              ]
-            }
-          ]
         }
-      }
+      },
+      "patterns": [
+        {
+          "key": "heading-faq",
+          "label": "Heading + FAQ",
+          "icon": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 256 256\"><path d=\"M208 90H48a14 14 0 0 0-14 14v96a14 14 0 0 0 14 14h160a14 14 0 0 0 14-14v-96a14 14 0 0 0-14-14Zm2 110a2 2 0 0 1-2 2H48a2 2 0 0 1-2-2v-96a2 2 0 0 1 2-2h160a2 2 0 0 1 2 2ZM50 64a6 6 0 0 1 6-6h144a6 6 0 0 1 0 12H56a6 6 0 0 1-6-6Zm16-32a6 6 0 0 1 6-6h112a6 6 0 0 1 0 12H72a6 6 0 0 1-6-6Z\"/></svg>",
+          "blocks": ["editrix-heading", "editrix-faq"]
+        }
+      ]
     }
   </script>
+
+  <%= _.template(require('../editrix/blocks/heading/index.html').default)(data) %>
+
+  <%= _.template(require('../editrix/control/text/index.html').default)(data) %>
+  <%= _.template(require('../editrix/control/switcher/index.html').default)(data) %>
+  <%= _.template(require('../editrix/control/select/index.html').default)(data) %>
+  <%= _.template(require('../editrix/control/color/index.html').default)(data) %>
+  <%= _.template(require('../editrix/control/image/index.html').default)(data) %>
+  <%= _.template(require('../editrix/control/url/index.html').default)(data) %>
+  <%= _.template(require('../editrix/control/slider/index.html').default)(data) %>
+  <%= _.template(require('../editrix/control/dimensions/index.html').default)(data) %>
+  <%= _.template(require('../editrix/control/repeater/index.html').default)(data) %>
+  <%= _.template(require('../editrix/control/textarea/index.html').default)(data) %>
+  <%= _.template(require('../editrix/control/gallery/index.html').default)(data) %>
+  <%= _.template(require('../editrix/control/meta/index.html').default)(data) %>
+  <%= _.template(require('../editrix/control/categories/index.html').default)(data) %>
+  <%= _.template(require('../editrix/control/margin/index.html').default)(data) %>
+  <%= _.template(require('../editrix/control/padding/index.html').default)(data) %>
+  <%= _.template(require('../editrix/control/borders/index.html').default)(data) %>
+  <%= _.template(require('../editrix/control/css-classes/index.html').default)(data) %>
+  <%= _.template(require('../editrix/control/custom-css/index.html').default)(data) %>
 </body>
 </html>

@@ -1,13 +1,19 @@
 const PLACEMENTS = ['top', 'bottom', 'left', 'right', 'auto'];
 const TRIGGERS   = ['hover', 'click', 'focus'];
 
+// A "style-<name>" modifier (e.g. "v-tooltip.style-error") maps to a "v-tooltip--<name>" class on
+// the tooltip element (syncClasses()), the same way ".top" maps to "v-tooltip--top" — open-ended
+// rather than a fixed list like PLACEMENTS/TRIGGERS, since new skins are purely a CSS concern.
+const VARIANT_PREFIX = 'style-';
+
 const OFFSET = 8;
 const MARGIN = 4;
 
-const TOOLTIP_CLASS = 'v-tooltip';
+// Exported so other floating elements (e.g. the ProseMirror selection toolbar, editrix/prosemirror/toolbar.js) can style and position themselves exactly like a v-tooltip without duplicating this logic.
+export const TOOLTIP_CLASS = 'v-tooltip';
 
 // Fallback removal if the CSS exit animation never fires (e.g. reduced motion).
-const EXIT_FALLBACK = 200;
+export const EXIT_FALLBACK = 200;
 
 // Shared across every tooltip — one observer and one scroll/resize pair, not one each.
 const trackedElements = new Map();
@@ -71,6 +77,47 @@ function ensureGlobalListeners() {
 }
 
 /**
+ * Translates a rect measured in "el"'s own window (getBoundingClientRect(), ProseMirror's
+ * coordsAtPos(), etc.) into the top-level window's own viewport coordinates — a no-op unless "el"
+ * lives inside a same-origin iframe (the editrix canvas, say). A tooltip/toolbar is always appended
+ * to the *top* document's <body> (this script never runs a second copy inside the iframe), so its
+ * own "top"/"left" have to be expressed in that document's coordinate space regardless of which
+ * document its anchor actually renders in — otherwise it lands offset by wherever the iframe itself
+ * sits on the page.
+ *
+ * @param {Element} el - The anchor element (or, for a text selection, the editor's own DOM node).
+ * @param {{top: number, left: number, bottom?: number, right?: number}} rect
+ * @returns {{top: number, left: number, bottom?: number, right?: number}}
+ */
+export function toTopViewportRect(el, rect) {
+  let view = el.ownerDocument.defaultView;
+  let offsetTop = 0;
+  let offsetLeft = 0;
+
+  // Walks every iframe boundary between "el" and the top window, not just one — correct even if a
+  // canvas were ever nested another level deep.
+  while (view && view.frameElement) {
+    const frameRect = view.frameElement.getBoundingClientRect();
+    offsetTop += frameRect.top;
+    offsetLeft += frameRect.left;
+    view = view.frameElement.ownerDocument.defaultView;
+  }
+
+  if (!offsetTop && !offsetLeft) {
+    return rect;
+  }
+
+  const translated = { ...rect, top: rect.top + offsetTop, left: rect.left + offsetLeft };
+  if ('bottom' in rect) {
+    translated.bottom = rect.bottom + offsetTop;
+  }
+  if ('right' in rect) {
+    translated.right = rect.right + offsetLeft;
+  }
+  return translated;
+}
+
+/**
  * Resolves a tooltip's position next to "anchorRect" for the given placement, clamped to the viewport.
  *
  * @param {object} anchorRect - The trigger element's bounding box.
@@ -80,7 +127,7 @@ function ensureGlobalListeners() {
  * @param {number} [offset] - Gap between the anchor and the tooltip.
  * @returns {{top: number, left: number, placement: string}}
  */
-function computePosition(anchorRect, size, placement, viewport, offset = OFFSET) {
+export function computePosition(anchorRect, size, placement, viewport, offset = OFFSET) {
   const centerY = anchorRect.top + anchorRect.height / 2 - size.height / 2;
   const centerX = anchorRect.left + anchorRect.width / 2 - size.width / 2;
 
@@ -116,9 +163,12 @@ function computePosition(anchorRect, size, placement, viewport, offset = OFFSET)
 }
 
 // A tooltip's DOM element, positioning, triggers, and lifecycle. Cached as `el._x_tooltip`.
-class TooltipInstance {
-  constructor(el, content, placement, trigger, delay = 250) {
-    Object.assign(this, { el, content, placement, trigger, delay, visible: false });
+// Exported so other UI built outside the v-data/directive system (e.g. the ProseMirror selection
+// toolbar, editrix/prosemirror/toolbar.js) can attach a real v-tooltip to an element it built by
+// hand, the same way the "v-tooltip" directive below does.
+export class TooltipInstance {
+  constructor(el, content, placement, trigger, delay = 250, variant = null) {
+    Object.assign(this, { el, content, placement, trigger, delay, variant, visible: false });
 
     // Only inserted into the DOM while shown — see show()/hide().
     this.tooltip = Object.assign(document.createElement('div'), {
@@ -158,6 +208,14 @@ class TooltipInstance {
     if (this.visible) {
       this.reposition();
     }
+  }
+
+  updateVariant(variant) {
+    if (this.variant === variant) {
+      return;
+    }
+    this.variant = variant;
+    this.syncClasses();
   }
 
   updateTrigger(trigger) {
@@ -218,7 +276,7 @@ class TooltipInstance {
   }
 
   reposition() {
-    const anchorRect = this.el.getBoundingClientRect();
+    const anchorRect = toTopViewportRect(this.el, this.el.getBoundingClientRect());
     const size        = { width: this.tooltip.offsetWidth, height: this.tooltip.offsetHeight };
     // visualViewport reflects the actually-visible area on iOS Safari; innerWidth/innerHeight don't.
     const vv          = window.visualViewport;
@@ -239,6 +297,9 @@ class TooltipInstance {
     }
     if (this.resolvedPlacement) {
       classes.push(`${TOOLTIP_CLASS}--${this.resolvedPlacement}`);
+    }
+    if (this.variant) {
+      classes.push(`${TOOLTIP_CLASS}--${this.variant}`);
     }
     this.tooltip.className = classes.join(' ');
   }
@@ -339,13 +400,14 @@ document.addEventListener('youla:init', ()=> {
   Youla.directive('tooltip', (el, output, { modifiers, duration }) => {
     const placement = modifiers.find(m => PLACEMENTS.includes(m)) || 'auto';
     const trigger   = modifiers.find(m => TRIGGERS.includes(m)) || 'hover';
+    const variant   = modifiers.find(m => m.startsWith(VARIANT_PREFIX))?.slice(VARIANT_PREFIX.length) || null;
 
     const delay   = duration?.unit === 'ms' ? duration.value : 250;
     const content = output == null ? '' : String(output);
 
     const instance = el._x_tooltip;
     if (!instance) {
-      el._x_tooltip = new TooltipInstance(el, content, placement, trigger, delay);
+      el._x_tooltip = new TooltipInstance(el, content, placement, trigger, delay, variant);
       return;
     }
 
@@ -353,5 +415,6 @@ document.addEventListener('youla:init', ()=> {
     instance.updatePlacement(placement);
     instance.updateTrigger(trigger);
     instance.updateDelay(delay);
+    instance.updateVariant(variant);
   });
 });

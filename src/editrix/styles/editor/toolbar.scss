@@ -1,12 +1,14 @@
 .editrix-toolbar {
 	height: 36px;
-	min-width: 100%;
+	// Spans every column of the .editrix grid (editor/editrix.scss) so it always fills its own row,
+	// however many columns that grid ends up with.
+	grid-column: 1 / -1;
 	border-bottom: 1px solid #dadada;
 	background-color: #fff;
 	padding-block: 4px;
 	display: flex;
 	align-items: center;
-	z-index: 2;
+	z-index: 5;
 	position: sticky;
 	top: 0;
 
@@ -27,9 +29,35 @@
 		justify-content: space-between;
 		position: relative;
 		user-select: none;
-		width: 240px;
 		padding-inline: 16px;
-		font-size: 10.5px;
+		font-size: 11px;
+	}
+
+	&-presence {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		padding-inline: 8px;
+
+		&-item {
+			width: 22px;
+			height: 22px;
+			border-radius: 50%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 10px;
+			font-weight: 600;
+			color: #fff;
+			background-color: var(--editrix-presence-color, #9e9e9e);
+			border: 2px solid #fff;
+			box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+			margin-inline-start: -8px;
+
+			&:first-child {
+				margin-inline-start: 0;
+			}
+		}
 	}
 
 	&-link {

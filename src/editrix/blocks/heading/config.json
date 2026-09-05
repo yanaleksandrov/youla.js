@@ -5,6 +5,7 @@
     {
       "heading": "Content",
       "tooltip": "The block's own picture and the author's avatar — the quote and author name/position are edited directly on the canvas",
+      "tab": "content",
       "repeatable": false,
       "name": "content",
       "min": null,
@@ -34,6 +35,7 @@
     {
       "heading": "Layout",
       "tooltip": "",
+      "tab": "layout",
       "repeatable": false,
       "name": "layout",
       "min": null,
@@ -54,6 +56,7 @@
     {
       "heading": "Block Style",
       "tooltip": "",
+      "tab": "layout",
       "repeatable": true,
       "name": "",
       "min": null,

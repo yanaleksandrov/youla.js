@@ -275,6 +275,7 @@
         "heading": "Position",
         "tooltip": "",
         "repeatable": false,
+        "tab": "advanced",
         "name": "position",
         "min": null,
         "max": null,
@@ -342,75 +343,6 @@
       ],
       "blocks": {
         "editrix-heading": <%= JSON.stringify(require('../editrix/blocks/heading/config.json')) %>,
-        "editrix-image": {
-          "label": "Image",
-          "icon": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 256 256\"><rect x=\"28\" y=\"48\" width=\"200\" height=\"160\" rx=\"14\" fill=\"none\" stroke=\"#000\" stroke-width=\"14\"/><circle cx=\"88\" cy=\"104\" r=\"16\"/><path d=\"M52 176 L100 124 L136 160 L180 108 L204 176 Z\"/></svg>",
-          "html": "<figure><img src=\"https://placehold.co/600x400\" alt=\"\"><figcaption data-editable=\"plain\" data-name=\"caption\" data-placeholder=\"Add a caption\">Add a caption</figcaption></figure>",
-          "sections": [
-            {
-              "heading": "Content",
-              "tooltip": "Settings for what the image shows and where it links to",
-              "repeatable": false,
-              "name": "image",
-              "min": null,
-              "max": null,
-              "default": null,
-              "fields": [
-                {
-                  "name": "show_caption",
-                  "title": "Show caption",
-                  "tooltip": "Edit the caption directly on the canvas — this only shows or hides it",
-                  "type": "switcher",
-                  "default": true,
-                  "description": "",
-                  "condition": null
-                },
-                {
-                  "name": "link",
-                  "title": "Link",
-                  "tooltip": "Where the image goes when clicked",
-                  "type": "url",
-                  "default": { "url": "", "is_external": false, "nofollow": false },
-                  "description": "Leave empty for no link",
-                  "condition": null
-                },
-                {
-                  "name": "width",
-                  "title": "Width",
-                  "tooltip": "How wide the image is",
-                  "type": "slider",
-                  "default": { "size": 100, "unit": "%" },
-                  "description": "",
-                  "condition": null,
-                  "min": 0,
-                  "max": 100,
-                  "step": 1
-                }
-              ]
-            },
-            {
-              "heading": "Style",
-              "tooltip": "",
-              "repeatable": true,
-              "name": "styles",
-              "min": null,
-              "max": null,
-              "default": null,
-              "fields": [
-                {
-                  "name": "fill",
-                  "title": "",
-                  "tooltip": "",
-                  "type": "fill",
-                  "default": { "type": "solid", "color": "#1069FB", "alpha": 100, "image": null, "video": null },
-                  "description": "",
-                  "condition": null,
-                  "sources": null
-                }
-              ]
-            }
-          ]
-        },
         "editrix-faq": {
           "label": "FAQ",
           "icon": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 256 256\"><rect x=\"28\" y=\"48\" width=\"200\" height=\"36\" rx=\"8\" fill=\"none\" stroke=\"#000\" stroke-width=\"14\"/><rect x=\"28\" y=\"110\" width=\"200\" height=\"36\" rx=\"8\" fill=\"none\" stroke=\"#000\" stroke-width=\"14\"/><rect x=\"28\" y=\"172\" width=\"200\" height=\"36\" rx=\"8\" fill=\"none\" stroke=\"#000\" stroke-width=\"14\"/></svg>",
@@ -419,6 +351,7 @@
             {
               "heading": "Content",
               "tooltip": "Add, remove and reorder the FAQ's own questions and answers",
+              "tab": "content",
               "repeatable": false,
               "name": "content",
               "min": null,
@@ -483,64 +416,14 @@
               ]
             }
           ]
-        },
-        "editrix-links": {
-          "label": "Links",
-          "icon": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 256 256\"><rect x=\"40\" y=\"88\" width=\"104\" height=\"80\" rx=\"40\" fill=\"none\" stroke=\"#000\" stroke-width=\"14\"/><rect x=\"112\" y=\"88\" width=\"104\" height=\"80\" rx=\"40\" fill=\"none\" stroke=\"#000\" stroke-width=\"14\"/></svg>",
-          "html": "<nav class=\"links-block\"><p>Links list — configure its items in the sidebar.</p></nav>",
-          "sections": [
-            {
-              "heading": "Content",
-              "tooltip": "Add, remove and reorder the block's own links — a repeatable section, so \"+\" lives in this section's own header and every link's fields always show in full",
-              "repeatable": true,
-              "name": "links",
-              "min": 0,
-              "max": 99,
-              "default": [],
-              "fields": [
-                {
-                  "name": "label",
-                  "title": "Label",
-                  "tooltip": "Shown as the link's own text",
-                  "type": "text",
-                  "default": "New link",
-                  "description": "",
-                  "condition": null,
-                  "placeholder": "Enter a label…"
-                },
-                {
-                  "name": "url",
-                  "title": "URL",
-                  "tooltip": "Where this link points to",
-                  "type": "text",
-                  "default": "",
-                  "description": "",
-                  "condition": null,
-                  "placeholder": "https://…"
-                }
-              ]
-            }
-          ]
         }
       },
       "patterns": [
-        {
-          "key": "heading-image",
-          "label": "Heading + Image",
-          "icon": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 256 256\"><path d=\"M208 90H48a14 14 0 0 0-14 14v96a14 14 0 0 0 14 14h160a14 14 0 0 0 14-14v-96a14 14 0 0 0-14-14Zm2 110a2 2 0 0 1-2 2H48a2 2 0 0 1-2-2v-96a2 2 0 0 1 2-2h160a2 2 0 0 1 2 2ZM50 64a6 6 0 0 1 6-6h144a6 6 0 0 1 0 12H56a6 6 0 0 1-6-6Zm16-32a6 6 0 0 1 6-6h112a6 6 0 0 1 0 12H72a6 6 0 0 1-6-6Z\"/></svg>",
-          "blocks": ["editrix-heading", "editrix-image"]
-        },
         {
           "key": "heading-faq",
           "label": "Heading + FAQ",
           "icon": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 256 256\"><path d=\"M208 90H48a14 14 0 0 0-14 14v96a14 14 0 0 0 14 14h160a14 14 0 0 0 14-14v-96a14 14 0 0 0-14-14Zm2 110a2 2 0 0 1-2 2H48a2 2 0 0 1-2-2v-96a2 2 0 0 1 2-2h160a2 2 0 0 1 2 2ZM50 64a6 6 0 0 1 6-6h144a6 6 0 0 1 0 12H56a6 6 0 0 1-6-6Zm16-32a6 6 0 0 1 6-6h112a6 6 0 0 1 0 12H72a6 6 0 0 1-6-6Z\"/></svg>",
           "blocks": ["editrix-heading", "editrix-faq"]
-        },
-        {
-          "key": "heading-image-links",
-          "label": "Heading + Image + Links",
-          "icon": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 256 256\"><path d=\"M208 90H48a14 14 0 0 0-14 14v96a14 14 0 0 0 14 14h160a14 14 0 0 0 14-14v-96a14 14 0 0 0-14-14Zm2 110a2 2 0 0 1-2 2H48a2 2 0 0 1-2-2v-96a2 2 0 0 1 2-2h160a2 2 0 0 1 2 2ZM50 64a6 6 0 0 1 6-6h144a6 6 0 0 1 0 12H56a6 6 0 0 1-6-6Zm16-32a6 6 0 0 1 6-6h112a6 6 0 0 1 0 12H72a6 6 0 0 1-6-6Z\"/></svg>",
-          "blocks": ["editrix-heading", "editrix-image", "editrix-links"]
         }
       ]
     }

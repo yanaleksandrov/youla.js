@@ -5,6 +5,7 @@
       <details class="editrix-details" v-bind="e.detailsAutoClose">
         <summary class="editrix-details-summary editrix-meta-authors-summary">
           <span v-each="name in selectedAuthors" class="editrix-meta-author-chip">
+            <span class="editrix-meta-author-avatar" v-bind="e.authorAvatar(name)"></span>
             <span v-text="name"></span>
             <i class="ph ph-x" v-bind="e.authorSummary(name)"></i>
           </span>
@@ -79,7 +80,19 @@
 
     <div class="editrix-meta-row">
       <div class="editrix-meta-label">Published At</div>
-      <input type="datetime-local" v-bind="e.publishedAtInput">
+      <input type="datetime-local" v-bind="e.publishedAtInput"> <span class="badge">EST</span>
+    </div>
+
+    <div class="editrix-meta-row">
+      <label class="editrix-meta-switch">
+        <input type="checkbox" v-prop="hasExpiration">
+        <span>до</span>
+      </label>
+    </div>
+
+    <div class="editrix-meta-row" v-show="hasExpiration" hidden>
+      <div class="editrix-meta-label">Expires At</div>
+      <input type="datetime-local" v-prop="expiresAt">
     </div>
   </div>
 </template>

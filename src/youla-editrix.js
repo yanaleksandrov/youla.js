@@ -56,6 +56,16 @@ let TOOLBOX = [];
 // pageFields(), below. Populated in the 'youla:init' listener below.
 let PAGE_FIELDS = [];
 
+// Elementor-style Content/Layout/Advanced sub-tabs shown inside the sidebar's "Content" panel
+// (v-bind="e.sidebarPanel('content')", view/editrix.html) for whichever block is active — see
+// renderContentTabs() below. Fixed, unlike sidebarTabs/BLOCKS: every block sorts its own sections
+// into these same three, via each section's own `tab` (BLOCKS[type].sections, config.json).
+const CONTENT_TABS = [
+  { key: 'content', label: 'Content' },
+  { key: 'layout', label: 'Layout' },
+  { key: 'advanced', label: 'Advanced' },
+];
+
 // Sidebar nav tab list (view/editrix.html's own "sidebarTabs" data) — `{ name, label, icon, tooltip }`
 // per tab, rendered via `v-each="navTab in sidebarTabs"` (view/editrix.html). Populated in the
 // 'youla:init' listener below, same as BLOCK_LIST/PATTERN_LIST/TOOLBOX above. The "content" tab
@@ -316,6 +326,41 @@ function renderSections(container, sections, dark = false) {
 }
 
 /**
+ * Builds the sidebar's "Content" panel (v-bind="e.sidebarPanel('content')", view/editrix.html) with
+ * Elementor-style Content/Layout/Advanced sub-tabs, grouping "sections" by each section's own `tab`
+ * (BLOCKS[type].sections, config.json — same idea as Elementor's per-control "tab" key) and falling
+ * back to "content" for a section that doesn't declare one. Reuses renderSections() per tab so a
+ * section's own heading/condition/repeatable handling stays identical to every other caller.
+ *
+ * @param {HTMLElement} container
+ * @param {Array} sections
+ */
+function renderContentTabs(container, sections) {
+  const nav = document.createElement('div');
+  nav.className = 'editrix-content-tabs';
+
+  CONTENT_TABS.forEach(({ key, label }) => {
+    const button = document.createElement('div');
+    button.className = 'editrix-content-tab';
+    button.textContent = label;
+    button.setAttribute(':class', `{'active': e.contentTab === '${key}'}`);
+    button.setAttribute('@click', `e.contentTab = '${key}'`);
+    nav.append(button);
+  });
+
+  container.append(nav);
+
+  CONTENT_TABS.forEach(({ key }) => {
+    const panel = document.createElement('div');
+    panel.className = 'editrix-content-tab-panel';
+    panel.setAttribute('v-show', `e.contentTab === '${key}'`);
+
+    renderSections(panel, (sections || []).filter((section) => (section.tab || 'content') === key), true);
+    container.append(panel);
+  });
+}
+
+/**
  * True while "el" (typically the current keydown target) is a normal text-entry context — an
  * <input>/<textarea>, or anywhere inside a contenteditable region (ProseMirror's own rich-text
  * blocks included) — so canvas's own "Delete" handler below doesn't hijack the key from ordinary
@@ -342,6 +387,7 @@ function setActiveBlock(component, blockId) {
   }
   component.activeBlock = blockId;
   component.tab = blockId ? 'content' : 'blocks';
+  component.contentTab = 'content';
   if (blockId) {
     collab?.acquireLock(blockId);
   }
@@ -763,6 +809,10 @@ document.addEventListener('youla:init', () => {
     tab: 'blocks',
     // Toolbox panel shown for whichever block/container was last clicked on the canvas
     section: 'content',
+    // Sidebar > Content panel (renderContentTabs() above) — which of the Content/Layout/Advanced
+    // sub-tabs is active for the current block; reset to "content" whenever the active block
+    // changes (setActiveBlock() above).
+    contentTab: 'content',
 
     // Sidebar > nav tabs (view/editrix.html) — `v-each="navTab in sidebarTabs"` renders one
     // ".editrix-sidebar-tab" per SIDEBAR_TABS entry.
@@ -1083,7 +1133,7 @@ document.addEventListener('youla:init', () => {
         this.$el.querySelectorAll('input').forEach((input) => input._x_filler?.destroy());
         this.$el.innerHTML = '';
 
-        renderSections(this.$el, BLOCKS[blockType]?.sections, true);
+        renderContentTabs(this.$el, BLOCKS[blockType]?.sections);
         this.$root.__x.initialize(this.$el);
         return blockType;
       },

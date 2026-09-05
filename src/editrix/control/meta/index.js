@@ -1,3 +1,5 @@
+import { colorForUser } from '../../collab/presence';
+
 /**
  * Toolbox > "Page" panel's meta control (authors/discussion/visibility/status/slug/published-at) —
  * fixed, single-instance state, not routed through getValue()/setValue() (controls/base.js).
@@ -16,6 +18,10 @@ export function createMetaControl({ statuses, visibilities, discussions, authors
     selectableStatuses: statuses.filter((stat) => stat.value !== 'scheduled'),
     // Drives both the publish time and, via publishedAtInput() below, whether "status" is published or scheduled.
     publishedAt: '2025-03-15T11:44',
+    // "Expires At" (below) only takes effect, and only shows, once this is switched on — the post
+    // itself carries no separate "expired" status, so nothing else here reads "expiresAt" yet.
+    hasExpiration: false,
+    expiresAt: '',
     // Independent of "status" above — public (default)/protected/private, matching WordPress's Status/Visibility split.
     visibility: 'public',
     visibilities,
@@ -78,6 +84,23 @@ export function createMetaControl({ statuses, visibilities, discussions, authors
           if (this.selectedAuthors.length > 1) {
             this.selectedAuthors = this.selectedAuthors.filter((n) => n !== name);
           }
+        },
+      };
+    },
+    /**
+     * v-bind="e.authorAvatar(name)" on each selected author's own chip (index.html) — a mini
+     * initials avatar, same idea as the toolbar's own presence avatars (colorForUser(),
+     * editrix/collab/presence.js) but keyed by the author's email (authors have no "id") so the
+     * same author always gets the same color across the chip.
+     */
+    authorAvatar(name) {
+      return {
+        'v-text'() {
+          return name.slice(0, 1).toUpperCase();
+        },
+        ':style'() {
+          const author = this.authors.find((a) => a.name === name);
+          return { '--editrix-presence-color': colorForUser(author?.email || name) };
         },
       };
     },

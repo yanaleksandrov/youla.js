@@ -349,6 +349,10 @@ document.addEventListener('youla:init', ()=> {
           searchParamsHandler('dialog', null, true);
         }
       },
+      // Snapshot first: close() reassigns "stack" on every call, so iterating the live array would skip entries.
+      clear() {
+        [...this.stack].forEach(entry => this.close(entry.id));
+      },
       // Reopens the base dialog from a shared URL, e.g. via "@load" on the element matching templateID.
       async init(templateID, callback) {
         const params = new URLSearchParams(window.location.search);

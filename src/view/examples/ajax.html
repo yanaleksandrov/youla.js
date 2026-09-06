@@ -230,8 +230,8 @@ $ajax(route, payload, onProgress, options)
       counter: 0,
       onNotify(message) {
         const id = ++this.counter;
-        this.items = [...this.items, { id, message }];
-        setTimeout(() => this.items = this.items.filter(item => item.id !== id), 3000);
+        this.items.push({ id, message });
+        setTimeout(() => this.items.splice(this.items.findIndex(item => item.id === id), 1), 3000);
       },
     }));
   });
@@ -384,8 +384,8 @@ Youla.data('ajaxToasts', () =&gt; ({
   counter: 0,
   onNotify(message) {
     const id = ++this.counter;
-    this.items = [...this.items, { id, message }];
-    setTimeout(() =&gt; this.items = this.items.filter(item =&gt; item.id !== id), 3000);
+    this.items.push({ id, message });
+    setTimeout(() =&gt; this.items.splice(this.items.findIndex(item =&gt; item.id === id), 1), 3000);
   },
 }));
 </pre>

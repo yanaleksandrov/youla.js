@@ -220,7 +220,10 @@ export default class Component {
   /**
    * Wraps a plain data object (and, recursively, any nested object it contains) in a Proxy
    * that tracks writes: each successful "set" queues the changed property in "concernedData"
-   * and triggers a refresh (plus a persist, if storage is enabled).
+   * and triggers a refresh (plus a persist, if storage is enabled). An array mutator call (see
+   * "makeObservable") instead forces every binding to re-run unconditionally — its change isn't
+   * one property name a binding's tracked deps can match against (e.g. a "push" touches an index
+   * and "length", not the array's own key).
    *
    * @param {Object} data - The raw data object to make observable.
    * @returns {Object} The observable (proxied) version of "data".
@@ -228,7 +231,13 @@ export default class Component {
   observeData(data) {
     this.concernedData = [];
 
-    return makeObservable(data, prop => {
+    return makeObservable(data, (prop, force) => {
+      if (force) {
+        this.refresh(true);
+        this.persist();
+        return;
+      }
+
       if (!this.concernedData.includes(prop)) {
         this.concernedData.push(prop);
         this.refresh();

@@ -424,37 +424,29 @@ document.addEventListener('youla:init', ()=> {
    *
    * @since 1.0
    */
-  Youla.data('builder', () => {
-    // Reassigns "groups" wholesale (not in place) so u-each notices the change and re-renders.
-    const updateRules = (groups, key, transform) => groups.map((group, index) => index !== key ? group : {
-      ...group,
-      rules: transform(group.rules),
-    });
-
-    return {
-      default: {
-        field: 'post',
-        operator: '===',
-        value: '',
-      },
-      groups: [],
-      addGroup() {
-        this.groups = [ ...this.groups, { rules: [ { ...this.default } ] } ];
-      },
-      removeGroup(index) {
-        this.groups = this.groups.filter((group, key) => key !== index);
-      },
-      addRule(key) {
-        this.groups = updateRules(this.groups, key, rules => [ ...rules, { ...this.default } ]);
-      },
-      removeRule(key, index) {
-        this.groups = updateRules(this.groups, key, rules => rules.filter((rule, ruleIndex) => ruleIndex !== index));
-      },
-      submit() {
-        console.log(JSON.parse(JSON.stringify(this.groups)));
-      },
-    };
-  });
+  Youla.data('builder', () => ({
+    default: {
+      field: 'post',
+      operator: '===',
+      value: '',
+    },
+    groups: [],
+    addGroup() {
+      this.groups.push({ rules: [ { ...this.default } ] });
+    },
+    removeGroup(index) {
+      this.groups.splice(index, 1);
+    },
+    addRule(key) {
+      this.groups[key].rules.push({ ...this.default });
+    },
+    removeRule(key, index) {
+      this.groups[key].rules.splice(index, 1);
+    },
+    submit() {
+      console.log(JSON.parse(JSON.stringify(this.groups)));
+    },
+  }));
 
   /**
    * Selfie: `u-data="stream"` (one instance per root) wraps `getUserMedia` into a

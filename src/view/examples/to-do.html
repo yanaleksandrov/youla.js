@@ -81,11 +81,11 @@ document.addEventListener('youla:init', () =&gt; {
     value: '',
     tasks: [],
     adder: {
-      '@click': &quot;tasks = [...tasks, {title: value, checked: false}]; value = ''&quot;,
+      '@click': &quot;tasks.push({title: value, checked: false}); value = ''&quot;,
       ':disabled': '!value.trim()',
     },
     field: {
-      '@keydown.enter': &quot;value.trim() &amp;&amp; (tasks = [...tasks, {title: value, checked: false}], value = '')&quot;,
+      '@keydown.enter': &quot;value.trim() &amp;&amp; (tasks.push({title: value, checked: false}), value = '')&quot;,
     },
     checkbox: {
       '@change': 'task.checked = !task.checked',
@@ -96,7 +96,7 @@ document.addEventListener('youla:init', () =&gt; {
       ':class': &quot;task.checked &amp;&amp; 'strike'&quot;,
     },
     remover: {
-      '@click': 'tasks = tasks.filter((_, i) =&gt; i != index)',
+      '@click': 'tasks.splice(index, 1)',
     },
     clearer: {
       '@click': 'tasks = []',
@@ -113,11 +113,11 @@ document.addEventListener('youla:init', () =&gt; {
       value: '',
       tasks: [],
       adder: {
-        '@click': "tasks = [...tasks, {title: value, checked: false}]; value = ''",
+        '@click': "tasks.push({title: value, checked: false}); value = ''",
         ':disabled': '!value.trim()',
       },
       field: {
-        '@keydown.enter': "value.trim() && (tasks = [...tasks, {title: value, checked: false}], value = '')",
+        '@keydown.enter': "value.trim() && (tasks.push({title: value, checked: false}), value = '')",
       },
       checkbox: {
         '@change': 'task.checked = !task.checked',
@@ -128,7 +128,7 @@ document.addEventListener('youla:init', () =&gt; {
         ':class': "task.checked && 'strike'",
       },
       remover: {
-        '@click': 'tasks = tasks.filter((_, i) => i != index)',
+        '@click': 'tasks.splice(index, 1)',
       },
       clearer: {
         '@click': 'tasks = []',

@@ -302,9 +302,10 @@
 </p>
 
 <p>
-  Важно: обновляйте список присваиванием нового значения — через spread-синтаксис или
-  <code>.slice()</code> — а не мутирующими методами вроде <code>.push()</code>. Система
-  реактивности отслеживает именно присваивание.
+  Список реактивен и к мутирующим методам массива — <code>.push()</code>, <code>.splice()</code>,
+  <code>.shift()</code>, <code>.unshift()</code>, <code>.sort()</code>, <code>.reverse()</code>,
+  <code>.fill()</code>, <code>.copyWithin()</code>. Не обязательно присваивать новое значение
+  целиком — можно менять массив на месте, как в обычном JS.
 </p>
 
 <div class="example">
@@ -314,8 +315,8 @@
   </div>
   <div class="example__panel is-active" data-panel="preview">
     <div class="demo" u-data="{ fruits: ['Apple', 'Banana'] }">
-      <button type="button" @click="fruits = [...fruits, 'Cherry']">Добавить</button>
-      <button type="button" @click="fruits = fruits.slice(0, -1)">Удалить последний</button>
+      <button type="button" @click="fruits.push('Cherry')">Добавить</button>
+      <button type="button" @click="fruits.pop()">Удалить последний</button>
       <ul>
         <li u-each="fruit in fruits" u-text="fruit"></li>
       </ul>
@@ -324,8 +325,8 @@
   <div class="example__panel" data-panel="html">
     <pre>
 &lt;div u-data=&quot;{ fruits: ['Apple', 'Banana'] }&quot;&gt;
-  &lt;button type=&quot;button&quot; @click=&quot;fruits = [...fruits, 'Cherry']&quot;&gt;Добавить&lt;/button&gt;
-  &lt;button type=&quot;button&quot; @click=&quot;fruits = fruits.slice(0, -1)&quot;&gt;Удалить последний&lt;/button&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;fruits.push('Cherry')&quot;&gt;Добавить&lt;/button&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;fruits.pop()&quot;&gt;Удалить последний&lt;/button&gt;
   &lt;ul&gt;
     &lt;li u-each=&quot;fruit in fruits&quot; u-text=&quot;fruit&quot;&gt;&lt;/li&gt;
   &lt;/ul&gt;

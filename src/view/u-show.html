@@ -61,7 +61,7 @@
   </div>
   <div class="example__panel is-active" data-panel="preview">
     <div class="demo" u-data="{ cart: ['Book', 'Pen'] }">
-      <button @click="cart = [...cart, 'Book']">Добавить в корзину</button>
+      <button @click="cart.push('Book')">Добавить в корзину</button>
       <button @click="cart = []">Очистить корзину</button>
 
       <p u-show="cart.length > 0">Товаров в корзине: <strong u-text="cart.length"></strong></p>
@@ -71,7 +71,7 @@
   <div class="example__panel" data-panel="html">
     <pre>
 &lt;div u-data=&quot;{ cart: ['Book', 'Pen'] }&quot;&gt;
-  &lt;button @click=&quot;cart = [...cart, 'Book']&quot;&gt;Добавить в корзину&lt;/button&gt;
+  &lt;button @click=&quot;cart.push('Book')&quot;&gt;Добавить в корзину&lt;/button&gt;
   &lt;button @click=&quot;cart = []&quot;&gt;Очистить корзину&lt;/button&gt;
 
   &lt;p u-show=&quot;cart.length &gt; 0&quot;&gt;Товаров в корзине: &lt;strong u-text=&quot;cart.length&quot;&gt;&lt;/strong&gt;&lt;/p&gt;

@@ -18,21 +18,20 @@
 </p>
 
 <blockquote>
-  <p>Портирование с Alpine.js: три ловушки</p>
+  <p>Портирование с Alpine.js: две ловушки</p>
   <p>
-    1. <a href="/u-each"><code>u-each</code></a> замечает только <strong>присваивание</strong>
-    новому значению массива, а не мутацию существующего — <code>.push()</code>/<code>.splice()</code>
-    из Alpine-версии заменены на <code>array = [...array, x]</code> / <code>array.filter(...)</code>.
-  </p>
-  <p>
-    2. Каждое чтение вложенного свойства реактивных данных возвращает новую обёртку прокси над тем
+    1. Каждое чтение вложенного свойства реактивных данных возвращает новую обёртку прокси над тем
     же объектом, поэтому <code>array.filter(x =&gt; x !== item)</code> из Alpine-версии здесь не
-    работает — сравнение объектов циклов между собой всегда ложно. Все удаления и перестановки
-    ниже фильтруют и переставляют по <strong>индексу</strong>, тем же приёмом, что и
-    <code>removeRule(key, index)</code> в примере <a href="/builder"><code>builder</code></a>.
+    работает — сравнение объектов циклов между собой всегда ложно. Все удаления ниже — через
+    <code>.splice(index, 1)</code> по <strong>индексу</strong>, тем же приёмом, что и
+    <code>removeRule(key, index)</code> в примере <a href="/builder"><code>builder</code></a>; сама
+    мутация массива на месте, без пересборки, реактивна — см. <a href="/u-each"><code>u-each</code></a>.
+    Перестановка соседних элементов (<code>moveGroupUpBtn</code> и т. п.) — исключение: своп по двум
+    индексам не входит в список отслеживаемых методов, поэтому там по-прежнему собирается копия и
+    присваивается обратно.
   </p>
   <p>
-    3. Метод <a href="/ajax"><code>$ajax</code></a> доступен только внутри выражения
+    2. Метод <a href="/ajax"><code>$ajax</code></a> доступен только внутри выражения
     <code>@событие</code> — обычный метод <code>u-data</code> его не видит (в отличие от глобальной
     функции <code>ajax()</code> в исходном проекте). Поэтому поиск товаров вызывается прямо в
     наборе <code>u-bind</code> строкой-выражением, а не отдельным методом <code>searchProduct()</code>.
@@ -204,7 +203,7 @@ Youla.data(&#39;bundle&#39;, () =&gt; ({
 
   // Каждое действие живёт прямо в своём u-bind-наборе — отдельных методов на u-data нет.
   addGroupBtn: {
-    &#39;@click&#39;: &quot;groups = [...groups, { name: &#39;&#39;, items: [{ search: [], products: [] }] }]&quot;,
+    &#39;@click&#39;: &quot;groups.push({ name: &#39;&#39;, items: [{ search: [], products: [] }] })&quot;,
   },
 
   groupNameField: {
@@ -212,7 +211,7 @@ Youla.data(&#39;bundle&#39;, () =&gt; ({
     &#39;@input&#39;: &#39;group.name = $el.value&#39;,
   },
   removeGroupBtn: {
-    &#39;@click&#39;: &#39;groups = groups.filter((_, i) =&gt; i !== gi)&#39;,
+    &#39;@click&#39;: &#39;groups.splice(gi, 1)&#39;,
   },
   moveGroupUpBtn: {
     &#39;u-show&#39;: &#39;gi &gt; 0&#39;,
@@ -223,7 +222,7 @@ Youla.data(&#39;bundle&#39;, () =&gt; ({
     `,
   },
   addItemBtn: {
-    &#39;@click&#39;: &quot;group.items = [...group.items, { search: [], products: [] }]&quot;,
+    &#39;@click&#39;: &quot;group.items.push({ search: [], products: [] })&quot;,
   },
 
   itemSearchWrapper: {
@@ -236,7 +235,7 @@ Youla.data(&#39;bundle&#39;, () =&gt; ({
   },
   resultBtn: {
     &#39;@click&#39;: `
-      item.products = [...item.products, { isOptional: false, shortTitle: &#39;&#39;, qty: 1, mix: [], ...result }];
+      item.products.push({ isOptional: false, shortTitle: &#39;&#39;, qty: 1, mix: [], ...result });
       item.search = []
     `,
   },
@@ -290,12 +289,12 @@ Youla.data(&#39;bundle&#39;, () =&gt; ({
   removeProductBtn: {
     &#39;@click&#39;: `
       if (item.products.length === 1) {
-        group.items = group.items.filter((_, i) =&gt; i !== ii);
+        group.items.splice(ii, 1);
       } else {
-        item.products = item.products.filter((_, i) =&gt; i !== pi);
+        item.products.splice(pi, 1);
       }
       if (group.items.length === 0) {
-        groups = groups.filter((_, i) =&gt; i !== gi);
+        groups.splice(gi, 1);
       }
     `,
   },
@@ -329,7 +328,7 @@ Youla.data(&#39;bundle&#39;, () =&gt; ({
   },
   mixedResultBtn: {
     &#39;@click&#39;: `
-      product.mix = [...product.mix, { isOptional: false, shortTitle: &#39;&#39;, qty: 1, ...mixedResult }];
+      product.mix.push({ isOptional: false, shortTitle: &#39;&#39;, qty: 1, ...mixedResult });
       product.search = []
     `,
   },
@@ -365,7 +364,7 @@ Youla.data(&#39;bundle&#39;, () =&gt; ({
     &#39;u-html&#39;: &quot;&#39; × &#39; + mixed.price + &#39; ₽&#39;&quot;,
   },
   removeMixedBtn: {
-    &#39;@click&#39;: &#39;product.mix = product.mix.filter((_, i) =&gt; i !== mi)&#39;,
+    &#39;@click&#39;: &#39;product.mix.splice(mi, 1)&#39;,
   },
 }));
 </pre>
@@ -505,7 +504,7 @@ Youla.data(&#39;bundle&#39;, () =&gt; ({
 
       // Каждое действие живёт прямо в своём u-bind-наборе — отдельных методов на u-data нет.
       addGroupBtn: {
-        '@click': "groups = [...groups, { name: '', items: [{ search: [], products: [] }] }]",
+        '@click': "groups.push({ name: '', items: [{ search: [], products: [] }] })",
       },
 
       groupNameField: {
@@ -513,7 +512,7 @@ Youla.data(&#39;bundle&#39;, () =&gt; ({
         '@input': 'group.name = $el.value',
       },
       removeGroupBtn: {
-        '@click': 'groups = groups.filter((_, i) => i !== gi)',
+        '@click': 'groups.splice(gi, 1)',
       },
       moveGroupUpBtn: {
         'u-show': 'gi > 0',
@@ -524,7 +523,7 @@ Youla.data(&#39;bundle&#39;, () =&gt; ({
         `,
       },
       addItemBtn: {
-        '@click': "group.items = [...group.items, { search: [], products: [] }]",
+        '@click': "group.items.push({ search: [], products: [] })",
       },
 
       itemSearchWrapper: {
@@ -537,7 +536,7 @@ Youla.data(&#39;bundle&#39;, () =&gt; ({
       },
       resultBtn: {
         '@click': `
-          item.products = [...item.products, { isOptional: false, shortTitle: '', qty: 1, mix: [], ...result }];
+          item.products.push({ isOptional: false, shortTitle: '', qty: 1, mix: [], ...result });
           item.search = []
         `,
       },
@@ -591,12 +590,12 @@ Youla.data(&#39;bundle&#39;, () =&gt; ({
       removeProductBtn: {
         '@click': `
           if (item.products.length === 1) {
-            group.items = group.items.filter((_, i) => i !== ii);
+            group.items.splice(ii, 1);
           } else {
-            item.products = item.products.filter((_, i) => i !== pi);
+            item.products.splice(pi, 1);
           }
           if (group.items.length === 0) {
-            groups = groups.filter((_, i) => i !== gi);
+            groups.splice(gi, 1);
           }
         `,
       },
@@ -630,7 +629,7 @@ Youla.data(&#39;bundle&#39;, () =&gt; ({
       },
       mixedResultBtn: {
         '@click': `
-          product.mix = [...product.mix, { isOptional: false, shortTitle: '', qty: 1, ...mixedResult }];
+          product.mix.push({ isOptional: false, shortTitle: '', qty: 1, ...mixedResult });
           product.search = []
         `,
       },
@@ -666,7 +665,7 @@ Youla.data(&#39;bundle&#39;, () =&gt; ({
         'u-html': "' × ' + mixed.price + ' ₽'",
       },
       removeMixedBtn: {
-        '@click': 'product.mix = product.mix.filter((_, i) => i !== mi)',
+        '@click': 'product.mix.splice(mi, 1)',
       },
     }));
   });

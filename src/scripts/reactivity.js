@@ -19,12 +19,23 @@ export function toRaw(value) {
 }
 
 /**
+ * Array methods that mutate the array in place rather than returning a new one. Reading one of
+ * these off an observed array (see "wrap()") hands back a wrapper that runs the native method on
+ * the raw array, then reports the change — so `list.push(item)` is reactive exactly like
+ * `list = [...list, item]`, without the throwaway copy.
+ */
+const ARRAY_MUTATORS = ['push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse', 'fill', 'copyWithin'];
+
+/**
  * Wraps "data" (and, recursively, any nested object it contains) in a Proxy that intercepts
- * writes: each successful "set" calls "onChange" with the changed property name. A DOM node is
- * never wrapped, since calling a native method on a wrapped node would break "this" binding.
+ * writes: each successful "set" calls "onChange" with the changed property name, and each call to
+ * an array mutator (push, splice, …) calls "onChange" with the method name and "force: true" —
+ * a single mutator call can touch several indices plus "length", none of which necessarily match
+ * the property name a binding depends on, so it's reported as one unconditional change instead. A
+ * DOM node is never wrapped, since calling a native method on a wrapped node would break "this" binding.
  *
  * @param {object} data - The plain object to make observable.
- * @param {(prop: string) => void} onChange - Called with the changed property name after each successful write.
+ * @param {(prop: string, force?: boolean) => void} onChange - Called after each successful write or mutator call.
  * @returns {Proxy} The observable version of "data".
  */
 export function makeObservable(data, onChange) {
@@ -46,7 +57,23 @@ export function makeObservable(data, onChange) {
 
         return true;
       },
-      get: (obj, prop) => (prop === RAW ? obj : wrap(obj[prop])),
+      get: (obj, prop) => {
+        if (prop === RAW) {
+          return obj;
+        }
+
+        if (Array.isArray(obj) && ARRAY_MUTATORS.includes(prop)) {
+          return (...args) => {
+            const result = obj[prop](...args.map(wrap));
+
+            onChange(prop, true);
+
+            return result;
+          };
+        }
+
+        return wrap(obj[prop]);
+      },
     });
   };
 

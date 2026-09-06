@@ -3,6 +3,13 @@
  * context — every property of "dataContext" is reachable in the expression by name via "with",
  * and any extra helper variables (e.g. "$event", "$el") are exposed as real function parameters.
  *
+ * Every directive/event/binding expression in the whole library goes through this function —
+ * "expression" runs as real, unrestricted JavaScript (via "new Function"), not a sandboxed
+ * mini-language. This is the same trust boundary "u-html" documents for markup, just extended to
+ * every attribute value: "u-text", "u-show", ":class", "@click", a "u-bind" object's values — all
+ * of it. Never interpolate untrusted (user-supplied) data into an attribute value that ends up
+ * here — that's arbitrary code execution, not merely unescaped HTML.
+ *
  * @param {string} expression - The expression (or, if "noReturn" is true, statement) to evaluate.
  * @param {object} dataContext - The component's reactive data, made available as bare identifiers.
  * @param {object} [additionalHelperVariables] - Extra named values (e.g. "$el", "$event") exposed to the expression.

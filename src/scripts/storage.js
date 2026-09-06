@@ -90,7 +90,8 @@ export const storage = {
     }
 
     if (type === 'cookie') {
-      options = options || {};
+      // "samesite" defaults to "Lax" unless the caller overrides it; a bare Object.assign target keeps whichever casing the caller used.
+      options = Object.assign({ samesite: 'Lax' }, options);
 
       if (options.expires instanceof Date) {
         options.expires = options.expires.toUTCString();

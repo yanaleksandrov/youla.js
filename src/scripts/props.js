@@ -1,5 +1,5 @@
 import { closestDirective, domWalk } from './dom';
-import { setNestedObjectValue, getNestedObjectValue } from './object-path';
+import { setNestedObjectValue, getNestedObjectValue, isUnsafeKey } from './object-path';
 import { saferEval } from './eval';
 import { createMagicVariables, withMagicVariables } from './magic-variables';
 import { getAttributes } from './attributes';
@@ -29,10 +29,16 @@ export function hydrateProps(rootElement, data) {
 
     let [key, ...prop] = expression.split('.');
 
+    if (isUnsafeKey(key)) {
+      console.warn(`Youla.js: u-prop expression "${expression}" uses unsafe key "${key}" — skipped.`);
+      return;
+    }
+
     if (data[key] === undefined) {
       let fields = [];
       if (el.type === 'checkbox') {
-        fields = closestDirective(el, 'u-data').querySelectorAll(`[${CSS.escape(attribute.name)}="${expression}"]`);
+        // CSS.escape() only covers identifiers, not the quoted attribute-value part, so a "\"/"\\" in "expression" is escaped by hand to keep it from breaking out of the selector.
+        fields = closestDirective(el, 'u-data').querySelectorAll(`[${CSS.escape(attribute.name)}="${expression.replace(/["\\]/g, '\\$&')}"]`);
       }
 
       data[key] = setNestedObjectValue(prop, fields.length > 1 ? [] : '');
@@ -62,6 +68,12 @@ export function hydrateProps(rootElement, data) {
  * onto `$data.<expression>`, accounting for the element's type and the `.number`/`.trim`
  * modifiers.
  *
+ * `.number`/`.trim` also write the cleaned-up value straight back onto `$el.value`, in the same
+ * expression — not just `$data`. Without that, the field would show the raw keystroke (a letter,
+ * a trailing space) until the next reactive refresh overwrote it with the corrected value a tick
+ * later, flickering. Doing both in the same synchronous "input"/"change" handler means the browser
+ * never gets to paint the uncorrected value in between.
+ *
  * @param {HTMLElement} el - The bound form field (input, select, or textarea).
  * @param {Object} data - The component's data object, read to resolve the current bound value.
  * @param {Object} attribute - The parsed `u-prop` attribute descriptor (expression, modifiers).
@@ -85,10 +97,12 @@ export function generateExpressionForProp(el, data, attribute) {
     rightSideOfExpression = `Array.from($el.selectedOptions).map(option => ${modifiers.includes('number')
       ? 'parseFloat(option.value || option.text)'
       : 'option.value || option.text'})`
+  } else if (modifiers.includes('number')) {
+    return `($el.value = $el.value.replace(/[^\\d]/g, ''), $data.${expression} = $el.value === '' ? '' : parseFloat($el.value))`
+  } else if (modifiers.includes('trim')) {
+    rightSideOfExpression = `($el.value = $el.value.replace(/^\\s+|\\s+$/g, ''), $el.value)`
   } else {
-    rightSideOfExpression = modifiers.includes('number')
-      ? 'parseFloat($el.value)'
-      : (modifiers.includes('trim') ? '$el.value.trim()' : '$el.value')
+    rightSideOfExpression = '$el.value'
   }
 
   return `$data.${expression} = ${rightSideOfExpression}`

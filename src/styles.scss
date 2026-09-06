@@ -350,6 +350,26 @@ table {
 	color: var(--ink-muted);
 }
 
+// The shared "$dialog" stack (parts/footer.html) — later entries are later DOM siblings, so they paint over earlier ones with no z-index math needed.
+.dialog-backdrop {
+	display: flex;
+	position: fixed;
+	z-index: 1000;
+	inset: 0;
+	align-items: center;
+	justify-content: center;
+	background: rgba(0, 0, 0, .5);
+}
+
+.dialog-window {
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: .5rem;
+	padding: 1.5rem;
+	max-width: 320px;
+	width: calc(100vw - 2rem);
+}
+
 .demo {
 	margin: 0;
 	padding: 1rem;

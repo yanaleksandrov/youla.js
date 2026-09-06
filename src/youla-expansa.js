@@ -163,20 +163,20 @@ document.addEventListener('youla:init', ()=> {
       items: {},
       duration: 7000,
       hovering: false,
-      info( message ) {
-        this.add( message, 'info' );
+      info( message, duration ) {
+        this.add( message, 'info', duration );
       },
-      success( message ) {
-        this.add( message, 'success' );
+      success( message, duration ) {
+        this.add( message, 'success', duration );
       },
-      warning( message ) {
-        this.add( message, 'warning' );
+      warning( message, duration ) {
+        this.add( message, 'warning', duration );
       },
-      error( message ) {
-        this.add( message, 'error' );
+      error( message, duration ) {
+        this.add( message, 'error', duration );
       },
-      loading( message ) {
-        this.add( message, 'loading' );
+      loading( message, duration ) {
+        this.add( message, 'loading', duration );
       },
       // @mouseenter on the container: freezes every item's countdown where it stood.
       pause() {
@@ -198,7 +198,7 @@ document.addEventListener('youla:init', ()=> {
       },
       schedule( id ) {
         let item = this.items[id];
-        if ( item && !item.timer ) {
+        if ( item && !item.timer && item.duration ) {
           item.startedAt = Date.now();
           item.timer     = setTimeout( () => this.close(id), item.remaining );
         }
@@ -220,17 +220,23 @@ document.addEventListener('youla:init', ()=> {
           }, 1000 )
         }
       },
-      add( message, type ) {
+      add( message, type, duration ) {
         if ( message ) {
           let timestamp = Date.now();
+
+          if ( duration === 'auto' ) {
+            duration = Math.max( message.length * 70, 1500 );
+          } else if ( duration === void 0 ) {
+            duration = this.duration;
+          }
 
           // Spinner is a real inline <svg> (parts/footer.html), animated via CSS, so it can be paused on :hover.
           this.items = { ...this.items, [timestamp]: {
             message: message,
             closable: true,
             selectors: [ type || 'info' ],
-            duration: this.duration,
-            remaining: this.duration,
+            duration: duration,
+            remaining: duration,
             startedAt: Date.now(),
             timer: null,
             classes() {
@@ -240,6 +246,122 @@ document.addEventListener('youla:init', ()=> {
 
           if ( !this.hovering ) {
             this.schedule(timestamp);
+          }
+        }
+      },
+    }));
+  })();
+
+  /**
+   * Accessible, stackable dialog: open() pushes a new one on top instead of replacing the
+   * current one, so a template can raise its own (e.g. a confirm) from within another. Only
+   * the outermost dialog syncs to "?dialog=" in the URL — nested ones are transient.
+   *
+   * @since 1.0
+   */
+  (() => {
+    Youla.variable('dialog', () => document.querySelector('[u-data="dialog"]')?.__x?.data);
+
+    const searchParamsHandler = (param, value, isRemove) => {
+      const url    = new URL(window.location.href);
+      const params = new URLSearchParams(url.search);
+
+      if (isRemove) {
+        params.delete(param);
+      } else {
+        params.set(param, value);
+      }
+      url.search = params.toString();
+
+      window.history.replaceState({}, '', url.toString());
+    };
+
+    let uid     = 0;
+    let scrollY = 0;
+
+    /**
+     * Freezes body at its current scroll offset — plain overflow:hidden alone doesn't
+     * block touch scrolling on iOS Safari.
+     */
+    function lockScroll() {
+      scrollY = window.scrollY;
+
+      Object.assign(document.body.style, {
+        position: 'fixed',
+        top: `-${scrollY}px`,
+        width: '100%',
+        overflow: 'hidden',
+      });
+    }
+
+    /**
+     * Restores body scroll to the offset lockScroll() froze it at.
+     */
+    function unlockScroll() {
+      Object.assign(document.body.style, {
+        position: '',
+        top: '',
+        width: '',
+        overflow: '',
+      });
+
+      // "instant" overrides the site's global "scroll-behavior: smooth" — this restore isn't a user-facing scroll.
+      window.scrollTo({ top: scrollY, left: 0, behavior: 'instant' });
+    }
+
+    // injectDataProviders() reruns this factory per u-data element; "root" only matters for this one's own component.
+    Youla.data('dialog', (root) => ({
+      stack: [],
+
+      open(templateID, data = {}) {
+        setTimeout(() => {
+          let template = document.getElementById(templateID);
+          if (!template) {
+            return;
+          }
+
+          const isBase = this.stack.length === 0;
+
+          // u-each (parts/footer.html) initializes each entry itself, wiring up the template's own "@click".
+          this.stack.push({ id: ++uid, content: template.innerHTML, ...data });
+
+          // Only the base dialog locks scroll — a nested call would read scrollY as 0 (already frozen).
+          if (isBase) {
+            lockScroll();
+          }
+
+          root.dispatchEvent(new Event('open', { bubbles: true }));
+
+          if (isBase) {
+            searchParamsHandler('dialog', templateID, false);
+          }
+        }, 25);
+      },
+      // No "id" closes the top dialog; an explicit one (the backdrop's own click) closes that entry.
+      close(id) {
+        const target = id ?? this.stack.at(-1)?.id;
+        this.stack   = this.stack.filter(dialog => dialog.id !== target);
+
+        root.dispatchEvent(new Event('close', { bubbles: true }));
+
+        if (this.stack.length === 0) {
+          unlockScroll();
+          searchParamsHandler('dialog', null, true);
+        }
+      },
+      // Snapshot first: close() reassigns "stack" on every call, so iterating the live array would skip entries.
+      clear() {
+        [...this.stack].forEach(entry => this.close(entry.id));
+      },
+      // Reopens the base dialog from a shared URL, e.g. via "@load" on the element matching templateID.
+      async init(templateID, callback) {
+        const params = new URLSearchParams(window.location.search);
+
+        if (templateID && params.get('dialog') === templateID && callback) {
+          const data = await callback();
+
+          if (data) {
+            this.open(templateID, data);
           }
         }
       },
@@ -731,5 +853,243 @@ document.addEventListener('youla:init', ()=> {
         sync();
       },
     };
+  });
+
+  /**
+   * Copies a string to the clipboard, e.g. `@click="$copy('Some text', ['is-copied'])"`.
+   *
+   * @since 1.0
+   */
+  Youla.method('copy', (e, el) => (subject, classes) => {
+    window.navigator.clipboard.writeText(subject).then(() => {
+      const classes       = classes || ['ph-copy', 'ph-check'];
+      const classesToggle = () => classes.forEach(s => el.classList.toggle(s));
+
+      classesToggle();
+      setTimeout(classesToggle, 1000);
+    });
+  });
+
+  /**
+   * Data sanitizing.
+   *
+   * @since 1.0
+   */
+  Youla.method('safe', () => ({
+    slug(value) {
+      return value
+        .toString()                                                // Convert the input to a string
+        .normalize('NFD')                                    // Normalize the string (separate characters and diacritical marks)
+        .replace(/[\u0300-\u036f]/g, '')    // Remove diacritical marks
+        .replace(/[^\p{L}\p{N}\s-]/gu, '')  // Remove everything except letters, numbers, spaces, and hyphens (Unicode support)
+        .trim()                                                   // Trim leading and trailing whitespace
+        .replace(/\s+/g, '-')               // Replace spaces with hyphens
+        .replace(/-+/g, '-')                // Remove consecutive hyphens
+        .toLowerCase();                                           // Convert the string to lowercase
+    },
+  }));
+
+  /**
+   * Code syntax highlight
+   *
+   * @since 1.0
+   */
+  Youla.directive('highlight', (el, output, { modifiers }) => {
+    const lang    = modifiers[0] || 'html';
+    const wrapper = document.createElement('code');
+
+    wrapper.className = `language-${lang}`;
+    wrapper.append(...el.childNodes);
+
+    el.classList.add('line-numbers');
+    el.setAttribute('data-lang', lang.toUpperCase());
+    el.replaceChildren(wrapper);
+  });
+
+  /**
+   * Disable autofill, reliably — the readonly-until-focus trick stops
+   * autofill from prefilling the field before the user interacts with it,
+   * even when the browser ignores `autocomplete="off"`.
+   *
+   * @since 1.0
+   */
+  Youla.directive('noautofill', (el) => {
+    const lock = () => el.readOnly = true;
+
+    lock();
+
+    el.addEventListener('focus', () => requestAnimationFrame(() => el.readOnly = false));
+    el.addEventListener('blur', lock);
+  });
+
+  /**
+   * Pins a sidebar within its `position: relative` parent's bounds as it scrolls, instead
+   * of sticking to the viewport — a taller-than-viewport sidebar scrolls internally.
+   *
+   * @since 1.0
+   */
+  Youla.directive('sticky', el => {
+    const parent = el.parentElement;
+    if (getComputedStyle(parent).position !== 'relative') {
+      console.warn('Youla.js: "u-sticky" requires its parent to have position: relative.');
+      return;
+    }
+
+    const paddingTop    = parseInt(getComputedStyle(parent).paddingTop) + 42;
+    const paddingBottom = parseInt(getComputedStyle(parent).paddingBottom);
+
+    let top        = paddingTop;
+    let lastScroll = window.scrollY;
+
+    // Recomputed on every call (not cached) so a resize is picked up for free.
+    const reposition = () => {
+      const rect     = el.getBoundingClientRect();
+      const overflow = rect.height - window.innerHeight;
+      const delta    = window.scrollY - lastScroll;
+      lastScroll     = window.scrollY;
+
+      // Only slide while actually stuck — rect.top runs ahead of "top" otherwise.
+      if (overflow <= 0 || rect.top > top) {
+        return;
+      }
+
+      top = Math.min(paddingTop, Math.max(-overflow - paddingBottom, top - delta));
+      el.style.top = `${top}px`;
+    };
+
+    el.style.position = 'sticky';
+    el.style.top      = `${paddingTop}px`;
+
+    ['load', 'scroll', 'resize'].forEach(event => window.addEventListener(event, reposition));
+  });
+
+  /**
+   * Expands or collapses an element with a smooth slide animation, driven by the
+   * directive's truthiness (`u-collapse="open"`) rather than a CSS class.
+   *
+   * @since 1.0
+   */
+  Youla.directive('collapse', (el, output) => {
+    const isOpen   = !!output;
+    const duration = 200;
+    const props    = ['height', 'paddingTop', 'paddingBottom', 'marginTop', 'marginBottom'];
+
+    el.style.overflow = 'hidden';
+    if (isOpen) {
+      el.style.display = 'block';
+    }
+
+    const from = Object.fromEntries(props.map(prop => [prop, parseFloat(getComputedStyle(el)[prop])]));
+
+    let start;
+    function step(timestamp) {
+      start ??= timestamp;
+
+      const elapsed = Math.min(timestamp - start, duration);
+      const ratio   = isOpen ? elapsed / duration : 1 - elapsed / duration;
+
+      props.forEach(prop => el.style[prop] = `${from[prop] * ratio}px`);
+
+      if (elapsed < duration) {
+        requestAnimationFrame(step);
+      } else {
+        if (!isOpen) {
+          el.style.display = 'none';
+        }
+        [...props, 'overflow'].forEach(prop => el.style[prop] = '');
+      }
+    }
+    requestAnimationFrame(step);
+  });
+
+  /**
+   * Grows a <textarea> to fit its content as the user types, up to a
+   * maximum number of rows (`u-textarea="6"`) — past that, it stops
+   * growing and scrolls internally instead.
+   *
+   * @since 1.0
+   */
+  Youla.directive('textarea', (el, output) => {
+    if (el.tagName !== 'TEXTAREA') {
+      return;
+    }
+
+    el.addEventListener('input', () => {
+      const maxRows = parseInt(output) || 99;
+      if (el.value.split(/\r\n|\r|\n/).length > maxRows) {
+        return;
+      }
+
+      const border = parseInt(getComputedStyle(el).borderWidth) * 4;
+
+      el.style.height = 'auto';
+      el.style.height = `${el.scrollHeight + border + 4}px`;
+    });
+  });
+
+  /**
+   * Animates `--youla-progress` into view once the element enters the viewport, from/to
+   * modifiers as percentages (`u-progress.20.80.600ms`). `to` can also be a reactive bound
+   * value, e.g. `u-progress.0.600ms="percent"`. Skips the transition on reduced motion.
+   *
+   * @since 1.0
+   */
+  Youla.directive('progress', (el, output, { modifiers, duration, expression }) => {
+    const [rawFrom = 0, rawTo = 100] = modifiers;
+
+    const from = parseInt(rawFrom);
+
+    const bound = expression !== '' && !isNaN(parseFloat(output));
+    const to    = bound ? parseFloat(output) : parseInt(rawTo);
+
+    if (isNaN(from) || isNaN(to)) {
+      console.warn('Youla.js: "u-progress" requires numeric from/to modifiers as percentages (or a numeric bound value), e.g. u-progress.20.80.600ms.');
+      return;
+    }
+
+    const start = Math.min(Math.max(from, 0), 100);
+    const end   = Math.min(Math.max(to, 0), 100);
+
+    const transitionDuration = duration ? `${duration.value}${duration.unit}` : '0ms';
+    const reducedMotion      = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const apply = (percent, animate) => {
+      if (animate && !reducedMotion()) {
+        el.style.setProperty('--youla-progress-transition', `width ${transitionDuration}`);
+      }
+      el.style.setProperty('--youla-progress', `${percent}%`);
+    };
+
+    // Already revealed — this call is a reactive update to the bound value, not the initial mount.
+    if (el._x_progress?.revealed) {
+      el._x_progress.end = end;
+      apply(end, true);
+      return;
+    }
+
+    if (el._x_progress) {
+      el._x_progress.end = end;
+      return;
+    }
+
+    el._x_progress = { revealed: false, end };
+
+    new IntersectionObserver(([entry], observer) => {
+      if (!entry.isIntersecting) {
+        return;
+      }
+      observer.unobserve(el);
+
+      el._x_progress.revealed = true;
+
+      el.style.setProperty('--youla-progress', `${start}%`);
+
+      if (reducedMotion()) {
+        apply(el._x_progress.end, false);
+        return;
+      }
+
+      setTimeout(() => apply(el._x_progress.end, true), 500);
+    }).observe(el);
   });
 });

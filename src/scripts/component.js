@@ -10,6 +10,7 @@ import { injectDataProviders } from './data';
 import { storage, isStorageModifier, getStorageType, computeExpires } from './storage';
 import { getDirective } from './directives';
 import { resolveMethods } from './methods';
+import { isUnsafeKey } from './object-path';
 
 /**
  * A window/document/outside listener or an intersect observer keeps its own reference to "el",
@@ -89,7 +90,14 @@ export default class Component {
       const saved = storage.get(`u-data:${this.name}`, this.storageType);
       if (saved) {
         try {
-          Object.assign(this.rawData, typeof saved === 'string' ? JSON.parse(saved) : saved);
+          const parsed = typeof saved === 'string' ? JSON.parse(saved) : saved;
+
+          // Not Object.assign(): a JSON key literally named "__proto__" would, through its [[Set]] semantics, repoint this.rawData's own prototype instead of writing a plain "__proto__" data property.
+          Object.keys(parsed).forEach(key => {
+            if (!isUnsafeKey(key)) {
+              this.rawData[key] = parsed[key];
+            }
+          });
         } catch (error) {}
       }
     }

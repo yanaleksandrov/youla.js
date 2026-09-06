@@ -163,20 +163,20 @@ document.addEventListener('youla:init', ()=> {
       items: {},
       duration: 7000,
       hovering: false,
-      info( message ) {
-        this.add( message, 'info' );
+      info( message, duration ) {
+        this.add( message, 'info', duration );
       },
-      success( message ) {
-        this.add( message, 'success' );
+      success( message, duration ) {
+        this.add( message, 'success', duration );
       },
-      warning( message ) {
-        this.add( message, 'warning' );
+      warning( message, duration ) {
+        this.add( message, 'warning', duration );
       },
-      error( message ) {
-        this.add( message, 'error' );
+      error( message, duration ) {
+        this.add( message, 'error', duration );
       },
-      loading( message ) {
-        this.add( message, 'loading' );
+      loading( message, duration ) {
+        this.add( message, 'loading', duration );
       },
       // @mouseenter on the container: freezes every item's countdown where it stood.
       pause() {
@@ -198,7 +198,7 @@ document.addEventListener('youla:init', ()=> {
       },
       schedule( id ) {
         let item = this.items[id];
-        if ( item && !item.timer ) {
+        if ( item && !item.timer && item.duration ) {
           item.startedAt = Date.now();
           item.timer     = setTimeout( () => this.close(id), item.remaining );
         }
@@ -220,17 +220,23 @@ document.addEventListener('youla:init', ()=> {
           }, 1000 )
         }
       },
-      add( message, type ) {
+      add( message, type, duration ) {
         if ( message ) {
           let timestamp = Date.now();
+
+          if ( duration === 'auto' ) {
+            duration = Math.max( message.length * 70, 1500 );
+          } else if ( duration === void 0 ) {
+            duration = this.duration;
+          }
 
           // Spinner is a real inline <svg> (parts/footer.html), animated via CSS, so it can be paused on :hover.
           this.items = { ...this.items, [timestamp]: {
             message: message,
             closable: true,
             selectors: [ type || 'info' ],
-            duration: this.duration,
-            remaining: this.duration,
+            duration: duration,
+            remaining: duration,
             startedAt: Date.now(),
             timer: null,
             classes() {

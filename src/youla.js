@@ -1,9 +1,9 @@
-// Core directives: v-each, v-html, v-prop, v-show, v-text.
-import './scripts/directives/v-each';
-import './scripts/directives/v-html';
-import './scripts/directives/v-prop';
-import './scripts/directives/v-show';
-import './scripts/directives/v-text';
+// Core directives: u-each, u-html, u-prop, u-show, u-text.
+import './scripts/directives/u-each';
+import './scripts/directives/u-html';
+import './scripts/directives/u-prop';
+import './scripts/directives/u-show';
+import './scripts/directives/u-text';
 
 // Methods available to all Youla.js expressions.
 import './scripts/methods/$dispatch';

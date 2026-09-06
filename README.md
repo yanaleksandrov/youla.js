@@ -3,9 +3,9 @@
 Youla.js is a small JavaScript library for adding interactivity to HTML. It follows a markup-first, Vue-like API: directives live directly in your tags and react to data changes automatically, without a build step.
 
 ```html
-<div v-data="{ open: false }">
+<div u-data="{ open: false }">
   <button @click="open = !open">Toggle</button>
-  <div v-show="open">Content...</div>
+  <div u-show="open">Content...</div>
 </div>
 ```
 
@@ -29,12 +29,12 @@ Available scripts:
 
 ## Usage
 
-Add `v-data` to any element to turn it into a component with its own reactive data. From there, bind
+Add `u-data` to any element to turn it into a component with its own reactive data. From there, bind
 behavior and content to that data using directives, directly inside your existing markup:
 
 ```html
-<ul v-data="{ colors: ['Red', 'Orange', 'Yellow'] }">
-  <li v-each="color in colors" v-text="color"></li>
+<ul u-data="{ colors: ['Red', 'Orange', 'Yellow'] }">
+  <li u-each="color in colors" u-text="color"></li>
 </ul>
 ```
 
@@ -42,12 +42,12 @@ Youla.js ships with:
 
 | Directive        | Purpose                                                              |
 | ---------------- | --------------------------------------------------------------------|
-| `v-data`         | Marks an element as a component and defines its reactive data       |
-| `v-text`         | Sets the element's text content, escaping HTML                      |
-| `v-html`         | Sets the element's HTML content                                     |
-| `v-show`         | Toggles element visibility via `display`                            |
-| `v-each`         | Renders a template element for each item of an array, object, or range |
-| `v-prop`         | Two-way binds a form field's value to data                          |
+| `u-data`         | Marks an element as a component and defines its reactive data       |
+| `u-text`         | Sets the element's text content, escaping HTML                      |
+| `u-html`         | Sets the element's HTML content                                     |
+| `u-show`         | Toggles element visibility via `display`                            |
+| `u-each`         | Renders a template element for each item of an array, object, or range |
+| `u-prop`         | Two-way binds a form field's value to data                          |
 | `:attr`          | Binds any HTML attribute to an expression (e.g. `:class`, `:style`)  |
 | `@event`         | Listens for a browser event, with modifiers like `.prevent`/`.once`  |
 

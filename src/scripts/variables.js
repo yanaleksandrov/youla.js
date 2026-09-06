@@ -29,7 +29,7 @@ export function variable(name, callback) {
  * Runs every registered custom variable's factory and collects the results keyed by `$name`, so
  * `createMagicVariables()` can merge them alongside the built-in magic variables.
  *
- * @param {HTMLElement} root - The component's root element ("v-data"), forwarded to each factory.
+ * @param {HTMLElement} root - The component's root element ("u-data"), forwarded to each factory.
  * @param {HTMLElement} el - The element the expression is being evaluated for/against, forwarded to each factory.
  * @param {Event} [event] - The triggering DOM event, if any, forwarded to each factory.
  * @returns {Object} One entry per registered variable, keyed by `$name`.

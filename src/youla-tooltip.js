@@ -1,17 +1,17 @@
 const PLACEMENTS = ['top', 'bottom', 'left', 'right', 'auto'];
 const TRIGGERS   = ['hover', 'click', 'focus'];
 
-// A "style-<name>" modifier (e.g. "v-tooltip.style-error") maps to a "v-tooltip--<name>" class on
-// the tooltip element (syncClasses()), the same way ".top" maps to "v-tooltip--top" — open-ended
+// A "style-<name>" modifier (e.g. "u-tooltip.style-error") maps to a "u-tooltip--<name>" class on
+// the tooltip element (syncClasses()), the same way ".top" maps to "u-tooltip--top" — open-ended
 // rather than a fixed list like PLACEMENTS/TRIGGERS, since new skins are purely a CSS concern.
 const VARIANT_PREFIX = 'style-';
 
 const OFFSET = 8;
 const MARGIN = 4;
 
-// Exported so other floating elements built outside the v-data/directive system can style and
-// position themselves exactly like a v-tooltip without duplicating this logic.
-export const TOOLTIP_CLASS = 'v-tooltip';
+// Exported so other floating elements built outside the u-data/directive system can style and
+// position themselves exactly like a u-tooltip without duplicating this logic.
+export const TOOLTIP_CLASS = 'u-tooltip';
 
 // Fallback removal if the CSS exit animation never fires (e.g. reduced motion).
 export const EXIT_FALLBACK = 200;
@@ -164,8 +164,8 @@ export function computePosition(anchorRect, size, placement, viewport, offset = 
 }
 
 // A tooltip's DOM element, positioning, triggers, and lifecycle. Cached as `el._x_tooltip`.
-// Exported so other UI built outside the v-data/directive system can attach a real v-tooltip to an
-// element it built by hand, the same way the "v-tooltip" directive below does.
+// Exported so other UI built outside the u-data/directive system can attach a real u-tooltip to an
+// element it built by hand, the same way the "u-tooltip" directive below does.
 export class TooltipInstance {
   constructor(el, content, placement, trigger, delay = 250, variant = null) {
     Object.assign(this, { el, content, placement, trigger, delay, variant, visible: false });

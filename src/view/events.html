@@ -28,13 +28,13 @@
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data>
+    <div class="demo" u-data>
       <button @click="alert('Привет 👋')">Скажи привет</button>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-data&gt;
+&lt;div u-data&gt;
   &lt;button @click=&quot;alert(&#039;Привет 👋&#039;)&quot;&gt;Скажи привет&lt;/button&gt;
 &lt;/div&gt;
 </pre>
@@ -62,8 +62,9 @@
 <h3><code>.prevent</code></h3>
 
 <p>
-  Это эквивалент вызова <code>.preventDefault()</code>. В примере ниже кнопка не отправляет форму
-  на эндпоинт <code>/foo</code> — модификатор перехватывает отправку до того, как это сделает браузер.
+  Это эквивалент вызова <code>.preventDefault()</code>. В примере ниже форма не отправляется
+  на эндпоинт <code>/foo</code> и страница не перезагружается — модификатор перехватывает
+  отправку до того, как это сделает браузер.
 </p>
 
 <div class="example">
@@ -72,17 +73,21 @@
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo">
-      <form v-data @submit.prevent="console.log('submitted')" action="/foo">
+    <div class="demo" u-data="{ submitted: false }">
+      <form @submit.prevent="submitted = true" action="/foo">
         <button>Submit</button>
       </form>
+      <p u-show="submitted">Форма «отправлена» без перезагрузки страницы ✅</p>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;form v-data @submit.prevent=&quot;console.log(&#039;submitted&#039;)&quot; action=&quot;/foo&quot;&gt;
-  &lt;button&gt;Submit&lt;/button&gt;
-&lt;/form&gt;
+&lt;div u-data=&quot;{ submitted: false }&quot;&gt;
+  &lt;form @submit.prevent=&quot;submitted = true&quot; action=&quot;/foo&quot;&gt;
+    &lt;button&gt;Submit&lt;/button&gt;
+  &lt;/form&gt;
+  &lt;p u-show=&quot;submitted&quot;&gt;Форма «отправлена» без перезагрузки страницы ✅&lt;/p&gt;
+&lt;/div&gt;
 </pre>
   </div>
 </div>
@@ -90,14 +95,15 @@
 <h3><code>.stop</code></h3>
 
 <p>
-  Это эквивалент вызова <code>.stopPropagation()</code>. В примере ниже клик по кнопке не попадает
-  в консоль, потому что модификатор останавливает всплытие события до родителя.
+  Это эквивалент вызова <code>.stopPropagation()</code>. В примере ниже клик по кнопке не доходит
+  до родителя, потому что модификатор останавливает всплытие события — счётчик клика по контейнеру
+  не увеличивается.
 </p>
 
 <p>
   Без модификатора <code>.stop</code> событие поднялось бы выше по дереву DOM, и сработал бы
-  обработчик <code>@click</code>, установленный на родительском <code>&lt;div&gt;</code>, выведя
-  сообщение в консоль.
+  обработчик <code>@click</code>, установленный на родительском <code>&lt;div&gt;</code>, увеличив
+  оба счётчика сразу.
 </p>
 
 <div class="example">
@@ -106,14 +112,16 @@
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data @click="console.log('I will not get logged')">
-      <button @click.stop>Click Me</button>
+    <div class="demo" u-data="{ containerClicks: 0, buttonClicks: 0 }" @click="containerClicks++">
+      Кликов по контейнеру: <span u-text="containerClicks"></span>
+      <button @click.stop="buttonClicks++">Click Me (кликов: <span u-text="buttonClicks"></span>)</button>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-data @click=&quot;console.log(&#039;I will not get logged&#039;)&quot;&gt;
-  &lt;button @click.stop&gt;Click Me&lt;/button&gt;
+&lt;div u-data=&quot;{ containerClicks: 0, buttonClicks: 0 }&quot; @click=&quot;containerClicks++&quot;&gt;
+  Кликов по контейнеру: &lt;span u-text=&quot;containerClicks&quot;&gt;&lt;/span&gt;
+  &lt;button @click.stop=&quot;buttonClicks++&quot;&gt;Click Me (кликов: &lt;span u-text=&quot;buttonClicks&quot;&gt;&lt;/span&gt;)&lt;/button&gt;
 &lt;/div&gt;
 </pre>
   </div>
@@ -137,18 +145,18 @@
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data="{ open: false }">
+    <div class="demo" u-data="{ open: false }">
       <button @click="open = ! open">Открыть</button>
-      <div v-show="open" @click.outside="open = false">
+      <div u-show="open" @click.outside="open = false">
         Контент...
       </div>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-data=&quot;{ open: false }&quot;&gt;
+&lt;div u-data=&quot;{ open: false }&quot;&gt;
   &lt;button @click=&quot;open = ! open&quot;&gt;Открыть&lt;/button&gt;
-  &lt;div v-show=&quot;open&quot; @click.outside=&quot;open = false&quot;&gt;
+  &lt;div u-show=&quot;open&quot; @click.outside=&quot;open = false&quot;&gt;
     Контент...
   &lt;/div&gt;
 &lt;/div&gt;
@@ -168,9 +176,22 @@
   не на этом <code>&lt;div&gt;</code>, а совсем на другом элементе или в другой форме.
 </p>
 
-<pre>
-&lt;div v-data @keyup.prevent.ctrl.s.window=&quot;alert(&#039;No need save&#039;)&quot;&gt;...&lt;/div&gt;
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" u-data @keydown.prevent.ctrl.s.window="alert('No need save')">
+      Нажмите <code>Ctrl + S</code> в любом месте страницы — фокус может быть где угодно, а не только здесь.
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;div u-data @keydown.prevent.ctrl.s.window=&quot;alert(&#039;No need save&#039;)&quot;&gt;...&lt;/div&gt;
 </pre>
+  </div>
+</div>
 
 <h3><code>.enter</code>, <code>.esc</code>, <code>.ctrl</code> и другие клавиши</h3>
 
@@ -199,12 +220,12 @@
   </div>
   <div class="example__panel is-active" data-panel="preview">
     <div class="demo">
-      <input v-data @keydown.enter="alert('Отправлено')" placeholder="Нажмите Enter">
+      <input u-data @keydown.enter="alert('Отправлено')" placeholder="Нажмите Enter">
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;input v-data @keydown.enter=&quot;alert(&#039;Отправлено&#039;)&quot;&gt;
+&lt;input u-data @keydown.enter=&quot;alert(&#039;Отправлено&#039;)&quot;&gt;
 </pre>
   </div>
 </div>
@@ -223,12 +244,12 @@
   </div>
   <div class="example__panel is-active" data-panel="preview">
     <div class="demo">
-      <button v-data @click.once="alert('Я появлюсь только один раз')">Кликни</button>
+      <button u-data @click.once="alert('Я появлюсь только один раз')">Кликни</button>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;button v-data @click.once=&quot;alert(&#039;Я появлюсь только один раз&#039;)&quot;&gt;Кликни&lt;/button&gt;
+&lt;button u-data @click.once=&quot;alert(&#039;Я появлюсь только один раз&#039;)&quot;&gt;Кликни&lt;/button&gt;
 </pre>
   </div>
 </div>
@@ -252,12 +273,12 @@
   </div>
   <div class="example__panel is-active" data-panel="preview">
     <div class="demo">
-      <input v-data @input.delay.500ms="alert('Я вызван')" placeholder="Начните печатать...">
+      <input u-data @input.delay.500ms="alert('Я вызван')" placeholder="Начните печатать...">
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;input v-data @input.delay.500ms=&quot;alert(&#039;Я вызван&#039;)&quot;&gt;
+&lt;input u-data @input.delay.500ms=&quot;alert(&#039;Я вызван&#039;)&quot;&gt;
 </pre>
   </div>
 </div>
@@ -265,7 +286,7 @@
 <p>
   Сводная таблица всех модификаторов событий — на странице <a href="/syntax">Полный синтаксис</a>.
   А если обработчик нужно объявить вместе с другими директивами и атрибутами одним набором в JS —
-  посмотрите <a href="/v-bind"><code>v-bind</code></a>.
+  посмотрите <a href="/u-bind"><code>u-bind</code></a>.
 </p>
 
 <%= _.template(require('./parts/footer.html').default)(data) %>

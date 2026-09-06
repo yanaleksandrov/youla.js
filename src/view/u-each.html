@@ -1,0 +1,426 @@
+<% var data = {
+  title: "u-each"
+}; %>
+<%= _.template(require('./parts/header.html').default)(data) %>
+
+<h1>u-each</h1>
+
+<p>
+  Директива <code>u-each</code> создаёт элемент разметки для каждого значения массива, объекта
+  или диапазона чисел. Она клонирует DOM-узел, на котором объявлена, поэтому список всегда
+  отражает актуальное состояние данных.
+</p>
+
+<p>
+  Пример ниже показывает список цветов на основе массива — каждый элемент li создаётся
+  автоматически, по одному на каждый цвет из исходного массива данных.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" u-data="{ colors: ['Red', 'Orange', 'Yellow'] }">
+      <ul>
+        <li u-each="color in colors" u-text="color"></li>
+      </ul>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;div u-data=&quot;{ colors: ['Red', 'Orange', 'Yellow'] }&quot;&gt;
+  &lt;ul&gt;
+    &lt;li u-each=&quot;color in colors&quot; u-text=&quot;color&quot;&gt;&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/div&gt;
+</pre>
+  </div>
+</div>
+
+<p>
+  Важное правило: атрибут <code>u-each</code> ставится на тот элемент, который нужно повторить —
+  а не на его родителя или потомка, иначе клонируется не то, что вы ожидаете.
+</p>
+
+<p>
+  Сам элемент-шаблон остаётся в разметке как образец для клонирования, поэтому его стоит скрыть
+  css-правилом <code>display: none</code> для селектора <code>[u-each]</code> на странице.
+</p>
+
+<p>
+  Вы также можете передавать объекты и разбирать их следующим синтаксисом, получая одновременно
+  ключ и значение каждого свойства прямо внутри шаблона списка.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <ul class="demo" u-data="{ cars: { make: 'Jeep', model: 'Grand Cherokee', color: 'Black' } }">
+      <li u-each="(car, key) in cars">
+        <span u-text="key"></span>: <span u-text="car"></span>
+      </li>
+    </ul>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+  &lt;ul u-data=&quot;{ cars: { make: 'Jeep', model: 'Grand Cherokee', color: 'Black' } }&quot;&gt;
+    &lt;li u-each=&quot;(car, key) in cars&quot;&gt;
+      &lt;span u-text=&quot;key&quot;&gt;&lt;/span&gt;: &lt;span u-text=&quot;car&quot;&gt;&lt;/span&gt;
+    &lt;/li&gt;
+  &lt;/ul&gt;
+</pre>
+  </div>
+</div>
+
+<h2>Массив объектов</h2>
+
+<p>
+  Самый частый случай на практике — перебор массива объектов. Поля текущего элемента доступны в
+  шаблоне через точечную нотацию, без дополнительной настройки.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <ul class="demo" u-data="{
+      users: [
+        { name: 'Ian', role: 'Admin' },
+        { name: 'Olga', role: 'Editor' },
+        { name: 'Denis', role: 'Viewer' },
+      ]
+    }">
+      <li u-each="user in users">
+        <strong u-text="user.name"></strong> — <span u-text="user.role"></span>
+      </li>
+    </ul>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;ul u-data=&quot;{
+  users: [
+    { name: &#039;Ian&#039;, role: &#039;Admin&#039; },
+    { name: &#039;Olga&#039;, role: &#039;Editor&#039; },
+    { name: &#039;Denis&#039;, role: &#039;Viewer&#039; },
+  ]
+}&quot;&gt;
+  &lt;li u-each=&quot;user in users&quot;&gt;
+    &lt;strong u-text=&quot;user.name&quot;&gt;&lt;/strong&gt; — &lt;span u-text=&quot;user.role&quot;&gt;&lt;/span&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+</pre>
+  </div>
+</div>
+
+<p>
+  А также создавать вложенные циклы с неограниченной глубиной — например, категории товаров, где
+  у каждой категории свой список товаров и их характеристик.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" u-data="{
+      categories: [
+        {
+          name: 'Category 1',
+          products: [
+            { name: 'Product 1' },
+            { name: 'Product 2' },
+          ]
+        },
+        {
+          name: 'Category 2',
+          products: [
+            { name: 'Product 3', attributes: ['10x50mm', 'Yellow'] },
+            { name: 'Product 4', attributes: ['30x40mm', 'White'] },
+            { name: 'Product 5', attributes: ['20x20mm', 'Black'] },
+          ]
+        }
+      ]
+    }">
+      <div u-each="(category, index) in categories">
+        <h3 u-text="category.name"></h3>
+        <ul>
+          <li u-each="product in category.products">
+            <strong u-text="product.name"></strong>
+            Attributes:
+            <em u-each="attribute in product.attributes join ', '" u-text="attribute"></em>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;div u-data=&quot;{
+  categories: [
+    {
+      name: &#039;Category 1&#039;,
+      products: [
+        { name: &#039;Product 1&#039; },
+        { name: &#039;Product 2&#039; },
+      ]
+    },
+    {
+      name: &#039;Category 2&#039;,
+      products: [
+        { name: &#039;Product 3&#039;, attributes: [&#039;10x50mm&#039;, &#039;Yellow&#039;] },
+        { name: &#039;Product 4&#039;, attributes: [&#039;30x40mm&#039;, &#039;White&#039;] },
+        { name: &#039;Product 5&#039;, attributes: [&#039;20x20mm&#039;, &#039;Black&#039;] },
+      ]
+    }
+  ]
+}&quot;&gt;
+  &lt;div u-each=&quot;(category, index) in categories&quot;&gt;
+    &lt;h3 u-text=&quot;category.name&quot;&gt;&lt;/h3&gt;
+    &lt;ul&gt;
+      &lt;li u-each=&quot;product in category.products&quot;&gt;
+        &lt;strong u-text=&quot;product.name&quot;&gt;&lt;/strong&gt;
+        Attributes:
+        &lt;em u-each=&quot;attribute in product.attributes join &#039;, &#039;&quot; u-text=&quot;attribute&quot;&gt;&lt;/em&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+</pre>
+  </div>
+</div>
+
+<h2>Независимость списков друг от друга</h2>
+
+<p>
+  Каждый элемент с <a href="/u-data"><code>u-data</code></a> — самостоятельный компонент со
+  своими данными, поэтому на странице можно свободно размещать сколько угодно независимых
+  <code>u-each</code>, в том числе вложенных.
+</p>
+
+<p>
+  Переменные цикла одного компонента не видны другому, так что в соседних списках можно спокойно
+  использовать одинаковые имена, например <code>item</code>, без конфликтов.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <ul class="demo" u-data="{ fruits: ['Apple', 'Banana'] }">
+      <li u-each="item in fruits" u-text="item"></li>
+    </ul>
+
+    <ul class="demo" u-data="{ tools: ['Hammer', 'Wrench'] }">
+      <li u-each="item in tools" u-text="item"></li>
+    </ul>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;ul u-data=&quot;{ fruits: ['Apple', 'Banana'] }&quot;&gt;
+  &lt;li u-each=&quot;item in fruits&quot; u-text=&quot;item&quot;&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;ul u-data=&quot;{ tools: ['Hammer', 'Wrench'] }&quot;&gt;
+  &lt;li u-each=&quot;item in tools&quot; u-text=&quot;item&quot;&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</pre>
+  </div>
+</div>
+
+<h2>Добавление разделителя</h2>
+
+<p>
+  Ключевое слово <code>join</code> вставляет текстовый разделитель между элементами — например,
+  запятую или пробел — без ручной проверки, последний ли это элемент списка.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <p class="demo" u-data="{ attributes: ['White', '20x30mm', 'Google LLC'] }">
+      Характеристики: <i u-each="attribute in attributes join ', '" u-text="attribute"></i>
+    </p>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;p u-data=&quot;{ attributes: [&#039;White&#039;, &#039;20x30mm&#039;, &#039;Google LLC&#039;] }&quot;&gt;
+  Характеристики: &lt;i u-each=&quot;attribute in attributes join &#039;, &#039;&quot; u-text=&quot;attribute&quot;&gt;&lt;/i&gt;
+&lt;/p&gt;
+</pre>
+  </div>
+</div>
+
+<h2>Доступ к индексам</h2>
+
+<p>
+  Чтобы получить индекс текущего элемента в цикле, используйте синтаксис
+  <code>(item, index) in items</code> — индекс становится доступен в шаблоне наравне с самим
+  значением.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <ul class="demo" u-data="{ names: ['Ivan', 'Yulia', 'Evgeny'] }">
+      <li u-each="(name, index) in names">
+        <span u-text="`${++index}: ${name}`"></span>
+      </li>
+    </ul>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;ul u-data=&quot;{ names: ['Ivan', 'Yulia', 'Evgeny'] }&quot;&gt;
+  &lt;li u-each=&quot;(name, index) in names&quot;&gt;
+    &lt;span u-text=&quot;&#x60;${++index}: ${name}&#x60;&quot;&gt;&lt;/span&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+</pre>
+  </div>
+</div>
+
+<h2>Динамическое обновление списка</h2>
+
+<p>
+  Список реактивен: как только массив получает новое значение, <code>u-each</code> автоматически
+  перерисовывает разметку, без ручного вызова каких-либо методов обновления.
+</p>
+
+<p>
+  Список реактивен и к мутирующим методам массива — <code>.push()</code>, <code>.splice()</code>,
+  <code>.shift()</code>, <code>.unshift()</code>, <code>.sort()</code>, <code>.reverse()</code>,
+  <code>.fill()</code>, <code>.copyWithin()</code>. Не обязательно присваивать новое значение
+  целиком — можно менять массив на месте, как в обычном JS.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" u-data="{ fruits: ['Apple', 'Banana'] }">
+      <button type="button" @click="fruits.push('Cherry')">Добавить</button>
+      <button type="button" @click="fruits.pop()">Удалить последний</button>
+      <ul>
+        <li u-each="fruit in fruits" u-text="fruit"></li>
+      </ul>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;div u-data=&quot;{ fruits: ['Apple', 'Banana'] }&quot;&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;fruits.push('Cherry')&quot;&gt;Добавить&lt;/button&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;fruits.pop()&quot;&gt;Удалить последний&lt;/button&gt;
+  &lt;ul&gt;
+    &lt;li u-each=&quot;fruit in fruits&quot; u-text=&quot;fruit&quot;&gt;&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/div&gt;
+</pre>
+  </div>
+</div>
+
+<h2>Итерация по диапазону</h2>
+
+<p>
+  Чтобы просто повторить блок N раз, не создавая массив, укажите целое число вместо свойства
+  данных — удобно для рейтингов, шагов мастера и похожих счётчиков.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" u-data>
+      Рейтинг:
+      <span u-each="i in 5">⭐</span>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;div u-data&gt;
+  Рейтинг:
+  &lt;span u-each=&quot;i in 5&quot;&gt;⭐&lt;/span&gt;
+&lt;/div&gt;
+</pre>
+  </div>
+</div>
+
+<p>
+  Обратите внимание, что в таком случае значения <code>i</code> начинаются с единицы, а не с нуля,
+  в отличие от привычных нулевых индексов обычного массива в JavaScript.
+</p>
+
+<h2>Модификаторы</h2>
+
+<p><code>.lazy</code></p>
+
+<p>
+  Пропускает рендер списка при инициализации компонента и включается только при изменении
+  привязанных данных. Это устраняет мерцание (flickering) страницы и помогает SEO.
+</p>
+
+<blockquote>
+  <p>Как это работает</p>
+  <p>
+    Первичный рендеринг делает сервер: браузер сразу показывает готовый контент, не дожидаясь
+    загрузки и выполнения JavaScript-кода библиотеки на клиенте.
+  </p>
+  <p>
+    После загрузки JS происходит гидратация — Youla.js «привязывает» данные к уже готовому HTML,
+    включая интерактивность и последующие реактивные обновления.
+  </p>
+</blockquote>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" u-data="{devices: []}">
+      <button type="button" @click="devices = ['Headphones', 'VR Glasses']">Обновить список</button>
+      <ul>
+        <li u-each.lazy="device in devices" u-text="device"></li>
+        <li>Phones</li>
+        <li>Laptops</li>
+      </ul>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;div u-data=&quot;{devices: []}&quot;&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;devices = [&#039;Headphones&#039;, &#039;VR Glasses&#039;]&quot;&gt;Обновить список&lt;/button&gt;
+  &lt;ul&gt;
+    &lt;li u-each.lazy=&quot;device in devices&quot; u-text=&quot;device&quot;&gt;&lt;/li&gt;
+    &lt;li&gt;Phones&lt;/li&gt;
+    &lt;li&gt;Laptops&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/div&gt;
+</pre>
+  </div>
+</div>
+
+<p>
+  Если элементу нужны ещё и другие директивы, события и атрибуты одним набором — посмотрите
+  <a href="/u-bind"><code>u-bind</code></a>, чтобы не перечислять их все по отдельности в разметке.
+</p>
+
+<%= _.template(require('./parts/footer.html').default)(data) %>

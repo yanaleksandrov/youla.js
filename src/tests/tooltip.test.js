@@ -187,10 +187,10 @@ describe('tooltipDirective — basic lifecycle', () => {
     const el = mount();
     tooltipDirective(el, 'Hello', attr());
 
-    expect(document.querySelectorAll('.v-tooltip').length).toBe(0);
+    expect(document.querySelectorAll('.u-tooltip').length).toBe(0);
 
     el._x_tooltip.show();
-    const tooltips = document.querySelectorAll('.v-tooltip');
+    const tooltips = document.querySelectorAll('.u-tooltip');
     expect(tooltips.length).toBe(1);
     expect(tooltips[0].getAttribute('role')).toBe('tooltip');
   });
@@ -202,7 +202,7 @@ describe('tooltipDirective — basic lifecycle', () => {
     tooltipDirective(el, 'Hello', attr());
     el._x_tooltip.show();
 
-    expect(document.querySelectorAll('.v-tooltip').length).toBe(1);
+    expect(document.querySelectorAll('.u-tooltip').length).toBe(1);
   });
 
   it('reuses the same tooltip DOM node across updates', () => {
@@ -222,7 +222,7 @@ describe('tooltipDirective — basic lifecycle', () => {
     tooltipDirective(el, 'Second', attr());
 
     expect(el._x_tooltip.tooltip.innerHTML).toBe('Second');
-    expect(document.querySelectorAll('.v-tooltip').length).toBe(1);
+    expect(document.querySelectorAll('.u-tooltip').length).toBe(1);
   });
 
   it('supports empty content without throwing', () => {
@@ -272,8 +272,8 @@ describe('tooltipDirective — DOM presence and bounce animation', () => {
 
     const tooltip = el._x_tooltip.tooltip;
     expect(document.body.contains(tooltip)).toBe(true);
-    expect(tooltip.classList.contains('v-tooltip--in')).toBe(true);
-    expect(tooltip.classList.contains('v-tooltip--out')).toBe(false);
+    expect(tooltip.classList.contains('u-tooltip--in')).toBe(true);
+    expect(tooltip.classList.contains('u-tooltip--out')).toBe(false);
   });
 
   it('switches to the exit-bounce class immediately on hide, before removal', () => {
@@ -285,8 +285,8 @@ describe('tooltipDirective — DOM presence and bounce animation', () => {
 
     const tooltip = el._x_tooltip.tooltip;
     expect(document.body.contains(tooltip)).toBe(true);
-    expect(tooltip.classList.contains('v-tooltip--out')).toBe(true);
-    expect(tooltip.classList.contains('v-tooltip--in')).toBe(false);
+    expect(tooltip.classList.contains('u-tooltip--out')).toBe(true);
+    expect(tooltip.classList.contains('u-tooltip--in')).toBe(false);
   });
 
   it('is fully removed from the DOM once the exit animation completes', async () => {
@@ -299,7 +299,7 @@ describe('tooltipDirective — DOM presence and bounce animation', () => {
     await flushExit();
 
     expect(document.body.contains(tooltip)).toBe(false);
-    expect(tooltip.classList.contains('v-tooltip--out')).toBe(false);
+    expect(tooltip.classList.contains('u-tooltip--out')).toBe(false);
   });
 
   it('cancels an in-flight exit and replays the enter animation if shown again quickly', async () => {
@@ -309,11 +309,11 @@ describe('tooltipDirective — DOM presence and bounce animation', () => {
     const tooltip = el._x_tooltip.tooltip;
 
     el._x_tooltip.hide();
-    expect(tooltip.classList.contains('v-tooltip--out')).toBe(true);
+    expect(tooltip.classList.contains('u-tooltip--out')).toBe(true);
 
     el._x_tooltip.show();
-    expect(tooltip.classList.contains('v-tooltip--out')).toBe(false);
-    expect(tooltip.classList.contains('v-tooltip--in')).toBe(true);
+    expect(tooltip.classList.contains('u-tooltip--out')).toBe(false);
+    expect(tooltip.classList.contains('u-tooltip--in')).toBe(true);
     expect(document.body.contains(tooltip)).toBe(true);
 
     // The interrupted hide()'s fallback timer must not remove it later.
@@ -385,16 +385,16 @@ describe('tooltipDirective — modifiers', () => {
 });
 
 describe('tooltipDirective — placement class', () => {
-  it.each(['top', 'bottom', 'left', 'right'])('adds "v-tooltip--%s" once shown with that placement', placement => {
+  it.each(['top', 'bottom', 'left', 'right'])('adds "u-tooltip--%s" once shown with that placement', placement => {
     const el = mount();
     tooltipDirective(el, 'Tip', attr([placement]));
 
     el._x_tooltip.show();
 
-    expect(el._x_tooltip.tooltip.classList.contains(`v-tooltip--${placement}`)).toBe(true);
+    expect(el._x_tooltip.tooltip.classList.contains(`u-tooltip--${placement}`)).toBe(true);
   });
 
-  it('never adds a literal "v-tooltip--auto" class — it reflects the resolved side instead', () => {
+  it('never adds a literal "u-tooltip--auto" class — it reflects the resolved side instead', () => {
     const el = mount();
     tooltipDirective(el, 'Tip', attr(['auto']));
     stubRect(el, { top: 5, bottom: 35, left: 400, right: 450, width: 50, height: 30 });
@@ -403,19 +403,19 @@ describe('tooltipDirective — placement class', () => {
     el._x_tooltip.show();
 
     const tooltip = el._x_tooltip.tooltip;
-    expect(tooltip.classList.contains('v-tooltip--auto')).toBe(false);
-    expect(['top', 'bottom', 'left', 'right'].some(side => tooltip.classList.contains(`v-tooltip--${side}`))).toBe(true);
+    expect(tooltip.classList.contains('u-tooltip--auto')).toBe(false);
+    expect(['top', 'bottom', 'left', 'right'].some(side => tooltip.classList.contains(`u-tooltip--${side}`))).toBe(true);
   });
 
   it('swaps the class when the placement modifier changes while visible', () => {
     const el = mount();
     tooltipDirective(el, 'Tip', attr(['top']));
     el._x_tooltip.show();
-    expect(el._x_tooltip.tooltip.classList.contains('v-tooltip--top')).toBe(true);
+    expect(el._x_tooltip.tooltip.classList.contains('u-tooltip--top')).toBe(true);
 
     tooltipDirective(el, 'Tip', attr(['bottom']));
-    expect(el._x_tooltip.tooltip.classList.contains('v-tooltip--top')).toBe(false);
-    expect(el._x_tooltip.tooltip.classList.contains('v-tooltip--bottom')).toBe(true);
+    expect(el._x_tooltip.tooltip.classList.contains('u-tooltip--top')).toBe(false);
+    expect(el._x_tooltip.tooltip.classList.contains('u-tooltip--bottom')).toBe(true);
   });
 
   it('swaps the class when a later reposition() resolves "auto" to a different side', () => {
@@ -426,13 +426,13 @@ describe('tooltipDirective — placement class', () => {
     stubRect(el, { top: 5, bottom: 35, left: 400, right: 450, width: 50, height: 30 });
     el._x_tooltip.show();
     const firstSide = ['top', 'bottom', 'left', 'right'].find(side =>
-      el._x_tooltip.tooltip.classList.contains(`v-tooltip--${side}`)
+      el._x_tooltip.tooltip.classList.contains(`u-tooltip--${side}`)
     );
 
     stubRect(el, { top: 760, bottom: 790, left: 400, right: 450, width: 50, height: 30 });
     el._x_tooltip.reposition();
     const secondSide = ['top', 'bottom', 'left', 'right'].find(side =>
-      el._x_tooltip.tooltip.classList.contains(`v-tooltip--${side}`)
+      el._x_tooltip.tooltip.classList.contains(`u-tooltip--${side}`)
     );
 
     expect(secondSide).not.toBe(firstSide);
@@ -694,7 +694,7 @@ describe('tooltipDirective — hover delay', () => {
     await new Promise(resolve => setTimeout(resolve, 60));
 
     expect(el._x_tooltip).toBeUndefined();
-    expect(document.querySelectorAll('.v-tooltip').length).toBe(0);
+    expect(document.querySelectorAll('.u-tooltip').length).toBe(0);
   });
 
   it('applies an updated delay from a later directive call', async () => {
@@ -848,7 +848,7 @@ describe('tooltipDirective — destroy and removal cleanup', () => {
     el._x_tooltip.destroy();
 
     expect(() => el.dispatchEvent(new Event('mouseenter'))).not.toThrow();
-    expect(document.querySelectorAll('.v-tooltip').length).toBe(0);
+    expect(document.querySelectorAll('.u-tooltip').length).toBe(0);
   });
 
   it('creates a fresh instance on reinitialization after destroy', () => {
@@ -861,7 +861,7 @@ describe('tooltipDirective — destroy and removal cleanup', () => {
     tooltipDirective(el, 'Tip again', attr());
     el._x_tooltip.show();
     expect(el._x_tooltip).not.toBe(firstInstance);
-    expect(document.querySelectorAll('.v-tooltip').length).toBe(1);
+    expect(document.querySelectorAll('.u-tooltip').length).toBe(1);
   });
 
   it('tears itself down automatically once the element is removed from the DOM', async () => {

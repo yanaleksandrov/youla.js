@@ -1,0 +1,140 @@
+<% var data = {
+  title: "Список задач"
+}; %>
+<%= _.template(require('../parts/header.html').default)(data) %>
+
+<h1>Список задач</h1>
+
+<p>
+  Список To-Do — типовой сценарий для трекера задач. Он переживает перезагрузку страницы: список
+  сохраняется в браузере автоматически. Ниже — весь код, который для этого нужен.
+</p>
+
+<p>
+  За сохранение списка отвечает модификатор <code>.local</code> в <code>u-data.local="todo"</code>:
+  он пишет данные в <code>localStorage</code> при каждом изменении и подставляет их обратно при
+  следующей загрузке страницы.
+</p>
+
+<p>
+  Сохранённые данные накладываются поверх начальных значений из <code>Youla.data</code> — так новые
+  поля, добавленные в фабрику позже, появятся даже у посетителей со старым <code>localStorage</code>.
+</p>
+
+<p>
+  Если данные должны быть доступны серверу, замените модификатор на <code>.cookie</code>. Если
+  персистентность не нужна, уберите модификатор — оставьте обычный <code>u-data="todo"</code>.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+    <button type="button" class="example__tab" data-tab="js">JS</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" u-data.local="todo">
+      <p>Добавить задачу:</p>
+      <input placeholder="Введите новую задачу..." u-prop="value" u-bind="field" />
+      <button type="button" u-bind="adder">Добавить</button>
+
+      <div u-show="tasks.length" hidden>
+        <p>Список задач:</p>
+        <ul>
+          <li u-each="(task, index) in tasks">
+            <label>
+              <input type="checkbox" u-bind="checkbox"> <span u-bind="status"></span>
+            </label>
+            <button u-bind="remover">Удалить</button>
+          </li>
+        </ul>
+        <button u-bind="clearer">Очистить всё</button>
+      </div>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;div u-data.local=&quot;todo&quot;&gt;
+  &lt;p&gt;Добавить задачу:&lt;/p&gt;
+  &lt;input placeholder=&quot;Введите новую задачу...&quot; u-prop=&quot;value&quot; u-bind=&quot;field&quot; /&gt;
+  &lt;button type=&quot;button&quot; u-bind=&quot;adder&quot;&gt;Добавить&lt;/button&gt;
+
+  &lt;div u-show=&quot;tasks.length&quot; hidden&gt;
+    &lt;p&gt;Список задач:&lt;/p&gt;
+    &lt;ul&gt;
+      &lt;li u-each=&quot;(task, index) in tasks&quot;&gt;
+        &lt;label&gt;
+          &lt;input type=&quot;checkbox&quot; u-bind=&quot;checkbox&quot;&gt; &lt;span u-bind=&quot;status&quot;&gt;&lt;/span&gt;
+        &lt;/label&gt;
+        &lt;button u-bind=&quot;remover&quot;&gt;Удалить&lt;/button&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+    &lt;button u-bind=&quot;clearer&quot;&gt;Очистить всё&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+</pre>
+  </div>
+  <div class="example__panel" data-panel="js">
+    <pre>
+document.addEventListener('youla:init', () =&gt; {
+  Youla.data('todo', () =&gt; ({
+    value: '',
+    tasks: [],
+    adder: {
+      '@click': &quot;tasks.push({title: value, checked: false}); value = ''&quot;,
+      ':disabled': '!value.trim()',
+    },
+    field: {
+      '@keydown.enter': &quot;value.trim() &amp;&amp; (tasks.push({title: value, checked: false}), value = '')&quot;,
+    },
+    checkbox: {
+      '@change': 'task.checked = !task.checked',
+      ':checked': 'task.checked',
+    },
+    status: {
+      'u-text': 'task.title',
+      ':class': &quot;task.checked &amp;&amp; 'strike'&quot;,
+    },
+    remover: {
+      '@click': 'tasks.splice(index, 1)',
+    },
+    clearer: {
+      '@click': 'tasks = []',
+    },
+  }));
+});
+</pre>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('youla:init', () => {
+    Youla.data('todo', () => ({
+      value: '',
+      tasks: [],
+      adder: {
+        '@click': "tasks.push({title: value, checked: false}); value = ''",
+        ':disabled': '!value.trim()',
+      },
+      field: {
+        '@keydown.enter': "value.trim() && (tasks.push({title: value, checked: false}), value = '')",
+      },
+      checkbox: {
+        '@change': 'task.checked = !task.checked',
+        ':checked': 'task.checked',
+      },
+      status: {
+        'u-text': 'task.title',
+        ':class': "task.checked && 'strike'",
+      },
+      remover: {
+        '@click': 'tasks.splice(index, 1)',
+      },
+      clearer: {
+        '@click': 'tasks = []',
+      },
+    }));
+  });
+</script>
+
+<%= _.template(require('../parts/footer.html').default)(data) %>

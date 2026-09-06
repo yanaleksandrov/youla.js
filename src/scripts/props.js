@@ -6,7 +6,7 @@ import { getAttributes } from './attributes';
 import { storage, isStorageModifier, getStorageType, castToType } from './storage';
 
 /**
- * Prepares every `v-prop`-bound form field under `rootElement`: ensures each field has a
+ * Prepares every `u-prop`-bound form field under `rootElement`: ensures each field has a
  * `name`, seeds a default value into `data` for any property that doesn't exist yet, evaluates
  * the field's current DOM value into `data`, and applies any persisted `.local`/`.cookie` value.
  *
@@ -15,7 +15,7 @@ import { storage, isStorageModifier, getStorageType, castToType } from './storag
  * @returns {Object} `data`, for convenience (it's also mutated directly).
  */
 export function hydrateProps(rootElement, data) {
-  domWalk(rootElement, el => getAttributes(el).filter(({directive}) => directive === 'v-prop').forEach(attribute => {
+  domWalk(rootElement, el => getAttributes(el).filter(({directive}) => directive === 'u-prop').forEach(attribute => {
     let {expression, modifiers} = attribute;
 
     // support directive just for form fields
@@ -32,7 +32,7 @@ export function hydrateProps(rootElement, data) {
     if (data[key] === undefined) {
       let fields = [];
       if (el.type === 'checkbox') {
-        fields = closestDirective(el, 'v-data').querySelectorAll(`[${CSS.escape(attribute.name)}="${expression}"]`);
+        fields = closestDirective(el, 'u-data').querySelectorAll(`[${CSS.escape(attribute.name)}="${expression}"]`);
       }
 
       data[key] = setNestedObjectValue(prop, fields.length > 1 ? [] : '');
@@ -58,13 +58,13 @@ export function hydrateProps(rootElement, data) {
 }
 
 /**
- * Builds the assignment expression used to write a `v-prop`-bound field's current DOM value
+ * Builds the assignment expression used to write a `u-prop`-bound field's current DOM value
  * onto `$data.<expression>`, accounting for the element's type and the `.number`/`.trim`
  * modifiers.
  *
  * @param {HTMLElement} el - The bound form field (input, select, or textarea).
  * @param {Object} data - The component's data object, read to resolve the current bound value.
- * @param {Object} attribute - The parsed `v-prop` attribute descriptor (expression, modifiers).
+ * @param {Object} attribute - The parsed `u-prop` attribute descriptor (expression, modifiers).
  * @returns {string} An expression string, e.g. `"$data.count = $el.value"`, ready for saferEval.
  */
 export function generateExpressionForProp(el, data, attribute) {

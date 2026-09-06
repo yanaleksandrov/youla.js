@@ -1,0 +1,167 @@
+<% var data = {
+  title: "Пользовательские директивы"
+}; %>
+<%= _.template(require('../parts/header.html').default)(data) %>
+
+<h1>Пользовательские директивы</h1>
+
+<p>
+  Помимо встроенных <code>u-*</code> директив Youla.js позволяет зарегистрировать свои через
+  <code>Youla.directive()</code>. Как устроена регистрация и что получает <code>callback</code> —
+  на странице <a href="/extending">Extending</a>. Ниже — примеры уже готовых директив из
+  библиотеки.
+</p>
+
+<h2>u-noautofill: блокируем автозаполнение браузера</h2>
+
+<p>
+  Атрибут <code>autocomplete="off"</code> браузеры нередко игнорируют, особенно для полей логина
+  и пароля. Директива <code>u-noautofill</code> решает это иначе: делает поле <code>readonly</code>
+  до первого фокуса, из-за чего браузер не успевает предложить сохранённые значения, а сразу после
+  фокуса атрибут снимается и поле ведёт себя как обычное.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" u-data="{ login: '' }">
+      <input type="text" placeholder="Логин" u-noautofill>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;input type=&quot;text&quot; placeholder=&quot;Логин&quot; u-noautofill&gt;
+</pre>
+  </div>
+</div>
+
+<p>
+  Значение директивы не используется — атрибут <code>u-noautofill</code> просто включает
+  поведение, а сама привязка значения поля, как обычно, остаётся за <a href="/u-prop"><code>u-prop</code></a>.
+</p>
+
+<h2>u-highlight: разметка для подсветки синтаксиса</h2>
+
+<p>
+  Директива сама не красит текст — она готовит разметку под подсветчик вроде
+  <a href="https://prismjs.com/" target="_blank">Prism.js</a>: оборачивает содержимое элемента в
+  <code>&lt;code class="language-имя"&gt;</code>, добавляет класс <code>line-numbers</code> и
+  выставляет атрибут <code>data-lang</code>. Дальше за подсветку и нумерацию строк отвечает уже
+  сама библиотека — её CSS и JS в этот проект не подключены.
+</p>
+
+<p>
+  Язык берётся из модификатора — <code>u-highlight.js</code> даёт класс <code>language-js</code>,
+  без модификатора используется <code>language-html</code>.
+</p>
+
+<pre>
+&lt;pre u-highlight.js&gt;
+Youla.data(&#39;user&#39;, () =&gt; ({
+  name: &#39;Youla.js&#39;,
+}));
+&lt;/pre&gt;
+</pre>
+
+<h2>u-collapse: плавное раскрытие и скрытие</h2>
+
+<p>
+  Директива анимирует высоту, отступы и поля элемента между 0 и его естественным размером —
+  раскрывает при истинном значении, закрывает при ложном. Никакого CSS-класса не требуется,
+  поведением управляет само выражение атрибута.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" u-data="{ open: false }">
+      <button type="button" @click="open = !open">Переключить</button>
+      <div u-collapse="open">Содержимое, которое плавно раскрывается и закрывается.</div>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;div u-data=&quot;{ open: true }&quot;&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;open = !open&quot;&gt;Переключить&lt;/button&gt;
+  &lt;div u-collapse=&quot;open&quot;&gt;Содержимое, которое плавно раскрывается и закрывается.&lt;/div&gt;
+&lt;/div&gt;
+</pre>
+  </div>
+</div>
+
+<h2>u-textarea: автовысота при вводе</h2>
+
+<p>
+  Поле растёт по мере набора текста, подстраиваясь под содержимое, — и перестаёт расти после
+  значения-лимита в строках, дальше внутри появляется обычная прокрутка.
+</p>
+
+<p>
+  Минимальная высота задаётся обычным HTML-атрибутом <code>rows</code> — сама директива его не
+  трогает, это стандартное поведение <code>&lt;textarea&gt;</code>. Максимум строк, до которого
+  можно вырасти, передаётся значением директивы, например <code>u-textarea="6"</code>; без
+  значения используется лимит по умолчанию (99 строк).
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" u-data>
+      <textarea u-textarea="6" rows="2" placeholder="Печатайте здесь — поле будет расти..."></textarea>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;textarea u-textarea=&quot;6&quot; rows=&quot;2&quot;&gt;&lt;/textarea&gt;
+</pre>
+  </div>
+</div>
+
+<h2>u-sticky: прилипающая колонка</h2>
+
+<p>
+  Элемент со свойством <code>position: relative</code> у родителя остаётся на месте, пока родитель
+  прокручивается мимо, — не просто «прилипает» к вьюпорту, а остаётся в пределах родителя: колонка
+  выше вьюпорта прокручивается внутри себя, а не съезжает за верх или низ экрана.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" u-data style="position: relative; display: flex; gap: 1rem; align-items: flex-start;">
+      <div u-sticky style="width: 180px; padding: 0.75rem; border-radius: 0.4rem; border: 1px solid var(--line);">
+        Прокрутите страницу — я слежу за этой колонкой
+      </div>
+      <div style="flex: 1; line-height: 2.4;">
+        <p>Youla.js остаётся крошечной библиотекой — около 16kB, без сборки и виртуального DOM.</p>
+        <p>Реактивность строится на прокси над обычным объектом данных, без своего диалекта шаблонов.</p>
+        <p>Директивы читаются прямо из атрибутов разметки: <code>u-*</code>, <code>:attribute</code>, <code>@event</code>.</p>
+        <p>Пользовательские директивы и методы регистрируются через <code>Youla.directive()</code> и <code>Youla.method()</code>.</p>
+        <p>Эта колонка — просто заполнитель, чтобы страница стала достаточно длинной для прокрутки.</p>
+        <p>Прокрутите чуть ниже и обратно — левая колонка должна остаться на виду всё это время.</p>
+      </div>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;div style=&quot;position: relative; display: flex; gap: 1rem;&quot;&gt;
+  &lt;div u-sticky&gt;Слежу за колонкой&lt;/div&gt;
+  &lt;div&gt;Длинная колонка содержимого...&lt;/div&gt;
+&lt;/div&gt;
+</pre>
+  </div>
+</div>
+
+<%= _.template(require('../parts/footer.html').default)(data) %>

@@ -21,7 +21,7 @@ export const Youla = {
   /**
    * Boots Youla.js: fires the `youla:init` event (the hook user code uses to register
    * directives/methods/data-providers), waits for the DOM to be ready, then discovers and
-   * initializes every `v-data` element on the page before watching for components added later.
+   * initializes every `u-data` element on the page before watching for components added later.
    *
    * @returns {Promise<void>}
    */
@@ -36,29 +36,29 @@ export const Youla = {
   },
 
   /**
-   * Finds every element already in the document carrying `v-data` (in any
-   * modified form, e.g. `v-data.local`) and invokes `callback` for each.
+   * Finds every element already in the document carrying `u-data` (in any
+   * modified form, e.g. `u-data.local`) and invokes `callback` for each.
    *
    * @param {Function} callback - Called once per discovered element.
    * @returns {void}
    */
   componentDiscover: callback => {
-    Array.from(document.querySelectorAll('*')).filter(el => hasDirective(el, 'v-data')).forEach(callback)
+    Array.from(document.querySelectorAll('*')).filter(el => hasDirective(el, 'u-data')).forEach(callback)
   },
 
   /**
    * Watches `document.body` for elements added after the initial page load
    * (e.g. markup injected via AJAX) and invokes `callback` for any new
-   * element carrying `v-data`, so it gets initialized automatically.
+   * element carrying `u-data`, so it gets initialized automatically.
    *
-   * @param {Function} callback - Called once per newly-added `v-data` element.
+   * @param {Function} callback - Called once per newly-added `u-data` element.
    * @returns {void}
    */
   componentWatch: callback => {
     let observer = new MutationObserver(mutations =>
       mutations.forEach(mutation =>
         Array.from(mutation.addedNodes)
-          .filter(node => node.nodeType === 1 && hasDirective(node, 'v-data'))
+          .filter(node => node.nodeType === 1 && hasDirective(node, 'u-data'))
           .forEach(callback)
       )
     );
@@ -76,7 +76,7 @@ export const Youla = {
   /**
    * Creates a `Component` instance for `el` and stashes it on `el.__x`.
    *
-   * @param {HTMLElement} el - The root element carrying `v-data`.
+   * @param {HTMLElement} el - The root element carrying `u-data`.
    * @returns {void}
    */
   componentInitialize: el => {

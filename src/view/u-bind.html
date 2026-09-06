@@ -1,0 +1,404 @@
+<% var data = {
+  title: "u-bind"
+}; %>
+<%= _.template(require('./parts/header.html').default)(data) %>
+
+<h1>u-bind</h1>
+
+<p>
+  Пока состояние компонента — пара плоских свойств, объектный литерал прямо в атрибуте
+  <code>u-data="{...}"</code> остаётся самым коротким и понятным путём.
+  Но как только в задаче появляется повторяющаяся логика, сложные проверки, или богатый функционал, расписывать её в каждом выражении
+  - становится многословно и хрупко: любое изменение поведения приходится аккуратно повторять во всех местах, где она встречается.
+</p>
+
+<p>
+  Директива <code>u-bind</code> собирает несколько <code>u-*</code>, <code>@</code> и <code>:</code>
+  атрибутов элемента в один именованный набор — обычный объект внутри <a href="/u-data"><code>u-data</code></a>.
+  Так поведение элемента переезжает из разметки в JS.
+</p>
+
+<p>
+  Ключи объекта — имена атрибутов (<code>'@click'</code>, <code>':aria-expanded'</code>,
+  <code>'u-show'</code> или <code>'u-ref'</code>), а значения — то же,
+  что вы написали бы в HTML напрямую: выражение, метод или статическое значение.
+  В разметке остаётся одна короткая ссылка — <code>u-bind="имя"</code>, а само определение можно
+  переиспользовать для любого числа элементов на странице, без копирования.
+</p>
+
+<p>
+  При этом u-bind лучше использовать только для того, что действительно требует динамики.
+  Каждый binding участвует в обработке реактивных данных и может пересчитываться при их изменении.
+  Поэтому неизменяемые свойства разумнее задавать непосредственно в HTML: например, если кнопка всегда имеет
+  <code>type="button"</code>, нет смысла выносить его в u-bind. А вот динамические свойства и поведение — например,
+  <code>:disabled</code> или <code>@click</code> — как раз подходят для такого набора.
+</p>
+
+<h2>Определение через u-data</h2>
+
+<p>
+  Опишите компонент через <code>Youla.data(имя, callback)</code> как обычно, но добавьте в
+  возвращаемый объект отдельные свойства, каждое из которых станет набором биндингов.
+</p>
+
+<p>
+  Каждый метод внутри набора получает <code>this</code>, указывающий на реактивные данные
+  компонента, — точно так же, как и обычные методы <code>Youla.data</code>, объявленные на
+  верхнем уровне.
+</p>
+
+<p>
+  В разметке остаётся только ссылка на нужное свойство — <code>trigger</code> и
+  <code>dialogue</code> объявлять в <code>u-data</code> отдельно не нужно, они уже часть данных
+  компонента, возвращённых callback:
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+    <button type="button" class="example__tab" data-tab="js">JS</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" u-data="dropdown">
+      <button u-bind="trigger">Открыть меню</button>
+
+      <span u-bind="dialogue">Содержимое меню</span>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;div u-data=&quot;dropdown&quot;&gt;
+  &lt;button u-bind=&quot;trigger&quot;&gt;Открыть меню&lt;/button&gt;
+
+  &lt;span u-bind=&quot;dialogue&quot;&gt;Содержимое меню&lt;/span&gt;
+&lt;/div&gt;
+</pre>
+  </div>
+  <div class="example__panel" data-panel="js">
+    <pre>
+Youla.data(&#039;dropdown&#039;, () =&gt; ({
+  open: false,
+  trigger: {
+    &#039;@click&#039;() {
+      this.open = true
+    },
+  },
+  dialogue: {
+    &#039;u-show&#039;() {
+      return this.open
+    },
+    &#039;@click.outside&#039;() {
+      this.open = false
+    },
+  },
+}))
+</pre>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('youla:init', () => {
+    Youla.data('dropdown', () => ({
+      open: false,
+      trigger: {
+        '@click'() {
+          this.open = true
+        },
+      },
+      dialogue: {
+        'u-show'() {
+          return this.open
+        },
+        '@click.outside'() {
+          this.open = false
+        },
+      },
+    }));
+  });
+</script>
+
+<p>
+  Каждый ключ в наборе биндингов обрабатывается так же, как если бы он был написан в разметке
+  напрямую: <code>@click</code> регистрирует обработчик, <a href="/u-show"><code>u-show</code></a>
+  вызывается заново при каждом изменении данных и переключает видимость.
+</p>
+
+<p>
+  От того, к какому типу относится ключ, зависит, чего Youla.js ждёт от метода — возврата значения
+  через <code>return</code> или простого выполнения побочного эффекта.
+</p>
+
+<table>
+  <tbody>
+    <tr>
+      <th>Тип ключа</th>
+      <th>Нужен <code>return</code>?</th>
+      <th>Поведение</th>
+    </tr>
+    <tr>
+      <td><code>@event</code> (<code>@click</code>, <code>@click.outside</code> и т.п.)</td>
+      <td>Нет</td>
+      <td>
+        Метод — обработчик. Вызывается один раз при срабатывании события ради побочного эффекта
+        (обычно изменения <code>this</code>). Возвращаемое значение полностью игнорируется —
+        писать <code>return</code> незачем.
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <code>u-директива</code>, <code>:attribute</code> и обычный атрибут
+        (<code>u-show</code>, <a href="/u-text"><code>u-text</code></a>,
+        <a href="/attributes"><code>:class</code></a>, <code>type</code> и т.п.)
+      </td>
+      <td>Да</td>
+      <td>
+        Метод — вычисляемое значение. Вызывается заново при каждом изменении связанных данных, и
+        то, что он вернёт через <code>return</code>, становится значением, которое применяется к
+        элементу. Без <code>return</code> метод вернёт <code>undefined</code>, и директива получит
+        именно его — например, <code>u-show</code> скроет элемент (<code>undefined</code> ложно),
+        а <code>u-text</code> очистит его содержимое.
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  Внутри метода-обработчика (<code>@event</code>) <code>this</code> указывает на реактивные
+  данные напрямую — запись в него сразу вызывает обновление связанной с ним разметки на странице.
+</p>
+
+<p>
+  Внутри метода-вычисления (<code>u-директива</code>, <code>:attribute</code> и т.п.) <code>this</code>
+  отслеживает читаемые свойства, чтобы знать, когда пересчитывать значение — такой метод только
+  для чтения и <code>return</code>, а не для записи данных.
+</p>
+
+<p>
+  Используйте обычную функцию или сокращённую запись метода (<code>'@click'() {...}</code>),
+  а не стрелочную — стрелочные функции не получают <code>this</code> компонента, и Youla.js
+  выведет предупреждение в консоли.
+</p>
+
+<h2>Строки-выражения вместо методов</h2>
+
+<p>
+  Для простых случаев метод необязателен — значением может быть обычная строка-выражение, как в
+  атрибуте <code>:attribute="выражение"</code>. Она пересчитывается при каждом изменении связанных
+  данных ровно так же, как и метод.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+    <button type="button" class="example__tab" data-tab="js">JS</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" u-data="saveButton">
+      <button type="button" u-bind="action">Сохранить</button>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;div u-data=&quot;saveButton&quot;&gt;
+  &lt;button type=&quot;button&quot; u-bind=&quot;action&quot;&gt;Сохранить&lt;/button&gt;
+&lt;/div&gt;
+</pre>
+  </div>
+  <div class="example__panel" data-panel="js">
+    <pre>
+Youla.data(&#39;saveButton&#39;, () =&gt; ({
+  saving: false,
+
+  action: {
+    &#39;:disabled&#39;: &#39;saving&#39;,
+    &#39;@click&#39;: &#39;saving = true&#39;,
+    &#39;u-text&#39;: &quot;saving ? &#39;Сохраняем...&#39; : &#39;Сохранить&#39;&quot;,
+  },
+}))
+</pre>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('youla:init', () => {
+    Youla.data('saveButton', () => ({
+      saving: false,
+
+      action: {
+        ':disabled': 'saving',
+        '@click': 'saving = true',
+        'u-text': "saving ? 'Сохраняем...' : 'Сохранить'",
+      },
+    }));
+  });
+</script>
+
+<h2>Параметризованные определения</h2>
+
+<p>
+  Выражение в <code>u-bind</code> не обязано быть просто именем свойства — это обычное
+  JS-выражение, поэтому подойдёт и вызов метода с любым числом аргументов, как обычный вызов
+  функции.
+</p>
+
+<p>
+  Так одно определение превращается в фабрику наборов биндингов, различающихся только
+  переданным значением — удобно для вкладок и похожих переключателей.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+    <button type="button" class="example__tab" data-tab="js">JS</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo">
+      <ul class="attr-tabs" u-data="tabs">
+        <li u-bind="tabButton('profile')">Профиль</li>
+        <li u-bind="tabButton('settings')">Настройки</li>
+      </ul>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;ul u-data=&quot;tabs&quot;&gt;
+  &lt;li u-bind=&quot;tabButton(&#039;profile&#039;)&quot;&gt;Профиль&lt;/li&gt;
+  &lt;li u-bind=&quot;tabButton(&#039;settings&#039;)&quot;&gt;Настройки&lt;/li&gt;
+&lt;/ul&gt;
+</pre>
+  </div>
+  <div class="example__panel" data-panel="js">
+    <pre>
+Youla.data(&#39;tabs&#39;, () =&gt; ({
+  tab: &#39;profile&#39;,
+
+  tabButton(name) {
+    return {
+      &#39;:class&#39;: `{ active: tab === &#39;${name}&#39; }`,
+      &#39;@click&#39;: `tab = &#39;${name}&#39;`,
+    }
+  },
+}))
+</pre>
+  </div>
+</div>
+
+<style>
+  .attr-tabs { display: flex; gap: 0.5rem; list-style: none; padding: 0; }
+  .attr-tabs li { cursor: pointer; padding: 0.3rem 0.8rem; border-radius: 0.4rem; border: 1px solid var(--line); }
+  .attr-tabs li.active { background: var(--teal); color: var(--surface); border-color: var(--teal); }
+</style>
+
+<script>
+  document.addEventListener('youla:init', () => {
+    Youla.data('tabs', () => ({
+      tab: 'profile',
+
+      tabButton(name) {
+        return {
+          ':class': `{ active: tab === '${name}' }`,
+          '@click': `tab = '${name}'`,
+        }
+      },
+    }));
+  });
+</script>
+
+<p>
+  <code>tabButton</code> подставляет <code>name</code> в строки выражений через шаблонную
+  строку — это происходит один раз, в момент вызова метода, а не при каждом обновлении данных.
+</p>
+
+<p>
+  А вот <code>tab</code> внутри самих строк остаётся именем свойства и вычисляется заново при
+  каждом изменении <code>tab</code> — поэтому активная вкладка переключается реактивно.
+</p>
+
+<h2>u-bind внутри u-each</h2>
+
+<p>
+  Одно определение можно применить к каждому элементу списка, обращаясь внутри него к текущему
+  элементу итерации — например, чтобы раскрасить бейджи приоритета задач, как в примере на
+  странице <a href="/u-each">u-each</a>.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+    <button type="button" class="example__tab" data-tab="js">JS</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <ul class="demo" u-data="priorityList">
+      <li u-each="task in tasks">
+        <span u-bind="badge"></span>
+        <span u-text="task.title"></span>
+      </li>
+    </ul>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;ul u-data=&quot;priorityList&quot;&gt;
+  &lt;li u-each=&quot;task in tasks&quot;&gt;
+    &lt;span u-bind=&quot;badge&quot;&gt;&lt;/span&gt;
+    &lt;span u-text=&quot;task.title&quot;&gt;&lt;/span&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+</pre>
+  </div>
+  <div class="example__panel" data-panel="js">
+    <pre>
+Youla.data(&#39;priorityList&#39;, () =&gt; ({
+  tasks: [
+    { title: &#39;Написать отчёт&#39;, priority: &#39;high&#39; },
+    { title: &#39;Проверить почту&#39;, priority: &#39;low&#39; },
+    { title: &#39;Согласовать бюджет&#39;, priority: &#39;medium&#39; },
+  ],
+
+  badge: {
+    &#39;:style&#39;: &quot;{ color: task.priority === &#39;high&#39; ? &#39;crimson&#39; : (task.priority === &#39;medium&#39; ? &#39;darkorange&#39; : &#39;seagreen&#39;) }&quot;,
+    &#39;u-text&#39;: &#39;task.priority&#39;,
+  },
+}))
+</pre>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('youla:init', () => {
+    Youla.data('priorityList', () => ({
+      tasks: [
+        { title: 'Написать отчёт', priority: 'high' },
+        { title: 'Проверить почту', priority: 'low' },
+        { title: 'Согласовать бюджет', priority: 'medium' },
+      ],
+
+      badge: {
+        ':style': "{ color: task.priority === 'high' ? 'crimson' : (task.priority === 'medium' ? 'darkorange' : 'seagreen') }",
+        'u-text': 'task.priority',
+      },
+    }));
+  });
+</script>
+
+<p>
+  Ключ <code>badge</code> — обычное свойство <code>u-data</code>, а не метод, поэтому у него нет
+  собственного доступа к <code>this</code> с данными текущего элемента итерации внутри цикла
+  <code>u-each</code>.
+</p>
+
+<p>
+  Строки-выражения внутри него всё же получают <code>task</code> — так же, как получил бы его
+  любой обычный атрибут, объявленный прямо внутри директивы <code>u-each</code> на странице.
+</p>
+
+<p>
+  Если бы вместо строк использовались методы, <code>task</code> они бы не увидели: методы
+  получают только <code>this</code> с данными компонента, без доступа к переменным цикла
+  <code>u-each</code>.
+</p>
+
+<%= _.template(require('./parts/footer.html').default)(data) %>

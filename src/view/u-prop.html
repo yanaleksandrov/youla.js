@@ -1,0 +1,499 @@
+<% var data = {
+title: "u-prop"
+}; %>
+<%= _.template(require('./parts/header.html').default)(data) %>
+
+<h1>u-prop</h1>
+
+<p>
+  Директива <code>u-prop</code> связывает поле формы — <code>input</code>, <code>select</code> или
+  <code>textarea</code> — с данными компонента <a href="/u-data"><code>u-data</code></a> одним
+  атрибутом, без ручного объявления значения и обработчика ввода.
+</p>
+
+<p>
+  <strong>Меньше кода.</strong> Без <code>u-prop</code> значение пришлось бы объявлять дважды —
+  атрибутом <code>value</code>/<code>checked</code> в разметке и отдельным ключом в объекте
+  <code>u-data</code>, вручную синхронизируя оба места.
+</p>
+
+<p>
+  А затем вручную вешать <code>@input</code>/<code>@change</code>, который читает
+  <code>$el.value</code> (или <code>$el.checked</code>, выбранные <code>&lt;option&gt;</code> —
+  по-своему для каждого типа поля) и пишет это в данные. Сравните два одинаковых по смыслу подхода:
+</p>
+
+<table style="table-layout: fixed;">
+  <colgroup>
+    <col style="width: 50%;">
+    <col style="width: 50%;">
+  </colgroup>
+  <tbody>
+    <tr>
+      <th>С <code>u-prop</code></th>
+      <th>Без <code>u-prop</code></th>
+    </tr>
+    <tr>
+      <td>
+        <pre>&lt;form u-data&gt;
+  &lt;input type=&quot;text&quot; value=&quot;Hello&quot; u-prop=&quot;test&quot;&gt;
+  &lt;span u-text=&quot;test&quot;&gt;&lt;/span&gt;
+&lt;/form&gt;</pre>
+      </td>
+      <td>
+        <pre>&lt;form u-data=&quot;{test: 'Hello'}&quot;&gt;
+  &lt;input type=&quot;text&quot; value=&quot;Hello&quot; @keydown.delay.1ms=&quot;test = $el.value&quot;&gt;
+  &lt;span u-text=&quot;test&quot;&gt;&lt;/span&gt;
+&lt;/form&gt;</pre>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  В первом случае, с <code>u-prop</code>, не требуется ни отдельного объявления значения в
+  <code>u-data</code>, ни обработчика события ввода — всё это делает один атрибут на поле формы.
+</p>
+
+<p>
+  <strong>Мерцание при загрузке.</strong> <code>u-prop</code> считывает значение поля прямо из уже
+  отрисованной разметки при инициализации компонента — до того, как данные становятся реактивными.
+</p>
+
+<p>
+  Поэтому состояние в <code>u-data</code> сразу совпадает с тем, что видно на экране. При ручном
+  подходе значение и атрибут <code>value</code> объявлены отдельно: стоит им разойтись — и зависящая
+  от них разметка на первом кадре покажет неверное значение.
+</p>
+
+<p>
+  <strong>Разные типы полей.</strong> Чекбоксы, радиокнопки и <code>select</code> по-разному хранят
+  своё значение в DOM. <code>u-prop</code> сам определяет тип поля и обрабатывает его — писать
+  отдельную логику синхронизации для каждого вида не нужно.
+</p>
+
+<p>
+  Модификаторы <code>.number</code> и <code>.trim</code> берут на себя приведение типов и очистку
+  пробелов, а <code>.local</code>/<code>.cookie</code> — сохранение значения поля между
+  перезагрузками страницы браузера.
+</p>
+
+<h2>Text inputs</h2>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <form class="demo" u-data>
+      <input u-prop="message" type="text">
+      <span u-text="message"></span>
+    </form>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;form u-data&gt;
+  &lt;input u-prop=&quot;message&quot; type=&quot;text&quot;&gt;
+  &lt;span u-text=&quot;message&quot;&gt;&lt;/span&gt;
+&lt;/form&gt;
+</pre>
+  </div>
+</div>
+
+<h2>Textarea inputs</h2>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <form class="demo" u-data>
+      <textarea u-prop="message"></textarea>
+      <span u-text="message"></span>
+    </form>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;form u-data&gt;
+  &lt;textarea u-prop=&quot;message&quot;&gt;&lt;/textarea&gt;
+  &lt;span u-text=&quot;message&quot;&gt;&lt;/span&gt;
+&lt;/form&gt;
+</pre>
+  </div>
+</div>
+
+<h2>Checkbox inputs</h2>
+
+<h3>Одиночный checkbox с логическим значением</h3>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <form class="demo" u-data>
+      <input type="checkbox" id="checkbox" u-prop="show">
+      <label for="checkbox" u-text="show"></label>
+    </form>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;form u-data&gt;
+  &lt;input type=&quot;checkbox&quot; id=&quot;checkbox&quot; u-prop=&quot;show&quot;&gt;
+  &lt;label for=&quot;checkbox&quot; u-text=&quot;show&quot;&gt;&lt;/label&gt;
+&lt;/form&gt;
+</pre>
+  </div>
+</div>
+
+<h3>Несколько checkbox, привязанных к массиву</h3>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <form class="demo" u-data>
+      <input type="checkbox" value="red" u-prop="colors">
+      <input type="checkbox" value="orange" u-prop="colors">
+      <input type="checkbox" value="yellow" u-prop="colors">
+      Colors: <span u-text="colors"></span>
+    </form>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;form u-data&gt;
+  &lt;input type=&quot;checkbox&quot; value=&quot;red&quot; u-prop=&quot;colors&quot;&gt;
+  &lt;input type=&quot;checkbox&quot; value=&quot;orange&quot; u-prop=&quot;colors&quot;&gt;
+  &lt;input type=&quot;checkbox&quot; value=&quot;yellow&quot; u-prop=&quot;colors&quot;&gt;
+  Colors: &lt;span u-text=&quot;colors&quot;&gt;&lt;/span&gt;
+&lt;/form&gt;
+</pre>
+  </div>
+</div>
+
+<h2>Radio кнопки</h2>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <form class="demo" u-data>
+      <input type="radio" value="yes" u-prop="answer">
+      <input type="radio" value="no" u-prop="answer">
+      Answer: <span u-text="answer"></span>
+    </form>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;form u-data&gt;
+  &lt;input type=&quot;radio&quot; value=&quot;yes&quot; u-prop=&quot;answer&quot;&gt;
+  &lt;input type=&quot;radio&quot; value=&quot;no&quot; u-prop=&quot;answer&quot;&gt;
+  Answer: &lt;span u-text=&quot;answer&quot;&gt;&lt;/span&gt;
+&lt;/form&gt;
+</pre>
+  </div>
+</div>
+
+<h2>Выпадающий список select</h2>
+
+<h3>Одиночный выбор</h3>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <form class="demo" u-data>
+      <select u-prop="color">
+        <option>Red</option>
+        <option>Orange</option>
+        <option>Yellow</option>
+      </select>
+
+      Color: <span u-text="color"></span>
+    </form>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;form u-data&gt;
+  &lt;select u-prop=&quot;color&quot;&gt;
+    &lt;option&gt;Red&lt;/option&gt;
+    &lt;option&gt;Orange&lt;/option&gt;
+    &lt;option&gt;Yellow&lt;/option&gt;
+  &lt;/select&gt;
+
+  Color: &lt;span u-text=&quot;color&quot;&gt;&lt;/span&gt;
+&lt;/form&gt;
+</pre>
+  </div>
+</div>
+
+<h3>Множественный выбор</h3>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <form class="demo" u-data>
+      <select u-prop="color" multiple>
+        <option>Red</option>
+        <option>Orange</option>
+        <option>Yellow</option>
+      </select>
+
+      Colors: <span u-text="color"></span>
+    </form>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;form u-data&gt;
+  &lt;select u-prop=&quot;color&quot; multiple&gt;
+    &lt;option&gt;Red&lt;/option&gt;
+    &lt;option&gt;Orange&lt;/option&gt;
+    &lt;option&gt;Yellow&lt;/option&gt;
+  &lt;/select&gt;
+
+  Colors: &lt;span u-text=&quot;color&quot;&gt;&lt;/span&gt;
+&lt;/form&gt;
+</pre>
+  </div>
+</div>
+
+<h2>Диапазон inputs</h2>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <form class="demo" u-data>
+      <input type="range" u-prop="range" min="0" max="1" step="0.1">
+      <span u-text="range"></span>
+    </form>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;form u-data&gt;
+  &lt;input type=&quot;range&quot; u-prop=&quot;range&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.1&quot;&gt;
+  &lt;span u-text=&quot;range&quot;&gt;&lt;/span&gt;
+&lt;/form&gt;
+</pre>
+  </div>
+</div>
+
+<h2>Вложенные свойства</h2>
+
+<p>
+  Youla.js поддерживает свойства в dot-нотации любой вложенности, например
+  <code>content.title.color</code> — так же, как обращение к вложенным полям обычного JS-объекта.
+</p>
+
+<p>
+  Ниже — выбор категории и подкатегории товара через dot-нотацию: сначала раздел, затем подраздел.
+  Так формируется предсказуемый URL страницы товара в интернет-магазине.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <form class="demo" u-data>
+      <code>https://site.com/<span u-text="`${terms.lvl1 && terms.lvl1 + '/'}`"></span><span u-text="`${terms.lvl2 && terms.lvl2 + '/'}`"></span>product-slug</code>
+      <ul>
+        <li>
+          <label><input type="radio" value="electronic" u-prop="terms.lvl1" @click="$el.checked && (terms = {lvl1: '', lvl2: ''})"> Electronics</label>
+          <ul>
+            <li>
+              <label><input type="radio" value="phone" u-prop="terms.lvl2" @click="$el.checked && (terms = {lvl1: 'electronic', lvl2: ''})"> Phones</label>
+            </li>
+            <li>
+              <label><input type="radio" value="laptops" u-prop="terms.lvl2" @click="$el.checked && (terms = {lvl1: 'electronic', lvl2: ''})"> Laptops</label>
+            </li>
+          </ul>
+        </li>
+        <li>
+          <label><input type="radio" value="books" u-prop="terms.lvl1" @click="$el.checked && (terms = {lvl1: '', lvl2: ''})"> Books</label>
+          <ul>
+            <li>
+              <label><input type="radio" value="drama" u-prop="terms.lvl2" @click="$el.checked && (terms = {lvl1: 'books', lvl2: ''})"> Drama</label>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </form>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;label&gt;&lt;input type=&quot;radio&quot; value=&quot;electronic&quot; u-prop=&quot;terms.lvl1&quot; @click=&quot;$el.checked &amp;&amp; (terms = {lvl1: &#039;&#039;, lvl2: &#039;&#039;})&quot;&gt; Electronics&lt;/label&gt;
+    &lt;ul&gt;
+      &lt;li&gt;
+        &lt;label&gt;&lt;input type=&quot;radio&quot; value=&quot;phone&quot; u-prop=&quot;terms.lvl2&quot; @click=&quot;$el.checked &amp;&amp; (terms = {lvl1: &#039;electronic&#039;, lvl2: &#039;&#039;})&quot;&gt; Phones&lt;/label&gt;
+      &lt;/li&gt;
+      &lt;li&gt;
+        &lt;label&gt;&lt;input type=&quot;radio&quot; value=&quot;laptops&quot; u-prop=&quot;terms.lvl2&quot; @click=&quot;$el.checked &amp;&amp; (terms = {lvl1: &#039;electronic&#039;, lvl2: &#039;&#039;})&quot;&gt; Laptops&lt;/label&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;label&gt;&lt;input type=&quot;radio&quot; value=&quot;books&quot; u-prop=&quot;terms.lvl1&quot; @click=&quot;$el.checked &amp;&amp; (terms = {lvl1: &#039;&#039;, lvl2: &#039;&#039;})&quot;&gt; Books&lt;/label&gt;
+    &lt;ul&gt;
+      &lt;li&gt;
+        &lt;label&gt;&lt;input type=&quot;radio&quot; value=&quot;drama&quot; u-prop=&quot;terms.lvl2&quot; @click=&quot;$el.checked &amp;&amp; (terms = {lvl1: &#039;books&#039;, lvl2: &#039;&#039;})&quot;&gt; Drama&lt;/label&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+</pre>
+  </div>
+</div>
+
+<h2>Модификаторы</h2>
+
+<p><code>.number</code></p>
+
+<p>
+  По умолчанию <code>u-prop</code> хранит значение поля как строку. Добавьте модификатор
+  <code>.number</code>, чтобы Youla.js автоматически приводила его к числовому типу данных.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <form class="demo" u-data>
+      <input type="text" value="10" u-prop.number="age">
+      <div>Значение: <span u-text="age"></span>, тип: <span u-text="typeof age"></span></div>
+    </form>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;form u-data&gt;
+  &lt;input type=&quot;text&quot; value=&quot;10&quot; u-prop.number=&quot;age&quot;&gt;
+  &lt;div&gt;Значение: &lt;span u-text=&quot;age&quot;&gt;&lt;/span&gt;, тип: &lt;span u-text=&quot;typeof age&quot;&gt;&lt;/span&gt;&lt;/div&gt;
+&lt;/form&gt;
+</pre>
+  </div>
+</div>
+
+<p><code>.trim</code></p>
+
+<p>
+  Убирает пробелы в начале и конце введённого значения — полезно для полей вроде email или логина,
+  где лишние пробелы мешают. В примере ниже пробел обрезается при каждом нажатии клавиши.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <form class="demo" u-data>
+      <input type="text" u-prop.trim="name">
+      <div u-text="name"></div>
+    </form>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;form u-data&gt;
+  &lt;input type=&quot;text&quot; u-prop.trim=&quot;name&quot;&gt;
+  &lt;div u-text=&quot;name&quot;&gt;&lt;/div&gt;
+&lt;/form&gt;
+</pre>
+  </div>
+</div>
+
+<p>
+  Если пробелы нужно убирать только после завершения ввода, а не при каждом нажатии клавиши,
+  добавьте к <code>u-prop.trim</code> ещё и модификатор <code>.lazy</code> для этого поля.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <form class="demo" u-data>
+      <input type="text" u-prop.lazy.trim="name">
+      <div u-text="name"></div>
+    </form>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;form u-data&gt;
+  &lt;input type=&quot;text&quot; u-prop.lazy.trim=&quot;name&quot;&gt;
+  &lt;div u-text=&quot;name&quot;&gt;&lt;/div&gt;
+&lt;/form&gt;
+</pre>
+  </div>
+</div>
+
+<p><code>.local</code> и <code>.cookie</code></p>
+
+<p>
+  Сохраняют значение поля в localStorage или куках и восстанавливают его при следующей загрузке
+  страницы — удобно для пользовательских настроек, например темы оформления.
+</p>
+
+<p>
+  Чем local storage и куки отличаются по объёму и назначению и как выбрать между ними — читайте
+  на странице <a href="/u-data">u-data</a>, в разделе про модификаторы <code>.local</code> и
+  <code>.cookie</code>.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <form class="demo" u-data>
+      <div>Сохранение в local storage</div>
+      <input type="text" u-prop.local="firstName">
+      <div u-text="firstName"></div>
+      <br>
+      <div>Сохранение в куках</div>
+      <input type="text" u-prop.cookie="lastName">
+      <div u-text="lastName"></div>
+    </form>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;form u-data&gt;
+  &lt;div&gt;Сохранение в local storage&lt;/div&gt;
+  &lt;input type=&quot;text&quot; u-prop.local=&quot;firstName&quot;&gt;
+  &lt;div u-text=&quot;firstName&quot;&gt;&lt;/div&gt;
+  &lt;br&gt;
+  &lt;div&gt;Сохранение в куках&lt;/div&gt;
+  &lt;input type=&quot;text&quot; u-prop.cookie=&quot;lastName&quot;&gt;
+  &lt;div u-text=&quot;lastName&quot;&gt;&lt;/div&gt;
+&lt;/form&gt;
+</pre>
+  </div>
+</div>
+
+<p>
+  Значение поля обычно выводится через <a href="/u-text"><code>u-text</code></a>, как в примерах
+  выше. Полный практический пример со связкой <code>u-prop</code>, <code>u-each</code> и
+  <code>u-show</code> — на странице <a href="/to-do">Список задач</a>.
+</p>
+
+<%= _.template(require('./parts/footer.html').default)(data) %>

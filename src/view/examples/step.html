@@ -1,0 +1,196 @@
+<% var data = {
+  title: "Мастер форм (u-step, step)"
+}; %>
+<%= _.template(require('../parts/header.html').default)(data) %>
+
+<h1>Мастер форм (u-step, step)</h1>
+
+<p>
+  Директива <code>u-step</code> и именованный провайдер <code>Youla.data('step')</code> вместе
+  превращают обычную форму в мастер из нескольких шагов: каждый шаг показывается по очереди, а
+  переход к следующему происходит только тогда, когда текущий шаг заполнен правильно.
+</p>
+
+<p>
+  <code>u-step="условие"</code> ставится на каждый шаг и определяет, когда он считается
+  завершённым, — обычно это проверка введённых данных. Провайдер <code>step</code> отвечает за
+  само перемещение между шагами (<code>goNext()</code>, <code>goBack()</code>) и за все вопросы
+  вроде «а можно ли идти дальше» (<code>canGoNext()</code>). Подключите его как
+  <code>u-data="step"</code> — тогда его методы доступны в любом выражении внутри этого компонента
+  без префикса, — в <code>@click</code>, в <code>u-show</code>, в <code>:disabled</code>, в тексте.
+  Поля формы вроде <code>name</code>/<code>email</code> из примера ниже отдельно объявлять не
+  нужно — <code>u-prop</code> сам добавит их в те же данные при первой отрисовке.
+</p>
+
+<h2>Методы провайдера step вкратце</h2>
+
+<table>
+  <tbody>
+    <tr>
+      <th>Метод</th>
+      <th>Что делает</th>
+    </tr>
+    <tr>
+      <td><code>goNext()</code> / <code>goBack()</code></td>
+      <td>Переходит на шаг вперёд или назад, если такой шаг есть</td>
+    </tr>
+    <tr>
+      <td><code>goto(index)</code></td>
+      <td>Переходит сразу на шаг с указанным номером (нумерация с нуля), не проверяя завершённость промежуточных шагов</td>
+    </tr>
+    <tr>
+      <td><code>canGoNext()</code> / <code>canGoBack()</code></td>
+      <td><code>true</code>, если переход возможен. Для <code>canGoNext()</code> это ещё и означает, что текущий шаг завершён</td>
+    </tr>
+    <tr>
+      <td><code>isFirst()</code> / <code>isLast()</code></td>
+      <td><code>true</code> на первом или последнем шаге — без учёта того, завершён он или нет</td>
+    </tr>
+    <tr>
+      <td><code>isStep(n)</code></td>
+      <td><code>true</code>, если сейчас открыт шаг с номером <code>n</code>. Пригодится для подсветки текущего шага в списке или индикаторе</td>
+    </tr>
+    <tr>
+      <td><code>isCompleted()</code></td>
+      <td><code>true</code>, когда пользователь дошёл до последнего шага и он тоже завершён — то есть весь мастер пройден</td>
+    </tr>
+    <tr>
+      <td><code>progress()</code></td>
+      <td>Сводка по прогрессу: сколько шагов всего, сколько завершено, и готовые проценты для полосы загрузки</td>
+    </tr>
+    <tr>
+      <td><code>getState()</code></td>
+      <td>Все данные выше сразу, одним объектом — удобно для отладки или для передачи куда-то ещё</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  У каждого метода, начинающегося на <code>can</code>/<code>is</code>, есть противоположность:
+  <code>cannotGoNext()</code>, <code>cannotGoBack()</code>, <code>isNotFirst()</code>,
+  <code>isNotLast()</code>, <code>isUncompleted()</code>. Это просто ради читаемости — чтобы не
+  писать <code>!canGoNext()</code> в разметке.
+</p>
+
+<h2>Прогресс, шаги-точки и полный снимок состояния</h2>
+
+<p>
+  Раз методы <code>step</code> можно использовать в любом выражении внутри своего <code>u-data</code>,
+  из них легко собрать что угодно:
+  полосу прогресса, кликабельные индикаторы шагов или просто вывести всё состояние целиком —
+  например, для отладки.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" id="step-demo" u-data="step">
+      <div class="progress-bar">
+        <i :style="{ width: progress().completion }"></i>
+      </div>
+
+      <ul class="dots">
+        <li u-each="n in 3" :class="{ active: isStep(n-1) }" u-text="n"></li>
+      </ul>
+
+      <div u-step="name.trim().length > 0">
+        <label>Ваше имя</label>
+        <input u-prop="name" placeholder="Иван">
+      </div>
+
+      <div u-step="/.+@.+\..+/.test(email)" hidden>
+        <label>Email</label>
+        <input u-prop="email" placeholder="ivan@example.com">
+      </div>
+
+      <div u-step="true" hidden>
+        Готово! <span u-text="name"></span>, мы отправим подтверждение на <span u-text="email"></span>.
+        <p>Мастер завершён.</p>
+      </div>
+
+      <p>
+        <button type="button" :disabled="cannotGoBack()" @click="goBack()" disabled>Назад</button>
+        <button type="button" :disabled="cannotGoNext()" @click="goNext()" u-show="isNotLast()" disabled>Далее</button>
+      </p>
+
+      <pre u-text="JSON.stringify(getState(), null, 2)"></pre>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;div u-data=&quot;step&quot;&gt;
+  &lt;div class=&quot;progress-bar&quot;&gt;
+    &lt;i :style=&quot;{ width: progress().completion }&quot;&gt;&lt;/i&gt;
+  &lt;/div&gt;
+
+  &lt;ul class=&quot;dots&quot;&gt;
+    &lt;li u-each=&quot;n in 3&quot; :class=&quot;{ active: isStep(n-1) }&quot; u-text=&quot;n&quot;&gt;&lt;/li&gt;
+  &lt;/ul&gt;
+
+  &lt;div u-step=&quot;name.trim().length &gt; 0&quot;&gt;
+    &lt;label&gt;Ваше имя&lt;/label&gt;
+    &lt;input u-prop=&quot;name&quot; placeholder=&quot;Иван&quot;&gt;
+  &lt;/div&gt;
+
+  &lt;div u-step=&quot;/.+@.+\..+/.test(email)&quot; hidden&gt;
+    &lt;label&gt;Email&lt;/label&gt;
+    &lt;input u-prop=&quot;email&quot; placeholder=&quot;ivan@example.com&quot;&gt;
+  &lt;/div&gt;
+
+  &lt;div u-step=&quot;true&quot; hidden&gt;
+    Готово! &lt;span u-text=&quot;name&quot;&gt;&lt;/span&gt;, мы отправим подтверждение на &lt;span u-text=&quot;email&quot;&gt;&lt;/span&gt;.
+    &lt;p&gt;Мастер завершён.&lt;/p&gt;
+  &lt;/div&gt;
+
+  &lt;p&gt;
+    &lt;button type=&quot;button&quot; :disabled=&quot;cannotGoBack()&quot; @click=&quot;goBack()&quot;&gt;Назад&lt;/button&gt;
+    &lt;button type=&quot;button&quot; :disabled=&quot;cannotGoNext()&quot; @click=&quot;goNext()&quot; u-show=&quot;isNotLast()&quot;&gt;Далее&lt;/button&gt;
+  &lt;/p&gt;
+
+  &lt;pre u-text=&quot;JSON.stringify(getState(), null, 2)&quot;&gt;&lt;/pre&gt;
+&lt;/div&gt;
+</pre>
+  </div>
+</div>
+
+<style>
+  #step-demo .dots {
+    display: flex;
+    gap: 0.5rem;
+    list-style: none;
+    padding: 0;
+    margin: 0 0 0.75rem;
+  }
+  #step-demo .dots li {
+    width: 1.75rem;
+    height: 1.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+  }
+  #step-demo .dots li.active {
+    background: var(--teal);
+    border-color: var(--teal);
+    color: var(--bg, #fff);
+  }
+  #step-demo .progress-bar {
+    height: 10px;
+    border-radius: 999px;
+    background: var(--line);
+    overflow: hidden;
+    margin-bottom: 0.75rem;
+  }
+  #step-demo .progress-bar i {
+    display: block;
+    height: 100%;
+    background: var(--teal);
+    transition: width 300ms;
+  }
+</style>
+
+<%= _.template(require('../parts/footer.html').default)(data) %>

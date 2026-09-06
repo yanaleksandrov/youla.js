@@ -12,7 +12,7 @@ When writing or updating project documentation, follow these rules strictly.
 * Put the most important warnings in a Markdown blockquote (`>`).
 * Use **no more than one blockquote per page**.
 * If there are multiple warnings, combine them into a single blockquote.
-* When an example requires `v-data="{}"`, always use the shorthand form `v-data` instead.
+* When an example requires `u-data="{}"`, always use the shorthand form `u-data` instead.
 
 When documenting a feature, provide a **short, high-level description of its purpose and main capabilities**.
 
@@ -38,7 +38,7 @@ Avoid unnecessary wording and technical details. If a detail does not help expla
 
 #### Desired level of detail
 
-> The `v-filler` directive turns a text input into a color or image picker. It supports HEX, RGB, and HSL colors, transparency, custom color palettes, and image settings with CSS filters.
+> The `u-filler` directive turns a text input into a color or image picker. It supports HEX, RGB, and HSL colors, transparency, custom color palettes, and image settings with CSS filters.
 
 This is the preferred level of detail: **short, focused, and high-level, without describing the UI, implementation, or secondary details.**
 

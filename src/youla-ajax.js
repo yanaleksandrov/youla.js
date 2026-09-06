@@ -234,7 +234,7 @@ document.addEventListener('youla:init', () => {
         break;
       case 'value':
         target.value = value || '';
-        // Lets a v-prop-bound field pick up the change too.
+        // Lets a u-prop-bound field pick up the change too.
         target.dispatchEvent(new Event('input', { bubbles: true }));
         break;
       case 'update':

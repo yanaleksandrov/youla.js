@@ -5,7 +5,7 @@
  *
  * @param {string} kind - Label used in the console warning, e.g. "directive" or "method".
  * @param {Object} target - The registry object to write onto (e.g. `Youla.directives`).
- * @param {string} name - The key to register `callback` under (e.g. "v-text", "$ajax").
+ * @param {string} name - The key to register `callback` under (e.g. "u-text", "$ajax").
  * @param {Function} callback - The implementation to store.
  * @returns {void}
  */

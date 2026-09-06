@@ -9,20 +9,27 @@ const HtmlWebpackPlugin      = require('html-webpack-plugin');
 const MiniCssExtractPlugin   = require('mini-css-extract-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 
-const parseHtmlPages = dir => {
-  const files = fs.readdirSync(path.resolve(__dirname, dir));
+// Recursively finds every ".html" page under "dir" (e.g. individual pages tucked away in
+// "src/view/examples"), skipping the "parts" folder — it holds partials (header/footer), not
+// pages of its own. Every match still builds to a flat "<name>.html" at the dist root, regardless
+// of how deep its source file lives, so nesting pages into subfolders never changes their URL.
+const findHtmlFiles = dir => {
+  const absDir = path.resolve(__dirname, dir);
 
-  return files.reduce((acc, file) => {
-    const [name, extension] = file.split('.');
-    if (extension) {
-      acc.push(new HtmlWebpackPlugin({
-        filename: `${name}.html`,
-        template: path.resolve(__dirname, `${dir}/${name}.${extension}`),
-        inject: true,
-      }));
+  return fs.readdirSync(absDir, { withFileTypes: true }).flatMap(entry => {
+    if (entry.isDirectory()) {
+      return entry.name === 'parts' ? [] : findHtmlFiles(`${dir}/${entry.name}`);
     }
-    return acc;
-  }, []);
+    return entry.name.endsWith('.html') ? [`${dir}/${entry.name}`] : [];
+  });
+}
+
+const parseHtmlPages = dir => {
+  return findHtmlFiles(dir).map(file => new HtmlWebpackPlugin({
+    filename: `${path.parse(file).name}.html`,
+    template: path.resolve(__dirname, file),
+    inject: true,
+  }));
 }
 
 // Every scss entry under parseEntries('scss', 'css') below (e.g. "css/styles") produces a CSS file
@@ -45,17 +52,17 @@ class StripCssScriptTagsPlugin {
   }
 }
 
+// "index" needs no special case: connect-history-api-fallback already falls back to
+// "/index.html" on its own for any unmatched, dot-less path (including "/") — a catch-all
+// entry here (`from: /./`) would match every request before its turn came up, in whatever
+// order fs.readdirSync happens to return entries, silently swallowing every other rewrite
+// that follows it in the array.
 const parseHtmlParts = dir => {
-  return fs.readdirSync(path.resolve(__dirname, dir)).map(file => {
-    const [name, extension] = file.split('.');
+  return findHtmlFiles(dir).map(file => {
+    const name = path.parse(file).name;
 
-    if (extension === 'html') {
-      return { from: new RegExp(`^\\/${name}`), to: `/${file}` };
-    } else if ( name === 'index' ) {
-      return { from: /./, to: `/${name}/index.html` };
-    }
-    return null;
-  }).filter(item => item !== null);
+    return { from: new RegExp(`^\\/${name}`), to: `/${name}.html` };
+  });
 }
 
 // separate and compile every .scss & .js file from root "src" folder
@@ -120,18 +127,15 @@ module.exports = {
       {
         // `import css from './x.scss?inline'` — the raw compiled CSS as a JS string, for components
         // that inject their own styles into a shadow root instead of shipping a global stylesheet.
+        // Emitted as an "asset/source" module (a plain string) instead of run through css-loader,
+        // which would otherwise drag its runtime (dist/runtime/api.js, noSourceMaps.js) and array-push
+        // wrapper into every entry that imports one — dead weight since nothing here needs url()
+        // rewriting or CSS Modules.
         test: /\.(sass|scss)$/,
         resourceQuery: /inline/,
+        type: 'asset/source',
         include: path.resolve(__dirname, 'src/styles'),
         use: [
-          {
-            loader: 'css-loader',
-            options: {
-              sourceMap: false,
-              url: false,
-              exportType: 'string',
-            },
-          },
           {
             loader: 'postcss-loader',
             options: {

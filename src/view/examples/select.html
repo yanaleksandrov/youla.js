@@ -1,0 +1,219 @@
+<% var data = {
+  title: "Список выбора (u-select)"
+}; %>
+<%= _.template(require('../parts/header.html').default)(data) %>
+
+<h1>Список выбора (u-select)</h1>
+
+<p>
+  Директива <code>u-select</code> — адаптер для <a href="https://github.com/brianvoe/slim-select" target="_blank">SlimSelect</a>:
+  превращает обычную разметку <code>&lt;select&gt;</code>/<code>&lt;option&gt;</code>/<code>&lt;optgroup&gt;</code>
+  в стилизованный список с поиском, множественным выбором, картинками и иконками у пунктов —
+  сама библиотека подключена в проект напрямую, ставить и загружать её отдельно не нужно.
+</p>
+
+<p>
+  Атрибут <code>multiple</code> на <code>&lt;select&gt;</code> — обычный HTML-атрибут, но директива
+  на него реагирует: по умолчанию для множественного выбора включаются <code>hideSelected</code>
+  (выбранные пункты исчезают из списка) и выключается <code>closeOnSelect</code> (список не
+  закрывается после каждого клика). Значение самой директивы, если оно задано, — обычное
+  JS-выражение с объектом настроек, как и везде в Youla.js; оно подмешивается в настройки
+  SlimSelect, переопределяя эти и любые другие дефолты.
+</p>
+
+<h2>Опции вкратце</h2>
+
+<table>
+  <tbody>
+    <tr>
+      <th>Опция</th>
+      <th>Описание</th>
+      <th>По умолчанию</th>
+    </tr>
+    <tr>
+      <td><code>showSearch</code></td>
+      <td>Строка поиска по пунктам списка.</td>
+      <td><code>false</code></td>
+    </tr>
+    <tr>
+      <td><code>closeOnSelect</code></td>
+      <td>Закрывать ли список сразу после выбора пункта.</td>
+      <td><code>true</code>, для <code>multiple</code> — <code>false</code></td>
+    </tr>
+    <tr>
+      <td><code>hideSelected</code></td>
+      <td>Прятать ли уже выбранные пункты из выпадающего списка.</td>
+      <td><code>false</code>, для <code>multiple</code> — <code>true</code></td>
+    </tr>
+    <tr>
+      <td><code>allowDeselect</code></td>
+      <td>Разрешить снимать выбор с одиночного <code>&lt;select&gt;</code> кликом по уже выбранному пункту.</td>
+      <td><code>false</code></td>
+    </tr>
+    <tr>
+      <td><code>placeholderText</code>, <code>searchPlaceholder</code></td>
+      <td>Текст заглушки в самом поле и в строке поиска.</td>
+      <td>стандартный текст библиотеки</td>
+    </tr>
+    <tr>
+      <td><code>minSelected</code>, <code>maxSelected</code></td>
+      <td>Ограничивают число выбранных пунктов в <code>multiple</code>-режиме.</td>
+      <td><code>0</code> (без ограничений)</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Одиночный выбор с иконками</h2>
+
+<p>
+  <code>data-icon</code> у <code>&lt;option&gt;</code> добавляет иконку перед текстом пункта —
+  значение подставляется как есть в <code>class</code>, поэтому подходит любой набор иконок,
+  здесь — <a href="https://phosphoricons.com/" target="_blank">Phosphor</a>.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" u-data>
+      <select u-select>
+        <option value="js" data-icon="ph ph-brackets-curly">JavaScript</option>
+        <option value="py" data-icon="ph ph-terminal-window">Python</option>
+        <option value="rs" data-icon="ph ph-gear">Rust</option>
+        <option value="go" data-icon="ph ph-lightning">Go</option>
+      </select>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;select u-select&gt;
+  &lt;option value=&quot;js&quot; data-icon=&quot;ph ph-brackets-curly&quot;&gt;JavaScript&lt;/option&gt;
+  &lt;option value=&quot;py&quot; data-icon=&quot;ph ph-terminal-window&quot;&gt;Python&lt;/option&gt;
+  &lt;option value=&quot;rs&quot; data-icon=&quot;ph ph-gear&quot;&gt;Rust&lt;/option&gt;
+  &lt;option value=&quot;go&quot; data-icon=&quot;ph ph-lightning&quot;&gt;Go&lt;/option&gt;
+&lt;/select&gt;
+</pre>
+  </div>
+</div>
+
+<h2>Множественный выбор</h2>
+
+<p>
+  Достаточно атрибута <code>multiple</code> — <code>hideSelected</code> и отключённый
+  <code>closeOnSelect</code> включаются сами, без единой опции в разметке.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" u-data>
+      <select u-select multiple>
+        <option value="html">HTML</option>
+        <option value="css">CSS</option>
+        <option value="js" selected>JavaScript</option>
+        <option value="ts">TypeScript</option>
+        <option value="node" selected>Node.js</option>
+      </select>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;select u-select multiple&gt;
+  &lt;option value=&quot;html&quot;&gt;HTML&lt;/option&gt;
+  &lt;option value=&quot;css&quot;&gt;CSS&lt;/option&gt;
+  &lt;option value=&quot;js&quot; selected&gt;JavaScript&lt;/option&gt;
+  &lt;option value=&quot;ts&quot;&gt;TypeScript&lt;/option&gt;
+  &lt;option value=&quot;node&quot; selected&gt;Node.js&lt;/option&gt;
+&lt;/select&gt;
+</pre>
+  </div>
+</div>
+
+<h2>Optgroup, картинки и описания</h2>
+
+<p>
+  <code>&lt;optgroup&gt;</code> превращается в заголовок группы, а <code>data-image</code> и
+  <code>data-description</code> у пункта — в аватар и подпись под именем, как в выборе
+  ответственного за задачу.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" u-data>
+      <select u-select>
+        <optgroup label="Дизайн">
+          <option value="anna" data-image="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='12' cy='12' r='12' fill='%230e7a6b'/%3E%3C/svg%3E" data-description="UI/UX дизайнер">Анна</option>
+          <option value="oleg" data-image="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='12' cy='12' r='12' fill='%23a85417'/%3E%3C/svg%3E" data-description="Иллюстратор">Олег</option>
+        </optgroup>
+        <optgroup label="Разработка">
+          <option value="ivan" data-image="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='12' cy='12' r='12' fill='%231c5fb0'/%3E%3C/svg%3E" data-description="Frontend">Иван</option>
+          <option value="maria" data-image="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='12' cy='12' r='12' fill='%23b3261e'/%3E%3C/svg%3E" data-description="Backend">Мария</option>
+        </optgroup>
+      </select>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;select u-select&gt;
+  &lt;optgroup label=&quot;Дизайн&quot;&gt;
+    &lt;option value=&quot;anna&quot; data-image=&quot;avatar-anna.svg&quot; data-description=&quot;UI/UX дизайнер&quot;&gt;Анна&lt;/option&gt;
+    &lt;option value=&quot;oleg&quot; data-image=&quot;avatar-oleg.svg&quot; data-description=&quot;Иллюстратор&quot;&gt;Олег&lt;/option&gt;
+  &lt;/optgroup&gt;
+  &lt;optgroup label=&quot;Разработка&quot;&gt;
+    &lt;option value=&quot;ivan&quot; data-image=&quot;avatar-ivan.svg&quot; data-description=&quot;Frontend&quot;&gt;Иван&lt;/option&gt;
+    &lt;option value=&quot;maria&quot; data-image=&quot;avatar-maria.svg&quot; data-description=&quot;Backend&quot;&gt;Мария&lt;/option&gt;
+  &lt;/optgroup&gt;
+&lt;/select&gt;
+</pre>
+  </div>
+</div>
+
+<h2>Свои настройки SlimSelect: поиск и лимит выбора</h2>
+
+<p>
+  Значение директивы передаётся прямо в настройки SlimSelect. Здесь оно включает поиск
+  (по умолчанию выключен) и ограничивает выбор двумя тегами через <code>maxSelected</code>.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" u-data>
+      <select u-select="{ showSearch: true, searchPlaceholder: 'Найти тег', placeholderText: 'До 2 тегов', maxSelected: 2 }" multiple>
+        <option value="frontend">Frontend</option>
+        <option value="backend">Backend</option>
+        <option value="devops">DevOps</option>
+        <option value="design">Дизайн</option>
+        <option value="mobile">Mobile</option>
+      </select>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;select
+  u-select=&quot;{ showSearch: true, searchPlaceholder: &#39;Найти тег&#39;, placeholderText: &#39;До 2 тегов&#39;, maxSelected: 2 }&quot;
+  multiple
+&gt;
+  &lt;option value=&quot;frontend&quot;&gt;Frontend&lt;/option&gt;
+  &lt;option value=&quot;backend&quot;&gt;Backend&lt;/option&gt;
+  &lt;option value=&quot;devops&quot;&gt;DevOps&lt;/option&gt;
+  &lt;option value=&quot;design&quot;&gt;Дизайн&lt;/option&gt;
+  &lt;option value=&quot;mobile&quot;&gt;Mobile&lt;/option&gt;
+&lt;/select&gt;
+</pre>
+  </div>
+</div>
+
+<%= _.template(require('../parts/footer.html').default)(data) %>

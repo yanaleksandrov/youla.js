@@ -1,0 +1,680 @@
+<% var data = {
+  title: "Конструктор бандла (bundle)"
+}; %>
+<%= _.template(require('../parts/header.html').default)(data) %>
+
+<h1>Конструктор бандла (bundle)</h1>
+
+<p>
+  Классический «репитер» из реальной вёрстки конструктора товарных бандлов: группы позиций
+  («И» между собой) → внутри каждой позиции несколько взаимозаменяемых альтернатив («ИЛИ» между
+  собой) → любую альтернативу можно превратить в комбо из нескольких товаров сразу. Добавление
+  товаров — через поиск с <a href="/ajax"><code>$ajax</code></a> (здесь — с замоканным ответом
+  сервера, как в примере <code>ajax</code>). Каждый динамический атрибут собран в один набор
+  <a href="/u-bind"><code>u-bind</code></a> — причём не только сама привязка, но и вся логика
+  изменения данных: отдельных методов вроде <code>addGroup()</code>/<code>removeProduct()</code>
+  в <code>u-data</code> нет вовсе, каждое действие — короткое выражение прямо в наборе, рядом с
+  элементом, который его вызывает.
+</p>
+
+<blockquote>
+  <p>Портирование с Alpine.js: две ловушки</p>
+  <p>
+    1. Каждое чтение вложенного свойства реактивных данных возвращает новую обёртку прокси над тем
+    же объектом, поэтому <code>array.filter(x =&gt; x !== item)</code> из Alpine-версии здесь не
+    работает — сравнение объектов циклов между собой всегда ложно. Все удаления ниже — через
+    <code>.splice(index, 1)</code> по <strong>индексу</strong>, тем же приёмом, что и
+    <code>removeRule(key, index)</code> в примере <a href="/builder"><code>builder</code></a>; сама
+    мутация массива на месте, без пересборки, реактивна — см. <a href="/u-each"><code>u-each</code></a>.
+    Перестановка соседних элементов (<code>moveGroupUpBtn</code> и т. п.) — исключение: своп по двум
+    индексам не входит в список отслеживаемых методов, поэтому там по-прежнему собирается копия и
+    присваивается обратно.
+  </p>
+  <p>
+    2. Метод <a href="/ajax"><code>$ajax</code></a> доступен только внутри выражения
+    <code>@событие</code> — обычный метод <code>u-data</code> его не видит (в отличие от глобальной
+    функции <code>ajax()</code> в исходном проекте). Поэтому поиск товаров вызывается прямо в
+    наборе <code>u-bind</code> строкой-выражением, а не отдельным методом <code>searchProduct()</code>.
+  </p>
+</blockquote>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+    <button type="button" class="example__tab" data-tab="js">JS</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo example-bundle" u-data="bundle">
+      <button type="button" u-bind="addGroupBtn">+ Подгруппа</button>
+
+      <pre class="bundle-json" u-text="JSON.stringify(groups, null, 2)"></pre>
+
+      <div u-each="(group, gi) in groups" class="bundle-group">
+        <div class="bundle-group__header">
+          <input type="text" u-bind="groupNameField" placeholder="Подзаголовок группы">
+          <button type="button" u-bind="removeGroupBtn">Удалить подгруппу</button>
+          <button type="button" class="is-ghost" u-bind="moveGroupUpBtn" title="Переместить подгруппу выше">⌃</button>
+        </div>
+
+        <div class="bundle-items">
+          <div u-each="(item, ii) in group.items" class="bundle-item" data-condition="AND">
+            <div class="bundle-item__products">
+              <div u-each="(product, pi) in item.products" class="bundle-product" data-condition="OR">
+                <span class="bundle-product__mix-badge" u-bind="productMixBadge">MIX:</span>
+
+                <img class="bundle-product__image" u-bind="productImage">
+                <input type="checkbox" u-bind="productOptional" title="Товар опционален: покупатель сам решает, добавлять ли его в заказ">
+                <input type="text" u-bind="productShortTitle" placeholder="Короткое название">
+                <a target="_blank" u-bind="productLink"></a>
+                <input type="number" min="1" max="99" step="1" u-bind="productQty" title="Количество по умолчанию" required>
+                <span u-bind="productPrice"></span>
+
+                <button type="button" u-bind="joinBtn">Комбо</button>
+                <button type="button" u-bind="removeProductBtn" title="Удалить товар">×</button>
+                <button type="button" u-bind="moveProductUpBtn" title="Переместить альтернативу выше">⌃</button>
+                <button type="button" u-bind="moveItemUpBtn" title="Переместить позицию выше">⌄</button>
+
+                <div class="bundle-mix" u-bind="mixWrapper">
+                  <div class="bundle-mix__list">
+                    <div u-each="(mixed, mi) in product.mix" class="bundle-mix__item">
+                      <img class="bundle-product__image" u-bind="mixedImage">
+                      <input type="checkbox" u-bind="mixedOptional" title="Товар опционален: покупатель сам решает, добавлять ли его в заказ">
+                      <input type="text" u-bind="mixedShortTitle" placeholder="Короткое название">
+                      <a target="_blank" u-bind="mixedLink"></a>
+                      <input type="number" min="1" max="99" step="1" u-bind="mixedQty" title="Количество по умолчанию" required>
+                      <span u-bind="mixedPrice"></span>
+                      <button type="button" u-bind="removeMixedBtn" title="Удалить товар">×</button>
+                    </div>
+                  </div>
+
+                  <div class="bundle-search" u-bind="mixSearchWrapper">
+                    <input type="search" u-bind="mixSearchField" data-include="1,2,3,4,5,6,7,8,9,10" placeholder="Добавить товар в комбо…">
+                    <div class="bundle-search-results">
+                      <div u-each="mixedResult in product.search">
+                        <button type="button" u-bind="mixedResultBtn">
+                          <img u-bind="mixedResultImage">
+                          <span u-bind="mixedResultInfo"></span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="bundle-search" u-bind="itemSearchWrapper">
+              <input type="search" u-bind="itemSearchField" data-include="1,2,3,4,5,6,7,8,9,10" placeholder="Добавить новый товар…">
+              <div class="bundle-search-results">
+                <div u-each="result in item.search">
+                  <button type="button" u-bind="resultBtn">
+                    <img u-bind="resultImage">
+                    <span u-bind="resultInfo"></span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button type="button" class="is-ghost" u-bind="addItemBtn">+ И ещё позицию</button>
+      </div>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;div u-data=&quot;bundle&quot;&gt;
+  &lt;button type=&quot;button&quot; u-bind=&quot;addGroupBtn&quot;&gt;+ Подгруппа&lt;/button&gt;
+
+  &lt;pre u-text=&quot;JSON.stringify(groups, null, 2)&quot;&gt;&lt;/pre&gt;
+
+  &lt;div u-each=&quot;(group, gi) in groups&quot; class=&quot;bundle-group&quot;&gt;
+    &lt;div class=&quot;bundle-group__header&quot;&gt;
+      &lt;input type=&quot;text&quot; u-bind=&quot;groupNameField&quot; placeholder=&quot;Подзаголовок группы&quot;&gt;
+      &lt;button type=&quot;button&quot; u-bind=&quot;removeGroupBtn&quot;&gt;Удалить подгруппу&lt;/button&gt;
+      &lt;button type=&quot;button&quot; u-bind=&quot;moveGroupUpBtn&quot;&gt;⌃&lt;/button&gt;
+    &lt;/div&gt;
+
+    &lt;div class=&quot;bundle-items&quot;&gt;
+      &lt;div u-each=&quot;(item, ii) in group.items&quot; class=&quot;bundle-item&quot; data-condition=&quot;AND&quot;&gt;
+        &lt;div class=&quot;bundle-item__products&quot;&gt;
+          &lt;div u-each=&quot;(product, pi) in item.products&quot; class=&quot;bundle-product&quot; data-condition=&quot;OR&quot;&gt;
+            &lt;span u-bind=&quot;productMixBadge&quot;&gt;MIX:&lt;/span&gt;
+
+            &lt;img u-bind=&quot;productImage&quot;&gt;
+            &lt;input type=&quot;checkbox&quot; u-bind=&quot;productOptional&quot;&gt;
+            &lt;input type=&quot;text&quot; u-bind=&quot;productShortTitle&quot; placeholder=&quot;Короткое название&quot;&gt;
+            &lt;a target=&quot;_blank&quot; u-bind=&quot;productLink&quot;&gt;&lt;/a&gt;
+            &lt;input type=&quot;number&quot; min=&quot;1&quot; max=&quot;99&quot; u-bind=&quot;productQty&quot; required&gt;
+            &lt;span u-bind=&quot;productPrice&quot;&gt;&lt;/span&gt;
+
+            &lt;button type=&quot;button&quot; u-bind=&quot;joinBtn&quot;&gt;Комбо&lt;/button&gt;
+            &lt;button type=&quot;button&quot; u-bind=&quot;removeProductBtn&quot;&gt;×&lt;/button&gt;
+            &lt;button type=&quot;button&quot; u-bind=&quot;moveProductUpBtn&quot;&gt;⌃&lt;/button&gt;
+            &lt;button type=&quot;button&quot; u-bind=&quot;moveItemUpBtn&quot;&gt;⌄&lt;/button&gt;
+
+            &lt;div class=&quot;bundle-mix&quot; u-bind=&quot;mixWrapper&quot;&gt;
+              &lt;div class=&quot;bundle-mix__list&quot;&gt;
+                &lt;div u-each=&quot;(mixed, mi) in product.mix&quot;&gt;
+                  &lt;img u-bind=&quot;mixedImage&quot;&gt;
+                  &lt;input type=&quot;checkbox&quot; u-bind=&quot;mixedOptional&quot;&gt;
+                  &lt;input type=&quot;text&quot; u-bind=&quot;mixedShortTitle&quot;&gt;
+                  &lt;a target=&quot;_blank&quot; u-bind=&quot;mixedLink&quot;&gt;&lt;/a&gt;
+                  &lt;input type=&quot;number&quot; min=&quot;1&quot; max=&quot;99&quot; u-bind=&quot;mixedQty&quot; required&gt;
+                  &lt;span u-bind=&quot;mixedPrice&quot;&gt;&lt;/span&gt;
+                  &lt;button type=&quot;button&quot; u-bind=&quot;removeMixedBtn&quot;&gt;×&lt;/button&gt;
+                &lt;/div&gt;
+              &lt;/div&gt;
+
+              &lt;div class=&quot;bundle-search&quot; u-bind=&quot;mixSearchWrapper&quot;&gt;
+                &lt;input type=&quot;search&quot; u-bind=&quot;mixSearchField&quot; data-include=&quot;1,2,3&quot;&gt;
+                &lt;div u-each=&quot;mixedResult in product.search&quot;&gt;
+                  &lt;button type=&quot;button&quot; u-bind=&quot;mixedResultBtn&quot;&gt;
+                    &lt;img u-bind=&quot;mixedResultImage&quot;&gt;
+                    &lt;span u-bind=&quot;mixedResultInfo&quot;&gt;&lt;/span&gt;
+                  &lt;/button&gt;
+                &lt;/div&gt;
+              &lt;/div&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+
+        &lt;div class=&quot;bundle-search&quot; u-bind=&quot;itemSearchWrapper&quot;&gt;
+          &lt;input type=&quot;search&quot; u-bind=&quot;itemSearchField&quot; data-include=&quot;1,2,3&quot;&gt;
+          &lt;div u-each=&quot;result in item.search&quot;&gt;
+            &lt;button type=&quot;button&quot; u-bind=&quot;resultBtn&quot;&gt;
+              &lt;img u-bind=&quot;resultImage&quot;&gt;
+              &lt;span u-bind=&quot;resultInfo&quot;&gt;&lt;/span&gt;
+            &lt;/button&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;button type=&quot;button&quot; u-bind=&quot;addItemBtn&quot;&gt;+ И ещё позицию&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+</pre>
+  </div>
+  <div class="example__panel" data-panel="js">
+    <pre>
+Youla.data(&#39;bundle&#39;, () =&gt; ({
+  groups: [],
+
+  // Каждое действие живёт прямо в своём u-bind-наборе — отдельных методов на u-data нет.
+  addGroupBtn: {
+    &#39;@click&#39;: &quot;groups.push({ name: &#39;&#39;, items: [{ search: [], products: [] }] })&quot;,
+  },
+
+  groupNameField: {
+    &#39;:value&#39;: &#39;group.name&#39;,
+    &#39;@input&#39;: &#39;group.name = $el.value&#39;,
+  },
+  removeGroupBtn: {
+    &#39;@click&#39;: &#39;groups.splice(gi, 1)&#39;,
+  },
+  moveGroupUpBtn: {
+    &#39;u-show&#39;: &#39;gi &gt; 0&#39;,
+    &#39;@click&#39;: `
+      const g = [...groups];
+      [g[gi - 1], g[gi]] = [g[gi], g[gi - 1]];
+      groups = g
+    `,
+  },
+  addItemBtn: {
+    &#39;@click&#39;: &quot;group.items.push({ search: [], products: [] })&quot;,
+  },
+
+  itemSearchWrapper: {
+    &#39;@click.outside&#39;: &#39;item.search = []&#39;,
+  },
+  itemSearchField: {
+    &#39;@focus&#39;: &quot;$ajax(&#39;/bundle/search&#39;, { search: $el.value, include: $el.dataset.include }).then(r =&gt; item.search = r)&quot;,
+    &#39;@input.delay.250ms&#39;: &quot;$ajax(&#39;/bundle/search&#39;, { search: $el.value, include: $el.dataset.include }).then(r =&gt; item.search = r)&quot;,
+    &#39;@blur&#39;: &quot;$el.value = &#39;&#39;&quot;,
+  },
+  resultBtn: {
+    &#39;@click&#39;: `
+      item.products.push({ isOptional: false, shortTitle: &#39;&#39;, qty: 1, mix: [], ...result });
+      item.search = []
+    `,
+  },
+  resultImage: {
+    &#39;:src&#39;: &#39;result.image&#39;,
+    &#39;:alt&#39;: &#39;result.title&#39;,
+  },
+  resultInfo: {
+    &#39;u-html&#39;: &quot;result.title + &#39; — &#39; + result.price + &#39; ₽&#39;&quot;,
+  },
+
+  productImage: {
+    &#39;:src&#39;: &#39;product.image&#39;,
+    &#39;:alt&#39;: &#39;product.title&#39;,
+    &#39;u-show&#39;: &#39;!product.mix.length&#39;,
+  },
+  productOptional: {
+    &#39;:checked&#39;: &#39;product.isOptional&#39;,
+    &#39;@change&#39;: &#39;product.isOptional = $el.checked&#39;,
+    &#39;u-show&#39;: &#39;!product.mix.length&#39;,
+  },
+  productShortTitle: {
+    &#39;:value&#39;: &#39;product.shortTitle&#39;,
+    &#39;@input&#39;: &#39;product.shortTitle = $el.value&#39;,
+  },
+  productLink: {
+    &#39;:href&#39;: &#39;product.permalink&#39;,
+    &#39;u-text&#39;: &#39;product.title&#39;,
+    &#39;u-show&#39;: &#39;!product.mix.length&#39;,
+  },
+  productQty: {
+    &#39;:value&#39;: &#39;product.qty&#39;,
+    &#39;@input&#39;: &#39;product.qty = parseInt($el.value) || 1&#39;,
+    &#39;u-show&#39;: &#39;!product.mix.length&#39;,
+  },
+  productPrice: {
+    &#39;u-html&#39;: &quot;&#39; × &#39; + product.price + &#39; ₽&#39;&quot;,
+    &#39;u-show&#39;: &#39;!product.mix.length&#39;,
+  },
+  productMixBadge: {
+    &#39;u-show&#39;: &#39;product.mix.length &gt; 0&#39;,
+  },
+  joinBtn: {
+    &#39;u-show&#39;: &#39;!product.mix.length&#39;,
+    &#39;@click&#39;: `
+      const { mix, search, ...snapshot } = product;
+      product.mix = [snapshot];
+      product.search = []
+    `,
+  },
+  removeProductBtn: {
+    &#39;@click&#39;: `
+      if (item.products.length === 1) {
+        group.items.splice(ii, 1);
+      } else {
+        item.products.splice(pi, 1);
+      }
+      if (group.items.length === 0) {
+        groups.splice(gi, 1);
+      }
+    `,
+  },
+  moveProductUpBtn: {
+    &#39;u-show&#39;: &#39;pi &gt; 0&#39;,
+    &#39;@click&#39;: `
+      const p = [...item.products];
+      [p[pi - 1], p[pi]] = [p[pi], p[pi - 1]];
+      item.products = p
+    `,
+  },
+  moveItemUpBtn: {
+    &#39;u-show&#39;: &#39;pi === 0 &amp;&amp; ii &gt; 0&#39;,
+    &#39;@click&#39;: `
+      const it = [...group.items];
+      [it[ii - 1], it[ii]] = [it[ii], it[ii - 1]];
+      group.items = it
+    `,
+  },
+
+  mixWrapper: {
+    &#39;u-show&#39;: &#39;product.mix.length &gt; 0&#39;,
+  },
+  mixSearchWrapper: {
+    &#39;@click.outside&#39;: &#39;product.search = []&#39;,
+  },
+  mixSearchField: {
+    &#39;@focus&#39;: &quot;$ajax(&#39;/bundle/search&#39;, { search: $el.value, include: $el.dataset.include }).then(r =&gt; product.search = r)&quot;,
+    &#39;@input.delay.250ms&#39;: &quot;$ajax(&#39;/bundle/search&#39;, { search: $el.value, include: $el.dataset.include }).then(r =&gt; product.search = r)&quot;,
+    &#39;@blur&#39;: &quot;$el.value = &#39;&#39;&quot;,
+  },
+  mixedResultBtn: {
+    &#39;@click&#39;: `
+      product.mix.push({ isOptional: false, shortTitle: &#39;&#39;, qty: 1, ...mixedResult });
+      product.search = []
+    `,
+  },
+  mixedResultImage: {
+    &#39;:src&#39;: &#39;mixedResult.image&#39;,
+    &#39;:alt&#39;: &#39;mixedResult.title&#39;,
+  },
+  mixedResultInfo: {
+    &#39;u-html&#39;: &quot;mixedResult.title + &#39; — &#39; + mixedResult.price + &#39; ₽&#39;&quot;,
+  },
+
+  mixedImage: {
+    &#39;:src&#39;: &#39;mixed.image&#39;,
+    &#39;:alt&#39;: &#39;mixed.title&#39;,
+  },
+  mixedOptional: {
+    &#39;:checked&#39;: &#39;mixed.isOptional&#39;,
+    &#39;@change&#39;: &#39;mixed.isOptional = $el.checked&#39;,
+  },
+  mixedShortTitle: {
+    &#39;:value&#39;: &#39;mixed.shortTitle&#39;,
+    &#39;@input&#39;: &#39;mixed.shortTitle = $el.value&#39;,
+  },
+  mixedLink: {
+    &#39;:href&#39;: &#39;mixed.permalink&#39;,
+    &#39;u-text&#39;: &#39;mixed.title&#39;,
+  },
+  mixedQty: {
+    &#39;:value&#39;: &#39;mixed.qty&#39;,
+    &#39;@input&#39;: &#39;mixed.qty = parseInt($el.value) || 1&#39;,
+  },
+  mixedPrice: {
+    &#39;u-html&#39;: &quot;&#39; × &#39; + mixed.price + &#39; ₽&#39;&quot;,
+  },
+  removeMixedBtn: {
+    &#39;@click&#39;: &#39;product.mix.splice(mi, 1)&#39;,
+  },
+}));
+</pre>
+  </div>
+</div>
+
+<style>
+  /* DOM order keeps the JSON preview before the u-each block (see u-each's own sibling-order
+     warning) — "order" only reorders how it's drawn, moving it visually to the bottom. */
+  .example-bundle { display: flex; flex-direction: column; }
+  .example-bundle > button { margin-bottom: 1rem; }
+  .example-bundle > .bundle-json { order: 1; }
+  .bundle-json { max-height: 220px; overflow-y: auto; }
+  .bundle-group {
+    padding: .8rem;
+    margin-bottom: .8rem;
+    border: 1px solid var(--line);
+    border-radius: .35rem;
+    background: var(--paper);
+  }
+  .bundle-group__header { display: flex; align-items: center; gap: .5rem; margin-bottom: .6rem; }
+  .bundle-group__header input { flex: 1; }
+  .bundle-group button.is-ghost, .bundle-item button.is-ghost { background: none; border-color: var(--line); color: var(--ink-muted); }
+  .bundle-item {
+    padding: .6rem;
+    margin-bottom: .5rem;
+    border: 1px dashed var(--line);
+    border-radius: .3rem;
+  }
+  .bundle-item[data-condition]:not(:first-child)::before {
+    content: attr(data-condition);
+    display: block;
+    font-family: var(--mono);
+    font-size: var(--fs-2xs);
+    color: var(--ink-muted);
+    margin-bottom: .3rem;
+  }
+  .bundle-item__products { display: flex; flex-direction: column; gap: .3rem; margin-bottom: .4rem; }
+  .bundle-product {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .4rem;
+    padding: .3rem .5rem;
+    border-radius: .3rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+  }
+  .bundle-product[data-condition]:not(:first-child)::before {
+    content: attr(data-condition);
+    flex-basis: 100%;
+    font-family: var(--mono);
+    font-size: var(--fs-2xs);
+    color: var(--ink-muted);
+  }
+  .bundle-product__image { width: 24px; height: 24px; border-radius: 4px; object-fit: cover; }
+  .bundle-product__mix-badge { font-weight: 600; color: var(--teal); }
+  .bundle-product input[type="text"], .bundle-product input[type="number"] { width: 8rem; }
+  .bundle-product a { flex: 1; min-width: 6rem; }
+  .bundle-mix {
+    flex-basis: 100%;
+    margin: .4rem 0 0 1rem;
+    padding: .4rem .6rem;
+    border-left: 2px solid var(--teal);
+    background: var(--teal-soft);
+  }
+  .bundle-mix__list > div { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; margin-bottom: .3rem; }
+  .bundle-search input[type="search"] { display: block; width: 100%; margin-top: .3rem; }
+  .bundle-search-results button {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    width: 100%;
+    text-align: left;
+    margin-top: .2rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+  }
+  .bundle-search-results img { width: 20px; height: 20px; border-radius: 3px; }
+</style>
+
+<p>
+  Мок-сервер ниже фильтрует каталог по подстроке названия и, если задан <code>data-include</code>,
+  ещё и по списку разрешённых ID — так поиск можно ограничить конкретным набором товаров для этой
+  секции бандла, не трогая остальной каталог. Задержка ввода перед запросом — модификатор
+  <code>.delay.250ms</code>, тот же, что и в <a href="/events">событиях</a>.
+</p>
+
+<script>
+  (function () {
+    // Мок-каталог и сервер поиска — как в примере /ajax, замена реального XHR ради живого демо без бэкенда.
+    const swatch = color => `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Crect width='24' height='24' rx='4' fill='${encodeURIComponent(color)}'/%3E%3C/svg%3E`;
+    const catalog = [
+      { id: 1, title: 'Капучино 300мл', price: 250, image: swatch('#0e7a6b'), permalink: '#' },
+      { id: 2, title: 'Эспрессо 30мл', price: 150, image: swatch('#0e7a6b'), permalink: '#' },
+      { id: 3, title: 'Латте 350мл', price: 270, image: swatch('#0e7a6b'), permalink: '#' },
+      { id: 4, title: 'Круассан классический', price: 180, image: swatch('#a85417'), permalink: '#' },
+      { id: 5, title: 'Круассан миндальный', price: 210, image: swatch('#a85417'), permalink: '#' },
+      { id: 6, title: 'Чизкейк Нью-Йорк', price: 320, image: swatch('#a85417'), permalink: '#' },
+      { id: 7, title: 'Сэндвич с ветчиной', price: 240, image: swatch('#1c5fb0'), permalink: '#' },
+      { id: 8, title: 'Салат Цезарь', price: 350, image: swatch('#1c5fb0'), permalink: '#' },
+      { id: 9, title: 'Вода негазированная 0.5л', price: 90, image: swatch('#b3261e'), permalink: '#' },
+      { id: 10, title: 'Сок апельсиновый 0.3л', price: 130, image: swatch('#b3261e'), permalink: '#' },
+    ];
+
+    function MockXHR() {
+      this.upload = {};
+      this.status = 0;
+      this.responseText = '';
+      this.responseURL = '';
+    }
+    MockXHR.prototype.open = function (method, url) { this._url = url; };
+    MockXHR.prototype.setRequestHeader = function () {};
+    MockXHR.prototype.send = function (body) {
+      const query = (body.get('search') || '').trim().toLowerCase();
+      const include = (body.get('include') || '').split(',').filter(Boolean).map(Number);
+
+      let matches = include.length ? catalog.filter(p => include.includes(p.id)) : catalog;
+      matches = query ? matches.filter(p => p.title.toLowerCase().includes(query)) : matches.slice(0, 3);
+
+      this._timer = setTimeout(() => {
+        this.status = 200;
+        this.responseURL = this._url;
+        this.responseText = JSON.stringify({ data: matches });
+        this.onload && this.onload();
+        this.onloadend && this.onloadend({ type: 'loadend', loaded: 100, total: 100 });
+      }, 300);
+    };
+    MockXHR.prototype.abort = function () { clearTimeout(this._timer); };
+
+    window.XMLHttpRequest = MockXHR;
+  })();
+
+  document.addEventListener('youla:init', () => {
+    Youla.data('bundle', () => ({
+      groups: [],
+
+      // Каждое действие живёт прямо в своём u-bind-наборе — отдельных методов на u-data нет.
+      addGroupBtn: {
+        '@click': "groups.push({ name: '', items: [{ search: [], products: [] }] })",
+      },
+
+      groupNameField: {
+        ':value': 'group.name',
+        '@input': 'group.name = $el.value',
+      },
+      removeGroupBtn: {
+        '@click': 'groups.splice(gi, 1)',
+      },
+      moveGroupUpBtn: {
+        'u-show': 'gi > 0',
+        '@click': `
+          const g = [...groups];
+          [g[gi - 1], g[gi]] = [g[gi], g[gi - 1]];
+          groups = g
+        `,
+      },
+      addItemBtn: {
+        '@click': "group.items.push({ search: [], products: [] })",
+      },
+
+      itemSearchWrapper: {
+        '@click.outside': 'item.search = []',
+      },
+      itemSearchField: {
+        '@focus': "$ajax('/bundle/search', { search: $el.value, include: $el.dataset.include }).then(r => item.search = r)",
+        '@input.delay.250ms': "$ajax('/bundle/search', { search: $el.value, include: $el.dataset.include }).then(r => item.search = r)",
+        '@blur': "$el.value = ''",
+      },
+      resultBtn: {
+        '@click': `
+          item.products.push({ isOptional: false, shortTitle: '', qty: 1, mix: [], ...result });
+          item.search = []
+        `,
+      },
+      resultImage: {
+        ':src': 'result.image',
+        ':alt': 'result.title',
+      },
+      resultInfo: {
+        'u-html': "result.title + ' — ' + result.price + ' ₽'",
+      },
+
+      productImage: {
+        ':src': 'product.image',
+        ':alt': 'product.title',
+        'u-show': '!product.mix.length',
+      },
+      productOptional: {
+        ':checked': 'product.isOptional',
+        '@change': 'product.isOptional = $el.checked',
+        'u-show': '!product.mix.length',
+      },
+      productShortTitle: {
+        ':value': 'product.shortTitle',
+        '@input': 'product.shortTitle = $el.value',
+      },
+      productLink: {
+        ':href': 'product.permalink',
+        'u-text': 'product.title',
+        'u-show': '!product.mix.length',
+      },
+      productQty: {
+        ':value': 'product.qty',
+        '@input': 'product.qty = parseInt($el.value) || 1',
+        'u-show': '!product.mix.length',
+      },
+      productPrice: {
+        'u-html': "' × ' + product.price + ' ₽'",
+        'u-show': '!product.mix.length',
+      },
+      productMixBadge: {
+        'u-show': 'product.mix.length > 0',
+      },
+      joinBtn: {
+        'u-show': '!product.mix.length',
+        '@click': `
+          const { mix, search, ...snapshot } = product;
+          product.mix = [snapshot];
+          product.search = []
+        `,
+      },
+      removeProductBtn: {
+        '@click': `
+          if (item.products.length === 1) {
+            group.items.splice(ii, 1);
+          } else {
+            item.products.splice(pi, 1);
+          }
+          if (group.items.length === 0) {
+            groups.splice(gi, 1);
+          }
+        `,
+      },
+      moveProductUpBtn: {
+        'u-show': 'pi > 0',
+        '@click': `
+          const p = [...item.products];
+          [p[pi - 1], p[pi]] = [p[pi], p[pi - 1]];
+          item.products = p
+        `,
+      },
+      moveItemUpBtn: {
+        'u-show': 'pi === 0 && ii > 0',
+        '@click': `
+          const it = [...group.items];
+          [it[ii - 1], it[ii]] = [it[ii], it[ii - 1]];
+          group.items = it
+        `,
+      },
+
+      mixWrapper: {
+        'u-show': 'product.mix.length > 0',
+      },
+      mixSearchWrapper: {
+        '@click.outside': 'product.search = []',
+      },
+      mixSearchField: {
+        '@focus': "$ajax('/bundle/search', { search: $el.value, include: $el.dataset.include }).then(r => product.search = r)",
+        '@input.delay.250ms': "$ajax('/bundle/search', { search: $el.value, include: $el.dataset.include }).then(r => product.search = r)",
+        '@blur': "$el.value = ''",
+      },
+      mixedResultBtn: {
+        '@click': `
+          product.mix.push({ isOptional: false, shortTitle: '', qty: 1, ...mixedResult });
+          product.search = []
+        `,
+      },
+      mixedResultImage: {
+        ':src': 'mixedResult.image',
+        ':alt': 'mixedResult.title',
+      },
+      mixedResultInfo: {
+        'u-html': "mixedResult.title + ' — ' + mixedResult.price + ' ₽'",
+      },
+
+      mixedImage: {
+        ':src': 'mixed.image',
+        ':alt': 'mixed.title',
+      },
+      mixedOptional: {
+        ':checked': 'mixed.isOptional',
+        '@change': 'mixed.isOptional = $el.checked',
+      },
+      mixedShortTitle: {
+        ':value': 'mixed.shortTitle',
+        '@input': 'mixed.shortTitle = $el.value',
+      },
+      mixedLink: {
+        ':href': 'mixed.permalink',
+        'u-text': 'mixed.title',
+      },
+      mixedQty: {
+        ':value': 'mixed.qty',
+        '@input': 'mixed.qty = parseInt($el.value) || 1',
+      },
+      mixedPrice: {
+        'u-html': "' × ' + mixed.price + ' ₽'",
+      },
+      removeMixedBtn: {
+        '@click': 'product.mix.splice(mi, 1)',
+      },
+    }));
+  });
+</script>
+
+<p>
+  Блок с JSON внизу примера — ровно то, что легло бы в тело запроса на сохранение бандла: тот же
+  <code>groups</code>, просто выведенный на страницу через <a href="/u-text"><code>u-text</code></a>
+  вместо <code>console.log()</code> из исходного Alpine-варианта.
+</p>
+
+<%= _.template(require('../parts/footer.html').default)(data) %>

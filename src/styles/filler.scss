@@ -5,7 +5,6 @@
 	display: inline-flex;
 	align-items: center;
 	gap: 8px;
-	width: 100%;
 	max-width: 100%;
 	padding-block: 4px;
 	padding-inline: 4px 8px;
@@ -28,7 +27,7 @@
 }
 
 // Pre-init skeleton so the raw input already looks like the mounted .filler box; stops once JS adds .filler-input.
-input[v-filler]:not(.filler-input) {
+input[u-filler]:not(.filler-input) {
 	max-width: 100%;
 	// Right offset matches the alpha block's width (.filler-alpha/-input/-suffix below).
 	padding: 4px calc(36px + 3ch) 4px 35px;

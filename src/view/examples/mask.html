@@ -1,0 +1,143 @@
+<% var data = {
+title: "Маска ввода (u-mask)"
+}; %>
+<%= _.template(require('../parts/header.html').default)(data) %>
+
+<h1>Маска ввода (u-mask)</h1>
+
+<p>
+  Директива <code>u-mask</code> ограничивает то, что можно ввести в <code>input</code>, прямо во
+  время набора текста. У неё три режима — они выбираются автоматически по тому, что передано
+  значением атрибута.
+</p>
+
+<table style="table-layout: fixed;">
+  <colgroup>
+    <col style="width: 25%;">
+    <col style="width: 75%;">
+  </colgroup>
+  <tbody>
+    <tr>
+      <th>Значение</th>
+      <th>Режим</th>
+    </tr>
+    <tr>
+      <td><code>u-mask</code></td>
+      <td>Пусто/не указано — фильтрует по собственному <code>type</code> поля (<code>tel</code>, <code>number</code>, <code>color</code>, <code>domain</code>).</td>
+    </tr>
+    <tr>
+      <td><code>u-mask="/regexp/"</code></td>
+      <td>RegExp — вычёркивает из введённого текста всё, что попадает под него.</td>
+    </tr>
+    <tr>
+      <td><code>u-mask="'DD.MM.YYYY'"</code></td>
+      <td>Строка-паттерн — полноценная маска ввода через библиотеку <code>vanillaTextMask</code>.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  <code>u-mask</code> правит только то, что показано в поле — саму разметку <code>value</code>
+  атрибута не трогает. Чтобы сохранить очищенное значение в данные компонента, добавьте к тому же
+  полю <a href="/u-prop"><code>u-prop</code></a>, как в примерах ниже.
+</p>
+
+<h2>Автофильтр по type</h2>
+
+<p>
+  Без второго аргумента <code>u-mask</code> смотрит на атрибут <code>type</code> самого поля и
+  вычёркивает символы, которые для этого типа заведомо лишние: пробелы и буквы из телефона, всё
+  кроме цифр и точки из числа, недопустимые символы домена.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <form class="demo" u-data>
+      <div>Телефон: <input type="tel" u-mask u-prop="phone"> <span u-text="phone"></span></div>
+      <div>Число: <input type="number" u-mask u-prop="amount"> <span u-text="amount"></span></div>
+      <div>Домен: <input type="domain" u-mask u-prop="domain"> <span u-text="domain"></span></div>
+    </form>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;form u-data&gt;
+  &lt;input type=&quot;tel&quot; u-mask u-prop=&quot;phone&quot;&gt;
+  &lt;input type=&quot;number&quot; u-mask u-prop=&quot;amount&quot;&gt;
+  &lt;input type=&quot;domain&quot; u-mask u-prop=&quot;domain&quot;&gt;
+&lt;/form&gt;
+</pre>
+  </div>
+</div>
+
+<h2>Свой RegExp</h2>
+
+<p>
+  Передайте выражение, возвращающее <code>RegExp</code> — <code>u-mask</code> будет вычёркивать
+  всё, что под него попадает, при каждом нажатии клавиши. Например, промокод только из заглавных
+  латинских букв и цифр:
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <form class="demo" u-data>
+      <input type="text" u-mask="/[^A-Z0-9]/g" u-prop="promo">
+      <span u-text="promo"></span>
+    </form>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;form u-data&gt;
+  &lt;input type=&quot;text&quot; u-mask=&quot;/[^A-Z0-9]/g&quot; u-prop=&quot;promo&quot;&gt;
+  &lt;span u-text=&quot;promo&quot;&gt;&lt;/span&gt;
+&lt;/form&gt;
+</pre>
+  </div>
+</div>
+
+<h2>Маска по паттерну</h2>
+
+<p>
+  Строка целиком — это маска для <code>vanillaTextMask</code>. Она разбирается посимвольно:
+  <code>H</code>/<code>i</code>/<code>D</code>/<code>M</code> — самоограничивающиеся разряды часов,
+  минут, дня и месяца (первая введённая цифра сужает диапазон второй, как в нативных полях даты),
+  <code>Y</code> и <code>0</code> — просто цифра, любой другой символ — литерал, который маска
+  подставит сама, а <code>{regexp}</code> — свой класс символов в фигурных скобках, например
+  <code>{[A-Z]}</code> для одной заглавной латинской буквы. Разбирает и применяет маску библиотека
+  <a href="https://github.com/text-mask/text-mask" target="_blank">vanilla-text-mask</a> — она
+  вшита в сборку Youla.js, подключать отдельно не нужно.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <form class="demo" u-data>
+      <div>Телефон: <input type="text" placeholder="+7 (___) ___-__-__" u-mask="'+7 (000) 000-00-00'" u-prop="phone"> <span u-text="phone"></span></div>
+      <div>Дата: <input type="text" placeholder="ДД.ММ.ГГГГ" u-mask="'DD.MM.YYYY'" u-prop="date"> <span u-text="date"></span></div>
+      <div>Время: <input type="text" placeholder="ЧЧ:ММ" u-mask="'HH:ii'" u-prop="time"> <span u-text="time"></span></div>
+      <div>Серийный номер: <input type="text" placeholder="AA-0000" u-mask="'{[A-Z]}{[A-Z]}-0000'" u-prop="serial"> <span u-text="serial"></span></div>
+    </form>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;form u-data&gt;
+  &lt;input type=&quot;text&quot; u-mask=&quot;&#039;+7 (000) 000-00-00&#039;&quot; u-prop=&quot;phone&quot;&gt;
+  &lt;input type=&quot;text&quot; u-mask=&quot;&#039;DD.MM.YYYY&#039;&quot; u-prop=&quot;date&quot;&gt;
+  &lt;input type=&quot;text&quot; u-mask=&quot;&#039;HH:ii&#039;&quot; u-prop=&quot;time&quot;&gt;
+  &lt;input type=&quot;text&quot; u-mask=&quot;&#039;{[A-Z]}{[A-Z]}-0000&#039;&quot; u-prop=&quot;serial&quot;&gt;
+&lt;/form&gt;
+</pre>
+  </div>
+</div>
+
+<%= _.template(require('../parts/footer.html').default)(data) %>

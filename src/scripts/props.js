@@ -92,8 +92,7 @@ export function generateExpressionForProp(el, data, attribute) {
       ? 'parseFloat(option.value || option.text)'
       : 'option.value || option.text'})`
   } else if (modifiers.includes('number')) {
-    // Same character class u-mask's own "number" type filter uses, for consistency.
-    rightSideOfExpression = `($el.value = $el.value.replace(/[^-.\\d]/g, ''), parseFloat($el.value))`
+    return `($el.value = $el.value.replace(/[^\\d]/g, ''), $data.${expression} = $el.value === '' ? '' : parseFloat($el.value))`
   } else if (modifiers.includes('trim')) {
     rightSideOfExpression = `($el.value = $el.value.replace(/^\\s+|\\s+$/g, ''), $el.value)`
   } else {

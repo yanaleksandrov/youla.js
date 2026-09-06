@@ -1,0 +1,288 @@
+<% var data = {
+  title: "Диалоговое окно"
+}; %>
+<%= _.template(require('../parts/header.html').default)(data) %>
+
+<h1>Диалоговое окно ($dialog)</h1>
+
+<p>
+  <code>$dialog</code> — готовое диалоговое окно, и не одно: диалоги складываются в стек, поэтому
+  шаблон одного диалога может сам вызвать <code>$dialog.open()</code> и поднять второй (например,
+  подтверждение) поверх первого. Стек рендерит <code>u-each</code> в общей на всё приложение
+  оболочке (<code>parts/footer.html</code>) — три метода: <code>open(templateID, data)</code>,
+  <code>close()</code> и <code>init(templateID, callback)</code>. Разметка каждого окна хранится в
+  своём <code>&lt;template&gt;</code>; закрыть можно кликом по фону, клавишей <code>Escape</code>
+  или самим <code>close()</code> — так закрывается верхний диалог стека. Самый первый (внешний)
+  диалог ещё и записывает свой <code>id</code> в адресную строку — <code>?dialog=...</code>, — чтобы
+  его можно было перезагрузить или переслать ссылкой; вложенные диалоги на URL не влияют.
+</p>
+
+<p>
+  Пока диалог открыт, страница под ним не прокручивается — в том числе на iOS Safari, где одного
+  <code>overflow: hidden</code> на <code>body</code> недостаточно: сама страница снизу всё равно
+  тянется пальцем. <code>$dialog</code> дополнительно фиксирует <code>body</code>
+  (<code>position: fixed</code> со сдвигом на текущий скролл) и возвращает прокрутку на место, как
+  только закрывается последний диалог стека — эта часть работает сама, ничего подключать не нужно.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" u-data>
+      <button type="button" @click="$dialog.open('dialog-window-content')">Открыть диалоговое окно</button>
+
+      <template id="dialog-window-content">
+        <h3>Заголовок окна</h3>
+        <p>Закрыть можно кликом по фону, клавишей Escape или кнопкой ниже.</p>
+        <button type="button" @click="$dialog.close()">Закрыть</button>
+      </template>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;div u-data&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;$dialog.open('dialog-window-content')&quot;&gt;Открыть диалоговое окно&lt;/button&gt;
+
+  &lt;template id=&quot;dialog-window-content&quot;&gt;
+    &lt;h3&gt;Заголовок окна&lt;/h3&gt;
+    &lt;p&gt;Закрыть можно кликом по фону, клавишей Escape или кнопкой ниже.&lt;/p&gt;
+    &lt;button type=&quot;button&quot; @click=&quot;$dialog.close()&quot;&gt;Закрыть&lt;/button&gt;
+  &lt;/template&gt;
+&lt;/div&gt;
+</pre>
+  </div>
+</div>
+
+<p>
+  Сам диалог в примере ни при чём — контейнер <code>u-data</code> здесь только для того, чтобы
+  внутри него заработал <code>@click</code>. Диалоговая оболочка (показана ниже) лежит один раз на
+  всё приложение в <code>parts/footer.html</code>: <code>$dialog</code> работает из любого места
+  страницы, а не только отсюда, и любая кнопка может открыть один и тот же или другой шаблон — своя
+  разметка окна каждой не нужна.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="html">HTML (parts/footer.html)</button>
+  </div>
+  <div class="example__panel is-active" data-panel="html">
+    <pre>
+&lt;div class=&quot;dialog&quot; u-data=&quot;dialog&quot; @keydown.esc.window=&quot;close()&quot;&gt;
+  &lt;div u-each=&quot;entry in stack&quot; class=&quot;dialog-backdrop&quot; @click=&quot;close(entry.id)&quot;&gt;
+    &lt;div class=&quot;dialog-window&quot; role=&quot;dialog&quot; aria-modal=&quot;true&quot;
+         @click.stop=&quot;null&quot; u-html=&quot;entry.content&quot;&gt;&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+</pre>
+  </div>
+</div>
+
+<p>
+  Клик по фону вызывает <code>close(entry.id)</code> именно того диалога, чей фон кликнули, — но
+  так как каждый диалог занимает весь экран, физически кликнуть можно только по фону самого
+  верхнего; <code>@click.stop</code> на самом окне не даёт клику внутри него всплыть до фона и
+  закрыть диалог по ошибке.
+</p>
+
+<h2>Как использовать в своём проекте</h2>
+
+<p>
+  Никакой настройки не требуется — оболочка уже подключена. Опишите содержимое окна в
+  <code>&lt;template&gt;</code> с уникальным <code>id</code> и вызовите
+  <code>$dialog.open(id)</code> там, где у вас в коде происходит событие, которое должно его
+  открыть: в <code>@click</code>, в обработчике ответа <a href="/ajax"><code>$ajax</code></a>-запроса
+  или в любом другом методе компонента на странице — в том числе внутри уже открытого диалога.
+</p>
+
+<table>
+  <tbody>
+    <tr>
+      <th>Метод</th>
+      <th>Когда вызывать</th>
+    </tr>
+    <tr>
+      <td><code>$dialog.open(templateID, data)</code></td>
+      <td>Открыть окно поверх всего, что уже открыто: копирует <code>&lt;template id="templateID"&gt;</code> в новую запись стека</td>
+    </tr>
+    <tr>
+      <td><code>$dialog.close()</code></td>
+      <td>Закрыть верхний диалог стека — тот же вызов, что уже стоит на кнопке «Закрыть», Escape и клике по фону</td>
+    </tr>
+    <tr>
+      <td><code>$dialog.init(templateID, callback)</code></td>
+      <td>На элементе с тем же <code>id</code>, что и <code>templateID</code> (обычно как <code>$el.id</code>) — переоткрывает внешний диалог, если он остался открытым в перезагруженном или пересланном <code>?dialog=</code>-адресе</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Данные при открытии</h2>
+
+<p>
+  Второй аргумент <code>open()</code> — произвольные данные для открываемого окна, они сливаются
+  прямо в его запись стека. Внутри <code>&lt;template&gt;</code> они доступны через
+  <code>entry</code> — ту же переменную цикла, что даёт <code>u-each="entry in stack"</code>:
+  <code>open('confirm-delete', { order })</code> читается как <code>entry.order</code>, отдельное
+  хранилище для этого не нужно.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" u-data>
+      <button type="button" @click="$dialog.open('confirm-delete', { order: 'Заказ №42' })">Удалить заказ №42</button>
+
+      <template id="confirm-delete">
+        <h3>Удалить <span u-text="entry.order"></span>?</h3>
+        <p>Действие нельзя отменить.</p>
+        <button type="button" @click="$dialog.close()">Отмена</button>
+        <button type="button" @click="$notice.success(entry.order + ' удалён'); $dialog.close()">Удалить</button>
+      </template>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;div u-data&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;$dialog.open('confirm-delete', { order: 'Заказ №42' })&quot;&gt;
+    Удалить заказ №42
+  &lt;/button&gt;
+
+  &lt;template id=&quot;confirm-delete&quot;&gt;
+    &lt;h3&gt;Удалить &lt;span u-text=&quot;entry.order&quot;&gt;&lt;/span&gt;?&lt;/h3&gt;
+    &lt;p&gt;Действие нельзя отменить.&lt;/p&gt;
+    &lt;button type=&quot;button&quot; @click=&quot;$dialog.close()&quot;&gt;Отмена&lt;/button&gt;
+    &lt;button type=&quot;button&quot; @click=&quot;$notice.success(entry.order + ' удалён'); $dialog.close()&quot;&gt;
+      Удалить
+    &lt;/button&gt;
+  &lt;/template&gt;
+&lt;/div&gt;
+</pre>
+  </div>
+</div>
+
+<h2>Диалог из диалога</h2>
+
+<p>
+  Раз открытые окна складываются в стек, а не заменяют друг друга, шаблон может звать
+  <code>$dialog.open()</code> так же, как и любая кнопка на странице, — второй диалог просто
+  появится поверх первого. Ниже «Настройки» открывают «Сбросить настройки?» — оба остаются в DOM
+  одновременно, и «Отмена» там закрывает только верхний, оставляя «Настройки» открытыми.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" u-data>
+      <button type="button" @click="$dialog.open('settings')">Настройки</button>
+
+      <template id="settings">
+        <h3>Настройки</h3>
+        <p>Здесь могли бы быть настройки проекта.</p>
+        <button type="button" @click="$dialog.open('reset-confirm')">Сбросить настройки</button>
+        <button type="button" @click="$dialog.close()">Закрыть</button>
+      </template>
+
+      <template id="reset-confirm">
+        <h3>Сбросить настройки?</h3>
+        <p>Все текущие значения вернутся к значениям по умолчанию.</p>
+        <button type="button" @click="$dialog.close()">Отмена</button>
+        <button type="button" @click="$notice.warning('Настройки сброшены'); $dialog.close()">Сбросить</button>
+      </template>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;div u-data&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;$dialog.open('settings')&quot;&gt;Настройки&lt;/button&gt;
+
+  &lt;template id=&quot;settings&quot;&gt;
+    &lt;h3&gt;Настройки&lt;/h3&gt;
+    &lt;p&gt;Здесь могли бы быть настройки проекта.&lt;/p&gt;
+    &lt;button type=&quot;button&quot; @click=&quot;$dialog.open('reset-confirm')&quot;&gt;Сбросить настройки&lt;/button&gt;
+    &lt;button type=&quot;button&quot; @click=&quot;$dialog.close()&quot;&gt;Закрыть&lt;/button&gt;
+  &lt;/template&gt;
+
+  &lt;template id=&quot;reset-confirm&quot;&gt;
+    &lt;h3&gt;Сбросить настройки?&lt;/h3&gt;
+    &lt;p&gt;Все текущие значения вернутся к значениям по умолчанию.&lt;/p&gt;
+    &lt;button type=&quot;button&quot; @click=&quot;$dialog.close()&quot;&gt;Отмена&lt;/button&gt;
+    &lt;button type=&quot;button&quot; @click=&quot;$notice.warning('Настройки сброшены'); $dialog.close()&quot;&gt;Сбросить&lt;/button&gt;
+  &lt;/template&gt;
+&lt;/div&gt;
+</pre>
+  </div>
+</div>
+
+<p>
+  Оба вызова <code>$dialog.close()</code> внутри шаблонов не знают и не должны знать, какой именно
+  диалог сейчас верхний, — без аргумента <code>close()</code> всегда закрывает тот, что физически
+  доступен для клика, то есть верхний.
+</p>
+
+<h2>Реакция на события диалога</h2>
+
+<p>
+  Каждое открытие и закрытие ещё и рассылает по странице всплывающее DOM-событие —
+  <code>open</code> и <code>close</code>, — независимо от того, каким <code>templateID</code> или
+  кнопкой это было вызвано, и на каком уровне стека. Поймать их можно как обычные события, добавив
+  модификатор <code>.document</code>: так любой компонент на странице узнаёт об открытии или
+  закрытии диалога, не трогая сам <code>$dialog</code>.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" u-data="{ log: [] }"
+         @open.document="log.unshift('Открыт в ' + new Date().toLocaleTimeString())"
+         @close.document="log.unshift('Закрыт в ' + new Date().toLocaleTimeString())">
+      <button type="button" @click="$dialog.open('dialog-window-content')">Открыть окно ещё раз</button>
+      <ul>
+        <li u-each="entry in log.slice(0, 5)" u-text="entry"></li>
+      </ul>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;div u-data=&quot;{ log: [] }&quot;
+     @open.document=&quot;log.unshift('Открыт в ' + new Date().toLocaleTimeString())&quot;
+     @close.document=&quot;log.unshift('Закрыт в ' + new Date().toLocaleTimeString())&quot;&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;$dialog.open('dialog-window-content')&quot;&gt;Открыть окно ещё раз&lt;/button&gt;
+  &lt;ul&gt;
+    &lt;li u-each=&quot;entry in log.slice(0, 5)&quot; u-text=&quot;entry&quot;&gt;&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/div&gt;
+</pre>
+  </div>
+</div>
+
+<p>
+  В примере кнопка открывает тот же <code>dialog-window-content</code>, что и в самом первом
+  примере на этой странице, — окно на всю страницу одно, так что журнал слева заполнится и от
+  него, и от обоих диалогов выше.
+</p>
+
+<blockquote>
+  <p>Что нельзя убирать при кастомизации разметки</p>
+  <p>
+    Меняя оболочку диалога в <code>parts/footer.html</code>, сохраните <code>u-data="dialog"</code>
+    и <code>u-each="entry in stack"</code> — без них нечего будет открывать и рендерить.
+    <code>u-html="entry.content"</code> на <code>.dialog-window</code> — то, что фактически рисует
+    содержимое шаблона. <code>@click="close(entry.id)"</code> на фоне и
+    <code>@click.stop</code> на самом окне отвечают за закрытие кликом мимо, а
+    <code>@keydown.esc.window="close()"</code> на корневом элементе — за закрытие клавишей Escape;
+    уберите их, только если хотите закрывать окно исключительно кнопкой.
+  </p>
+</blockquote>
+
+<%= _.template(require('../parts/footer.html').default)(data) %>

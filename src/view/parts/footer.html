@@ -12,6 +12,12 @@
     </div>
   </div>
 
+  <div class="dialog" u-data="dialog" @keydown.esc.window="close()">
+    <div u-each="entry in stack" class="dialog-backdrop" @click="close(entry.id)">
+      <div class="dialog-window" role="dialog" aria-modal="true" @click.stop="null" u-html="entry.content"></div>
+    </div>
+  </div>
+
   <script>
     document.querySelectorAll('.document__menu-link').forEach(function (link) {
       if (link.getAttribute('href') === window.location.pathname) {

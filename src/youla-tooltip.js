@@ -390,31 +390,34 @@ export class TooltipInstance {
   }
 }
 
+/**
+ * Shows "output" as a tooltip anchored to the element; content is trusted HTML. Exported (rather
+ * than kept as an inline directive callback) so src/tests/tooltip.test.js can drive the real
+ * implementation directly instead of maintaining a hand-copied mirror that drifts out of sync.
+ *
+ * @since 1.0
+ */
+export function tooltipDirective(el, output, { modifiers, duration }) {
+  const placement = modifiers.find(m => PLACEMENTS.includes(m)) || 'auto';
+  const trigger   = modifiers.find(m => TRIGGERS.includes(m)) || 'hover';
+  const variant   = modifiers.find(m => m.startsWith(VARIANT_PREFIX))?.slice(VARIANT_PREFIX.length) || null;
+
+  const delay   = duration?.unit === 'ms' ? duration.value : 250;
+  const content = output == null ? '' : String(output);
+
+  const instance = el._x_tooltip;
+  if (!instance) {
+    el._x_tooltip = new TooltipInstance(el, content, placement, trigger, delay, variant);
+    return;
+  }
+
+  instance.updateContent(content);
+  instance.updatePlacement(placement);
+  instance.updateTrigger(trigger);
+  instance.updateDelay(delay);
+  instance.updateVariant(variant);
+}
+
 document.addEventListener('youla:init', ()=> {
-
-  /**
-   * Shows "output" as a tooltip anchored to the element; content is trusted HTML.
-   *
-   * @since 1.0
-   */
-  Youla.directive('tooltip', (el, output, { modifiers, duration }) => {
-    const placement = modifiers.find(m => PLACEMENTS.includes(m)) || 'auto';
-    const trigger   = modifiers.find(m => TRIGGERS.includes(m)) || 'hover';
-    const variant   = modifiers.find(m => m.startsWith(VARIANT_PREFIX))?.slice(VARIANT_PREFIX.length) || null;
-
-    const delay   = duration?.unit === 'ms' ? duration.value : 250;
-    const content = output == null ? '' : String(output);
-
-    const instance = el._x_tooltip;
-    if (!instance) {
-      el._x_tooltip = new TooltipInstance(el, content, placement, trigger, delay, variant);
-      return;
-    }
-
-    instance.updateContent(content);
-    instance.updatePlacement(placement);
-    instance.updateTrigger(trigger);
-    instance.updateDelay(delay);
-    instance.updateVariant(variant);
-  });
+  Youla.directive('tooltip', tooltipDirective);
 });

@@ -1,27 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { TooltipInstance, PLACEMENTS, TRIGGERS, computePosition } from '../scripts/tooltip';
-
-/**
- * Mirrors the `Youla.directive('tooltip', ...)` callback in ../youla-tooltip.js.
- */
-function tooltipDirective(el, output, { modifiers, duration }) {
-  const placement = modifiers.find(m => PLACEMENTS.includes(m)) || 'top';
-  const trigger   = modifiers.find(m => TRIGGERS.includes(m)) || 'hover';
-
-  const delay   = duration?.unit === 'ms' ? duration.value : 250;
-  const content = output == null ? '' : String(output);
-
-  const instance = el._x_tooltip;
-  if (!instance) {
-    el._x_tooltip = new TooltipInstance(el, content, placement, trigger, delay);
-    return;
-  }
-
-  instance.updateContent(content);
-  instance.updatePlacement(placement);
-  instance.updateTrigger(trigger);
-  instance.updateDelay(delay);
-}
+import { computePosition, tooltipDirective } from '../youla-tooltip';
 
 /**
  * jsdom never computes real layout, so these are 0 unless stubbed.
@@ -351,10 +329,10 @@ describe('tooltipDirective — HTML content', () => {
 });
 
 describe('tooltipDirective — modifiers', () => {
-  it('defaults to placement "top" and trigger "hover"', () => {
+  it('defaults to placement "auto" and trigger "hover"', () => {
     const el = mount();
     tooltipDirective(el, 'Tip', attr());
-    expect(el._x_tooltip.placement).toBe('top');
+    expect(el._x_tooltip.placement).toBe('auto');
     expect(el._x_tooltip.trigger).toBe('hover');
   });
 

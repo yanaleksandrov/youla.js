@@ -361,6 +361,11 @@ document.addEventListener('youla:init', ()=> {
     };
 
     el.addEventListener('input', onInput);
-    el._x_mask = { mode, output, destroy: () => el.removeEventListener('input', onInput) };
+
+    el._x_mask = {
+      mode,
+      output,
+      destroy: () => el.removeEventListener('input', onInput)
+    };
   });
 });

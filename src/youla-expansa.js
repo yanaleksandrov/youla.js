@@ -253,6 +253,118 @@ document.addEventListener('youla:init', ()=> {
   })();
 
   /**
+   * Accessible, stackable dialog: open() pushes a new one on top instead of replacing the
+   * current one, so a template can raise its own (e.g. a confirm) from within another. Only
+   * the outermost dialog syncs to "?dialog=" in the URL — nested ones are transient.
+   *
+   * @since 1.0
+   */
+  (() => {
+    Youla.variable('dialog', () => document.querySelector('[u-data="dialog"]')?.__x?.data);
+
+    const searchParamsHandler = (param, value, isRemove) => {
+      const url    = new URL(window.location.href);
+      const params = new URLSearchParams(url.search);
+
+      if (isRemove) {
+        params.delete(param);
+      } else {
+        params.set(param, value);
+      }
+      url.search = params.toString();
+
+      window.history.replaceState({}, '', url.toString());
+    };
+
+    let uid     = 0;
+    let scrollY = 0;
+
+    /**
+     * Freezes body at its current scroll offset — plain overflow:hidden alone doesn't
+     * block touch scrolling on iOS Safari.
+     */
+    function lockScroll() {
+      scrollY = window.scrollY;
+
+      Object.assign(document.body.style, {
+        position: 'fixed',
+        top: `-${scrollY}px`,
+        width: '100%',
+        overflow: 'hidden',
+      });
+    }
+
+    /**
+     * Restores body scroll to the offset lockScroll() froze it at.
+     */
+    function unlockScroll() {
+      Object.assign(document.body.style, {
+        position: '',
+        top: '',
+        width: '',
+        overflow: '',
+      });
+
+      // "instant" overrides the site's global "scroll-behavior: smooth" — this restore isn't a user-facing scroll.
+      window.scrollTo({ top: scrollY, left: 0, behavior: 'instant' });
+    }
+
+    // injectDataProviders() reruns this factory per u-data element; "root" only matters for this one's own component.
+    Youla.data('dialog', (root) => ({
+      stack: [],
+
+      open(templateID, data = {}) {
+        setTimeout(() => {
+          let template = document.getElementById(templateID);
+          if (!template) {
+            return;
+          }
+
+          const isBase = this.stack.length === 0;
+
+          // u-each (parts/footer.html) initializes each entry itself, wiring up the template's own "@click".
+          this.stack.push({ id: ++uid, content: template.innerHTML, ...data });
+
+          // Only the base dialog locks scroll — a nested call would read scrollY as 0 (already frozen).
+          if (isBase) {
+            lockScroll();
+          }
+
+          root.dispatchEvent(new Event('open', { bubbles: true }));
+
+          if (isBase) {
+            searchParamsHandler('dialog', templateID, false);
+          }
+        }, 25);
+      },
+      // No "id" closes the top dialog; an explicit one (the backdrop's own click) closes that entry.
+      close(id) {
+        const target = id ?? this.stack.at(-1)?.id;
+        this.stack   = this.stack.filter(dialog => dialog.id !== target);
+
+        root.dispatchEvent(new Event('close', { bubbles: true }));
+
+        if (this.stack.length === 0) {
+          unlockScroll();
+          searchParamsHandler('dialog', null, true);
+        }
+      },
+      // Reopens the base dialog from a shared URL, e.g. via "@load" on the element matching templateID.
+      async init(templateID, callback) {
+        const params = new URLSearchParams(window.location.search);
+
+        if (templateID && params.get('dialog') === templateID && callback) {
+          const data = await callback();
+
+          if (data) {
+            this.open(templateID, data);
+          }
+        }
+      },
+    }));
+  })();
+
+  /**
    * Password policy: checks a string against a fixed policy (minimum count per character
    * class, minimum length) and can generate a password satisfying it.
    *
@@ -772,32 +884,6 @@ document.addEventListener('youla:init', ()=> {
         .toLowerCase();                                           // Convert the string to lowercase
     },
   }));
-
-  /**
-   * An accessible dialog window: modal, alert, dialog, popup
-   *
-   * @since 1.0
-   */
-  Youla.method('modal', (e, el) => {
-    return {
-      open: (id, animation) => {
-        setTimeout( () => {
-          let modal = document.getElementById(id);
-          if( modal ) {
-            modal.classList.add('is-active', animation || 'fade');
-          }
-          document.body.style.overflow = 'hidden';
-        }, 25 );
-      },
-      close: animation => {
-        let modal = el.closest( '.modal' );
-        if( modal !== null && modal.classList.contains( 'is-active' ) ) {
-          modal.classList.remove('is-active', animation || 'fade');
-          document.body.style.overflow = '';
-        }
-      }
-    }
-  });
 
   /**
    * Code syntax highlight

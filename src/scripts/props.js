@@ -1,5 +1,5 @@
 import { closestDirective, domWalk } from './dom';
-import { setNestedObjectValue, getNestedObjectValue } from './object-path';
+import { setNestedObjectValue, getNestedObjectValue, isUnsafeKey } from './object-path';
 import { saferEval } from './eval';
 import { createMagicVariables, withMagicVariables } from './magic-variables';
 import { getAttributes } from './attributes';
@@ -29,10 +29,16 @@ export function hydrateProps(rootElement, data) {
 
     let [key, ...prop] = expression.split('.');
 
+    if (isUnsafeKey(key)) {
+      console.warn(`Youla.js: u-prop expression "${expression}" uses unsafe key "${key}" — skipped.`);
+      return;
+    }
+
     if (data[key] === undefined) {
       let fields = [];
       if (el.type === 'checkbox') {
-        fields = closestDirective(el, 'u-data').querySelectorAll(`[${CSS.escape(attribute.name)}="${expression}"]`);
+        // CSS.escape() only covers identifiers, not the quoted attribute-value part, so a "\"/"\\" in "expression" is escaped by hand to keep it from breaking out of the selector.
+        fields = closestDirective(el, 'u-data').querySelectorAll(`[${CSS.escape(attribute.name)}="${expression.replace(/["\\]/g, '\\$&')}"]`);
       }
 
       data[key] = setNestedObjectValue(prop, fields.length > 1 ? [] : '');

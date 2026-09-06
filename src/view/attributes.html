@@ -200,6 +200,7 @@
       <button @click="open = !open" :aria-expanded="open" :data-state="open ? 'expanded' : 'collapsed'">
         Подробнее
       </button>
+      <p>aria-expanded="<span u-text="open"></span>", data-state="<span u-text="open ? 'expanded' : 'collapsed'"></span>"</p>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
@@ -208,6 +209,7 @@
   &lt;button @click=&quot;open = !open&quot; :aria-expanded=&quot;open&quot; :data-state=&quot;open ? 'expanded' : 'collapsed'&quot;&gt;
     Подробнее
   &lt;/button&gt;
+  &lt;p&gt;aria-expanded=&quot;&lt;span u-text=&quot;open&quot;&gt;&lt;/span&gt;&quot;, data-state=&quot;&lt;span u-text=&quot;open ? 'expanded' : 'collapsed'&quot;&gt;&lt;/span&gt;&quot;&lt;/p&gt;
 &lt;/div&gt;
 </pre>
   </div>

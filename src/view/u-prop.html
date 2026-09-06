@@ -23,8 +23,16 @@ title: "u-prop"
   по-своему для каждого типа поля) и пишет это в данные. Сравните два одинаковых по смыслу подхода:
 </p>
 
-<table>
+<table style="table-layout: fixed;">
+  <colgroup>
+    <col style="width: 50%;">
+    <col style="width: 50%;">
+  </colgroup>
   <tbody>
+    <tr>
+      <th>С <code>u-prop</code></th>
+      <th>Без <code>u-prop</code></th>
+    </tr>
     <tr>
       <td>
         <pre>&lt;form u-data&gt;

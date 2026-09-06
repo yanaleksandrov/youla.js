@@ -69,14 +69,14 @@
   <div class="example__panel is-active" data-panel="preview">
     <div class="demo" u-data="{ lastKey: '' }">
       <input @keyup="lastKey = $event.key" placeholder="Печатайте здесь">
-      <p>Последняя нажатая клавиша: <strong u-text="lastKey"></strong></p>
+      <p>Последняя нажатая клавиша: <strong>"<span u-text="lastKey"></span>"</strong></p>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
 &lt;div u-data=&quot;{ lastKey: '' }&quot;&gt;
   &lt;input @keyup=&quot;lastKey = $event.key&quot; placeholder=&quot;Печатайте здесь&quot;&gt;
-  &lt;p&gt;Последняя нажатая клавиша: &lt;strong u-text=&quot;lastKey&quot;&gt;&lt;/strong&gt;&lt;/p&gt;
+  &lt;p&gt;Последняя нажатая клавиша: &lt;strong&gt;&quot;&lt;span u-text=&quot;lastKey&quot;&gt;&lt;/span&gt;&quot;&lt;/strong&gt;&lt;/p&gt;
 &lt;/div&gt;
 </pre>
   </div>

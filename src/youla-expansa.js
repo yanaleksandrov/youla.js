@@ -8,9 +8,38 @@ document.addEventListener('youla:init', ()=> {
    * field or method that isn't backed by a form input. The directive and the data provider are
    * grouped in one IIFE since neither is useful without the other.
    *
+   * `u-step:action="expression"` on the same panel runs `expression` (a statement, like
+   * `@click`) once each time this step becomes the current one — e.g.
+   * `u-step:action="approved = {}"` to clear a previous system check's result as soon as its
+   * step is (re-)entered, or `u-step:action="$ajax('system/test', db).then(r => approved = r)"`
+   * to kick one off. Deliberately NOT a `u-step.action` modifier: any attribute whose directive
+   * name is "u-step" (a dot-modifier only ever changes the name *after* the dot) would still run
+   * through Component's own generic evaluate-to-get-"output" step — the same eager evaluation
+   * this doc block used to warn about — since that's core, unconditional behavior for every
+   * matching directive attribute, not something this plugin can special-case from the outside.
+   * A colon isn't a modifier separator, so "u-step:action" isn't recognized as any directive at
+   * all (core's own resolveAttributes()/computeOutput() skip an attribute whose directive has no
+   * registered handler) — invisible to the reactive pipeline entirely, read and run by hand below,
+   * from goto() itself, the sole place currentIndex ever actually changes. Going back to a step
+   * re-enters it (and re-runs its action) the same as going forward into it.
+   *
    * @since 1.0
    */
   (() => {
+    // Not exported, not shared with dom.js's own closestDirective() — kept local so this plugin
+    // never reaches into Youla's internals, only the "u-data"/".__x" contract already public to
+    // every directive callback (see the "step" directive above receiving "component").
+    function hasUData(el) {
+      return [...el.attributes].some(({ name }) => name === 'u-data' || name.startsWith('u-data.'));
+    }
+
+    function closestComponent(el) {
+      while (el && !hasUData(el)) {
+        el = el.parentElement;
+      }
+      return el ? el.__x : null;
+    }
+
     Youla.directive('step', (el, output, _, component) => {
       const wizard = component.data;
       const step   = wizard.getStep(el);
@@ -121,11 +150,28 @@ document.addEventListener('youla:init', ()=> {
         this.goto(this.previousIndex());
       },
       goto(index) {
+        const previousIndex = this.currentIndex;
+
         if(index !== null && this.steps[index] !== void 0) {
           this.currentIndex = index;
         }
         this.render();
+
+        if (this.currentIndex !== previousIndex) {
+          this.runAction(this.steps[this.currentIndex]);
+        }
         return this.current();
+      },
+      // Runs the newly-entered step's "u-step:action", if any — see the doc block above this
+      // IIFE for why it's read straight off the DOM instead of through a reactive attribute.
+      runAction(step) {
+        const expression = step?.el.getAttribute('u-step:action');
+        if (!expression) {
+          return;
+        }
+
+        const component = closestComponent(step.el);
+        component?.invokeListener(expression, null, step.el);
       },
       render() {
         this.steps.forEach((step, index) => {

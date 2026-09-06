@@ -127,18 +127,15 @@ module.exports = {
       {
         // `import css from './x.scss?inline'` — the raw compiled CSS as a JS string, for components
         // that inject their own styles into a shadow root instead of shipping a global stylesheet.
+        // Emitted as an "asset/source" module (a plain string) instead of run through css-loader,
+        // which would otherwise drag its runtime (dist/runtime/api.js, noSourceMaps.js) and array-push
+        // wrapper into every entry that imports one — dead weight since nothing here needs url()
+        // rewriting or CSS Modules.
         test: /\.(sass|scss)$/,
         resourceQuery: /inline/,
+        type: 'asset/source',
         include: path.resolve(__dirname, 'src/styles'),
         use: [
-          {
-            loader: 'css-loader',
-            options: {
-              sourceMap: false,
-              url: false,
-              exportType: 'string',
-            },
-          },
           {
             loader: 'postcss-loader',
             options: {

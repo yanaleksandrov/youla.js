@@ -16,6 +16,7 @@
     "watch": "webpack --mode development --watch",
     "start": "webpack serve --mode development --no-client-overlay-warnings",
     "build": "webpack --config webpack.config.js webpack.config.min.js --mode production && prettier --parser html --write dist/*.html",
+    "postbuild": "node scripts/copy-to-expansa.js",
     "test": "vitest run"
   },
   "dependencies": {

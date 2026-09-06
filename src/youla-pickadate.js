@@ -3,13 +3,11 @@
  *
  * License: MIT <https://opensource.org/licenses/MIT>
  *
- * @version 3.5.3
+ * @version 3.6.0
  * @source  https://github.com/t1m0n/air-datepicker
  * @author	Copyright (c) Timofey Marochkin
  */
 import AirDatepicker from 'air-datepicker';
-
-window.AirDatepicker = AirDatepicker;
 
 document.addEventListener('youla:init', ()=> {
 

@@ -1,12 +1,12 @@
 <% var data = {
-  title: "Filler (v-filler)"
+  title: "Filler (u-filler)"
 }; %>
 <%= _.template(require('../parts/header.html').default)(data) %>
 
-<h1>Filler (v-filler)</h1>
+<h1>Filler (u-filler)</h1>
 
 <p>
-  Директива <code>v-filler</code> превращает обычный <code>&lt;input type="text"&gt;</code> в
+  Директива <code>u-filler</code> превращает обычный <code>&lt;input type="text"&gt;</code> в
   поле выбора цвета в духе Figma: квадратный образец цвета, поле HEX-значения и поле прозрачности
   (0-100%) — перетащить подпись «%» можно прямо мышью, влево-вправо. В поле HEX можно вставить или
   ввести цвет сразу вместе с прозрачностью — восьмизначный HEX (<code>#RRGGBBAA</code>) или строку
@@ -104,7 +104,7 @@
 </p>
 
 <pre><code>&lt;style&gt;
-  /* сработает для любого v-filler на странице, у которого открыт диалог */
+  /* сработает для любого u-filler на странице, у которого открыт диалог */
   div::part(filler-dialog) { border-radius: 12px; }
   div::part(filler-dialog-area) { height: 200px; }
 &lt;/style&gt;</code></pre>
@@ -113,11 +113,11 @@
 
 <p>Начальный цвет и прозрачность читаются из <code>value</code> и <code>data-alpha</code>.</p>
 
-<div class="demo" v-data>
-  <input type="text" value="#FF6F59" data-alpha="80" v-filler>
+<div class="demo" u-data>
+  <input type="text" value="#FF6F59" data-alpha="80" u-filler>
 </div>
 
-<pre><code>&lt;input type="text" value="#FF6F59" data-alpha="80" v-filler&gt;</code></pre>
+<pre><code>&lt;input type="text" value="#FF6F59" data-alpha="80" u-filler&gt;</code></pre>
 
 <h2>Пипетка с экрана</h2>
 
@@ -145,21 +145,21 @@
   строкой в том формате, что выбран на вкладках (HEX/RGB/HSL), с учётом прозрачности.
 </p>
 
-<div class="demo" v-data="{ result: '#2196F3, 100%' }">
+<div class="demo" u-data="{ result: '#2196F3, 100%' }">
   <input
     type="text"
     value="#2196F3"
-    v-filler="{ onChange: (hex, alpha) => result = `${hex}, ${alpha}%` }"
+    u-filler="{ onChange: (hex, alpha) => result = `${hex}, ${alpha}%` }"
   >
-  <p>Текущее значение: <code v-text="result"></code></p>
+  <p>Текущее значение: <code u-text="result"></code></p>
 </div>
 
 <pre><code>&lt;input
   type="text"
   value="#2196F3"
-  v-filler="{ onChange: (hex, alpha) => result = `${hex}, ${alpha}%` }"
+  u-filler="{ onChange: (hex, alpha) => result = `${hex}, ${alpha}%` }"
 &gt;
-&lt;p&gt;Текущее значение: &lt;code v-text="result"&gt;&lt;/code&gt;&lt;/p&gt;</code></pre>
+&lt;p&gt;Текущее значение: &lt;code u-text="result"&gt;&lt;/code&gt;&lt;/p&gt;</code></pre>
 
 <h2>Свой формат и своя палитра</h2>
 
@@ -168,11 +168,11 @@
   брендовых цветов.
 </p>
 
-<div class="demo" v-data>
+<div class="demo" u-data>
   <input
     type="text"
     value="#8F00FF"
-    v-filler="{
+    u-filler="{
       format: 'rgb',
       palette: [
         { name: 'Brand Purple', hex: '#8F00FF' },
@@ -186,7 +186,7 @@
 <pre><code>&lt;input
   type="text"
   value="#8F00FF"
-  v-filler="{
+  u-filler="{
     format: 'rgb',
     palette: [
       { name: 'Brand Purple', hex: '#8F00FF' },
@@ -277,26 +277,26 @@
   видео.
 </p>
 
-<div class="demo" v-data>
-  <input type="text" value="#4C9FFE" v-filler>
+<div class="demo" u-data>
+  <input type="text" value="#4C9FFE" u-filler>
 </div>
 
-<pre><code>&lt;input type="text" value="#4C9FFE" v-filler&gt;</code></pre>
+<pre><code>&lt;input type="text" value="#4C9FFE" u-filler&gt;</code></pre>
 
 <p>С единственным доступным источником кнопки-переключатели не показываются:</p>
 
-<div class="demo" v-data>
-  <input type="text" value="#4C9FFE" v-filler="{ sources: ['video'] }">
+<div class="demo" u-data>
+  <input type="text" value="#4C9FFE" u-filler="{ sources: ['video'] }">
 </div>
 
-<pre><code>&lt;input type="text" value="#4C9FFE" v-filler="{ sources: ['video'] }"&gt;</code></pre>
+<pre><code>&lt;input type="text" value="#4C9FFE" u-filler="{ sources: ['video'] }"&gt;</code></pre>
 
 <h2>Отключённое поле</h2>
 
-<div class="demo" v-data>
-  <input type="text" value="#9E9E9E" data-alpha="40" v-filler="{ disabled: true }">
+<div class="demo" u-data>
+  <input type="text" value="#9E9E9E" data-alpha="40" u-filler="{ disabled: true }">
 </div>
 
-<pre><code>&lt;input type="text" value="#9E9E9E" data-alpha="40" v-filler="{ disabled: true }"&gt;</code></pre>
+<pre><code>&lt;input type="text" value="#9E9E9E" data-alpha="40" u-filler="{ disabled: true }"&gt;</code></pre>
 
 <%= _.template(require('../parts/footer.html').default)(data) %>

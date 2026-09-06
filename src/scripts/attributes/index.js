@@ -7,18 +7,18 @@ import { setStyles } from './styles';
  * resolved value back onto the element (updateAttribute()).
  */
 
-// Matches the "v-"/"@"/":" prefix marking an attribute as a directive, event, or binding.
-const ATTRIBUTE_PREFIX = /^(v-|@|:)/;
+// Matches the "u-"/"@"/":" prefix marking an attribute as a directive, event, or binding.
+const ATTRIBUTE_PREFIX = /^(u-|@|:)/;
 
 // Matches a bare "<number><unit>" modifier (e.g. ".500ms", ".30d") given directly, without a preceding keyword like ".delay.".
 const DURATION_MODIFIER = /^(\d+)([a-z]+)$/;
 
 /**
  * Classifies a single name/value pair into the shape Component dispatches on. Used both for
- * real DOM attributes and for a "v-bind" object's entries.
+ * real DOM attributes and for a "u-bind" object's entries.
  *
- * @param {string} name - The raw attribute or object key, e.g. "v-each.lazy", "@click.prevent", ":class".
- * @param {*} value - The attribute's string value, or (for v-bind entries) any JS value.
+ * @param {string} name - The raw attribute or object key, e.g. "u-each.lazy", "@click.prevent", ":class".
+ * @param {*} value - The attribute's string value, or (for u-bind entries) any JS value.
  * @returns {{name: string, bind: boolean, directive: string, event: string, expression: *, modifiers: string[], duration: {value: number, unit: string}|null, literal: boolean}} The parsed attribute descriptor.
  */
 export function parseAttribute(name, value) {
@@ -32,18 +32,18 @@ export function parseAttribute(name, value) {
     name,
     // Attribute binding (":attr") is core syntax, not a pluggable directive, so it gets its own flag rather than being reported as a directive.
     bind: startsWith === ':',
-    directive: startsWith === 'v-' ? name.split('.')[0] : '',
+    directive: startsWith === 'u-' ? name.split('.')[0] : '',
     event: startsWith === '@' ? parts[0] : '',
     expression: value,
     modifiers,
     duration: durationMatch ? { value: Number(durationMatch[1]), unit: durationMatch[2] } : null,
-    // A v-bind entry whose value isn't a string (e.g. `disabled: true`) is already a final value, not an expression to run through saferEval.
+    // A u-bind entry whose value isn't a string (e.g. `disabled: true`) is already a final value, not an expression to run through saferEval.
     literal: typeof value !== 'string'
   }
 }
 
 /**
- * Collects every directive/event/binding attribute on an element (":attr", "@event", "v-*"),
+ * Collects every directive/event/binding attribute on an element (":attr", "@event", "u-*"),
  * already parsed via parseAttribute().
  *
  * @param {Element} el - The element to read attributes from.
@@ -66,7 +66,7 @@ export function getAttributes(el) {
  */
 export function updateAttribute(el, name, value) {
   if (name === 'value') {
-    // Radio/checkbox isn't special-cased here like v-prop does; a plain :value bind just sets the element's value like any other input.
+    // Radio/checkbox isn't special-cased here like u-prop does; a plain :value bind just sets the element's value like any other input.
     if (el.tagName === 'SELECT') {
       const selectedValues = [].concat(value).map(v => v + '')
       Array.from(el.options).forEach(option => {

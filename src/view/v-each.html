@@ -1,12 +1,12 @@
 <% var data = {
-  title: "v-each"
+  title: "u-each"
 }; %>
 <%= _.template(require('./parts/header.html').default)(data) %>
 
-<h1>v-each</h1>
+<h1>u-each</h1>
 
 <p>
-  Директива <code>v-each</code> создаёт элемент разметки для каждого значения массива, объекта
+  Директива <code>u-each</code> создаёт элемент разметки для каждого значения массива, объекта
   или диапазона чисел. Она клонирует DOM-узел, на котором объявлена, поэтому список всегда
   отражает актуальное состояние данных.
 </p>
@@ -22,17 +22,17 @@
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data="{ colors: ['Red', 'Orange', 'Yellow'] }">
+    <div class="demo" u-data="{ colors: ['Red', 'Orange', 'Yellow'] }">
       <ul>
-        <li v-each="color in colors" v-text="color"></li>
+        <li u-each="color in colors" u-text="color"></li>
       </ul>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-data=&quot;{ colors: ['Red', 'Orange', 'Yellow'] }&quot;&gt;
+&lt;div u-data=&quot;{ colors: ['Red', 'Orange', 'Yellow'] }&quot;&gt;
   &lt;ul&gt;
-    &lt;li v-each=&quot;color in colors&quot; v-text=&quot;color&quot;&gt;&lt;/li&gt;
+    &lt;li u-each=&quot;color in colors&quot; u-text=&quot;color&quot;&gt;&lt;/li&gt;
   &lt;/ul&gt;
 &lt;/div&gt;
 </pre>
@@ -40,13 +40,13 @@
 </div>
 
 <p>
-  Важное правило: атрибут <code>v-each</code> ставится на тот элемент, который нужно повторить —
+  Важное правило: атрибут <code>u-each</code> ставится на тот элемент, который нужно повторить —
   а не на его родителя или потомка, иначе клонируется не то, что вы ожидаете.
 </p>
 
 <p>
   Сам элемент-шаблон остаётся в разметке как образец для клонирования, поэтому его стоит скрыть
-  css-правилом <code>display: none</code> для селектора <code>[v-each]</code> на странице.
+  css-правилом <code>display: none</code> для селектора <code>[u-each]</code> на странице.
 </p>
 
 <p>
@@ -60,17 +60,17 @@
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <ul class="demo" v-data="{ cars: { make: 'Jeep', model: 'Grand Cherokee', color: 'Black' } }">
-      <li v-each="(car, key) in cars">
-        <span v-text="key"></span>: <span v-text="car"></span>
+    <ul class="demo" u-data="{ cars: { make: 'Jeep', model: 'Grand Cherokee', color: 'Black' } }">
+      <li u-each="(car, key) in cars">
+        <span u-text="key"></span>: <span u-text="car"></span>
       </li>
     </ul>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-  &lt;ul v-data=&quot;{ cars: { make: 'Jeep', model: 'Grand Cherokee', color: 'Black' } }&quot;&gt;
-    &lt;li v-each=&quot;(car, key) in cars&quot;&gt;
-      &lt;span v-text=&quot;key&quot;&gt;&lt;/span&gt;: &lt;span v-text=&quot;car&quot;&gt;&lt;/span&gt;
+  &lt;ul u-data=&quot;{ cars: { make: 'Jeep', model: 'Grand Cherokee', color: 'Black' } }&quot;&gt;
+    &lt;li u-each=&quot;(car, key) in cars&quot;&gt;
+      &lt;span u-text=&quot;key&quot;&gt;&lt;/span&gt;: &lt;span u-text=&quot;car&quot;&gt;&lt;/span&gt;
     &lt;/li&gt;
   &lt;/ul&gt;
 </pre>
@@ -90,29 +90,29 @@
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <ul class="demo" v-data="{
+    <ul class="demo" u-data="{
       users: [
         { name: 'Ian', role: 'Admin' },
         { name: 'Olga', role: 'Editor' },
         { name: 'Denis', role: 'Viewer' },
       ]
     }">
-      <li v-each="user in users">
-        <strong v-text="user.name"></strong> — <span v-text="user.role"></span>
+      <li u-each="user in users">
+        <strong u-text="user.name"></strong> — <span u-text="user.role"></span>
       </li>
     </ul>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;ul v-data=&quot;{
+&lt;ul u-data=&quot;{
   users: [
     { name: &#039;Ian&#039;, role: &#039;Admin&#039; },
     { name: &#039;Olga&#039;, role: &#039;Editor&#039; },
     { name: &#039;Denis&#039;, role: &#039;Viewer&#039; },
   ]
 }&quot;&gt;
-  &lt;li v-each=&quot;user in users&quot;&gt;
-    &lt;strong v-text=&quot;user.name&quot;&gt;&lt;/strong&gt; — &lt;span v-text=&quot;user.role&quot;&gt;&lt;/span&gt;
+  &lt;li u-each=&quot;user in users&quot;&gt;
+    &lt;strong u-text=&quot;user.name&quot;&gt;&lt;/strong&gt; — &lt;span u-text=&quot;user.role&quot;&gt;&lt;/span&gt;
   &lt;/li&gt;
 &lt;/ul&gt;
 </pre>
@@ -130,7 +130,7 @@
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data="{
+    <div class="demo" u-data="{
       categories: [
         {
           name: 'Category 1',
@@ -149,13 +149,13 @@
         }
       ]
     }">
-      <div v-each="(category, index) in categories">
-        <h3 v-text="category.name"></h3>
+      <div u-each="(category, index) in categories">
+        <h3 u-text="category.name"></h3>
         <ul>
-          <li v-each="product in category.products">
-            <strong v-text="product.name"></strong>
+          <li u-each="product in category.products">
+            <strong u-text="product.name"></strong>
             Attributes:
-            <em v-each="attribute in product.attributes join ', '" v-text="attribute"></em>
+            <em u-each="attribute in product.attributes join ', '" u-text="attribute"></em>
           </li>
         </ul>
       </div>
@@ -163,7 +163,7 @@
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-data=&quot;{
+&lt;div u-data=&quot;{
   categories: [
     {
       name: &#039;Category 1&#039;,
@@ -182,13 +182,13 @@
     }
   ]
 }&quot;&gt;
-  &lt;div v-each=&quot;(category, index) in categories&quot;&gt;
-    &lt;h3 v-text=&quot;category.name&quot;&gt;&lt;/h3&gt;
+  &lt;div u-each=&quot;(category, index) in categories&quot;&gt;
+    &lt;h3 u-text=&quot;category.name&quot;&gt;&lt;/h3&gt;
     &lt;ul&gt;
-      &lt;li v-each=&quot;product in category.products&quot;&gt;
-        &lt;strong v-text=&quot;product.name&quot;&gt;&lt;/strong&gt;
+      &lt;li u-each=&quot;product in category.products&quot;&gt;
+        &lt;strong u-text=&quot;product.name&quot;&gt;&lt;/strong&gt;
         Attributes:
-        &lt;em v-each=&quot;attribute in product.attributes join &#039;, &#039;&quot; v-text=&quot;attribute&quot;&gt;&lt;/em&gt;
+        &lt;em u-each=&quot;attribute in product.attributes join &#039;, &#039;&quot; u-text=&quot;attribute&quot;&gt;&lt;/em&gt;
       &lt;/li&gt;
     &lt;/ul&gt;
   &lt;/div&gt;
@@ -200,9 +200,9 @@
 <h2>Независимость списков друг от друга</h2>
 
 <p>
-  Каждый элемент с <a href="/v-data"><code>v-data</code></a> — самостоятельный компонент со
+  Каждый элемент с <a href="/u-data"><code>u-data</code></a> — самостоятельный компонент со
   своими данными, поэтому на странице можно свободно размещать сколько угодно независимых
-  <code>v-each</code>, в том числе вложенных.
+  <code>u-each</code>, в том числе вложенных.
 </p>
 
 <p>
@@ -216,22 +216,22 @@
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <ul class="demo" v-data="{ fruits: ['Apple', 'Banana'] }">
-      <li v-each="item in fruits" v-text="item"></li>
+    <ul class="demo" u-data="{ fruits: ['Apple', 'Banana'] }">
+      <li u-each="item in fruits" u-text="item"></li>
     </ul>
 
-    <ul class="demo" v-data="{ tools: ['Hammer', 'Wrench'] }">
-      <li v-each="item in tools" v-text="item"></li>
+    <ul class="demo" u-data="{ tools: ['Hammer', 'Wrench'] }">
+      <li u-each="item in tools" u-text="item"></li>
     </ul>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;ul v-data=&quot;{ fruits: ['Apple', 'Banana'] }&quot;&gt;
-  &lt;li v-each=&quot;item in fruits&quot; v-text=&quot;item&quot;&gt;&lt;/li&gt;
+&lt;ul u-data=&quot;{ fruits: ['Apple', 'Banana'] }&quot;&gt;
+  &lt;li u-each=&quot;item in fruits&quot; u-text=&quot;item&quot;&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;ul v-data=&quot;{ tools: ['Hammer', 'Wrench'] }&quot;&gt;
-  &lt;li v-each=&quot;item in tools&quot; v-text=&quot;item&quot;&gt;&lt;/li&gt;
+&lt;ul u-data=&quot;{ tools: ['Hammer', 'Wrench'] }&quot;&gt;
+  &lt;li u-each=&quot;item in tools&quot; u-text=&quot;item&quot;&gt;&lt;/li&gt;
 &lt;/ul&gt;
 </pre>
   </div>
@@ -250,14 +250,14 @@
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <p class="demo" v-data="{ attributes: ['White', '20x30mm', 'Google LLC'] }">
-      Характеристики: <i v-each="attribute in attributes join ', '" v-text="attribute"></i>
+    <p class="demo" u-data="{ attributes: ['White', '20x30mm', 'Google LLC'] }">
+      Характеристики: <i u-each="attribute in attributes join ', '" u-text="attribute"></i>
     </p>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;p v-data=&quot;{ attributes: [&#039;White&#039;, &#039;20x30mm&#039;, &#039;Google LLC&#039;] }&quot;&gt;
-  Характеристики: &lt;i v-each=&quot;attribute in attributes join &#039;, &#039;&quot; v-text=&quot;attribute&quot;&gt;&lt;/i&gt;
+&lt;p u-data=&quot;{ attributes: [&#039;White&#039;, &#039;20x30mm&#039;, &#039;Google LLC&#039;] }&quot;&gt;
+  Характеристики: &lt;i u-each=&quot;attribute in attributes join &#039;, &#039;&quot; u-text=&quot;attribute&quot;&gt;&lt;/i&gt;
 &lt;/p&gt;
 </pre>
   </div>
@@ -277,17 +277,17 @@
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <ul class="demo" v-data="{ names: ['Ivan', 'Yulia', 'Evgeny'] }">
-      <li v-each="(name, index) in names">
-        <span v-text="`${++index}: ${name}`"></span>
+    <ul class="demo" u-data="{ names: ['Ivan', 'Yulia', 'Evgeny'] }">
+      <li u-each="(name, index) in names">
+        <span u-text="`${++index}: ${name}`"></span>
       </li>
     </ul>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;ul v-data=&quot;{ names: ['Ivan', 'Yulia', 'Evgeny'] }&quot;&gt;
-  &lt;li v-each=&quot;(name, index) in names&quot;&gt;
-    &lt;span v-text=&quot;&#x60;${++index}: ${name}&#x60;&quot;&gt;&lt;/span&gt;
+&lt;ul u-data=&quot;{ names: ['Ivan', 'Yulia', 'Evgeny'] }&quot;&gt;
+  &lt;li u-each=&quot;(name, index) in names&quot;&gt;
+    &lt;span u-text=&quot;&#x60;${++index}: ${name}&#x60;&quot;&gt;&lt;/span&gt;
   &lt;/li&gt;
 &lt;/ul&gt;
 </pre>
@@ -297,7 +297,7 @@
 <h2>Динамическое обновление списка</h2>
 
 <p>
-  Список реактивен: как только массив получает новое значение, <code>v-each</code> автоматически
+  Список реактивен: как только массив получает новое значение, <code>u-each</code> автоматически
   перерисовывает разметку, без ручного вызова каких-либо методов обновления.
 </p>
 
@@ -313,21 +313,21 @@
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data="{ fruits: ['Apple', 'Banana'] }">
+    <div class="demo" u-data="{ fruits: ['Apple', 'Banana'] }">
       <button type="button" @click="fruits = [...fruits, 'Cherry']">Добавить</button>
       <button type="button" @click="fruits = fruits.slice(0, -1)">Удалить последний</button>
       <ul>
-        <li v-each="fruit in fruits" v-text="fruit"></li>
+        <li u-each="fruit in fruits" u-text="fruit"></li>
       </ul>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-data=&quot;{ fruits: ['Apple', 'Banana'] }&quot;&gt;
+&lt;div u-data=&quot;{ fruits: ['Apple', 'Banana'] }&quot;&gt;
   &lt;button type=&quot;button&quot; @click=&quot;fruits = [...fruits, 'Cherry']&quot;&gt;Добавить&lt;/button&gt;
   &lt;button type=&quot;button&quot; @click=&quot;fruits = fruits.slice(0, -1)&quot;&gt;Удалить последний&lt;/button&gt;
   &lt;ul&gt;
-    &lt;li v-each=&quot;fruit in fruits&quot; v-text=&quot;fruit&quot;&gt;&lt;/li&gt;
+    &lt;li u-each=&quot;fruit in fruits&quot; u-text=&quot;fruit&quot;&gt;&lt;/li&gt;
   &lt;/ul&gt;
 &lt;/div&gt;
 </pre>
@@ -347,16 +347,16 @@
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data>
+    <div class="demo" u-data>
       Рейтинг:
-      <span v-each="i in 5">⭐</span>
+      <span u-each="i in 5">⭐</span>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-data&gt;
+&lt;div u-data&gt;
   Рейтинг:
-  &lt;span v-each=&quot;i in 5&quot;&gt;⭐&lt;/span&gt;
+  &lt;span u-each=&quot;i in 5&quot;&gt;⭐&lt;/span&gt;
 &lt;/div&gt;
 </pre>
   </div>
@@ -394,10 +394,10 @@
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data="{devices: []}">
+    <div class="demo" u-data="{devices: []}">
       <button type="button" @click="devices = ['Headphones', 'VR Glasses']">Обновить список</button>
       <ul>
-        <li v-each.lazy="device in devices" v-text="device"></li>
+        <li u-each.lazy="device in devices" u-text="device"></li>
         <li>Phones</li>
         <li>Laptops</li>
       </ul>
@@ -405,10 +405,10 @@
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-data=&quot;{devices: []}&quot;&gt;
+&lt;div u-data=&quot;{devices: []}&quot;&gt;
   &lt;button type=&quot;button&quot; @click=&quot;devices = [&#039;Headphones&#039;, &#039;VR Glasses&#039;]&quot;&gt;Обновить список&lt;/button&gt;
   &lt;ul&gt;
-    &lt;li v-each.lazy=&quot;device in devices&quot; v-text=&quot;device&quot;&gt;&lt;/li&gt;
+    &lt;li u-each.lazy=&quot;device in devices&quot; u-text=&quot;device&quot;&gt;&lt;/li&gt;
     &lt;li&gt;Phones&lt;/li&gt;
     &lt;li&gt;Laptops&lt;/li&gt;
   &lt;/ul&gt;
@@ -419,7 +419,7 @@
 
 <p>
   Если элементу нужны ещё и другие директивы, события и атрибуты одним набором — посмотрите
-  <a href="/v-bind"><code>v-bind</code></a>, чтобы не перечислять их все по отдельности в разметке.
+  <a href="/u-bind"><code>u-bind</code></a>, чтобы не перечислять их все по отдельности в разметке.
 </p>
 
 <%= _.template(require('./parts/footer.html').default)(data) %>

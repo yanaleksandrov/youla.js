@@ -28,13 +28,13 @@
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data>
+    <div class="demo" u-data>
       <button @click="alert('Привет 👋')">Скажи привет</button>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-data&gt;
+&lt;div u-data&gt;
   &lt;button @click=&quot;alert(&#039;Привет 👋&#039;)&quot;&gt;Скажи привет&lt;/button&gt;
 &lt;/div&gt;
 </pre>
@@ -73,14 +73,14 @@
   </div>
   <div class="example__panel is-active" data-panel="preview">
     <div class="demo">
-      <form v-data @submit.prevent="console.log('submitted')" action="/foo">
+      <form u-data @submit.prevent="console.log('submitted')" action="/foo">
         <button>Submit</button>
       </form>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;form v-data @submit.prevent=&quot;console.log(&#039;submitted&#039;)&quot; action=&quot;/foo&quot;&gt;
+&lt;form u-data @submit.prevent=&quot;console.log(&#039;submitted&#039;)&quot; action=&quot;/foo&quot;&gt;
   &lt;button&gt;Submit&lt;/button&gt;
 &lt;/form&gt;
 </pre>
@@ -106,13 +106,13 @@
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data @click="console.log('I will not get logged')">
+    <div class="demo" u-data @click="console.log('I will not get logged')">
       <button @click.stop>Click Me</button>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-data @click=&quot;console.log(&#039;I will not get logged&#039;)&quot;&gt;
+&lt;div u-data @click=&quot;console.log(&#039;I will not get logged&#039;)&quot;&gt;
   &lt;button @click.stop&gt;Click Me&lt;/button&gt;
 &lt;/div&gt;
 </pre>
@@ -137,18 +137,18 @@
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data="{ open: false }">
+    <div class="demo" u-data="{ open: false }">
       <button @click="open = ! open">Открыть</button>
-      <div v-show="open" @click.outside="open = false">
+      <div u-show="open" @click.outside="open = false">
         Контент...
       </div>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-data=&quot;{ open: false }&quot;&gt;
+&lt;div u-data=&quot;{ open: false }&quot;&gt;
   &lt;button @click=&quot;open = ! open&quot;&gt;Открыть&lt;/button&gt;
-  &lt;div v-show=&quot;open&quot; @click.outside=&quot;open = false&quot;&gt;
+  &lt;div u-show=&quot;open&quot; @click.outside=&quot;open = false&quot;&gt;
     Контент...
   &lt;/div&gt;
 &lt;/div&gt;
@@ -169,7 +169,7 @@
 </p>
 
 <pre>
-&lt;div v-data @keyup.prevent.ctrl.s.window=&quot;alert(&#039;No need save&#039;)&quot;&gt;...&lt;/div&gt;
+&lt;div u-data @keyup.prevent.ctrl.s.window=&quot;alert(&#039;No need save&#039;)&quot;&gt;...&lt;/div&gt;
 </pre>
 
 <h3><code>.enter</code>, <code>.esc</code>, <code>.ctrl</code> и другие клавиши</h3>
@@ -199,12 +199,12 @@
   </div>
   <div class="example__panel is-active" data-panel="preview">
     <div class="demo">
-      <input v-data @keydown.enter="alert('Отправлено')" placeholder="Нажмите Enter">
+      <input u-data @keydown.enter="alert('Отправлено')" placeholder="Нажмите Enter">
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;input v-data @keydown.enter=&quot;alert(&#039;Отправлено&#039;)&quot;&gt;
+&lt;input u-data @keydown.enter=&quot;alert(&#039;Отправлено&#039;)&quot;&gt;
 </pre>
   </div>
 </div>
@@ -223,12 +223,12 @@
   </div>
   <div class="example__panel is-active" data-panel="preview">
     <div class="demo">
-      <button v-data @click.once="alert('Я появлюсь только один раз')">Кликни</button>
+      <button u-data @click.once="alert('Я появлюсь только один раз')">Кликни</button>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;button v-data @click.once=&quot;alert(&#039;Я появлюсь только один раз&#039;)&quot;&gt;Кликни&lt;/button&gt;
+&lt;button u-data @click.once=&quot;alert(&#039;Я появлюсь только один раз&#039;)&quot;&gt;Кликни&lt;/button&gt;
 </pre>
   </div>
 </div>
@@ -252,12 +252,12 @@
   </div>
   <div class="example__panel is-active" data-panel="preview">
     <div class="demo">
-      <input v-data @input.delay.500ms="alert('Я вызван')" placeholder="Начните печатать...">
+      <input u-data @input.delay.500ms="alert('Я вызван')" placeholder="Начните печатать...">
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;input v-data @input.delay.500ms=&quot;alert(&#039;Я вызван&#039;)&quot;&gt;
+&lt;input u-data @input.delay.500ms=&quot;alert(&#039;Я вызван&#039;)&quot;&gt;
 </pre>
   </div>
 </div>
@@ -265,7 +265,7 @@
 <p>
   Сводная таблица всех модификаторов событий — на странице <a href="/syntax">Полный синтаксис</a>.
   А если обработчик нужно объявить вместе с другими директивами и атрибутами одним набором в JS —
-  посмотрите <a href="/v-bind"><code>v-bind</code></a>.
+  посмотрите <a href="/u-bind"><code>u-bind</code></a>.
 </p>
 
 <%= _.template(require('./parts/footer.html').default)(data) %>

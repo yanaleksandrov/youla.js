@@ -5,7 +5,7 @@ import { storage, isStorageModifier, getStorageType, computeExpires } from '../s
 
 /**
  * Writes the bound expression's value onto the element as its form value — the write side of
- * v-prop's two-way binding; the read side is handled by Component#attachListener. When `.local`
+ * u-prop's two-way binding; the read side is handled by Component#attachListener. When `.local`
  * or `.cookie` is present, also persists the value so it survives a page reload.
  *
  * @param {HTMLElement} el
@@ -14,7 +14,7 @@ import { storage, isStorageModifier, getStorageType, computeExpires } from '../s
  * @param {Component} component - the owning component instance.
  */
 directive('prop', (el, output, attribute, component) => {
-  // Not updateAttribute()'s generic "value" case: v-prop only checks/unchecks by comparing its own value against the bound property.
+  // Not updateAttribute()'s generic "value" case: u-prop only checks/unchecks by comparing its own value against the bound property.
   if (el.type === 'radio') {
     el.checked = el.value === output;
   } else if (el.type === 'checkbox') {

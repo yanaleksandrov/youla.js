@@ -18,7 +18,7 @@
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data>
+    <div class="demo" u-data>
       <button type="button" @click="$notice.info('Форма сохранена')">Info</button>
       <button type="button" @click="$notice.success('Изменения применены')">Success</button>
       <button type="button" @click="$notice.warning('Проверьте заполненные поля')">Warning</button>
@@ -28,7 +28,7 @@
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-data&gt;
+&lt;div u-data&gt;
   &lt;button type=&quot;button&quot; @click=&quot;$notice.info('Форма сохранена')&quot;&gt;Info&lt;/button&gt;
   &lt;button type=&quot;button&quot; @click=&quot;$notice.success('Изменения применены')&quot;&gt;Success&lt;/button&gt;
   &lt;button type=&quot;button&quot; @click=&quot;$notice.warning('Проверьте заполненные поля')&quot;&gt;Warning&lt;/button&gt;
@@ -37,13 +37,13 @@
 &lt;/div&gt;
 
 &lt;!-- это в footer --&gt;
-&lt;div class=&quot;notice-root&quot; v-data=&quot;notice&quot; @mouseenter=&quot;pause()&quot; @mouseleave=&quot;resume()&quot;&gt;
-  &lt;div v-each=&quot;(item, id) in items&quot; class=&quot;notice__item&quot; :class=&quot;item.classes()&quot;&gt;
+&lt;div class=&quot;notice-root&quot; u-data=&quot;notice&quot; @mouseenter=&quot;pause()&quot; @mouseleave=&quot;resume()&quot;&gt;
+  &lt;div u-each=&quot;(item, id) in items&quot; class=&quot;notice__item&quot; :class=&quot;item.classes()&quot;&gt;
     &lt;svg class=&quot;notice__spinner&quot; viewBox=&quot;0 0 24 24&quot; width=&quot;24&quot; height=&quot;24&quot;&gt;
       &lt;circle cx=&quot;12&quot; cy=&quot;12&quot; r=&quot;11&quot; @load=&quot;$el.style.animationDuration = item.duration + 'ms'; $el.style.animationDelay = '-' + elapsed(item) + 'ms'&quot;&gt;&lt;/circle&gt;
     &lt;/svg&gt;
-    &lt;span class=&quot;notice__message&quot; v-text=&quot;item.message&quot;&gt;&lt;/span&gt;
-    &lt;button type=&quot;button&quot; class=&quot;notice__close&quot; v-show=&quot;item.closable&quot; @click=&quot;close(id)&quot;&gt;×&lt;/button&gt;
+    &lt;span class=&quot;notice__message&quot; u-text=&quot;item.message&quot;&gt;&lt;/span&gt;
+    &lt;button type=&quot;button&quot; class=&quot;notice__close&quot; u-show=&quot;item.closable&quot; @click=&quot;close(id)&quot;&gt;×&lt;/button&gt;
   &lt;/div&gt;
 &lt;/div&gt;
 </pre>
@@ -52,7 +52,7 @@
 
 <p>
   Уведомления появятся в правом нижнем углу страницы — там же, где они будут появляться в реальном
-  приложении. Контейнер <code>v-data</code> в примере ни при чём — он просто даёт кнопкам, внутри
+  приложении. Контейнер <code>u-data</code> в примере ни при чём — он просто даёт кнопкам, внутри
   которых можно писать <code>@click</code>; <code>$notice</code> работает одинаково из любого
   места страницы, а не только отсюда.
 </p>
@@ -133,7 +133,7 @@
 <blockquote>
   <p>Что нельзя убирать при кастомизации разметки</p>
   <p>
-    Меняя разметку карточки, сохраните перебор <code>v-each="(item, id) in items"</code>, вызов
+    Меняя разметку карточки, сохраните перебор <code>u-each="(item, id) in items"</code>, вызов
     <code>close(id)</code> на кнопке закрытия и атрибуты <code>@mouseenter="pause()"</code> /
     <code>@mouseleave="resume()"</code> на контейнере — без них уведомления перестанут закрываться
     (и по кнопке, и по таймеру), а пауза при наведении курсора не будет работать.

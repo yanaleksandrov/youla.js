@@ -7,11 +7,11 @@ import { withMagicVariables, splitMagicVariables } from '../magic-variables';
  * keeping the DOM in sync as the collection changes. Supports `item in items`, `(item, index)
  * in items`, and an optional `... join 'separator'` suffix; `.lazy` skips rendering on init.
  *
- * @param {HTMLElement} el - the template element carrying v-each; cloned once per rendered item.
- * @param {string} output - the raw expression string; v-each parses `attribute.expression` itself rather than using an evaluated value.
+ * @param {HTMLElement} el - the template element carrying u-each; cloned once per rendered item.
+ * @param {string} output - the raw expression string; u-each parses `attribute.expression` itself rather than using an evaluated value.
  * @param {object} attribute - the parsed attribute descriptor (expression, modifiers, etc.).
  * @param {Component} component - the owning component instance, used to evaluate the items expression against its data.
- * @param {object} [additionalHelperVariables] - loop variables from an enclosing v-each clone, so nested loops can resolve the parent item (e.g. `product in category.products`).
+ * @param {object} [additionalHelperVariables] - loop variables from an enclosing u-each clone, so nested loops can resolve the parent item (e.g. `product in category.products`).
  */
 directive('each', (el, output, attribute, component, additionalHelperVariables = {}) => {
   const {expression} = attribute;
@@ -24,7 +24,7 @@ directive('each', (el, output, attribute, component, additionalHelperVariables =
 
   const { magicVariables, otherVariables } = splitMagicVariables(additionalHelperVariables);
 
-  // Resolves "items" against the component's data; a nested v-each's parent item is available via otherVariables.
+  // Resolves "items" against the component's data; a nested u-each's parent item is available via otherVariables.
   let dataItems;
 
   if (Number.isInteger(+items)) {
@@ -47,7 +47,7 @@ directive('each', (el, output, attribute, component, additionalHelperVariables =
   while (el.nextSibling) {
     let next = el.nextSibling;
 
-    if (next.nodeType === Node.ELEMENT_NODE && next.hasAttribute('v-each')) {
+    if (next.nodeType === Node.ELEMENT_NODE && next.hasAttribute('u-each')) {
       break;
     }
 
@@ -57,7 +57,7 @@ directive('each', (el, output, attribute, component, additionalHelperVariables =
   Object.entries(dataItems ?? []).forEach(([key, dataItem], idx, array) => {
     const clone = el.cloneNode(true);
 
-    clone.removeAttribute('v-each');
+    clone.removeAttribute('u-each');
 
     (async () => {
       // "+key || key" would wrongly fall back to "0" for the first entry since 0 is falsy; only fall back when the key truly isn't numeric.

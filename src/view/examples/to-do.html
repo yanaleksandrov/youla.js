@@ -11,7 +11,7 @@
 </p>
 
 <p>
-  За сохранение списка отвечает модификатор <code>.local</code> в <code>v-data.local="todo"</code>:
+  За сохранение списка отвечает модификатор <code>.local</code> в <code>u-data.local="todo"</code>:
   он пишет данные в <code>localStorage</code> при каждом изменении и подставляет их обратно при
   следующей загрузке страницы.
 </p>
@@ -23,7 +23,7 @@
 
 <p>
   Если данные должны быть доступны серверу, замените модификатор на <code>.cookie</code>. Если
-  персистентность не нужна, уберите модификатор — оставьте обычный <code>v-data="todo"</code>.
+  персистентность не нужна, уберите модификатор — оставьте обычный <code>u-data="todo"</code>.
 </p>
 
 <div class="example">
@@ -33,43 +33,43 @@
     <button type="button" class="example__tab" data-tab="js">JS</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data.local="todo">
+    <div class="demo" u-data.local="todo">
       <p>Добавить задачу:</p>
-      <input placeholder="Введите новую задачу..." v-prop="value" v-bind="field" />
-      <button type="button" v-bind="adder">Добавить</button>
+      <input placeholder="Введите новую задачу..." u-prop="value" u-bind="field" />
+      <button type="button" u-bind="adder">Добавить</button>
 
-      <div v-show="tasks.length" hidden>
+      <div u-show="tasks.length" hidden>
         <p>Список задач:</p>
         <ul>
-          <li v-each="(task, index) in tasks">
+          <li u-each="(task, index) in tasks">
             <label>
-              <input type="checkbox" v-bind="checkbox"> <span v-bind="status"></span>
+              <input type="checkbox" u-bind="checkbox"> <span u-bind="status"></span>
             </label>
-            <button v-bind="remover">Удалить</button>
+            <button u-bind="remover">Удалить</button>
           </li>
         </ul>
-        <button v-bind="clearer">Очистить всё</button>
+        <button u-bind="clearer">Очистить всё</button>
       </div>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-data.local=&quot;todo&quot;&gt;
+&lt;div u-data.local=&quot;todo&quot;&gt;
   &lt;p&gt;Добавить задачу:&lt;/p&gt;
-  &lt;input placeholder=&quot;Введите новую задачу...&quot; v-prop=&quot;value&quot; v-bind=&quot;field&quot; /&gt;
-  &lt;button type=&quot;button&quot; v-bind=&quot;adder&quot;&gt;Добавить&lt;/button&gt;
+  &lt;input placeholder=&quot;Введите новую задачу...&quot; u-prop=&quot;value&quot; u-bind=&quot;field&quot; /&gt;
+  &lt;button type=&quot;button&quot; u-bind=&quot;adder&quot;&gt;Добавить&lt;/button&gt;
 
-  &lt;div v-show=&quot;tasks.length&quot; hidden&gt;
+  &lt;div u-show=&quot;tasks.length&quot; hidden&gt;
     &lt;p&gt;Список задач:&lt;/p&gt;
     &lt;ul&gt;
-      &lt;li v-each=&quot;(task, index) in tasks&quot;&gt;
+      &lt;li u-each=&quot;(task, index) in tasks&quot;&gt;
         &lt;label&gt;
-          &lt;input type=&quot;checkbox&quot; v-bind=&quot;checkbox&quot;&gt; &lt;span v-bind=&quot;status&quot;&gt;&lt;/span&gt;
+          &lt;input type=&quot;checkbox&quot; u-bind=&quot;checkbox&quot;&gt; &lt;span u-bind=&quot;status&quot;&gt;&lt;/span&gt;
         &lt;/label&gt;
-        &lt;button v-bind=&quot;remover&quot;&gt;Удалить&lt;/button&gt;
+        &lt;button u-bind=&quot;remover&quot;&gt;Удалить&lt;/button&gt;
       &lt;/li&gt;
     &lt;/ul&gt;
-    &lt;button v-bind=&quot;clearer&quot;&gt;Очистить всё&lt;/button&gt;
+    &lt;button u-bind=&quot;clearer&quot;&gt;Очистить всё&lt;/button&gt;
   &lt;/div&gt;
 &lt;/div&gt;
 </pre>
@@ -92,7 +92,7 @@ document.addEventListener('youla:init', () =&gt; {
       ':checked': 'task.checked',
     },
     status: {
-      'v-text': 'task.title',
+      'u-text': 'task.title',
       ':class': &quot;task.checked &amp;&amp; 'strike'&quot;,
     },
     remover: {
@@ -124,7 +124,7 @@ document.addEventListener('youla:init', () =&gt; {
         ':checked': 'task.checked',
       },
       status: {
-        'v-text': 'task.title',
+        'u-text': 'task.title',
         ':class': "task.checked && 'strike'",
       },
       remover: {

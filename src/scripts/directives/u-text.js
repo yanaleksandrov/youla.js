@@ -45,7 +45,7 @@ function findIsolatedOccurrences(text, needle) {
  *
  * @param {HTMLElement} el - the element being compiled, used only for warning messages.
  * @param {string} text - the element's currently-rendered text content.
- * @param {object} data - the object passed to v-text, mapping keys to their current values.
+ * @param {object} data - the object passed to u-text, mapping keys to their current values.
  * @returns {Array<string|{key: string}>} an ordered list of static text chunks interleaved with placeholder references.
  */
 function compilePlaceholders(el, text, data) {
@@ -54,25 +54,25 @@ function compilePlaceholders(el, text, data) {
 
   for (const [key, value] of Object.entries(data)) {
     if (isPlainObject(value) || Array.isArray(value) || typeof value === 'function' || value === undefined) {
-      console.warn(`Youla.js: v-text placeholder "${key}" on <${tag}> is a ${typeof value} — only strings, numbers and booleans can be matched. Skipped.`);
+      console.warn(`Youla.js: u-text placeholder "${key}" on <${tag}> is a ${typeof value} — only strings, numbers and booleans can be matched. Skipped.`);
       continue;
     }
 
     const needle = String(value);
     if (needle === '') {
-      console.warn(`Youla.js: v-text placeholder "${key}" on <${tag}> is an empty string — nothing to match. Skipped.`);
+      console.warn(`Youla.js: u-text placeholder "${key}" on <${tag}> is an empty string — nothing to match. Skipped.`);
       continue;
     }
 
     const positions = findIsolatedOccurrences(text, needle);
 
     if (positions.length === 0) {
-      console.warn(`Youla.js: v-text placeholder "${key}" (value "${needle}") wasn't found in <${tag}>'s text. Skipped.`);
+      console.warn(`Youla.js: u-text placeholder "${key}" (value "${needle}") wasn't found in <${tag}>'s text. Skipped.`);
       continue;
     }
 
     if (positions.length > 1) {
-      console.warn(`Youla.js: v-text placeholder "${key}" (value "${needle}") matches ${positions.length} places in <${tag}>'s text — too ambiguous to track. Skipped.`);
+      console.warn(`Youla.js: u-text placeholder "${key}" (value "${needle}") matches ${positions.length} places in <${tag}>'s text — too ambiguous to track. Skipped.`);
       continue;
     }
 
@@ -87,7 +87,7 @@ function compilePlaceholders(el, text, data) {
     const collides = (prev && prev.end > candidate.start) || (next && next.start < candidate.end);
 
     if (collides) {
-      console.warn(`Youla.js: v-text placeholder "${candidate.key}" on <${tag}> overlaps another placeholder's match. Skipped.`);
+      console.warn(`Youla.js: u-text placeholder "${candidate.key}" on <${tag}> overlaps another placeholder's match. Skipped.`);
     }
 
     return !collides;
@@ -111,7 +111,7 @@ function compilePlaceholders(el, text, data) {
  * placeholder with the current value of its key.
  *
  * @param {Array<string|{key: string}>} segments - the list returned by compilePlaceholders.
- * @param {object} data - the object passed to v-text, mapping keys to their current values.
+ * @param {object} data - the object passed to u-text, mapping keys to their current values.
  * @returns {string} the fully rendered text.
  */
 function renderSegments(segments, data) {

@@ -12,17 +12,17 @@
 
 <p>
   Повторять эту тройку пять раз с разными номерами — такое же дублирование, как в примере
-  <a href="/v-bind">v-bind</a> с параметризованными вкладками.
+  <a href="/u-bind">u-bind</a> с параметризованными вкладками.
 </p>
 
 <p>
   Метод <code>star(n)</code> возвращает набор атрибутов для конкретного номера, а разметка просто
-  подставляет его через <code>v-bind="star(n)"</code>.
+  подставляет его через <code>u-bind="star(n)"</code>.
 </p>
 
 <p>
-  Звёзды написаны явно, а не через <a href="/v-each"><code>v-each</code></a>: их ровно пять, и это
-  фиксированный набор кнопок, а не меняющийся список — <code>v-each</code> здесь только пересчитывал
+  Звёзды написаны явно, а не через <a href="/u-each"><code>u-each</code></a>: их ровно пять, и это
+  фиксированный набор кнопок, а не меняющийся список — <code>u-each</code> здесь только пересчитывал
   бы один и тот же шаблон без пользы.
 </p>
 
@@ -38,26 +38,26 @@
     <button type="button" class="example__tab" data-tab="js">JS</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo example-rating" v-data="rating" @mouseleave="leave()">
-      <span v-bind="star(1)" class="star">★</span>
-      <span v-bind="star(2)" class="star">★</span>
-      <span v-bind="star(3)" class="star">★</span>
-      <span v-bind="star(4)" class="star">★</span>
-      <span v-bind="star(5)" class="star">★</span>
+    <div class="demo example-rating" u-data="rating" @mouseleave="leave()">
+      <span u-bind="star(1)" class="star">★</span>
+      <span u-bind="star(2)" class="star">★</span>
+      <span u-bind="star(3)" class="star">★</span>
+      <span u-bind="star(4)" class="star">★</span>
+      <span u-bind="star(5)" class="star">★</span>
 
-      <div>Оценка: <span v-text="value"></span> из 5</div>
+      <div>Оценка: <span u-text="value"></span> из 5</div>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-data=&quot;rating&quot; @mouseleave=&quot;leave()&quot;&gt;
-  &lt;span v-bind=&quot;star(1)&quot; class=&quot;star&quot;&gt;★&lt;/span&gt;
-  &lt;span v-bind=&quot;star(2)&quot; class=&quot;star&quot;&gt;★&lt;/span&gt;
-  &lt;span v-bind=&quot;star(3)&quot; class=&quot;star&quot;&gt;★&lt;/span&gt;
-  &lt;span v-bind=&quot;star(4)&quot; class=&quot;star&quot;&gt;★&lt;/span&gt;
-  &lt;span v-bind=&quot;star(5)&quot; class=&quot;star&quot;&gt;★&lt;/span&gt;
+&lt;div u-data=&quot;rating&quot; @mouseleave=&quot;leave()&quot;&gt;
+  &lt;span u-bind=&quot;star(1)&quot; class=&quot;star&quot;&gt;★&lt;/span&gt;
+  &lt;span u-bind=&quot;star(2)&quot; class=&quot;star&quot;&gt;★&lt;/span&gt;
+  &lt;span u-bind=&quot;star(3)&quot; class=&quot;star&quot;&gt;★&lt;/span&gt;
+  &lt;span u-bind=&quot;star(4)&quot; class=&quot;star&quot;&gt;★&lt;/span&gt;
+  &lt;span u-bind=&quot;star(5)&quot; class=&quot;star&quot;&gt;★&lt;/span&gt;
 
-  &lt;div&gt;Оценка: &lt;span v-text=&quot;value&quot;&gt;&lt;/span&gt; из 5&lt;/div&gt;
+  &lt;div&gt;Оценка: &lt;span u-text=&quot;value&quot;&gt;&lt;/span&gt; из 5&lt;/div&gt;
 &lt;/div&gt;
 </pre>
   </div>

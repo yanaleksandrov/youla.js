@@ -3,10 +3,10 @@ import { resolveVariables } from './variables';
 
 /**
  * Walks up from "el" to the nearest ancestor (or itself) carrying loop variables from an
- * enclosing "v-each" clone (see "__x_for_data" in ./directives/v-each).
+ * enclosing "u-each" clone (see "__x_for_data" in ./directives/u-each).
  *
  * @param {Element} el - The element to start searching from.
- * @returns {object|undefined} The loop variables stored on the nearest "v-each" clone, if any.
+ * @returns {object|undefined} The loop variables stored on the nearest "u-each" clone, if any.
  */
 export function getForData(el) {
   let data;
@@ -18,18 +18,18 @@ export function getForData(el) {
 
 /**
  * Creates a Proxy standing in for "$refs": each property access walks the DOM to find the
- * element carrying a matching "v-ref" attribute.
+ * element carrying a matching "u-ref" attribute.
  *
- * @param {HTMLElement} root - The component's root element ("v-data"), to scope the walk to.
- * @returns {Proxy} An object whose properties resolve to "v-ref" elements.
+ * @param {HTMLElement} root - The component's root element ("u-data"), to scope the walk to.
+ * @returns {Proxy} An object whose properties resolve to "u-ref" elements.
  */
 export function createRefsProxy(root) {
   return new Proxy({}, {
     get(object, property) {
       let ref;
 
-      // domWalk instead of querySelector, since querySelector can't easily exclude "v-ref" elements belonging to a nested component.
-      domWalk(root, el => (el.getAttribute('v-ref') === property ? (ref = el) : null));
+      // domWalk instead of querySelector, since querySelector can't easily exclude "u-ref" elements belonging to a nested component.
+      domWalk(root, el => (el.getAttribute('u-ref') === property ? (ref = el) : null));
 
       return ref;
     }
@@ -41,7 +41,7 @@ export function createRefsProxy(root) {
  * for "additionalHelperVariables" — plus one entry per custom variable registered via
  * "Youla.variable()", each recomputed by calling its factory with the same "root"/"el"/"event".
  *
- * @param {HTMLElement} root - The component's root element ("v-data"), used for "$root" and to scope "$refs".
+ * @param {HTMLElement} root - The component's root element ("u-data"), used for "$root" and to scope "$refs".
  * @param {HTMLElement} el - The element the expression is being evaluated for/against; becomes "$el".
  * @param {Event} [event] - The triggering DOM event, if any; becomes "$event" (undefined otherwise).
  * @returns {object} The magic variables, ready to merge into "additionalHelperVariables".
@@ -76,7 +76,7 @@ export function withMagicVariables(dataContext, magicVariables) {
 
 /**
  * Splits a merged helper-variables bag into its magic variables (anything with a "$" prefix)
- * and everything else (e.g. "v-each" loop variables).
+ * and everything else (e.g. "u-each" loop variables).
  *
  * @param {object} [helperVariables] - The merged bag, as built at each Component evaluation call site.
  * @returns {{magicVariables: object, otherVariables: object}}

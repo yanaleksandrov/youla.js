@@ -20,32 +20,32 @@
   </div>
   <div class="example__panel is-active" data-panel="preview">
     <div class="demo">
-      <table v-data="table">
+      <table u-data="table">
         <thead>
           <tr>
-            <th><input type="checkbox" v-bind="trigger"></th>
+            <th><input type="checkbox" u-bind="trigger"></th>
             <th>Имя</th>
             <th>Email</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td><input type="checkbox" v-bind="item"></td>
+            <td><input type="checkbox" u-bind="item"></td>
             <td>Иван Петров</td>
             <td>ivan@example.com</td>
           </tr>
           <tr>
-            <td><input type="checkbox" v-bind="item"></td>
+            <td><input type="checkbox" u-bind="item"></td>
             <td>Мария Сидорова</td>
             <td>maria@example.com</td>
           </tr>
           <tr>
-            <td><input type="checkbox" v-bind="item"></td>
+            <td><input type="checkbox" u-bind="item"></td>
             <td>Алексей Смирнов</td>
             <td>alexey@example.com</td>
           </tr>
           <tr>
-            <td><input type="checkbox" v-bind="item"></td>
+            <td><input type="checkbox" u-bind="item"></td>
             <td>Ольга Кузнецова</td>
             <td>olga@example.com</td>
           </tr>
@@ -55,32 +55,32 @@
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;table v-data=&quot;table&quot;&gt;
+&lt;table u-data=&quot;table&quot;&gt;
   &lt;thead&gt;
     &lt;tr&gt;
-      &lt;th&gt;&lt;input type=&quot;checkbox&quot; v-bind=&quot;trigger&quot;&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;input type=&quot;checkbox&quot; u-bind=&quot;trigger&quot;&gt;&lt;/th&gt;
       &lt;th&gt;Имя&lt;/th&gt;
       &lt;th&gt;Email&lt;/th&gt;
     &lt;/tr&gt;
   &lt;/thead&gt;
   &lt;tbody&gt;
     &lt;tr&gt;
-      &lt;td&gt;&lt;input type=&quot;checkbox&quot; v-bind=&quot;item&quot;&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;input type=&quot;checkbox&quot; u-bind=&quot;item&quot;&gt;&lt;/td&gt;
       &lt;td&gt;Иван Петров&lt;/td&gt;
       &lt;td&gt;ivan@example.com&lt;/td&gt;
     &lt;/tr&gt;
     &lt;tr&gt;
-      &lt;td&gt;&lt;input type=&quot;checkbox&quot; v-bind=&quot;item&quot;&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;input type=&quot;checkbox&quot; u-bind=&quot;item&quot;&gt;&lt;/td&gt;
       &lt;td&gt;Мария Сидорова&lt;/td&gt;
       &lt;td&gt;maria@example.com&lt;/td&gt;
     &lt;/tr&gt;
     &lt;tr&gt;
-      &lt;td&gt;&lt;input type=&quot;checkbox&quot; v-bind=&quot;item&quot;&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;input type=&quot;checkbox&quot; u-bind=&quot;item&quot;&gt;&lt;/td&gt;
       &lt;td&gt;Алексей Смирнов&lt;/td&gt;
       &lt;td&gt;alexey@example.com&lt;/td&gt;
     &lt;/tr&gt;
     &lt;tr&gt;
-      &lt;td&gt;&lt;input type=&quot;checkbox&quot; v-bind=&quot;item&quot;&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;input type=&quot;checkbox&quot; u-bind=&quot;item&quot;&gt;&lt;/td&gt;
       &lt;td&gt;Ольга Кузнецова&lt;/td&gt;
       &lt;td&gt;olga@example.com&lt;/td&gt;
     &lt;/tr&gt;
@@ -100,7 +100,7 @@ document.addEventListener('youla:init', () =&gt; {
       '@click': 'selectItem($el, $root, $event)',
     },
     items(root) {
-      return [...root.querySelectorAll('[v-bind~="item"]')];
+      return [...root.querySelectorAll('[u-bind~="item"]')];
     },
     selectAll(el, root) {
       this.items(root).forEach(input =&gt; input.checked = el.checked);
@@ -149,7 +149,7 @@ document.addEventListener('youla:init', () =&gt; {
 
 <p>
   Разметка не обязана быть таблицей — подойдёт список или набор <code>&lt;div&gt;</code>, важно
-  только расставить <code>v-bind=&quot;trigger&quot;</code> и <code>v-bind=&quot;item&quot;</code>
+  только расставить <code>u-bind=&quot;trigger&quot;</code> и <code>u-bind=&quot;item&quot;</code>
   на нужных чекбоксах.
 </p>
 

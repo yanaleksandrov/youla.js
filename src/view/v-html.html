@@ -1,12 +1,12 @@
 <% var data = {
-  title: "v-html"
+  title: "u-html"
 }; %>
 <%= _.template(require('./parts/header.html').default)(data) %>
 
-<h1>v-html</h1>
+<h1>u-html</h1>
 
 <p>
-  Директива <code>v-html</code> вставляет HTML-код в элемент, заменяя его текущее содержимое —
+  Директива <code>u-html</code> вставляет HTML-код в элемент, заменяя его текущее содержимое —
   это аналог свойства <code>innerHTML</code> в обычном JavaScript, но с реактивным обновлением.
 </p>
 
@@ -19,7 +19,7 @@
 </blockquote>
 
 <p>
-  Вот простой пример использования <code>v-html</code> для отображения имени пользователя вместе
+  Вот простой пример использования <code>u-html</code> для отображения имени пользователя вместе
   с HTML-тегом форматирования, вставленным прямо в значение этого свойства.
 </p>
 
@@ -29,14 +29,14 @@
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data="{ username: '<strong>Yan Aleksandrov</strong>' }">
-      Имя: <span v-html="username"></span>
+    <div class="demo" u-data="{ username: '<strong>Yan Aleksandrov</strong>' }">
+      Имя: <span u-html="username"></span>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-data=&quot;{ username: &#039;&lt;strong&gt;Yan Aleksandrov&lt;/strong&gt;&#039; }&quot;&gt;
-  Имя: &lt;span v-html=&quot;username&quot;&gt;&lt;/span&gt;
+&lt;div u-data=&quot;{ username: &#039;&lt;strong&gt;Yan Aleksandrov&lt;/strong&gt;&#039; }&quot;&gt;
+  Имя: &lt;span u-html=&quot;username&quot;&gt;&lt;/span&gt;
 &lt;/div&gt;
 </pre>
   </div>
@@ -45,7 +45,7 @@
 <h2>Живой предпросмотр</h2>
 
 <p>
-  <code>v-html</code> реактивен, как и любая другая директива: содержимое элемента
+  <code>u-html</code> реактивен, как и любая другая директива: содержимое элемента
   перерисовывается при каждом изменении связанных данных. Это удобно, например,
   для предпросмотра форматированного текста прямо во время ввода.
 </p>
@@ -56,16 +56,16 @@
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data="{ markup: '<strong>Привет!</strong> Это <em>живой</em> предпросмотр.' }">
-      <textarea v-prop="markup"></textarea>
-      <div v-html="markup"></div>
+    <div class="demo" u-data="{ markup: '<strong>Привет!</strong> Это <em>живой</em> предпросмотр.' }">
+      <textarea u-prop="markup"></textarea>
+      <div u-html="markup"></div>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-data=&quot;{ markup: '&lt;strong&gt;Привет!&lt;/strong&gt; Это &lt;em&gt;живой&lt;/em&gt; предпросмотр.' }&quot;&gt;
-  &lt;textarea v-prop=&quot;markup&quot;&gt;&lt;/textarea&gt;
-  &lt;div v-html=&quot;markup&quot;&gt;&lt;/div&gt;
+&lt;div u-data=&quot;{ markup: '&lt;strong&gt;Привет!&lt;/strong&gt; Это &lt;em&gt;живой&lt;/em&gt; предпросмотр.' }&quot;&gt;
+  &lt;textarea u-prop=&quot;markup&quot;&gt;&lt;/textarea&gt;
+  &lt;div u-html=&quot;markup&quot;&gt;&lt;/div&gt;
 &lt;/div&gt;
 </pre>
   </div>
@@ -74,7 +74,7 @@
 <h2>Любое выражение вместо простой переменной</h2>
 
 <p>
-  В <code>v-html</code>, как и в другие директивы, можно передать произвольное выражение —
+  В <code>u-html</code>, как и в другие директивы, можно передать произвольное выражение —
   например, собрать разметку из нескольких полей объекта прямо в шаблоне страницы.
 </p>
 
@@ -84,10 +84,10 @@
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data="{
+    <div class="demo" u-data="{
   product: { name: 'Наушники', price: 4990, inStock: true }
 }">
-      <div v-html="`
+      <div u-html="`
     <strong>${product.name}</strong>
     <span style='color:${product.inStock ? 'green' : 'crimson'}'>
       ${product.inStock ? 'В наличии' : 'Нет в наличии'}
@@ -97,10 +97,10 @@
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-data=&quot;{
+&lt;div u-data=&quot;{
   product: { name: 'Наушники', price: 4990, inStock: true }
 }&quot;&gt;
-  &lt;div v-html=&quot;&#x60;
+  &lt;div u-html=&quot;&#x60;
     &lt;strong&gt;${product.name}&lt;/strong&gt;
     &lt;span style=&#039;color:${product.inStock ? 'green' : 'crimson'}&#039;&gt;
       ${product.inStock ? 'В наличии' : 'Нет в наличии'}

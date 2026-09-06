@@ -58,7 +58,7 @@ export function makeObservable(data, onChange) {
  * `Component#refresh(force)`), deferred with a 0ms timeout so several calls in the same tick
  * still collapse into work the debounced `refresh()` already coalesces internally.
  *
- * @param {HTMLElement} root - The component's root element ("v-data"); its `Component` instance is stashed at "root.__x".
+ * @param {HTMLElement} root - The component's root element ("u-data"); its `Component` instance is stashed at "root.__x".
  * @returns {void}
  */
 export function forceRefresh(root) {
@@ -71,7 +71,7 @@ export function forceRefresh(root) {
 }
 
 /**
- * Makes a plain object reactive for state that lives outside a component's own `v-data` (e.g. a
+ * Makes a plain object reactive for state that lives outside a component's own `u-data` (e.g. a
  * `Youla.variable()`'s instance): every property write force-refreshes "root" (see
  * `forceRefresh`), deduplicated per pending refresh the way `Component#concernedData` is.
  *

@@ -1,12 +1,12 @@
 <% var data = {
-  title: "Прогрессбар (v-progress)"
+  title: "Прогрессбар (u-progress)"
 }; %>
 <%= _.template(require('../parts/header.html').default)(data) %>
 
-<h1>Прогрессбар (v-progress)</h1>
+<h1>Прогрессбар (u-progress)</h1>
 
 <p>
-  Директива <code>v-progress</code> запускает
+  Директива <code>u-progress</code> запускает
   анимацию полосы прогресса, когда элемент впервые появляется на экране, и выставляет два CSS-свойства:
   <code>--youla-progress</code> (текущее значение в процентах) и
   <code>--youla-progress-transition</code> (CSS-переход для него). Сама директива ничего не
@@ -35,7 +35,7 @@
     </tr>
     <tr>
       <td><code>.800ms</code>, <code>.0ms</code> и другие «число + единица»</td>
-      <td>Длительность перехода — тот же модификатор, что задаёт задержку у <a href="/tooltip"><code>v-tooltip</code></a></td>
+      <td>Длительность перехода — тот же модификатор, что задаёт задержку у <a href="/tooltip"><code>u-tooltip</code></a></td>
       <td><code>0ms</code></td>
     </tr>
   </tbody>
@@ -45,7 +45,7 @@
   <code>from</code> и <code>to</code> — сами по себе проценты (0–100), а не доли какого-то
   общего значения. Это обычные числа, поэтому порядок для них важен: они разбираются позиционно
   (<code>from.to</code>), а не по ключевому слову, как <code>.top</code>/<code>.click</code> у
-  <code>v-tooltip</code>. Модификатор длительности при этом ищется среди всех модификаторов
+  <code>u-tooltip</code>. Модификатор длительности при этом ищется среди всех модификаторов
   отдельно и на позицию не завязан.
 </p>
 
@@ -76,7 +76,7 @@
 <h2>Базовый пример</h2>
 
 <p>
-  <code>v-progress.20.90.800ms</code> анимирует от 20% к 90% за 800мс, как только полоса впервые
+  <code>u-progress.20.90.800ms</code> анимирует от 20% к 90% за 800мс, как только полоса впервые
   появляется в области видимости — прокрутите к ней, если она уже видна на экране.
 </p>
 
@@ -86,15 +86,15 @@
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data>
-      <div class="progress-bar" v-progress.20.90.800ms>
+    <div class="demo" u-data>
+      <div class="progress-bar" u-progress.20.90.800ms>
         <i></i>
       </div>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div class=&quot;progress-bar&quot; v-progress.20.90.800ms&gt;
+&lt;div class=&quot;progress-bar&quot; u-progress.20.90.800ms&gt;
   &lt;i&gt;&lt;/i&gt;
 &lt;/div&gt;
 </pre>
@@ -105,7 +105,7 @@
 
 <p>
   Вместо модификатора <code>to</code> значение можно привязать к данным компонента — например,
-  <code>v-progress.0.600ms="percent"</code>. Первое появление полосы в области видимости всё так
+  <code>u-progress.0.600ms="percent"</code>. Первое появление полосы в области видимости всё так
   же анимируется от <code>from</code> к текущему <code>percent</code>, а вот дальше директива
   реактивна: любое изменение <code>percent</code> плавно перетягивает <code>--youla-progress</code>
   к новому значению, без повторного ожидания попадания в область видимости.
@@ -117,8 +117,8 @@
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data="{ percent: 20 }">
-      <div class="progress-bar" v-progress.0.600ms="percent">
+    <div class="demo" u-data="{ percent: 20 }">
+      <div class="progress-bar" u-progress.0.600ms="percent">
         <i></i>
       </div>
       <p>
@@ -130,8 +130,8 @@
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-data=&quot;{ percent: 20 }&quot;&gt;
-  &lt;div class=&quot;progress-bar&quot; v-progress.0.600ms=&quot;percent&quot;&gt;
+&lt;div u-data=&quot;{ percent: 20 }&quot;&gt;
+  &lt;div class=&quot;progress-bar&quot; u-progress.0.600ms=&quot;percent&quot;&gt;
     &lt;i&gt;&lt;/i&gt;
   &lt;/div&gt;
   &lt;button type=&quot;button&quot; @click=&quot;percent = 20&quot;&gt;20%&lt;/button&gt;
@@ -161,15 +161,15 @@
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data>
-      <div class="progress-bar" v-progress>
+    <div class="demo" u-data>
+      <div class="progress-bar" u-progress>
         <i></i>
       </div>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div class=&quot;progress-bar&quot; v-progress&gt;
+&lt;div class=&quot;progress-bar&quot; u-progress&gt;
   &lt;i&gt;&lt;/i&gt;
 &lt;/div&gt;
 </pre>
@@ -189,15 +189,15 @@
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data>
-      <div class="progress-bar" v-progress.0.45.600ms>
+    <div class="demo" u-data>
+      <div class="progress-bar" u-progress.0.45.600ms>
         <i></i>
       </div>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div class=&quot;progress-bar&quot; v-progress.0.45.600ms&gt;
+&lt;div class=&quot;progress-bar&quot; u-progress.0.45.600ms&gt;
   &lt;i&gt;&lt;/i&gt;
 &lt;/div&gt;
 </pre>
@@ -217,17 +217,17 @@
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo progress-row" v-data>
-      <div class="progress-bar" v-progress.0.30.500ms><i></i></div>
-      <div class="progress-bar" v-progress.0.65.500ms><i></i></div>
-      <div class="progress-bar" v-progress.0.90.500ms><i></i></div>
+    <div class="demo progress-row" u-data>
+      <div class="progress-bar" u-progress.0.30.500ms><i></i></div>
+      <div class="progress-bar" u-progress.0.65.500ms><i></i></div>
+      <div class="progress-bar" u-progress.0.90.500ms><i></i></div>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div class=&quot;progress-bar&quot; v-progress.0.30.500ms&gt;&lt;i&gt;&lt;/i&gt;&lt;/div&gt;
-&lt;div class=&quot;progress-bar&quot; v-progress.0.65.500ms&gt;&lt;i&gt;&lt;/i&gt;&lt;/div&gt;
-&lt;div class=&quot;progress-bar&quot; v-progress.0.90.500ms&gt;&lt;i&gt;&lt;/i&gt;&lt;/div&gt;
+&lt;div class=&quot;progress-bar&quot; u-progress.0.30.500ms&gt;&lt;i&gt;&lt;/i&gt;&lt;/div&gt;
+&lt;div class=&quot;progress-bar&quot; u-progress.0.65.500ms&gt;&lt;i&gt;&lt;/i&gt;&lt;/div&gt;
+&lt;div class=&quot;progress-bar&quot; u-progress.0.90.500ms&gt;&lt;i&gt;&lt;/i&gt;&lt;/div&gt;
 </pre>
   </div>
 </div>

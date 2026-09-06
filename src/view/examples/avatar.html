@@ -18,30 +18,30 @@
     <button type="button" class="example__tab" data-tab="js">JS</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo example-avatar" v-data="avatar">
-      <div class="avatar-circle" v-bind="picture">
-        <span v-bind="initials" hidden></span>
+    <div class="demo example-avatar" u-data="avatar">
+      <div class="avatar-circle" u-bind="picture">
+        <span u-bind="initials" hidden></span>
       </div>
 
-      <input type="text" placeholder="Введите имя" v-bind="field">
+      <input type="text" placeholder="Введите имя" u-bind="field">
 
-      <input type="file" accept="image/*" v-bind="uploader">
+      <input type="file" accept="image/*" u-bind="uploader">
 
-      <button type="button" v-bind="remover" hidden>Удалить</button>
+      <button type="button" u-bind="remover" hidden>Удалить</button>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div class=&quot;demo example-avatar&quot; v-data=&quot;avatar&quot;&gt;
-  &lt;div class=&quot;avatar-circle&quot; v-bind=&quot;picture&quot;&gt;
-    &lt;span v-bind=&quot;initials&quot; hidden&gt;&lt;/span&gt;
+&lt;div class=&quot;demo example-avatar&quot; u-data=&quot;avatar&quot;&gt;
+  &lt;div class=&quot;avatar-circle&quot; u-bind=&quot;picture&quot;&gt;
+    &lt;span u-bind=&quot;initials&quot; hidden&gt;&lt;/span&gt;
   &lt;/div&gt;
 
-  &lt;input type=&quot;text&quot; placeholder=&quot;Введите имя&quot; v-bind=&quot;field&quot;&gt;
+  &lt;input type=&quot;text&quot; placeholder=&quot;Введите имя&quot; u-bind=&quot;field&quot;&gt;
 
-  &lt;input type=&quot;file&quot; accept=&quot;image/*&quot; v-bind=&quot;uploader&quot;&gt;
+  &lt;input type=&quot;file&quot; accept=&quot;image/*&quot; u-bind=&quot;uploader&quot;&gt;
 
-  &lt;button type=&quot;button&quot; v-bind=&quot;remover&quot; hidden&gt;Удалить&lt;/button&gt;
+  &lt;button type=&quot;button&quot; u-bind=&quot;remover&quot; hidden&gt;Удалить&lt;/button&gt;
 &lt;/div&gt;
 </pre>
   </div>
@@ -51,15 +51,15 @@ Youla.data(&#39;avatar&#39;, () =&gt; ({
   name: &#39;&#39;,
   image: &#39;&#39;,
   field: {
-    &#39;v-prop&#39;: &#39;name&#39;,
+    &#39;u-prop&#39;: &#39;name&#39;,
   },
   picture: {
     &#39;:title&#39;: &#39;name&#39;,
     &#39;:style&#39;: &quot;image &amp;&amp; `background-image:url(${image})`&quot;,
   },
   initials: {
-    &#39;v-show&#39;: &#39;!image&#39;,
-    &#39;v-text&#39;() {
+    &#39;u-show&#39;: &#39;!image&#39;,
+    &#39;u-text&#39;() {
       return this.name.trim().split(/\s+/).map(word =&gt; word[0]).slice(0, 2).join(&#39;&#39;).toUpperCase();
     },
   },
@@ -74,7 +74,7 @@ Youla.data(&#39;avatar&#39;, () =&gt; ({
     },
   },
   remover: {
-    &#39;v-show&#39;: &#39;image&#39;,
+    &#39;u-show&#39;: &#39;image&#39;,
     &#39;@click&#39;() {
       let input = this.$root.querySelector(&#39;input[type=&quot;file&quot;]&#39;);
       if (input) {
@@ -129,7 +129,7 @@ Youla.data(&#39;avatar&#39;, () =&gt; ({
     <tr>
       <td><code>field</code></td>
       <td>текстовое поле имени</td>
-      <td><code>v-prop</code> двусторонне связывает поле с <code>name</code></td>
+      <td><code>u-prop</code> двусторонне связывает поле с <code>name</code></td>
     </tr>
     <tr>
       <td><code>picture</code></td>
@@ -140,7 +140,7 @@ Youla.data(&#39;avatar&#39;, () =&gt; ({
       <td><code>initials</code></td>
       <td>заглушка внутри превью</td>
       <td>
-        <code>v-show</code> показывает её, пока файла нет; <code>v-text</code> — первые две буквы
+        <code>u-show</code> показывает её, пока файла нет; <code>u-text</code> — первые две буквы
         <code>name</code> через <code>getInitials(name)</code>
       </td>
     </tr>
@@ -153,7 +153,7 @@ Youla.data(&#39;avatar&#39;, () =&gt; ({
       <td><code>remover</code></td>
       <td>кнопка «Удалить»</td>
       <td>
-        <code>v-show</code> появляется, только когда <code>image</code> заполнен;
+        <code>u-show</code> появляется, только когда <code>image</code> заполнен;
         <code>@click</code> передаёт <code>$root</code> и очищает и <code>image</code>, и сам
         <code>input[type="file"]</code>
       </td>

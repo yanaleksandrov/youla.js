@@ -1,14 +1,14 @@
 <% var data = {
-  title: "Тултипы (v-tooltip)"
+  title: "Тултипы (u-tooltip)"
 }; %>
 <%= _.template(require('../parts/header.html').default)(data) %>
 
-<h1>Тултипы (v-tooltip)</h1>
+<h1>Тултипы (u-tooltip)</h1>
 
 <p>
-  Директива <code>v-tooltip</code> показывает всплывающую подсказку у любого элемента — без
+  Директива <code>u-tooltip</code> показывает всплывающую подсказку у любого элемента — без
   сборки, без сторонней библиотеки. Содержимое берётся из значения атрибута, позиция и способ показа — из модификаторов, например
-  <code>v-tooltip.left.click</code>. Директива работает на любом элементе: <code>div</code>,
+  <code>u-tooltip.left.click</code>. Директива работает на любом элементе: <code>div</code>,
   <code>span</code>, <code>p</code>, <code>a</code>, <code>button</code>, <code>input</code>,
   <code>img</code> — без каких-либо допущений об интерактивности элемента.
 </p>
@@ -46,8 +46,8 @@
 </table>
 
 <p>
-  Модификаторы независимы друг от друга и сочетаются в любом порядке — <code>v-tooltip.left.click</code>
-  и <code>v-tooltip.click.left</code> означают одно и то же.
+  Модификаторы независимы друг от друга и сочетаются в любом порядке — <code>u-tooltip.left.click</code>
+  и <code>u-tooltip.click.left</code> означают одно и то же.
 </p>
 
 <h2>Базовый пример</h2>
@@ -63,13 +63,13 @@
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data>
-      <div v-tooltip="'Простая подсказка'" class="tooltip-anchor">Наведите курсор</div>
+    <div class="demo" u-data>
+      <div u-tooltip="'Простая подсказка'" class="tooltip-anchor">Наведите курсор</div>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-tooltip=&quot;&#39;Простая подсказка&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;
+&lt;div u-tooltip=&quot;&#39;Простая подсказка&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;
   Наведите курсор
 &lt;/div&gt;
 </pre>
@@ -101,7 +101,7 @@
 <h2>HTML в содержимом</h2>
 
 <p>
-  Значение директивы вставляется как настоящий HTML — так же, как в <a href="/v-html"><code>v-html</code></a>,
+  Значение директивы вставляется как настоящий HTML — так же, как в <a href="/u-html"><code>u-html</code></a>,
   без экранирования и очистки: разметка внутри подсказки должна быть доверенной.
 </p>
 
@@ -111,19 +111,19 @@
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo tooltip-row" v-data>
-      <div v-tooltip="'<strong>Заголовок</strong><br><span>Описание</span>'" class="tooltip-anchor">
+    <div class="demo tooltip-row" u-data>
+      <div u-tooltip="'<strong>Заголовок</strong><br><span>Описание</span>'" class="tooltip-anchor">
         Подсказка с разметкой
       </div>
-      <div v-tooltip="'Список пунктов:<ul><li>Первый</li><li>Второй</li><li>Третий</li></ul>'" class="tooltip-anchor">
+      <div u-tooltip="'Список пунктов:<ul><li>Первый</li><li>Второй</li><li>Третий</li></ul>'" class="tooltip-anchor">
         Подсказка со списком
       </div>
-      <div v-tooltip="''" class="tooltip-anchor">Пустая подсказка (не появится)</div>
+      <div u-tooltip="''" class="tooltip-anchor">Пустая подсказка (не появится)</div>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-tooltip=&quot;&#39;&lt;strong&gt;Заголовок&lt;/strong&gt;&lt;br&gt;&lt;span&gt;Описание&lt;/span&gt;&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;
+&lt;div u-tooltip=&quot;&#39;&lt;strong&gt;Заголовок&lt;/strong&gt;&lt;br&gt;&lt;span&gt;Описание&lt;/span&gt;&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;
   Подсказка с разметкой
 &lt;/div&gt;
 </pre>
@@ -145,21 +145,21 @@
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo tooltip-row" v-data>
-      <div v-tooltip.top="'Сверху'" class="tooltip-anchor">top</div>
-      <div v-tooltip.bottom="'Снизу'" class="tooltip-anchor">bottom</div>
-      <div v-tooltip.left="'Слева'" class="tooltip-anchor">left</div>
-      <div v-tooltip.right="'Справа'" class="tooltip-anchor">right</div>
-      <div v-tooltip.auto="'Авто — сама выбирает сторону'" class="tooltip-anchor">auto</div>
+    <div class="demo tooltip-row" u-data>
+      <div u-tooltip.top="'Сверху'" class="tooltip-anchor">top</div>
+      <div u-tooltip.bottom="'Снизу'" class="tooltip-anchor">bottom</div>
+      <div u-tooltip.left="'Слева'" class="tooltip-anchor">left</div>
+      <div u-tooltip.right="'Справа'" class="tooltip-anchor">right</div>
+      <div u-tooltip.auto="'Авто — сама выбирает сторону'" class="tooltip-anchor">auto</div>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-tooltip.top=&quot;&#39;Сверху&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;top&lt;/div&gt;
-&lt;div v-tooltip.bottom=&quot;&#39;Снизу&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;bottom&lt;/div&gt;
-&lt;div v-tooltip.left=&quot;&#39;Слева&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;left&lt;/div&gt;
-&lt;div v-tooltip.right=&quot;&#39;Справа&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;right&lt;/div&gt;
-&lt;div v-tooltip.auto=&quot;&#39;Авто&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;auto&lt;/div&gt;
+&lt;div u-tooltip.top=&quot;&#39;Сверху&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;top&lt;/div&gt;
+&lt;div u-tooltip.bottom=&quot;&#39;Снизу&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;bottom&lt;/div&gt;
+&lt;div u-tooltip.left=&quot;&#39;Слева&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;left&lt;/div&gt;
+&lt;div u-tooltip.right=&quot;&#39;Справа&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;right&lt;/div&gt;
+&lt;div u-tooltip.auto=&quot;&#39;Авто&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;auto&lt;/div&gt;
 </pre>
   </div>
 </div>
@@ -186,17 +186,17 @@
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo tooltip-row" v-data>
-      <div v-tooltip.hover="'Показывается по наведению'" class="tooltip-anchor">hover</div>
-      <button type="button" v-tooltip.click="'Показывается по клику, закрывается по Escape или клику снаружи'" class="tooltip-anchor">click</button>
-      <input v-tooltip.focus="'Показывается только по фокусу, наведение курсора мышью ни на что не влияет'" placeholder="focus" class="tooltip-anchor">
+    <div class="demo tooltip-row" u-data>
+      <div u-tooltip.hover="'Показывается по наведению'" class="tooltip-anchor">hover</div>
+      <button type="button" u-tooltip.click="'Показывается по клику, закрывается по Escape или клику снаружи'" class="tooltip-anchor">click</button>
+      <input u-tooltip.focus="'Показывается только по фокусу, наведение курсора мышью ни на что не влияет'" placeholder="focus" class="tooltip-anchor">
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-tooltip.hover=&quot;&#39;Показывается по наведению&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;hover&lt;/div&gt;
-&lt;button type=&quot;button&quot; v-tooltip.click=&quot;&#39;Показывается по клику&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;click&lt;/button&gt;
-&lt;input v-tooltip.focus=&quot;&#39;Показывается только по фокусу&#39;&quot; placeholder=&quot;focus&quot; class=&quot;tooltip-anchor&quot;&gt;
+&lt;div u-tooltip.hover=&quot;&#39;Показывается по наведению&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;hover&lt;/div&gt;
+&lt;button type=&quot;button&quot; u-tooltip.click=&quot;&#39;Показывается по клику&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;click&lt;/button&gt;
+&lt;input u-tooltip.focus=&quot;&#39;Показывается только по фокусу&#39;&quot; placeholder=&quot;focus&quot; class=&quot;tooltip-anchor&quot;&gt;
 </pre>
   </div>
 </div>
@@ -204,8 +204,8 @@
 <h2>Стили</h2>
 
 <p>
-  Модификатор <code>.style-&lt;имя&gt;</code> добавляет подсказке класс <code>v-tooltip--&lt;имя&gt;</code> —
-  так же, как <code>.top</code> добавляет <code>v-tooltip--top</code>. Готовые
+  Модификатор <code>.style-&lt;имя&gt;</code> добавляет подсказке класс <code>u-tooltip--&lt;имя&gt;</code> —
+  так же, как <code>.top</code> добавляет <code>u-tooltip--top</code>. Готовые
   <code>.style-error</code>, <code>.style-warning</code> и <code>.style-success</code> уже описаны
   в <code>styles.scss</code>; свой вариант достаточно объявить в CSS — модификатор ничего не
   проверяет по списку, любое имя после <code>style-</code> просто становится классом.
@@ -217,19 +217,19 @@
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo tooltip-row" v-data>
-      <div v-tooltip="'Обычная подсказка'" class="tooltip-anchor">обычная</div>
-      <div v-tooltip.style-error="'Что-то пошло не так'" class="tooltip-anchor">style-error</div>
-      <div v-tooltip.style-warning="'Стоит проверить перед продолжением'" class="tooltip-anchor">style-warning</div>
-      <div v-tooltip.style-success="'Сохранено'" class="tooltip-anchor">style-success</div>
+    <div class="demo tooltip-row" u-data>
+      <div u-tooltip="'Обычная подсказка'" class="tooltip-anchor">обычная</div>
+      <div u-tooltip.style-error="'Что-то пошло не так'" class="tooltip-anchor">style-error</div>
+      <div u-tooltip.style-warning="'Стоит проверить перед продолжением'" class="tooltip-anchor">style-warning</div>
+      <div u-tooltip.style-success="'Сохранено'" class="tooltip-anchor">style-success</div>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-tooltip=&quot;&#39;Обычная подсказка&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;обычная&lt;/div&gt;
-&lt;div v-tooltip.style-error=&quot;&#39;Что-то пошло не так&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;style-error&lt;/div&gt;
-&lt;div v-tooltip.style-warning=&quot;&#39;Стоит проверить перед продолжением&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;style-warning&lt;/div&gt;
-&lt;div v-tooltip.style-success=&quot;&#39;Сохранено&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;style-success&lt;/div&gt;
+&lt;div u-tooltip=&quot;&#39;Обычная подсказка&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;обычная&lt;/div&gt;
+&lt;div u-tooltip.style-error=&quot;&#39;Что-то пошло не так&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;style-error&lt;/div&gt;
+&lt;div u-tooltip.style-warning=&quot;&#39;Стоит проверить перед продолжением&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;style-warning&lt;/div&gt;
+&lt;div u-tooltip.style-success=&quot;&#39;Сохранено&#39;&quot; class=&quot;tooltip-anchor&quot;&gt;style-success&lt;/div&gt;
 </pre>
   </div>
 </div>
@@ -247,9 +247,9 @@
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data>
+    <div class="demo" u-data>
       <div
-        v-tooltip="'Очень длинный текст подсказки, который не помещается в одну строку и должен корректно переноситься внутри ограниченной по ширине подсказки, не растягиваясь на весь экран.'"
+        u-tooltip="'Очень длинный текст подсказки, который не помещается в одну строку и должен корректно переноситься внутри ограниченной по ширине подсказки, не растягиваясь на весь экран.'"
         class="tooltip-anchor"
       >
         Длинная подсказка
@@ -258,7 +258,7 @@
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-tooltip=&quot;&#39;Очень длинный текст подсказки, который не помещается в одну строку и должен
+&lt;div u-tooltip=&quot;&#39;Очень длинный текст подсказки, который не помещается в одну строку и должен
 корректно переноситься внутри ограниченной по ширине подсказки, не растягиваясь на весь экран.&#39;&quot;&gt;
   Длинная подсказка
 &lt;/div&gt;
@@ -279,16 +279,16 @@
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data="{ count: 0 }">
-      <button type="button" @click="count++" v-tooltip="`Кликов: ${count}`" class="tooltip-anchor">
+    <div class="demo" u-data="{ count: 0 }">
+      <button type="button" @click="count++" u-tooltip="`Кликов: ${count}`" class="tooltip-anchor">
         Кликните, затем наведите курсор
       </button>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-data=&quot;{ count: 0 }&quot;&gt;
-  &lt;button type=&quot;button&quot; @click=&quot;count++&quot; v-tooltip=&quot;&#96;Кликов: ${count}&#96;&quot;&gt;
+&lt;div u-data=&quot;{ count: 0 }&quot;&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;count++&quot; u-tooltip=&quot;&#96;Кликов: ${count}&#96;&quot;&gt;
     Наведите после клика
   &lt;/button&gt;
 &lt;/div&gt;
@@ -311,14 +311,14 @@
     <button type="button" class="example__tab" data-tab="js">JS</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data="validation">
-      <input type="email" placeholder="you@example.com" v-bind="field" class="tooltip-anchor">
+    <div class="demo" u-data="validation">
+      <input type="email" placeholder="you@example.com" u-bind="field" class="tooltip-anchor">
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-data=&quot;validation&quot;&gt;
-  &lt;input type=&quot;email&quot; placeholder=&quot;you@example.com&quot; v-bind=&quot;field&quot;&gt;
+&lt;div u-data=&quot;validation&quot;&gt;
+  &lt;input type=&quot;email&quot; placeholder=&quot;you@example.com&quot; u-bind=&quot;field&quot;&gt;
 &lt;/div&gt;
 </pre>
   </div>
@@ -337,8 +337,8 @@ document.addEventListener(&#39;youla:init&#39;, () =&gt; {
       return &#39;&#39;;
     },
     field: {
-      &#39;v-prop&#39;: &#39;email&#39;,
-      &#39;v-tooltip.bottom.focus.style-error&#39;: &#39;error()&#39;,
+      &#39;u-prop&#39;: &#39;email&#39;,
+      &#39;u-tooltip.bottom.focus.style-error&#39;: &#39;error()&#39;,
       &#39;:class&#39;: `{ &#39;tooltip-anchor--invalid&#39;: error() }`,
     },
   }));
@@ -365,8 +365,8 @@ document.addEventListener('youla:init', () => {
       return '';
     },
     field: {
-      'v-prop': 'email',
-      'v-tooltip.bottom.focus.style-error': 'error()',
+      'u-prop': 'email',
+      'u-tooltip.bottom.focus.style-error': 'error()',
       ':class': `{ 'tooltip-anchor--invalid': error() }`,
     },
   }));

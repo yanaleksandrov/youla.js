@@ -6,7 +6,7 @@
 <h1>Модальное окно</h1>
 
 <p>
-  Модальное окно строится из типовых частей: показ/скрытие по флагу (<a href="/v-show"><code>v-show</code></a>),
+  Модальное окно строится из типовых частей: показ/скрытие по флагу (<a href="/u-show"><code>u-show</code></a>),
   закрытие кликом по фону или клавишей <code>Escape</code>, блокировка прокрутки страницы и
   ARIA-атрибуты для доступности.
 </p>
@@ -17,9 +17,9 @@
 </p>
 
 <p>
-  <a href="/v-bind"><code>v-bind</code></a> собирает атрибуты, директивы и события элемента в
+  <a href="/u-bind"><code>u-bind</code></a> собирает атрибуты, директивы и события элемента в
   один именованный набор внутри <code>Youla.data</code> — в разметке остаётся только
-  <code>v-bind="имя"</code>.
+  <code>u-bind="имя"</code>.
 </p>
 
 <div class="example">
@@ -29,11 +29,11 @@
     <button type="button" class="example__tab" data-tab="js">JS</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo example-modal" v-data="modal" @keydown.esc.window="hide()">
+    <div class="demo example-modal" u-data="modal" @keydown.esc.window="hide()">
       <button type="button" @click="show()">Открыть модальное окно</button>
 
-      <div class="modal-backdrop" v-bind="backdrop">
-        <div class="modal-window" v-bind="panel">
+      <div class="modal-backdrop" u-bind="backdrop">
+        <div class="modal-window" u-bind="panel">
           <h3>Заголовок окна</h3>
           <p>Закрыть можно кликом по фону, клавишей Escape или кнопкой ниже.</p>
           <button type="button" @click="hide()">Закрыть</button>
@@ -43,11 +43,11 @@
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-data=&quot;modal&quot; @keydown.esc.window=&quot;hide()&quot;&gt;
+&lt;div u-data=&quot;modal&quot; @keydown.esc.window=&quot;hide()&quot;&gt;
   &lt;button type=&quot;button&quot; @click=&quot;show()&quot;&gt;Открыть модальное окно&lt;/button&gt;
 
-  &lt;div class=&quot;modal-backdrop&quot; v-bind=&quot;backdrop&quot;&gt;
-    &lt;div class=&quot;modal-window&quot; v-bind=&quot;panel&quot;&gt;
+  &lt;div class=&quot;modal-backdrop&quot; u-bind=&quot;backdrop&quot;&gt;
+    &lt;div class=&quot;modal-window&quot; u-bind=&quot;panel&quot;&gt;
       &lt;h3&gt;Заголовок окна&lt;/h3&gt;
       &lt;p&gt;Закрыть можно кликом по фону, клавишей Escape или кнопкой ниже.&lt;/p&gt;
       &lt;button type=&quot;button&quot; @click=&quot;hide()&quot;&gt;Закрыть&lt;/button&gt;
@@ -70,7 +70,7 @@ document.addEventListener('youla:init', () =&gt; {
       document.body.style.overflow = '';
     },
     backdrop: {
-      'v-show': 'open',
+      'u-show': 'open',
       ':aria-hidden': '!open',
     },
     panel: {
@@ -95,7 +95,7 @@ document.addEventListener('youla:init', () =&gt; {
 
 <p>
   Кнопка открытия и обработчик Escape остались обычными атрибутами прямо в разметке: на элементе
-  всего одна динамическая привязка, оборачивать её в <code>v-bind</code> смысла нет.
+  всего одна динамическая привязка, оборачивать её в <code>u-bind</code> смысла нет.
 </p>
 
 <style>
@@ -130,7 +130,7 @@ document.addEventListener('youla:init', () =&gt; {
         document.body.style.overflow = '';
       },
       backdrop: {
-        'v-show': 'open',
+        'u-show': 'open',
         ':aria-hidden': '!open',
       },
       panel: {

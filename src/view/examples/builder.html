@@ -25,20 +25,20 @@
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo example-builder" v-data="builder">
+    <div class="demo example-builder" u-data="builder">
       <div class="builder-toolbar">
         <button type="button" @click="addGroup()">+ Группа (ИЛИ)</button>
         <button type="button" @click="submit()">Сохранить</button>
       </div>
 
-      <div v-each="(group, key) in groups" class="builder-group">
+      <div u-each="(group, key) in groups" class="builder-group">
         <div class="builder-group__header">
-          <span class="builder-group__title" v-text="key === 0 ? 'Если' : 'Или, если'"></span>
+          <span class="builder-group__title" u-text="key === 0 ? 'Если' : 'Или, если'"></span>
           <button type="button" @click="addRule(key)">+ Правило (И)</button>
           <button type="button" class="is-ghost" @click="removeGroup(key)">Удалить группу</button>
         </div>
 
-        <div v-each="(rule, index) in group.rules" class="builder-rule">
+        <div u-each="(rule, index) in group.rules" class="builder-rule">
           <select :value="rule.field" @change="rule.field = $el.value">
             <option value="post">Тип записи</option>
             <option value="post_status">Статус записи</option>
@@ -58,20 +58,20 @@
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div class=&quot;demo example-builder&quot; v-data=&quot;builder&quot;&gt;
+&lt;div class=&quot;demo example-builder&quot; u-data=&quot;builder&quot;&gt;
   &lt;div class=&quot;builder-toolbar&quot;&gt;
     &lt;button type=&quot;button&quot; @click=&quot;addGroup()&quot;&gt;+ Группа (ИЛИ)&lt;/button&gt;
     &lt;button type=&quot;button&quot; @click=&quot;submit()&quot;&gt;Сохранить&lt;/button&gt;
   &lt;/div&gt;
 
-  &lt;div v-each=&quot;(group, key) in groups&quot; class=&quot;builder-group&quot;&gt;
+  &lt;div u-each=&quot;(group, key) in groups&quot; class=&quot;builder-group&quot;&gt;
     &lt;div class=&quot;builder-group__header&quot;&gt;
-      &lt;span class=&quot;builder-group__title&quot; v-text=&quot;key === 0 ? &#39;Если&#39; : &#39;Или, если&#39;&quot;&gt;&lt;/span&gt;
+      &lt;span class=&quot;builder-group__title&quot; u-text=&quot;key === 0 ? &#39;Если&#39; : &#39;Или, если&#39;&quot;&gt;&lt;/span&gt;
       &lt;button type=&quot;button&quot; @click=&quot;addRule(key)&quot;&gt;+ Правило (И)&lt;/button&gt;
       &lt;button type=&quot;button&quot; class=&quot;is-ghost&quot; @click=&quot;removeGroup(key)&quot;&gt;Удалить группу&lt;/button&gt;
     &lt;/div&gt;
 
-    &lt;div v-each=&quot;(rule, index) in group.rules&quot; class=&quot;builder-rule&quot;&gt;
+    &lt;div u-each=&quot;(rule, index) in group.rules&quot; class=&quot;builder-rule&quot;&gt;
       &lt;select :value=&quot;rule.field&quot; @change=&quot;rule.field = $el.value&quot;&gt;
         &lt;option value=&quot;post&quot;&gt;Тип записи&lt;/option&gt;
         &lt;option value=&quot;post_status&quot;&gt;Статус записи&lt;/option&gt;
@@ -93,7 +93,7 @@
 </div>
 
 <style>
-  /* The toolbar sits before the v-each block in the DOM (see the note below), but "order"
+  /* The toolbar sits before the u-each block in the DOM (see the note below), but "order"
      displays it last, matching where it visually belongs. */
   .example-builder { display: flex; flex-direction: column; }
   .example-builder .builder-toolbar { order: 2; display: flex; gap: .5rem; margin-top: 1rem; }
@@ -115,7 +115,7 @@
 <p>
   Важно при переносе разметки под свой дизайн: не ставьте кнопки «+ Группа» / «Сохранить» <em>после</em>
   списка групп (и «+ Правило» / «Удалить группу» — после списка правил внутри группы). Они должны идти
-  раньше самого <code>v-each</code>, иначе пропадут при первом же рендере. В примере панель действий
+  раньше самого <code>u-each</code>, иначе пропадут при первом же рендере. В примере панель действий
   всё равно показана внизу, под группами — это сделано через CSS (<code>order</code> у flex-контейнера),
   а не через порядок в разметке.
 </p>
@@ -123,7 +123,7 @@
 <h2>Как подключить в своём проекте</h2>
 
 <p>
-  Скопируйте разметку из вкладки HTML и повесьте <code>v-data="builder"</code> на общий контейнер —
+  Скопируйте разметку из вкладки HTML и повесьте <code>u-data="builder"</code> на общий контейнер —
   дальше конструктор работает сам, без дополнительного JS. Поля выбора — обычные
   <code>&lt;select&gt;</code>/<code>&lt;input&gt;</code>, так что набор условий (<code>field</code>)
   и операторов (<code>operator</code>) под свой проект меняется прямо в разметке — добавьте или

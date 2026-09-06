@@ -1,10 +1,10 @@
 document.addEventListener('youla:init', ()=> {
   /**
-   * Multi-step wizard: `v-step="condition"` marks a panel's completion state; the `step`
-   * data provider drives navigation via `goNext()`/`goBack()`. Use it as `v-data="step"` — any
-   * `v-prop`-bound field referenced by a `v-step` condition (e.g. `name`) gets merged in
+   * Multi-step wizard: `u-step="condition"` marks a panel's completion state; the `step`
+   * data provider drives navigation via `goNext()`/`goBack()`. Use it as `u-data="step"` — any
+   * `u-prop`-bound field referenced by a `u-step` condition (e.g. `name`) gets merged in
    * automatically by hydrateProps(), no need to declare it. It isn't a global `$step`, only local
-   * to that `v-data`; spread it instead (`v-data="{ ...step, total: 0 }"`) only if you need a
+   * to that `u-data`; spread it instead (`u-data="{ ...step, total: 0 }"`) only if you need a
    * field or method that isn't backed by a form input. The directive and the data provider are
    * grouped in one IIFE since neither is useful without the other.
    *
@@ -18,7 +18,7 @@ document.addEventListener('youla:init', ()=> {
 
       if (step.isComplete !== isComplete) {
         step.isComplete = isComplete;
-        // step lives on el._x_step, outside v-data's own reactive wrapper, so refresh manually.
+        // step lives on el._x_step, outside u-data's own reactive wrapper, so refresh manually.
         component.refresh(true);
       }
     });
@@ -149,6 +149,104 @@ document.addEventListener('youla:init', ()=> {
   })();
 
   /**
+   * Notifications system: a single `u-data="notice"` container (parts/footer.html) holds
+   * the queue. `$notice` always resolves to that container's data, so `$notice.info('Saved')`
+   * works from any `u-data` on the page. The variable and the data provider are grouped in one
+   * IIFE since neither is useful without the other.
+   *
+   * @since 1.0
+   */
+  (() => {
+    Youla.variable('notice', () => document.querySelector('[u-data="notice"]')?.__x?.data);
+
+    Youla.data('notice', () => ({
+      items: {},
+      duration: 7000,
+      hovering: false,
+      info( message ) {
+        this.add( message, 'info' );
+      },
+      success( message ) {
+        this.add( message, 'success' );
+      },
+      warning( message ) {
+        this.add( message, 'warning' );
+      },
+      error( message ) {
+        this.add( message, 'error' );
+      },
+      loading( message ) {
+        this.add( message, 'loading' );
+      },
+      // @mouseenter on the container: freezes every item's countdown where it stood.
+      pause() {
+        this.hovering = true;
+
+        Object.values(this.items).forEach(item => {
+          if ( item.timer ) {
+            clearTimeout( item.timer );
+            item.timer     = null;
+            item.remaining = Math.max( 0, item.remaining - ( Date.now() - item.startedAt ) );
+          }
+        });
+      },
+      // @mouseleave: picks every countdown back up from where pause() froze it.
+      resume() {
+        this.hovering = false;
+
+        Object.keys(this.items).forEach( id => this.schedule(id) );
+      },
+      schedule( id ) {
+        let item = this.items[id];
+        if ( item && !item.timer ) {
+          item.startedAt = Date.now();
+          item.timer     = setTimeout( () => this.close(id), item.remaining );
+        }
+      },
+      elapsed( item ) {
+        return ( item.duration - item.remaining ) + ( item.timer ? Date.now() - item.startedAt : 0 );
+      },
+      close( id ) {
+        let item = this.items[id];
+        if ( typeof item !== 'undefined' ) {
+          clearTimeout( item.timer );
+
+          // u-each only re-renders when "items" itself is reassigned, not on a mutated nested key.
+          this.items = { ...this.items, [id]: { ...item, selectors: [ ...item.selectors, 'hide' ] } };
+
+          setTimeout( () => {
+            let { [id]: omit, ...rest } = this.items;
+            this.items = rest;
+          }, 1000 )
+        }
+      },
+      add( message, type ) {
+        if ( message ) {
+          let timestamp = Date.now();
+
+          // Spinner is a real inline <svg> (parts/footer.html), animated via CSS, so it can be paused on :hover.
+          this.items = { ...this.items, [timestamp]: {
+            message: message,
+            closable: true,
+            selectors: [ type || 'info' ],
+            duration: this.duration,
+            remaining: this.duration,
+            startedAt: Date.now(),
+            timer: null,
+            classes() {
+              return this.selectors.map( x => 'notice__item--' + x ).join(' ')
+            },
+          } };
+
+          if ( !this.hovering ) {
+            this.schedule(timestamp);
+          }
+        }
+      },
+    }));
+  })();
+
+  /**
    * Password policy: checks a string against a fixed policy (minimum count per character
    * class, minimum length) and can generate a password satisfying it.
    *
@@ -255,15 +353,15 @@ document.addEventListener('youla:init', ()=> {
     name: '',
     image: '',
     field: {
-      'v-prop': 'name',
+      'u-prop': 'name',
     },
     picture: {
       ':title': 'name',
       ':style': "image && `background-image:url(${image})`",
     },
     initials: {
-      'v-show': '!image',
-      'v-text'() {
+      'u-show': '!image',
+      'u-text'() {
         return this.name.trim().split(/\s+/).map(word => word[0]).slice(0, 2).join('').toUpperCase();
       },
     },
@@ -278,7 +376,7 @@ document.addEventListener('youla:init', ()=> {
       },
     },
     remover: {
-      'v-show': 'image',
+      'u-show': 'image',
       '@click'() {
         let input = this.$root.querySelector('input[type="file"]');
         if (input) {
@@ -303,7 +401,7 @@ document.addEventListener('youla:init', ()=> {
       '@click': 'selectItem($el, $root, $event)',
     },
     items(root) {
-      return [...root.querySelectorAll('[v-bind~="item"]')];
+      return [...root.querySelectorAll('[u-bind~="item"]')];
     },
     selectAll(el, root) {
       this.items(root).forEach(input => input.checked = el.checked);
@@ -327,7 +425,7 @@ document.addEventListener('youla:init', ()=> {
    * @since 1.0
    */
   Youla.data('builder', () => {
-    // Reassigns "groups" wholesale (not in place) so v-each notices the change and re-renders.
+    // Reassigns "groups" wholesale (not in place) so u-each notices the change and re-renders.
     const updateRules = (groups, key, transform) => groups.map((group, index) => index !== key ? group : {
       ...group,
       rules: transform(group.rules),
@@ -354,6 +452,291 @@ document.addEventListener('youla:init', ()=> {
       },
       submit() {
         console.log(JSON.parse(JSON.stringify(this.groups)));
+      },
+    };
+  });
+
+  /**
+   * Selfie: `u-data="stream"` (one instance per root) wraps `getUserMedia` into a
+   * preview -> snapshot -> canvas -> image flow.
+   *
+   * @since 1.0
+   */
+  Youla.data('stream', (root) => ({
+    error: null,
+    canvas: null,
+    videoRef: { 'u-ref': 'video' },
+    imageRef: { 'u-ref': 'image' },
+    canvasRef: { 'u-ref': 'canvas' },
+    get refs() {
+      return {
+        video:  root.querySelector('[u-ref="video"]'),
+        image:  root.querySelector('[u-ref="image"]'),
+        canvas: root.querySelector('[u-ref="canvas"]'),
+      };
+    },
+    check() {
+      const { video, image } = this.refs;
+
+      if (!video) {
+        console.error('Video for selfie preview is undefined');
+        return false;
+      }
+
+      if (!image) {
+        console.error('Image for output selfie is undefined');
+        return false;
+      }
+
+      return true;
+    },
+    getCanvas() {
+      return this.refs.canvas || (this.canvas || (this.canvas = document.createElement('canvas')));
+    },
+    isVisible(element) {
+      const styles = window.getComputedStyle(element);
+      if (styles) {
+        return !(styles.visibility === 'hidden' || styles.display === 'none' || parseFloat(styles.opacity) === 0);
+      }
+      return false;
+    },
+    async requestStream(video) {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        this.error = 'unsupported';
+        return;
+      }
+
+      try {
+        video.srcObject = video._x_stream = await navigator.mediaDevices.getUserMedia({video: true});
+        this.error = null;
+      } catch (error) {
+        this.error = error.name === 'NotAllowedError' || error.name === 'SecurityError' ? 'denied' : 'unavailable';
+      }
+    },
+    start() {
+      const video = this.refs.video;
+      if (video._x_stream || video._x_streamObserver) {
+        return;
+      }
+
+      if (this.isVisible(video)) {
+        this.requestStream(video);
+        return;
+      }
+
+      video._x_streamObserver = new IntersectionObserver(entries => {
+        if (entries.some(entry => entry.isIntersecting) && this.isVisible(video)) {
+          video._x_streamObserver.disconnect();
+          video._x_streamObserver = null;
+          this.requestStream(video);
+        }
+      });
+      video._x_streamObserver.observe(video);
+    },
+    snap() {
+      if (!this.check()) {
+        return null;
+      }
+      this.start();
+
+      const canvas = this.getCanvas();
+      const { video, image } = this.refs;
+
+      let imageStyles = window.getComputedStyle(image),
+        targetRatio = parseInt(imageStyles.width, 10) / parseInt(imageStyles.height, 10);
+
+      let videoWidth  = video.videoWidth,
+        videoHeight = video.videoHeight,
+        videoRatio  = videoWidth / videoHeight;
+
+      let sWidth, sHeight;
+      if (videoRatio > targetRatio) {
+        sHeight = videoHeight;
+        sWidth  = videoHeight * targetRatio;
+      } else {
+        sWidth  = videoWidth;
+        sHeight = videoWidth / targetRatio;
+      }
+
+      let sx = (videoWidth - sWidth) / 2,
+        sy = (videoHeight - sHeight) / 2;
+
+      canvas.width  = sWidth;
+      canvas.height = sHeight;
+
+      let ctx = canvas.getContext('2d');
+
+      // 1:1 pixel copy of the native camera resolution — no resampling, so no quality is lost
+      ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, sWidth, sHeight);
+
+      let imageData = canvas.toDataURL('image/png');
+      if ( imageData ) {
+        image.src = imageData;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+      return imageData;
+    },
+    stop() {
+      const video = this.refs.video;
+      if (video._x_streamObserver) {
+        video._x_streamObserver.disconnect();
+        video._x_streamObserver = null;
+      }
+      if (video._x_stream) {
+        video._x_stream.getTracks().forEach(track => track.stop());
+      }
+      video._x_stream = null;
+    },
+  }));
+
+  /**
+   * Search box: `wrapper`/`button`/`input` are ready-made `u-bind` sets. `button`/`input`
+   * carry their own `u-ref`, so the wrapper's Ctrl+K shortcut reaches the input via `$refs`
+   * instead of Alpine's `x-init` (Youla.js has no such hook — `u-ref` + `$refs` is the native
+   * way to grab an element reference, see /u-ref).
+   *
+   * @since 1.0
+   */
+  Youla.data('search', () => ({
+    currentIdx: -1,
+    links: [],
+    wrapper: {
+      '@click.outside'() {
+        this.$el.removeAttribute('open');
+      },
+      '@keydown.escape'() {
+        this.$el.removeAttribute('open');
+      },
+      '@keydown.prevent.window.ctrl.k'() {
+        this.$refs.searchButton.click();
+      },
+    },
+    button: {
+      'u-ref': 'searchButton',
+      '@click'() {
+        setTimeout(() => this.$refs.searchInput.focus());
+      },
+    },
+    input: {
+      'u-ref': 'searchInput',
+      '@keydown.up'() {
+        this.currentIdx = this.currentIdx <= 0 ? this.links.length - 1 : this.currentIdx - 1;
+        if (!this.links[this.currentIdx]?.url && this.currentIdx === 0) {
+          this.currentIdx = this.links.length - 1;
+        }
+      },
+      '@keydown.down'() {
+        this.currentIdx = this.currentIdx >= this.links.length - 1 ? 0 : this.currentIdx + 1;
+        if (!this.links[this.currentIdx]?.url) {
+          this.currentIdx++;
+        }
+      },
+      '@keydown.enter'() {
+        this.links[this.currentIdx] && (window.location.href = this.links[this.currentIdx].url);
+      },
+    },
+  }));
+
+  /**
+   * Tabs, synced with the page URL: `u-data="tab"` on the wrapper, `u-bind="tabButton('id')"` on
+   * each tab button, `u-bind="tabContent('id')"` on each panel. The active tab is read from the
+   * `?tab=` query param if present, else `data-tab` on the `u-data` element itself.
+   *
+   * @since 1.0
+   */
+  Youla.data('tab', (root) => ({
+    tab: new URLSearchParams(window.location.search).get('tab') || root.dataset.tab || null,
+    tabButton(id) {
+      return {
+        ':class'() {
+          return this.tab === id ? 'active' : '';
+        },
+        '@click'() {
+          this.tab = id;
+
+          const url = new URL(window.location.href);
+          url.searchParams.set('tab', id);
+          window.history.pushState({}, '', url);
+        },
+      };
+    },
+    tabContent(id) {
+      return {
+        'u-show'() {
+          return this.tab === id;
+        },
+      };
+    },
+  }));
+
+  /**
+   * `$dirty` — warns about unsaved form changes: tracks a form's initial serialized state
+   * and compares it against the current one on every input/change, toggling `is-unsaved` (and a
+   * brief `is-shake`) on `document.body`, and blocking in-page link clicks while any watched form
+   * is dirty. Call `$dirty.watch($el)` once per form — e.g. `<form @load="$dirty.watch($el)">`,
+   * `.load` being Youla's equivalent of Alpine's `x-init` — and `$dirty.remove($el)` after a
+   * successful save to reset it back to clean (or on `reset`, handled automatically below).
+   *
+   * `resolveVariables()` re-invokes this factory on every single expression evaluation page-wide,
+   * so nothing here can rely on a JS variable surviving between calls — "already watching this
+   * form"/"is this form dirty" live as attributes on the form itself instead, which is what
+   * actually persists. `sync()` re-derives "is-unsaved" from every watched form on the page, so
+   * several independently-watched forms aggregate correctly, for free.
+   *
+   * @since 1.0
+   */
+  Youla.variable('dirty', () => {
+    const serialize = form => JSON.stringify(Object.fromEntries(new FormData(form).entries()));
+
+    const sync = () => {
+      const isDirty = [...document.querySelectorAll('form[data-dirty-watch]')]
+        .some(form => form.dataset.initialState !== serialize(form));
+
+      document.body.classList.toggle('is-unsaved', isDirty);
+    };
+
+    return {
+      watch(form) {
+        if (!(form instanceof HTMLFormElement) || form.dataset.dirtyWatch !== undefined) {
+          return;
+        }
+        form.dataset.dirtyWatch = '';
+
+        // Only ever bound once, page-wide, regardless of how many forms call watch().
+        if (document.body.dataset.dirtyBound === undefined) {
+          document.body.dataset.dirtyBound = '';
+
+          // Shakes the page instead of following the link, while any watched form is still dirty.
+          window.addEventListener('click', e => {
+            if (document.body.classList.contains('is-unsaved') && e.target.closest('a[href]')) {
+              e.preventDefault();
+
+              document.body.classList.add('is-shake');
+              setTimeout(() => document.body.classList.remove('is-shake'), 500);
+            }
+          }, true);
+        }
+
+        // Deferred so any reactive hydration of the form's own fields settles first — otherwise
+        // that initial fill-in would itself register as a "dirty" change.
+        setTimeout(() => {
+          form.dataset.initialState = serialize(form);
+
+          form.addEventListener('input', sync);
+          form.addEventListener('change', sync);
+          form.addEventListener('reset', () => setTimeout(() => {
+            form.dataset.initialState = serialize(form);
+            sync();
+          }, 0));
+        }, 50);
+      },
+      remove(form) {
+        if (!(form instanceof HTMLFormElement)) {
+          return;
+        }
+
+        form.dataset.initialState = serialize(form);
+        sync();
       },
     };
   });

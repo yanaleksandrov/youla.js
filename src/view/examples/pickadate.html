@@ -1,0 +1,216 @@
+<% var data = {
+  title: "Календарь (u-pickadate)"
+}; %>
+<%= _.template(require('../parts/header.html').default)(data) %>
+
+<h1>Календарь (u-pickadate)</h1>
+
+<p>
+  Директива <code>u-pickadate</code> — реактивная обёртка над
+  <a href="https://github.com/t1m0n/air-datepicker" target="_blank">AirDatepicker</a>: превращает
+  любой элемент (обычно <code>&lt;input&gt;</code>) во всплывающий календарь. Библиотека подключена
+  в проект напрямую, отдельно её загружать не нужно.
+</p>
+
+<p>
+  В отличие от <a href="/select"><code>u-select</code></a>, значение директивы — не JSON, а
+  обычное JS-выражение с доступом к данным компонента, как у любой другой директивы. Стоит
+  измениться данным, от которых оно зависит, — и календарь пересоздаётся с новыми опциями, поэтому
+  в него можно передавать переменные, а не только статические значения.
+</p>
+
+<h2>Опции вкратце</h2>
+
+<table>
+  <tbody>
+    <tr>
+      <th>Опция</th>
+      <th>Описание</th>
+      <th>По умолчанию</th>
+    </tr>
+    <tr>
+      <td><code>range</code></td>
+      <td>Выбор диапазона: первый клик — начало, второй — конец.</td>
+      <td><code>false</code></td>
+    </tr>
+    <tr>
+      <td><code>multipleDates</code></td>
+      <td>Несколько независимых дат сразу; число ограничивает их количество, <code>true</code> — без лимита.</td>
+      <td><code>false</code></td>
+    </tr>
+    <tr>
+      <td><code>minDate</code>, <code>maxDate</code></td>
+      <td>Границы допустимых дат — за ними навигация по календарю блокируется.</td>
+      <td><code>false</code> (без границ)</td>
+    </tr>
+    <tr>
+      <td><code>dateFormat</code></td>
+      <td>Формат даты в поле — строка (<code>'yyyy-MM-dd'</code>) или функция <code>(date) =&gt; string</code>.</td>
+      <td><code>'yyyy-MM-dd'</code></td>
+    </tr>
+    <tr>
+      <td><code>view</code>, <code>minView</code></td>
+      <td>Стартовый экран (<code>'days'</code>/<code>'months'</code>/<code>'years'</code>) и самый детальный экран, до которого можно углубиться.</td>
+      <td><code>'days'</code></td>
+    </tr>
+    <tr>
+      <td><code>autoClose</code></td>
+      <td>Закрывать календарь сразу после выбора даты (в диапазоне — после выбора обеих).</td>
+      <td><code>false</code></td>
+    </tr>
+    <tr>
+      <td><code>onSelect</code></td>
+      <td>Коллбэк <code>({date, formattedDate}) =&gt; void</code>, вызывается при каждом выборе.</td>
+      <td><code>null</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Базовая дата</h2>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" u-data>
+      <input type="text" u-pickadate="{ autoClose: true }" placeholder="Выберите дату">
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;input type=&quot;text&quot; u-pickadate=&quot;{ autoClose: true }&quot; placeholder=&quot;Выберите дату&quot;&gt;
+</pre>
+  </div>
+</div>
+
+<h2>Диапазон дат: бронирование номера</h2>
+
+<p>
+  <code>range: true</code> превращает одиночный выбор в диапазон: первый клик отмечает заезд,
+  второй — выезд, между ними подсвечивается весь диапазон. <code>minDate</code> запрещает выбрать
+  прошедшую дату.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" u-data>
+      <input type="text" u-pickadate="{ range: true, autoClose: true, minDate: new Date() }" placeholder="Заезд — выезд">
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;input
+  type=&quot;text&quot;
+  u-pickadate=&quot;{ range: true, autoClose: true, minDate: new Date() }&quot;
+  placeholder=&quot;Заезд — выезд&quot;
+&gt;
+</pre>
+  </div>
+</div>
+
+<h2>Несколько дат: смены на неделю</h2>
+
+<p>
+  <code>multipleDates</code> с числом ограничивает, сколько независимых дат можно отметить —
+  здесь не больше 3 смен.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" u-data>
+      <input type="text" u-pickadate="{ multipleDates: 3 }" placeholder="До 3 дат">
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;input type=&quot;text&quot; u-pickadate=&quot;{ multipleDates: 3 }&quot; placeholder=&quot;До 3 дат&quot;&gt;
+</pre>
+  </div>
+</div>
+
+<h2>Реактивные опции: переключение диапазона</h2>
+
+<p>
+  Опции — обычное выражение, не JSON, поэтому в них можно подставлять данные компонента. Переключите
+  чекбокс — календарь пересоздастся уже в режиме диапазона, без единой строчки собственного JS для
+  этого перехода.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" u-data="{ isRange: false }">
+      <label>
+        <input type="checkbox" u-prop="isRange"> Диапазон дат
+      </label>
+      <input type="text" u-pickadate="{ range: isRange, autoClose: true }" placeholder="Дата">
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;div u-data=&quot;{ isRange: false }&quot;&gt;
+  &lt;label&gt;
+    &lt;input type=&quot;checkbox&quot; u-prop=&quot;isRange&quot;&gt; Диапазон дат
+  &lt;/label&gt;
+  &lt;input type=&quot;text&quot; u-pickadate=&quot;{ range: isRange, autoClose: true }&quot; placeholder=&quot;Дата&quot;&gt;
+&lt;/div&gt;
+</pre>
+  </div>
+</div>
+
+<h2>onSelect: выбранная дата в интерфейсе</h2>
+
+<p>
+  <code>onSelect</code> получает и «сырую» дату, и уже отформатированную строку — здесь она просто
+  выводится рядом с полем через <a href="/u-text"><code>u-text</code></a>.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" u-data="{ picked: '' }">
+      <input
+        type="text"
+        u-pickadate="{ autoClose: true, onSelect: ({ formattedDate }) => picked = formattedDate }"
+        placeholder="Выберите дату"
+      >
+      <p>Выбрано: <strong u-text="picked || '—'"></strong></p>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;div u-data=&quot;{ picked: &#039;&#039; }&quot;&gt;
+  &lt;input
+    type=&quot;text&quot;
+    u-pickadate=&quot;{ autoClose: true, onSelect: ({ formattedDate }) =&gt; picked = formattedDate }&quot;
+    placeholder=&quot;Выберите дату&quot;
+  &gt;
+  &lt;p&gt;Выбрано: &lt;strong u-text=&quot;picked || &#039;—&#039;&quot;&gt;&lt;/strong&gt;&lt;/p&gt;
+&lt;/div&gt;
+</pre>
+  </div>
+</div>
+
+<p>
+  Локаль, первый день недели и формат даты можно один раз задать для всего сайта через
+  <code>window.expansa.datepicker</code>/<code>weekStart</code>/<code>dateFormat</code> — любой
+  <code>u-pickadate</code> без своих значений этих опций подхватит их автоматически.
+</p>
+
+<%= _.template(require('../parts/footer.html').default)(data) %>

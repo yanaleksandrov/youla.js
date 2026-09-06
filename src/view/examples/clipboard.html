@@ -12,7 +12,7 @@
 
 <p>
   У кнопки два динамических атрибута — клик и подпись, — поэтому они собраны в один набор
-  <code>action</code> и подключены через <a href="/v-bind"><code>v-bind="action"</code></a>
+  <code>action</code> и подключены через <a href="/u-bind"><code>u-bind="action"</code></a>
   вместо двух отдельных атрибутов.
 </p>
 
@@ -25,7 +25,7 @@
 <p>
   Метод получил бы только <code>this</code> с данными компонента — без <code>$refs</code>,
   <code>$el</code> и <code>$event</code>. Подробнее об этом различии — на странице
-  <a href="/v-bind">v-bind</a>.
+  <a href="/u-bind">u-bind</a>.
 </p>
 
 <div class="example">
@@ -35,16 +35,16 @@
     <button type="button" class="example__tab" data-tab="js">JS</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data="clipboard">
-      <input v-ref="snippet" value="npm install youla.js" readonly>
-      <button type="button" v-bind="action"></button>
+    <div class="demo" u-data="clipboard">
+      <input u-ref="snippet" value="npm install youla.js" readonly>
+      <button type="button" u-bind="action"></button>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-data=&quot;clipboard&quot;&gt;
-  &lt;input v-ref=&quot;snippet&quot; value=&quot;npm install youla.js&quot; readonly&gt;
-  &lt;button type=&quot;button&quot; v-bind=&quot;action&quot;&gt;&lt;/button&gt;
+&lt;div u-data=&quot;clipboard&quot;&gt;
+  &lt;input u-ref=&quot;snippet&quot; value=&quot;npm install youla.js&quot; readonly&gt;
+  &lt;button type=&quot;button&quot; u-bind=&quot;action&quot;&gt;&lt;/button&gt;
 &lt;/div&gt;
 </pre>
   </div>
@@ -62,7 +62,7 @@ document.addEventListener('youla:init', () =&gt; {
     },
     action: {
       '@click': 'copy($refs.snippet.value)',
-      'v-text': &quot;copied ? 'Скопировано!' : 'Скопировать'&quot;,
+      'u-text': &quot;copied ? 'Скопировано!' : 'Скопировать'&quot;,
     },
   }));
 });
@@ -83,7 +83,7 @@ document.addEventListener('youla:init', () =&gt; {
       },
       action: {
         '@click': 'copy($refs.snippet.value)',
-        'v-text': "copied ? 'Скопировано!' : 'Скопировать'",
+        'u-text': "copied ? 'Скопировано!' : 'Скопировать'",
       },
     }));
   });

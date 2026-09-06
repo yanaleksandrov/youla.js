@@ -25,14 +25,14 @@
       <th>Пример</th>
     </tr>
     <tr>
-      <td><a href="/v-data"><code>v-data</code></a></td>
+      <td><a href="/u-data"><code>u-data</code></a></td>
       <td>Отмечает элемент как корень компонента и задаёт его реактивные данные</td>
-      <td><code>&lt;div v-data=&quot;{ count: 0 }&quot;&gt;</code></td>
+      <td><code>&lt;div u-data=&quot;{ count: 0 }&quot;&gt;</code></td>
     </tr>
     <tr>
-      <td><code>v-*</code></td>
+      <td><code>u-*</code></td>
       <td>Директива — привязывает поведение или содержимое элемента к данным</td>
-      <td><code>&lt;div v-show=&quot;open&quot;&gt;</code></td>
+      <td><code>&lt;div u-show=&quot;open&quot;&gt;</code></td>
     </tr>
     <tr>
       <td><a href="/attributes"><code>:attribute</code></a></td>
@@ -57,42 +57,42 @@
       <th>Описание</th>
     </tr>
     <tr>
-      <td><a href="/v-data"><code>v-data</code></a></td>
+      <td><a href="/u-data"><code>u-data</code></a></td>
       <td><code>.local</code>, <code>.cookie</code></td>
       <td>Определяет компонент и его начальные данные</td>
     </tr>
     <tr>
-      <td><a href="/v-text"><code>v-text</code></a></td>
+      <td><a href="/u-text"><code>u-text</code></a></td>
       <td>—</td>
       <td>Текстовое содержимое элемента, HTML-теги экранируются</td>
     </tr>
     <tr>
-      <td><a href="/v-html"><code>v-html</code></a></td>
+      <td><a href="/u-html"><code>u-html</code></a></td>
       <td>—</td>
       <td>HTML-содержимое элемента без экранирования (только для доверенного контента)</td>
     </tr>
     <tr>
-      <td><a href="/v-show"><code>v-show</code></a></td>
+      <td><a href="/u-show"><code>u-show</code></a></td>
       <td>—</td>
       <td>Переключает видимость элемента через <code>display</code>, не удаляя его из DOM</td>
     </tr>
     <tr>
-      <td><a href="/v-each"><code>v-each</code></a></td>
+      <td><a href="/u-each"><code>u-each</code></a></td>
       <td><code>.lazy</code></td>
       <td>Клонирует элемент-шаблон для каждого элемента массива, объекта или диапазона чисел</td>
     </tr>
     <tr>
-      <td><a href="/v-prop"><code>v-prop</code></a></td>
+      <td><a href="/u-prop"><code>u-prop</code></a></td>
       <td><code>.lazy</code>, <code>.number</code>, <code>.trim</code>, <code>.local</code>, <code>.cookie</code></td>
       <td>Двусторонняя привязка значения поля формы (<code>input</code>, <code>select</code>, <code>textarea</code>) к данным</td>
     </tr>
     <tr>
-      <td><a href="/v-bind"><code>v-bind</code></a></td>
+      <td><a href="/u-bind"><code>u-bind</code></a></td>
       <td>—</td>
       <td>Задаёт директивы, события и атрибуты элемента одним JS-объектом вместо перечисления в разметке</td>
     </tr>
     <tr>
-      <td><a href="/v-ref"><code>v-ref</code></a></td>
+      <td><a href="/u-ref"><code>u-ref</code></a></td>
       <td>—</td>
       <td>Именует элемент для доступа через <code>$refs</code> внутри выражений</td>
     </tr>
@@ -110,13 +110,13 @@
   </p>
   <p>
     Переходы стоит оформлять обычным CSS проекта — через классы, которые переключают директивы
-    вроде <a href="/v-show"><code>v-show</code></a> и <code>:class</code>, — и оставлять полностью
+    вроде <a href="/u-show"><code>u-show</code></a> и <code>:class</code>, — и оставлять полностью
     на усмотрение разработчика. Так разметка остаётся чистой, а не превращается в место для настройки
     анимации.
   </p>
 </blockquote>
 
-<h2>Синтаксис v-each</h2>
+<h2>Синтаксис u-each</h2>
 
 <pre>
 item in items                  — перебор массива
@@ -128,7 +128,7 @@ item in items join ', '        — со вставкой текстового р
 
 <p>
   Подробности синтаксиса и живой, редактируемый пример перебора массива, объекта или диапазона
-  чисел — на отдельной странице <a href="/v-each">v-each</a>, ссылка на которую есть выше.
+  чисел — на отдельной странице <a href="/u-each">u-each</a>, ссылка на которую есть выше.
 </p>
 
 <h2>Модификаторы событий</h2>
@@ -170,7 +170,7 @@ item in items join ', '        — со вставкой текстового р
     </tr>
     <tr>
       <td><code>$el</code></td>
-      <td>обработчиках событий, <code>v-prop</code></td>
+      <td>обработчиках событий, <code>u-prop</code></td>
       <td>DOM-элемент, на котором объявлено выражение</td>
     </tr>
     <tr>
@@ -181,12 +181,12 @@ item in items join ', '        — со вставкой текстового р
     <tr>
       <td><code>$refs</code></td>
       <td>обработчиках событий</td>
-      <td>доступ к элементам, помеченным атрибутом <a href="/v-ref"><code>v-ref</code></a></td>
+      <td>доступ к элементам, помеченным атрибутом <a href="/u-ref"><code>u-ref</code></a></td>
     </tr>
     <tr>
       <td><code>$root</code></td>
       <td>обработчиках событий</td>
-      <td>корневой элемент компонента (тот, на котором объявлен <code>v-data</code>)</td>
+      <td>корневой элемент компонента (тот, на котором объявлен <code>u-data</code>)</td>
     </tr>
     <tr>
       <td><code>$имяМетода</code></td>

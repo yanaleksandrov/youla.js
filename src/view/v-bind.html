@@ -1,40 +1,40 @@
 <% var data = {
-  title: "v-bind"
+  title: "u-bind"
 }; %>
 <%= _.template(require('./parts/header.html').default)(data) %>
 
-<h1>v-bind</h1>
+<h1>u-bind</h1>
 
 <p>
   Пока состояние компонента — пара плоских свойств, объектный литерал прямо в атрибуте
-  <code>v-data="{...}"</code> остаётся самым коротким и понятным путём.
+  <code>u-data="{...}"</code> остаётся самым коротким и понятным путём.
   Но как только в задаче появляется повторяющаяся логика, сложные проверки, или богатый функционал, расписывать её в каждом выражении
   - становится многословно и хрупко: любое изменение поведения приходится аккуратно повторять во всех местах, где она встречается.
 </p>
 
 <p>
-  Директива <code>v-bind</code> собирает несколько <code>v-*</code>, <code>@</code> и <code>:</code>
-  атрибутов элемента в один именованный набор — обычный объект внутри <a href="/v-data"><code>v-data</code></a>.
+  Директива <code>u-bind</code> собирает несколько <code>u-*</code>, <code>@</code> и <code>:</code>
+  атрибутов элемента в один именованный набор — обычный объект внутри <a href="/u-data"><code>u-data</code></a>.
   Так поведение элемента переезжает из разметки в JS.
 </p>
 
 <p>
   Ключи объекта — имена атрибутов (<code>'@click'</code>, <code>':aria-expanded'</code>,
-  <code>'v-show'</code> или <code>'v-ref'</code>), а значения — то же,
+  <code>'u-show'</code> или <code>'u-ref'</code>), а значения — то же,
   что вы написали бы в HTML напрямую: выражение, метод или статическое значение.
-  В разметке остаётся одна короткая ссылка — <code>v-bind="имя"</code>, а само определение можно
+  В разметке остаётся одна короткая ссылка — <code>u-bind="имя"</code>, а само определение можно
   переиспользовать для любого числа элементов на странице, без копирования.
 </p>
 
 <p>
-  При этом v-bind лучше использовать только для того, что действительно требует динамики.
+  При этом u-bind лучше использовать только для того, что действительно требует динамики.
   Каждый binding участвует в обработке реактивных данных и может пересчитываться при их изменении.
   Поэтому неизменяемые свойства разумнее задавать непосредственно в HTML: например, если кнопка всегда имеет
-  <code>type="button"</code>, нет смысла выносить его в v-bind. А вот динамические свойства и поведение — например,
+  <code>type="button"</code>, нет смысла выносить его в u-bind. А вот динамические свойства и поведение — например,
   <code>:disabled</code> или <code>@click</code> — как раз подходят для такого набора.
 </p>
 
-<h2>Определение через v-data</h2>
+<h2>Определение через u-data</h2>
 
 <p>
   Опишите компонент через <code>Youla.data(имя, callback)</code> как обычно, но добавьте в
@@ -49,7 +49,7 @@
 
 <p>
   В разметке остаётся только ссылка на нужное свойство — <code>trigger</code> и
-  <code>dialogue</code> объявлять в <code>v-data</code> отдельно не нужно, они уже часть данных
+  <code>dialogue</code> объявлять в <code>u-data</code> отдельно не нужно, они уже часть данных
   компонента, возвращённых callback:
 </p>
 
@@ -60,18 +60,18 @@
     <button type="button" class="example__tab" data-tab="js">JS</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data="dropdown">
-      <button v-bind="trigger">Открыть меню</button>
+    <div class="demo" u-data="dropdown">
+      <button u-bind="trigger">Открыть меню</button>
 
-      <span v-bind="dialogue">Содержимое меню</span>
+      <span u-bind="dialogue">Содержимое меню</span>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-data=&quot;dropdown&quot;&gt;
-  &lt;button v-bind=&quot;trigger&quot;&gt;Открыть меню&lt;/button&gt;
+&lt;div u-data=&quot;dropdown&quot;&gt;
+  &lt;button u-bind=&quot;trigger&quot;&gt;Открыть меню&lt;/button&gt;
 
-  &lt;span v-bind=&quot;dialogue&quot;&gt;Содержимое меню&lt;/span&gt;
+  &lt;span u-bind=&quot;dialogue&quot;&gt;Содержимое меню&lt;/span&gt;
 &lt;/div&gt;
 </pre>
   </div>
@@ -85,7 +85,7 @@ Youla.data(&#039;dropdown&#039;, () =&gt; ({
     },
   },
   dialogue: {
-    &#039;v-show&#039;() {
+    &#039;u-show&#039;() {
       return this.open
     },
     &#039;@click.outside&#039;() {
@@ -107,7 +107,7 @@ Youla.data(&#039;dropdown&#039;, () =&gt; ({
         },
       },
       dialogue: {
-        'v-show'() {
+        'u-show'() {
           return this.open
         },
         '@click.outside'() {
@@ -120,7 +120,7 @@ Youla.data(&#039;dropdown&#039;, () =&gt; ({
 
 <p>
   Каждый ключ в наборе биндингов обрабатывается так же, как если бы он был написан в разметке
-  напрямую: <code>@click</code> регистрирует обработчик, <a href="/v-show"><code>v-show</code></a>
+  напрямую: <code>@click</code> регистрирует обработчик, <a href="/u-show"><code>u-show</code></a>
   вызывается заново при каждом изменении данных и переключает видимость.
 </p>
 
@@ -147,8 +147,8 @@ Youla.data(&#039;dropdown&#039;, () =&gt; ({
     </tr>
     <tr>
       <td>
-        <code>v-директива</code>, <code>:attribute</code> и обычный атрибут
-        (<code>v-show</code>, <a href="/v-text"><code>v-text</code></a>,
+        <code>u-директива</code>, <code>:attribute</code> и обычный атрибут
+        (<code>u-show</code>, <a href="/u-text"><code>u-text</code></a>,
         <a href="/attributes"><code>:class</code></a>, <code>type</code> и т.п.)
       </td>
       <td>Да</td>
@@ -156,8 +156,8 @@ Youla.data(&#039;dropdown&#039;, () =&gt; ({
         Метод — вычисляемое значение. Вызывается заново при каждом изменении связанных данных, и
         то, что он вернёт через <code>return</code>, становится значением, которое применяется к
         элементу. Без <code>return</code> метод вернёт <code>undefined</code>, и директива получит
-        именно его — например, <code>v-show</code> скроет элемент (<code>undefined</code> ложно),
-        а <code>v-text</code> очистит его содержимое.
+        именно его — например, <code>u-show</code> скроет элемент (<code>undefined</code> ложно),
+        а <code>u-text</code> очистит его содержимое.
       </td>
     </tr>
   </tbody>
@@ -169,7 +169,7 @@ Youla.data(&#039;dropdown&#039;, () =&gt; ({
 </p>
 
 <p>
-  Внутри метода-вычисления (<code>v-директива</code>, <code>:attribute</code> и т.п.) <code>this</code>
+  Внутри метода-вычисления (<code>u-директива</code>, <code>:attribute</code> и т.п.) <code>this</code>
   отслеживает читаемые свойства, чтобы знать, когда пересчитывать значение — такой метод только
   для чтения и <code>return</code>, а не для записи данных.
 </p>
@@ -195,14 +195,14 @@ Youla.data(&#039;dropdown&#039;, () =&gt; ({
     <button type="button" class="example__tab" data-tab="js">JS</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data="saveButton">
-      <button type="button" v-bind="action">Сохранить</button>
+    <div class="demo" u-data="saveButton">
+      <button type="button" u-bind="action">Сохранить</button>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-data=&quot;saveButton&quot;&gt;
-  &lt;button type=&quot;button&quot; v-bind=&quot;action&quot;&gt;Сохранить&lt;/button&gt;
+&lt;div u-data=&quot;saveButton&quot;&gt;
+  &lt;button type=&quot;button&quot; u-bind=&quot;action&quot;&gt;Сохранить&lt;/button&gt;
 &lt;/div&gt;
 </pre>
   </div>
@@ -214,7 +214,7 @@ Youla.data(&#39;saveButton&#39;, () =&gt; ({
   action: {
     &#39;:disabled&#39;: &#39;saving&#39;,
     &#39;@click&#39;: &#39;saving = true&#39;,
-    &#39;v-text&#39;: &quot;saving ? &#39;Сохраняем...&#39; : &#39;Сохранить&#39;&quot;,
+    &#39;u-text&#39;: &quot;saving ? &#39;Сохраняем...&#39; : &#39;Сохранить&#39;&quot;,
   },
 }))
 </pre>
@@ -229,7 +229,7 @@ Youla.data(&#39;saveButton&#39;, () =&gt; ({
       action: {
         ':disabled': 'saving',
         '@click': 'saving = true',
-        'v-text': "saving ? 'Сохраняем...' : 'Сохранить'",
+        'u-text': "saving ? 'Сохраняем...' : 'Сохранить'",
       },
     }));
   });
@@ -238,7 +238,7 @@ Youla.data(&#39;saveButton&#39;, () =&gt; ({
 <h2>Параметризованные определения</h2>
 
 <p>
-  Выражение в <code>v-bind</code> не обязано быть просто именем свойства — это обычное
+  Выражение в <code>u-bind</code> не обязано быть просто именем свойства — это обычное
   JS-выражение, поэтому подойдёт и вызов метода с любым числом аргументов, как обычный вызов
   функции.
 </p>
@@ -256,17 +256,17 @@ Youla.data(&#39;saveButton&#39;, () =&gt; ({
   </div>
   <div class="example__panel is-active" data-panel="preview">
     <div class="demo">
-      <ul class="attr-tabs" v-data="tabs">
-        <li v-bind="tabButton('profile')">Профиль</li>
-        <li v-bind="tabButton('settings')">Настройки</li>
+      <ul class="attr-tabs" u-data="tabs">
+        <li u-bind="tabButton('profile')">Профиль</li>
+        <li u-bind="tabButton('settings')">Настройки</li>
       </ul>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;ul v-data=&quot;tabs&quot;&gt;
-  &lt;li v-bind=&quot;tabButton(&#039;profile&#039;)&quot;&gt;Профиль&lt;/li&gt;
-  &lt;li v-bind=&quot;tabButton(&#039;settings&#039;)&quot;&gt;Настройки&lt;/li&gt;
+&lt;ul u-data=&quot;tabs&quot;&gt;
+  &lt;li u-bind=&quot;tabButton(&#039;profile&#039;)&quot;&gt;Профиль&lt;/li&gt;
+  &lt;li u-bind=&quot;tabButton(&#039;settings&#039;)&quot;&gt;Настройки&lt;/li&gt;
 &lt;/ul&gt;
 </pre>
   </div>
@@ -317,12 +317,12 @@ Youla.data(&#39;tabs&#39;, () =&gt; ({
   каждом изменении <code>tab</code> — поэтому активная вкладка переключается реактивно.
 </p>
 
-<h2>v-bind внутри v-each</h2>
+<h2>u-bind внутри u-each</h2>
 
 <p>
   Одно определение можно применить к каждому элементу списка, обращаясь внутри него к текущему
   элементу итерации — например, чтобы раскрасить бейджи приоритета задач, как в примере на
-  странице <a href="/v-each">v-each</a>.
+  странице <a href="/u-each">u-each</a>.
 </p>
 
 <div class="example">
@@ -332,19 +332,19 @@ Youla.data(&#39;tabs&#39;, () =&gt; ({
     <button type="button" class="example__tab" data-tab="js">JS</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <ul class="demo" v-data="priorityList">
-      <li v-each="task in tasks">
-        <span v-bind="badge"></span>
-        <span v-text="task.title"></span>
+    <ul class="demo" u-data="priorityList">
+      <li u-each="task in tasks">
+        <span u-bind="badge"></span>
+        <span u-text="task.title"></span>
       </li>
     </ul>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;ul v-data=&quot;priorityList&quot;&gt;
-  &lt;li v-each=&quot;task in tasks&quot;&gt;
-    &lt;span v-bind=&quot;badge&quot;&gt;&lt;/span&gt;
-    &lt;span v-text=&quot;task.title&quot;&gt;&lt;/span&gt;
+&lt;ul u-data=&quot;priorityList&quot;&gt;
+  &lt;li u-each=&quot;task in tasks&quot;&gt;
+    &lt;span u-bind=&quot;badge&quot;&gt;&lt;/span&gt;
+    &lt;span u-text=&quot;task.title&quot;&gt;&lt;/span&gt;
   &lt;/li&gt;
 &lt;/ul&gt;
 </pre>
@@ -360,7 +360,7 @@ Youla.data(&#39;priorityList&#39;, () =&gt; ({
 
   badge: {
     &#39;:style&#39;: &quot;{ color: task.priority === &#39;high&#39; ? &#39;crimson&#39; : (task.priority === &#39;medium&#39; ? &#39;darkorange&#39; : &#39;seagreen&#39;) }&quot;,
-    &#39;v-text&#39;: &#39;task.priority&#39;,
+    &#39;u-text&#39;: &#39;task.priority&#39;,
   },
 }))
 </pre>
@@ -378,27 +378,27 @@ Youla.data(&#39;priorityList&#39;, () =&gt; ({
 
       badge: {
         ':style': "{ color: task.priority === 'high' ? 'crimson' : (task.priority === 'medium' ? 'darkorange' : 'seagreen') }",
-        'v-text': 'task.priority',
+        'u-text': 'task.priority',
       },
     }));
   });
 </script>
 
 <p>
-  Ключ <code>badge</code> — обычное свойство <code>v-data</code>, а не метод, поэтому у него нет
+  Ключ <code>badge</code> — обычное свойство <code>u-data</code>, а не метод, поэтому у него нет
   собственного доступа к <code>this</code> с данными текущего элемента итерации внутри цикла
-  <code>v-each</code>.
+  <code>u-each</code>.
 </p>
 
 <p>
   Строки-выражения внутри него всё же получают <code>task</code> — так же, как получил бы его
-  любой обычный атрибут, объявленный прямо внутри директивы <code>v-each</code> на странице.
+  любой обычный атрибут, объявленный прямо внутри директивы <code>u-each</code> на странице.
 </p>
 
 <p>
   Если бы вместо строк использовались методы, <code>task</code> они бы не увидели: методы
   получают только <code>this</code> с данными компонента, без доступа к переменным цикла
-  <code>v-each</code>.
+  <code>u-each</code>.
 </p>
 
 <%= _.template(require('./parts/footer.html').default)(data) %>

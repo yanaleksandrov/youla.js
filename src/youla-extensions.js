@@ -15,140 +15,23 @@ document.addEventListener('youla:init', ()=> {
   });
 
   /**
-   * Selfie: `$stream` (one instance per `v-data` root) wraps `getUserMedia` into a
-   * preview -> snapshot -> canvas -> image flow. Registered as a `Youla.variable()` so its
-   * properties are reachable from any expression, not just `@event` ones.
+   * Data sanitizing.
    *
    * @since 1.0
    */
-  Youla.variable('stream', (root) => {
-    if (!root._x_stream) {
-      root._x_stream = Youla.reactive({
-        error: null,
-        canvas: null,
-        get refs() {
-          return {
-            video:  root.querySelector('[v-ref="video"]'),
-            image:  root.querySelector('[v-ref="image"]'),
-            canvas: root.querySelector('[v-ref="canvas"]'),
-          };
-        },
-        check() {
-          const { video, image } = this.refs;
-
-          if (!video) {
-            console.error('Video for selfie preview is undefined');
-            return false;
-          }
-
-          if (!image) {
-            console.error('Image for output selfie is undefined');
-            return false;
-          }
-
-          return true;
-        },
-        getCanvas() {
-          return this.refs.canvas || (this.canvas || (this.canvas = document.createElement('canvas')));
-        },
-        isVisible(element) {
-          const styles = window.getComputedStyle(element);
-          if (styles) {
-            return !(styles.visibility === 'hidden' || styles.display === 'none' || parseFloat(styles.opacity) === 0);
-          }
-          return false;
-        },
-        async requestStream(video) {
-          if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            this.error = 'unsupported';
-            return;
-          }
-
-          try {
-            video.srcObject = video._x_stream = await navigator.mediaDevices.getUserMedia({video: true});
-            this.error = null;
-          } catch (error) {
-            this.error = error.name === 'NotAllowedError' || error.name === 'SecurityError' ? 'denied' : 'unavailable';
-          }
-        },
-        start() {
-          const video = this.refs.video;
-          if (video._x_stream || video._x_streamObserver) {
-            return;
-          }
-
-          if (this.isVisible(video)) {
-            this.requestStream(video);
-            return;
-          }
-
-          video._x_streamObserver = new IntersectionObserver(entries => {
-            if (entries.some(entry => entry.isIntersecting) && this.isVisible(video)) {
-              video._x_streamObserver.disconnect();
-              video._x_streamObserver = null;
-              this.requestStream(video);
-            }
-          });
-          video._x_streamObserver.observe(video);
-        },
-        snap() {
-          if (!this.check()) {
-            return null;
-          }
-          this.start();
-
-          const canvas = this.getCanvas();
-          const { video, image } = this.refs;
-
-          let imageStyles = window.getComputedStyle(image),
-            targetRatio = parseInt(imageStyles.width, 10) / parseInt(imageStyles.height, 10);
-
-          let videoWidth  = video.videoWidth,
-            videoHeight = video.videoHeight,
-            videoRatio  = videoWidth / videoHeight;
-
-          let sWidth, sHeight;
-          if (videoRatio > targetRatio) {
-            sHeight = videoHeight;
-            sWidth  = videoHeight * targetRatio;
-          } else {
-            sWidth  = videoWidth;
-            sHeight = videoWidth / targetRatio;
-          }
-
-          let sx = (videoWidth - sWidth) / 2,
-            sy = (videoHeight - sHeight) / 2;
-
-          canvas.width  = sWidth;
-          canvas.height = sHeight;
-
-          let ctx = canvas.getContext('2d');
-
-          // 1:1 pixel copy of the native camera resolution — no resampling, so no quality is lost
-          ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, sWidth, sHeight);
-
-          let imageData = canvas.toDataURL('image/png');
-          if ( imageData ) {
-            image.src = imageData;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-          }
-          return imageData;
-        },
-        stop() {
-          const video = this.refs.video;
-          if (video._x_streamObserver) {
-            video._x_streamObserver.disconnect();
-            video._x_streamObserver = null;
-          }
-          if (video._x_stream) {
-            video._x_stream.getTracks().forEach(track => track.stop());
-          }
-          video._x_stream = null;
-        },
-      }, root);
-    }
-    return root._x_stream;
-  });
+  Youla.method('safe', () => ({
+    slug(value) {
+      return value
+        .toString()                                                // Convert the input to a string
+        .normalize('NFD')                                    // Normalize the string (separate characters and diacritical marks)
+        .replace(/[\u0300-\u036f]/g, '')    // Remove diacritical marks
+        .replace(/[^\p{L}\p{N}\s-]/gu, '')  // Remove everything except letters, numbers, spaces, and hyphens (Unicode support)
+        .trim()                                                   // Trim leading and trailing whitespace
+        .replace(/\s+/g, '-')               // Replace spaces with hyphens
+        .replace(/-+/g, '-')                // Remove consecutive hyphens
+        .toLowerCase();                                           // Convert the string to lowercase
+    },
+  }));
 
   Youla.method('mask', (e, el) => mask =>  {
     if( typeof mask === 'undefined' ) {
@@ -177,7 +60,7 @@ document.addEventListener('youla:init', ()=> {
     } else if( mask === Object( mask ) ) {
       el.value = el.value.replace( mask, '' );
     }
-    // Validation by mask, see //javascript.ru/forum/dom-window/82008-kak-preobrazovat-stroku-v-massiv.html
+    // Validation by mask, see //javascript.ru/forum/dom-window/82008-kak-preobrazovat-stroku-u-massiv.html
     else {
       try {
         function limit( position, symbol, max ) {
@@ -255,103 +138,6 @@ document.addEventListener('youla:init', ()=> {
   });
 
   /**
-   * Notifications system: a single `v-data="notice"` container (parts/footer.html) holds
-   * the queue. `$notice` always resolves to that container's data, so `$notice.info('Saved')`
-   * works from any `v-data` on the page.
-   *
-   * @since 1.0
-   */
-  Youla.variable('notice', () => document.querySelector('[v-data="notice"]')?.__x?.data);
-
-  Youla.data('notice', () => ({
-    items: {},
-    duration: 7000,
-    hovering: false,
-    info( message ) {
-      this.add( message, 'info' );
-    },
-    success( message ) {
-      this.add( message, 'success' );
-    },
-    warning( message ) {
-      this.add( message, 'warning' );
-    },
-    error( message ) {
-      this.add( message, 'error' );
-    },
-    loading( message ) {
-      this.add( message, 'loading' );
-    },
-    // @mouseenter on the container: freezes every item's countdown where it stood.
-    pause() {
-      this.hovering = true;
-
-      Object.values(this.items).forEach(item => {
-        if ( item.timer ) {
-          clearTimeout( item.timer );
-          item.timer     = null;
-          item.remaining = Math.max( 0, item.remaining - ( Date.now() - item.startedAt ) );
-        }
-      });
-    },
-    // @mouseleave: picks every countdown back up from where pause() froze it.
-    resume() {
-      this.hovering = false;
-
-      Object.keys(this.items).forEach( id => this.schedule(id) );
-    },
-    schedule( id ) {
-      let item = this.items[id];
-      if ( item && !item.timer ) {
-        item.startedAt = Date.now();
-        item.timer     = setTimeout( () => this.close(id), item.remaining );
-      }
-    },
-    elapsed( item ) {
-      return ( item.duration - item.remaining ) + ( item.timer ? Date.now() - item.startedAt : 0 );
-    },
-    close( id ) {
-      let item = this.items[id];
-      if ( typeof item !== 'undefined' ) {
-        clearTimeout( item.timer );
-
-        // v-each only re-renders when "items" itself is reassigned, not on a mutated nested key.
-        this.items = { ...this.items, [id]: { ...item, selectors: [ ...item.selectors, 'hide' ] } };
-
-        setTimeout( () => {
-          let { [id]: omit, ...rest } = this.items;
-          this.items = rest;
-        }, 1000 )
-      }
-    },
-    add( message, type ) {
-      if ( message ) {
-        let timestamp = Date.now();
-
-        // Spinner is a real inline <svg> (parts/footer.html), animated via CSS, so it can be paused on :hover.
-        this.items = { ...this.items, [timestamp]: {
-          message: message,
-          closable: true,
-          selectors: [ type || 'info' ],
-          duration: this.duration,
-          remaining: this.duration,
-          startedAt: Date.now(),
-          timer: null,
-          classes() {
-            return this.selectors.map( x => 'notice__item--' + x ).join(' ')
-          },
-        } };
-
-        if ( !this.hovering ) {
-          this.schedule(timestamp);
-        }
-      }
-    },
-  }));
-
-
-
-  /**
    * Code syntax highlight
    *
    * @since 1.0
@@ -393,7 +179,7 @@ document.addEventListener('youla:init', ()=> {
   Youla.directive('sticky', el => {
     const parent = el.parentElement;
     if (getComputedStyle(parent).position !== 'relative') {
-      console.warn('Youla.js: "v-sticky" requires its parent to have position: relative.');
+      console.warn('Youla.js: "u-sticky" requires its parent to have position: relative.');
       return;
     }
 
@@ -427,7 +213,7 @@ document.addEventListener('youla:init', ()=> {
 
   /**
    * Expands or collapses an element with a smooth slide animation, driven by the
-   * directive's truthiness (`v-collapse="open"`) rather than a CSS class.
+   * directive's truthiness (`u-collapse="open"`) rather than a CSS class.
    *
    * @since 1.0
    */
@@ -466,7 +252,7 @@ document.addEventListener('youla:init', ()=> {
 
   /**
    * Grows a <textarea> to fit its content as the user types, up to a
-   * maximum number of rows (`v-textarea="6"`) — past that, it stops
+   * maximum number of rows (`u-textarea="6"`) — past that, it stops
    * growing and scrolls internally instead.
    *
    * @since 1.0
@@ -491,8 +277,8 @@ document.addEventListener('youla:init', ()=> {
 
   /**
    * Animates `--youla-progress` into view once the element enters the viewport, from/to
-   * modifiers as percentages (`v-progress.20.80.600ms`). `to` can also be a reactive bound
-   * value, e.g. `v-progress.0.600ms="percent"`. Skips the transition on reduced motion.
+   * modifiers as percentages (`u-progress.20.80.600ms`). `to` can also be a reactive bound
+   * value, e.g. `u-progress.0.600ms="percent"`. Skips the transition on reduced motion.
    *
    * @since 1.0
    */
@@ -505,7 +291,7 @@ document.addEventListener('youla:init', ()=> {
     const to    = bound ? parseFloat(output) : parseInt(rawTo);
 
     if (isNaN(from) || isNaN(to)) {
-      console.warn('Youla.js: "v-progress" requires numeric from/to modifiers as percentages (or a numeric bound value), e.g. v-progress.20.80.600ms.');
+      console.warn('Youla.js: "u-progress" requires numeric from/to modifiers as percentages (or a numeric bound value), e.g. u-progress.20.80.600ms.');
       return;
     }
 
@@ -553,87 +339,5 @@ document.addEventListener('youla:init', ()=> {
 
       setTimeout(() => apply(el._x_progress.end, true), 500);
     }).observe(el);
-  });
-
-  /**
-   * Adapter for SlimSelect — turns `<option>`s (with optional data-image/data-icon/
-   * data-description) and optgroups into SlimSelect's data format. Requires SlimSelect to
-   * be loaded; this project doesn't bundle it.
-   *
-   * @see   https://github.com/brianvoe/slim-select
-   * @since 1.0
-   */
-  Youla.directive('select', (el, output) => {
-    const settings = { showSearch: false, hideSelected: false, closeOnSelect: true };
-
-    if (el.hasAttribute('multiple')) {
-      settings.hideSelected  = true;
-      settings.closeOnSelect = false;
-    }
-
-    Object.assign(settings, JSON.parse(output || '{}'));
-
-    const data = Array.from(el.options).reduce((acc, option) => {
-      const image       = option.getAttribute('data-image');
-      const icon        = option.getAttribute('data-icon');
-      const description = option.getAttribute('data-description') || '';
-
-      const html =
-        `${image ? `<img src="${image}" alt />` : ''}${icon ? `<i class="${icon}"></i>` : ''}` +
-        `<span class="ss-text">${option.text}${description ? `<span class="ss-description">${description}</span>` : ''}</span>`;
-
-      const optionData = {
-        text: option.text, value: option.value, html, selected: option.selected,
-        display: true, disabled: false, mandatory: false, placeholder: false,
-        class: '', style: '', data: {},
-      };
-
-      if (option.parentElement.tagName === 'OPTGROUP') {
-        const label = option.parentElement.getAttribute('label');
-        let group   = acc.find(item => item.label === label);
-        if (!group) {
-          group = { label, options: [] };
-          acc.push(group);
-        }
-        group.options.push(optionData);
-      } else {
-        acc.push(optionData);
-      }
-      return acc;
-    }, []);
-
-    try {
-      new SlimSelect({ settings, select: el, data });
-    } catch {
-      console.error('Youla.js: "SlimSelect" is not defined — v-select requires SlimSelect to be loaded.');
-    }
-  });
-
-  /**
-   * Date picker with Datepicker.js
-   *
-   * @see     https://github.com/wwilsman/Datepicker.js
-   * @since   1.0
-   */
-  Youla.directive('pickadate', (e, el) => options => {
-    try {
-      options = Object.assign( {}, {
-        inline: true,
-        multiple: false,
-        ranged: true,
-        time: true,
-        lang: 'ru',
-        months: 2,
-        timeAmPm: false,
-        within: false,
-        without: false,
-        yearRange: 5,
-        weekStart: 1,
-      }, options );
-
-      new Datepicker(el,options);
-    } catch (e) {
-      console.error( 'Youla.js: "Datepicker" is not defined. Details: https:://github.com/text-mask/text-mask' );
-    }
   });
 });

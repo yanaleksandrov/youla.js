@@ -1,12 +1,12 @@
 <% var data = {
-  title: "Слайдер диапазона (v-ranger)"
+  title: "Слайдер диапазона (u-ranger)"
 }; %>
 <%= _.template(require('../parts/header.html').default)(data) %>
 
-<h1>Слайдер диапазона (v-ranger)</h1>
+<h1>Слайдер диапазона (u-ranger)</h1>
 
 <p>
-  Директива <code>v-ranger</code> превращает обычный <code>&lt;input type="range"&gt;</code> в
+  Директива <code>u-ranger</code> превращает обычный <code>&lt;input type="range"&gt;</code> в
   оформленный слайдер: заполненный трек, плавающая подпись значения над ручкой и шкала делений под
   треком. Если на том же поле стоит атрибут <code>data-points</code>, слайдер автоматически
   становится диапазонным — появляется вторая ручка, а поле начинает возвращать пару значений.
@@ -154,22 +154,22 @@
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data>
-      <input type="range" min="0" max="100" step="1" value="40" v-ranger="{ labelSuffix: '%' }">
-      <input type="range" min="0" max="10" step="1" value="4" v-ranger="{ scaleTicksCount: 0, labelIsVisible: false }">
-      <input type="range" min="0" max="1000" step="10" value="200" data-points="800" disabled v-ranger="{ disabled: true, labelPrefix: '$' }">
+    <div class="demo" u-data>
+      <input type="range" min="0" max="100" step="1" value="40" u-ranger="{ labelSuffix: '%' }">
+      <input type="range" min="0" max="10" step="1" value="4" u-ranger="{ scaleTicksCount: 0, labelIsVisible: false }">
+      <input type="range" min="0" max="1000" step="10" value="200" data-points="800" disabled u-ranger="{ disabled: true, labelPrefix: '$' }">
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
 &lt;input type=&quot;range&quot; min=&quot;0&quot; max=&quot;100&quot; step=&quot;1&quot; value=&quot;40&quot;
-  v-ranger=&quot;{ labelSuffix: &#39;%&#39; }&quot;&gt;
+  u-ranger=&quot;{ labelSuffix: &#39;%&#39; }&quot;&gt;
 
 &lt;input type=&quot;range&quot; min=&quot;0&quot; max=&quot;10&quot; step=&quot;1&quot; value=&quot;4&quot;
-  v-ranger=&quot;{ scaleTicksCount: 0, labelIsVisible: false }&quot;&gt;
+  u-ranger=&quot;{ scaleTicksCount: 0, labelIsVisible: false }&quot;&gt;
 
 &lt;input type=&quot;range&quot; min=&quot;0&quot; max=&quot;1000&quot; step=&quot;10&quot; value=&quot;200&quot; data-points=&quot;800&quot; disabled
-  v-ranger=&quot;{ disabled: true, labelPrefix: &#39;$&#39; }&quot;&gt;
+  u-ranger=&quot;{ disabled: true, labelPrefix: &#39;$&#39; }&quot;&gt;
 </pre>
   </div>
 </div>
@@ -188,14 +188,14 @@
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data>
-      <input type="range" min="-2" max="2" step="0.1" value="-0.3" v-ranger="{ scaleTicksCount: 8, scaleTickSuffix: ' EV', labelSuffix: ' EV' }">
+    <div class="demo" u-data>
+      <input type="range" min="-2" max="2" step="0.1" value="-0.3" u-ranger="{ scaleTicksCount: 8, scaleTickSuffix: ' EV', labelSuffix: ' EV' }">
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
 &lt;input type=&quot;range&quot; min=&quot;-2&quot; max=&quot;2&quot; step=&quot;0.1&quot; value=&quot;-0.3&quot;
-  v-ranger=&quot;{ scaleTicksCount: 8, scaleTickSuffix: &#39; EV&#39;, labelSuffix: &#39; EV&#39; }&quot;&gt;
+  u-ranger=&quot;{ scaleTicksCount: 8, scaleTickSuffix: &#39; EV&#39;, labelSuffix: &#39; EV&#39; }&quot;&gt;
 </pre>
   </div>
 </div>
@@ -205,7 +205,7 @@
 <p>
   Два ползунка через <code>data-points</code> задают вилку зарплаты в вакансии, значения
   дублируются в числовые поля ниже через <code>fromInput</code>/<code>toInput</code> — оба
-  найдены через <a href="/v-ref"><code>v-ref</code></a> и <code>$refs</code>, без единой строчки
+  найдены через <a href="/u-ref"><code>u-ref</code></a> и <code>$refs</code>, без единой строчки
   собственного JS, — а <code>minGap</code> не даёт вилке схлопнуться меньше чем на $1000.
 </p>
 
@@ -215,10 +215,10 @@
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data>
+    <div class="demo" u-data>
       <p>
-        <label>От <input type="number" v-ref="salaryFrom" min="0" max="50000" value="2000"></label>
-        <label>До <input type="number" v-ref="salaryTo" min="0" max="50000" value="35000"></label>
+        <label>От <input type="number" u-ref="salaryFrom" min="0" max="50000" value="2000"></label>
+        <label>До <input type="number" u-ref="salaryTo" min="0" max="50000" value="35000"></label>
       </p>
       <input
         type="range"
@@ -227,19 +227,19 @@
         step="1"
         value="2000"
         data-points="35000"
-        v-ranger="{ fromInput: $refs.salaryFrom, toInput: $refs.salaryTo, scaleTicksCount: 5, minGap: 1000, format: value => '$' + value.toLocaleString() }"
+        u-ranger="{ fromInput: $refs.salaryFrom, toInput: $refs.salaryTo, scaleTicksCount: 5, minGap: 1000, format: value => '$' + value.toLocaleString() }"
       >
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-data&gt;
-  &lt;label&gt;От &lt;input type=&quot;number&quot; v-ref=&quot;salaryFrom&quot; min=&quot;0&quot; max=&quot;50000&quot; value=&quot;2000&quot;&gt;&lt;/label&gt;
-  &lt;label&gt;До &lt;input type=&quot;number&quot; v-ref=&quot;salaryTo&quot; min=&quot;0&quot; max=&quot;50000&quot; value=&quot;35000&quot;&gt;&lt;/label&gt;
+&lt;div u-data&gt;
+  &lt;label&gt;От &lt;input type=&quot;number&quot; u-ref=&quot;salaryFrom&quot; min=&quot;0&quot; max=&quot;50000&quot; value=&quot;2000&quot;&gt;&lt;/label&gt;
+  &lt;label&gt;До &lt;input type=&quot;number&quot; u-ref=&quot;salaryTo&quot; min=&quot;0&quot; max=&quot;50000&quot; value=&quot;35000&quot;&gt;&lt;/label&gt;
 
   &lt;input
     type=&quot;range&quot; min=&quot;0&quot; max=&quot;50000&quot; step=&quot;1&quot; value=&quot;2000&quot; data-points=&quot;35000&quot;
-    v-ranger=&quot;{
+    u-ranger=&quot;{
       fromInput: $refs.salaryFrom,
       toInput: $refs.salaryTo,
       scaleTicksCount: 5,
@@ -267,14 +267,14 @@
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data>
-      <input type="range" min="0" max="100" step="1" value="48" data-points="52" v-ranger="{ snapPoints: [25, 50, 75], labelSuffix: '%', scaleTickSuffix: '%' }">
+    <div class="demo" u-data>
+      <input type="range" min="0" max="100" step="1" value="48" data-points="52" u-ranger="{ snapPoints: [25, 50, 75], labelSuffix: '%', scaleTickSuffix: '%' }">
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
 &lt;input type=&quot;range&quot; min=&quot;0&quot; max=&quot;100&quot; step=&quot;1&quot; value=&quot;48&quot; data-points=&quot;52&quot;
-  v-ranger=&quot;{ snapPoints: [25, 50, 75], labelSuffix: &#39;%&#39;, scaleTickSuffix: &#39;%&#39; }&quot;&gt;
+  u-ranger=&quot;{ snapPoints: [25, 50, 75], labelSuffix: &#39;%&#39;, scaleTickSuffix: &#39;%&#39; }&quot;&gt;
 </pre>
   </div>
 </div>
@@ -299,14 +299,14 @@
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data>
+    <div class="demo" u-data>
       <input
         type="range"
         min="0"
         max="100"
         step="1"
         value="50"
-        v-ranger="{
+        u-ranger="{
           scaleTicksCount: 10,
           scaleMinorTicksCount: 9,
           scaleAnimatedTicksCount: 3,
@@ -325,7 +325,7 @@
         step="1"
         value="20"
         data-points="80"
-        v-ranger="{
+        u-ranger="{
           scaleTicksCount: 10,
           scaleMinorTicksCount: 4,
           scaleAnimatedTicksCount: 2,
@@ -343,7 +343,7 @@
     <pre>
 &lt;input
   type=&quot;range&quot; min=&quot;0&quot; max=&quot;100&quot; step=&quot;1&quot; value=&quot;50&quot;
-  v-ranger=&quot;{
+  u-ranger=&quot;{
     scaleTicksCount: 10,
     scaleMinorTicksCount: 9,
     scaleAnimatedTicksCount: 3,
@@ -358,7 +358,7 @@
 
 &lt;input
   type=&quot;range&quot; min=&quot;0&quot; max=&quot;100&quot; step=&quot;1&quot; value=&quot;20&quot; data-points=&quot;80&quot;
-  v-ranger=&quot;{
+  u-ranger=&quot;{
     scaleTicksCount: 10,
     scaleMinorTicksCount: 4,
     scaleAnimatedTicksCount: 2,
@@ -386,7 +386,7 @@
   выбор датами с 5 по 23 июня, когда номер свободен, — шкала по-прежнему показывает весь месяц, но
   перетащить ручку за эти границы нельзя, она просто останавливается на них. Массив дат и функция
   форматирования вынесены в <code>Youla.data('bookingDates', ...)</code> — так выражение прямо в
-  <code>v-ranger</code> остаётся коротким.
+  <code>u-ranger</code> остаётся коротким.
 </p>
 
 <div class="example">
@@ -396,21 +396,21 @@
     <button type="button" class="example__tab" data-tab="js">JS</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data>
-      <input type="range" value="2" v-ranger="{ values: ['XS', 'S', 'M', 'L', 'XL', 'XXL'] }">
+    <div class="demo" u-data>
+      <input type="range" value="2" u-ranger="{ values: ['XS', 'S', 'M', 'L', 'XL', 'XXL'] }">
     </div>
-    <div class="demo" v-data="bookingDates">
-      <input type="range" value="8" data-points="18" v-ranger="{ values: dateValues, minValue: 4, maxValue: 22, format: formatBookingDate }">
+    <div class="demo" u-data="bookingDates">
+      <input type="range" value="8" data-points="18" u-ranger="{ values: dateValues, minValue: 4, maxValue: 22, format: formatBookingDate }">
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;input type=&quot;range&quot; value=&quot;2&quot; v-ranger=&quot;{ values: [&#39;XS&#39;, &#39;S&#39;, &#39;M&#39;, &#39;L&#39;, &#39;XL&#39;, &#39;XXL&#39;] }&quot;&gt;
+&lt;input type=&quot;range&quot; value=&quot;2&quot; u-ranger=&quot;{ values: [&#39;XS&#39;, &#39;S&#39;, &#39;M&#39;, &#39;L&#39;, &#39;XL&#39;, &#39;XXL&#39;] }&quot;&gt;
 
-&lt;div v-data=&quot;bookingDates&quot;&gt;
+&lt;div u-data=&quot;bookingDates&quot;&gt;
   &lt;input
     type=&quot;range&quot; value=&quot;8&quot; data-points=&quot;18&quot;
-    v-ranger=&quot;{ values: dateValues, minValue: 4, maxValue: 22, format: formatBookingDate }&quot;
+    u-ranger=&quot;{ values: dateValues, minValue: 4, maxValue: 22, format: formatBookingDate }&quot;
   &gt;
 &lt;/div&gt;
 </pre>
@@ -450,14 +450,14 @@ Youla.data(&#39;bookingDates&#39;, () =&gt; {
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data>
+    <div class="demo" u-data>
       <input
         type="range"
         min="0"
         max="5000"
         step="50"
         value="1250"
-        v-ranger="{ scaleTicksCount: 5, format: value => value >= 1000 ? (value / 1000).toFixed(2) + ' ТБ' : value + ' ГБ' }"
+        u-ranger="{ scaleTicksCount: 5, format: value => value >= 1000 ? (value / 1000).toFixed(2) + ' ТБ' : value + ' ГБ' }"
       >
     </div>
   </div>
@@ -465,7 +465,7 @@ Youla.data(&#39;bookingDates&#39;, () =&gt; {
     <pre>
 &lt;input
   type=&quot;range&quot; min=&quot;0&quot; max=&quot;5000&quot; step=&quot;50&quot; value=&quot;1250&quot;
-  v-ranger=&quot;{ scaleTicksCount: 5, format: value =&gt; value &gt;= 1000 ? (value / 1000).toFixed(2) + &#39; ТБ&#39; : value + &#39; ГБ&#39; }&quot;
+  u-ranger=&quot;{ scaleTicksCount: 5, format: value =&gt; value &gt;= 1000 ? (value / 1000).toFixed(2) + &#39; ТБ&#39; : value + &#39; ГБ&#39; }&quot;
 &gt;
 </pre>
   </div>
@@ -490,14 +490,14 @@ Youla.data(&#39;bookingDates&#39;, () =&gt; {
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data>
+    <div class="demo" u-data>
       <input
         type="range"
         min="0.1"
         max="10000"
         step="1"
         value="10"
-        v-ranger="{
+        u-ranger="{
           logScale: true,
           scaleTicksCount: 6,
           format: position => {
@@ -513,7 +513,7 @@ Youla.data(&#39;bookingDates&#39;, () =&gt; {
     <pre>
 &lt;input
   type=&quot;range&quot; min=&quot;0.1&quot; max=&quot;10000&quot; step=&quot;1&quot; value=&quot;10&quot;
-  v-ranger=&quot;{
+  u-ranger=&quot;{
     logScale: true,
     scaleTicksCount: 6,
     format: position =&gt; {
@@ -544,7 +544,7 @@ Youla.data(&#39;bookingDates&#39;, () =&gt; {
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data>
+    <div class="demo" u-data>
       <input
         type="range"
         min="0"
@@ -552,7 +552,7 @@ Youla.data(&#39;bookingDates&#39;, () =&gt; {
         step="1"
         value="30"
         data-points="90"
-        v-ranger="{ scaleTicksCount: 6, format: seconds => `${Math.floor(seconds / 60)}:${String(Math.round(seconds % 60)).padStart(2, '0')}` }"
+        u-ranger="{ scaleTicksCount: 6, format: seconds => `${Math.floor(seconds / 60)}:${String(Math.round(seconds % 60)).padStart(2, '0')}` }"
       >
       <input
         type="range"
@@ -561,7 +561,7 @@ Youla.data(&#39;bookingDates&#39;, () =&gt; {
         step="15"
         value="540"
         data-points="600"
-        v-ranger="{ fixedRange: true, scaleTicksCount: 4, format: minutes => `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}` }"
+        u-ranger="{ fixedRange: true, scaleTicksCount: 4, format: minutes => `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}` }"
       >
     </div>
   </div>
@@ -569,12 +569,12 @@ Youla.data(&#39;bookingDates&#39;, () =&gt; {
     <pre>
 &lt;input
   type=&quot;range&quot; min=&quot;0&quot; max=&quot;180&quot; step=&quot;1&quot; value=&quot;30&quot; data-points=&quot;90&quot;
-  v-ranger=&quot;{ scaleTicksCount: 6, format: seconds =&gt; `${Math.floor(seconds / 60)}:${String(Math.round(seconds % 60)).padStart(2, &#39;0&#39;)}` }&quot;
+  u-ranger=&quot;{ scaleTicksCount: 6, format: seconds =&gt; `${Math.floor(seconds / 60)}:${String(Math.round(seconds % 60)).padStart(2, &#39;0&#39;)}` }&quot;
 &gt;
 
 &lt;input
   type=&quot;range&quot; min=&quot;480&quot; max=&quot;1080&quot; step=&quot;15&quot; value=&quot;540&quot; data-points=&quot;600&quot;
-  v-ranger=&quot;{ fixedRange: true, scaleTicksCount: 4, format: minutes =&gt; `${String(Math.floor(minutes / 60)).padStart(2, &#39;0&#39;)}:${String(minutes % 60).padStart(2, &#39;0&#39;)}` }&quot;
+  u-ranger=&quot;{ fixedRange: true, scaleTicksCount: 4, format: minutes =&gt; `${String(Math.floor(minutes / 60)).padStart(2, &#39;0&#39;)}:${String(minutes % 60).padStart(2, &#39;0&#39;)}` }&quot;
 &gt;
 </pre>
   </div>
@@ -597,15 +597,15 @@ Youla.data(&#39;bookingDates&#39;, () =&gt; {
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data>
-      <input type="range" min="50" max="200" step="10" value="100" v-ranger="{ fineStep: 1, labelOnDragOnly: true, labelSuffix: '%', scaleTickSuffix: '%' }">
+    <div class="demo" u-data>
+      <input type="range" min="50" max="200" step="10" value="100" u-ranger="{ fineStep: 1, labelOnDragOnly: true, labelSuffix: '%', scaleTickSuffix: '%' }">
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
 &lt;input
   type=&quot;range&quot; min=&quot;50&quot; max=&quot;200&quot; step=&quot;10&quot; value=&quot;100&quot;
-  v-ranger=&quot;{ fineStep: 1, labelOnDragOnly: true, labelSuffix: &#39;%&#39;, scaleTickSuffix: &#39;%&#39; }&quot;
+  u-ranger=&quot;{ fineStep: 1, labelOnDragOnly: true, labelSuffix: &#39;%&#39;, scaleTickSuffix: &#39;%&#39; }&quot;
 &gt;
 </pre>
   </div>
@@ -627,15 +627,15 @@ Youla.data(&#39;bookingDates&#39;, () =&gt; {
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data>
-      <input type="range" min="0" max="100" step="1" value="40" v-ranger="{ fillGradient: 'linear-gradient(to right, #22c55e, #eab308, #ef4444)' }">
+    <div class="demo" u-data>
+      <input type="range" min="0" max="100" step="1" value="40" u-ranger="{ fillGradient: 'linear-gradient(to right, #22c55e, #eab308, #ef4444)' }">
       <input
         type="range"
         min="0"
         max="100"
         step="1"
         value="40"
-        v-ranger="{ fillGradient: 'linear-gradient(to right, #00a651 0 calc(20% - 1px), var(--ranger-bg) calc(20% - 1px) 20%, #7cb342 20% calc(40% - 1px), var(--ranger-bg) calc(40% - 1px) 40%, #fdd835 40% calc(60% - 1px), var(--ranger-bg) calc(60% - 1px) 60%, #fb8c00 60% calc(80% - 1px), var(--ranger-bg) calc(80% - 1px) 80%, #e53935 80% 100%)' }"
+        u-ranger="{ fillGradient: 'linear-gradient(to right, #00a651 0 calc(20% - 1px), var(--ranger-bg) calc(20% - 1px) 20%, #7cb342 20% calc(40% - 1px), var(--ranger-bg) calc(40% - 1px) 40%, #fdd835 40% calc(60% - 1px), var(--ranger-bg) calc(60% - 1px) 60%, #fb8c00 60% calc(80% - 1px), var(--ranger-bg) calc(80% - 1px) 80%, #e53935 80% 100%)' }"
       >
     </div>
   </div>
@@ -643,12 +643,12 @@ Youla.data(&#39;bookingDates&#39;, () =&gt; {
     <pre>
 &lt;input
   type=&quot;range&quot; min=&quot;0&quot; max=&quot;100&quot; step=&quot;1&quot; value=&quot;40&quot;
-  v-ranger=&quot;{ fillGradient: &#39;linear-gradient(to right, #22c55e, #eab308, #ef4444)&#39; }&quot;
+  u-ranger=&quot;{ fillGradient: &#39;linear-gradient(to right, #22c55e, #eab308, #ef4444)&#39; }&quot;
 &gt;
 
 &lt;input
   type=&quot;range&quot; min=&quot;0&quot; max=&quot;100&quot; step=&quot;1&quot; value=&quot;40&quot;
-  v-ranger=&quot;{
+  u-ranger=&quot;{
     fillGradient: &#39;linear-gradient(to right,
       #00a651 0 calc(20% - 1px), var(--ranger-bg) calc(20% - 1px) 20%,
       #7cb342 20% calc(40% - 1px), var(--ranger-bg) calc(40% - 1px) 40%,
@@ -677,14 +677,14 @@ Youla.data(&#39;bookingDates&#39;, () =&gt; {
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data>
+    <div class="demo" u-data>
       <input
         type="range"
         min="0"
         max="1000"
         step="10"
         value="450"
-        v-ranger="{
+        u-ranger="{
           scaleTicksCount: 5,
           marks: [
             { value: 300, label: 'Типично' },
@@ -700,7 +700,7 @@ Youla.data(&#39;bookingDates&#39;, () =&gt; {
     <pre>
 &lt;input
   type=&quot;range&quot; min=&quot;0&quot; max=&quot;1000&quot; step=&quot;10&quot; value=&quot;450&quot;
-  v-ranger=&quot;{
+  u-ranger=&quot;{
     scaleTicksCount: 5,
     marks: [
       { value: 300, label: &#39;Типично&#39; },
@@ -723,8 +723,8 @@ Youla.data(&#39;bookingDates&#39;, () =&gt; {
   переключает <code>disabled</code>, «Увеличить лимит» удваивает <code>max</code> у обоих
   слайдеров ниже и перестраивает их шкалу. Сам экземпляр <code>Ranger</code> директива кладёт на
   DOM-элемент как <code>el._x_ranger</code>, поэтому до него легко добраться через
-  <a href="/v-ref"><code>v-ref</code></a> и <code>$refs</code>, без отдельной переменной в
-  <code>v-data</code>.
+  <a href="/u-ref"><code>u-ref</code></a> и <code>$refs</code>, без отдельной переменной в
+  <code>u-data</code>.
 </p>
 
 <div class="example">
@@ -733,9 +733,9 @@ Youla.data(&#39;bookingDates&#39;, () =&gt; {
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data>
-      <input type="range" min="0" max="100" step="1" value="50" v-ref="presetVolume" v-ranger="{ labelSuffix: '%' }">
-      <input type="range" min="0" max="100" step="1" value="20" data-points="60" v-ref="presetPrice" v-ranger="{ labelPrefix: '$' }">
+    <div class="demo" u-data>
+      <input type="range" min="0" max="100" step="1" value="50" u-ref="presetVolume" u-ranger="{ labelSuffix: '%' }">
+      <input type="range" min="0" max="100" step="1" value="20" data-points="60" u-ref="presetPrice" u-ranger="{ labelPrefix: '$' }">
       <p>
         <button type="button" @click="$refs.presetVolume._x_ranger.setValue(80)">Комфортный уровень</button>
         <button type="button" @click="$refs.presetPrice._x_ranger.setRange(30, 70)">Средний сегмент</button>
@@ -746,9 +746,9 @@ Youla.data(&#39;bookingDates&#39;, () =&gt; {
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-data&gt;
-  &lt;input type=&quot;range&quot; min=&quot;0&quot; max=&quot;100&quot; step=&quot;1&quot; value=&quot;50&quot; v-ref=&quot;presetVolume&quot; v-ranger=&quot;{ labelSuffix: &#39;%&#39; }&quot;&gt;
-  &lt;input type=&quot;range&quot; min=&quot;0&quot; max=&quot;100&quot; step=&quot;1&quot; value=&quot;20&quot; data-points=&quot;60&quot; v-ref=&quot;presetPrice&quot; v-ranger=&quot;{ labelPrefix: &#39;$&#39; }&quot;&gt;
+&lt;div u-data&gt;
+  &lt;input type=&quot;range&quot; min=&quot;0&quot; max=&quot;100&quot; step=&quot;1&quot; value=&quot;50&quot; u-ref=&quot;presetVolume&quot; u-ranger=&quot;{ labelSuffix: &#39;%&#39; }&quot;&gt;
+  &lt;input type=&quot;range&quot; min=&quot;0&quot; max=&quot;100&quot; step=&quot;1&quot; value=&quot;20&quot; data-points=&quot;60&quot; u-ref=&quot;presetPrice&quot; u-ranger=&quot;{ labelPrefix: &#39;$&#39; }&quot;&gt;
 
   &lt;button type=&quot;button&quot; @click=&quot;$refs.presetVolume._x_ranger.setValue(80)&quot;&gt;
     Комфортный уровень
@@ -796,14 +796,14 @@ Youla.data(&#39;bookingDates&#39;, () =&gt; {
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" dir="rtl" v-data="{ logText: '' }">
+    <div class="demo" dir="rtl" u-data="{ logText: '' }">
       <input
         type="range"
         min="0"
         max="100"
         step="1"
         value="50"
-        v-ranger="{
+        u-ranger="{
           scaleTicksCount: 10,
           labelSuffix: '%',
           onStart: value => logText = 'onStart: ' + value + '\n' + logText,
@@ -813,15 +813,15 @@ Youla.data(&#39;bookingDates&#39;, () =&gt; {
           onBlur: value => logText = 'onBlur: ' + value + '\n' + logText,
         }"
       >
-      <pre v-text="logText" style="max-height: 160px; overflow-y: auto;"></pre>
+      <pre u-text="logText" style="max-height: 160px; overflow-y: auto;"></pre>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div dir=&quot;rtl&quot; v-data=&quot;{ logText: &#39;&#39; }&quot;&gt;
+&lt;div dir=&quot;rtl&quot; u-data=&quot;{ logText: &#39;&#39; }&quot;&gt;
   &lt;input
     type=&quot;range&quot; min=&quot;0&quot; max=&quot;100&quot; step=&quot;1&quot; value=&quot;50&quot;
-    v-ranger=&quot;{
+    u-ranger=&quot;{
       scaleTicksCount: 10,
       labelSuffix: &#39;%&#39;,
       onStart: value =&gt; logText = &#39;onStart: &#39; + value + &#39;\n&#39; + logText,
@@ -831,7 +831,7 @@ Youla.data(&#39;bookingDates&#39;, () =&gt; {
       onBlur: value =&gt; logText = &#39;onBlur: &#39; + value + &#39;\n&#39; + logText,
     }&quot;
   &gt;
-  &lt;pre v-text=&quot;logText&quot;&gt;&lt;/pre&gt;
+  &lt;pre u-text=&quot;logText&quot;&gt;&lt;/pre&gt;
 &lt;/div&gt;
 </pre>
   </div>

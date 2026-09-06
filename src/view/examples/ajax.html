@@ -267,7 +267,7 @@ $ajax(route, payload, onProgress, options)
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo example-ajax" v-data>
+    <div class="demo example-ajax" u-data>
       <button type="button" id="like-button" @click="$ajax('/demo/like')">
         <span id="like-count">★ 42</span> Нравится
       </button>
@@ -275,7 +275,7 @@ $ajax(route, payload, onProgress, options)
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-data=&quot;{}&quot;&gt;
+&lt;div u-data=&quot;{}&quot;&gt;
   &lt;button type=&quot;button&quot; id=&quot;like-button&quot; @click=&quot;$ajax('/demo/like')&quot;&gt;
     &lt;span id=&quot;like-count&quot;&gt;★ 42&lt;/span&gt; Нравится
   &lt;/button&gt;
@@ -297,7 +297,7 @@ $ajax(route, payload, onProgress, options)
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo example-ajax" v-data="{ percent: 0 }">
+    <div class="demo example-ajax" u-data="{ percent: 0 }">
       <form @submit.prevent="$ajax('/demo/upload', {}, p => percent = p.percent).then(() => percent = 0)">
         <input type="file" name="file">
         <button type="submit">Загрузить</button>
@@ -308,7 +308,7 @@ $ajax(route, payload, onProgress, options)
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-data=&quot;{ percent: 0 }&quot;&gt;
+&lt;div u-data=&quot;{ percent: 0 }&quot;&gt;
   &lt;form @submit.prevent=&quot;
     $ajax('/demo/upload', {}, p =&gt; percent = p.percent)
       .then(() =&gt; percent = 0)
@@ -345,34 +345,34 @@ $ajax(route, payload, onProgress, options)
   </div>
   <div class="example__panel is-active" data-panel="preview">
     <div class="demo example-ajax">
-      <div v-data="{ text: '' }">
+      <div u-data="{ text: '' }">
         <form @submit.prevent="$ajax('/demo/comment')">
-          <input id="comment-input" v-prop="text" name="text" placeholder="Комментарий...">
+          <input id="comment-input" u-prop="text" name="text" placeholder="Комментарий...">
           <button type="submit">Отправить</button>
         </form>
       </div>
       <ul id="comment-list"></ul>
 
-      <div @ajax:notify.document="onNotify($event.detail)" v-data="ajaxToasts">
-        <div v-each="item in items" class="ajax-toast">
-          <span v-text="item.message"></span>
+      <div @ajax:notify.document="onNotify($event.detail)" u-data="ajaxToasts">
+        <div u-each="item in items" class="ajax-toast">
+          <span u-text="item.message"></span>
         </div>
       </div>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-data=&quot;{ text: '' }&quot;&gt;
+&lt;div u-data=&quot;{ text: '' }&quot;&gt;
   &lt;form @submit.prevent=&quot;$ajax('/demo/comment')&quot;&gt;
-    &lt;input id=&quot;comment-input&quot; v-prop=&quot;text&quot; name=&quot;text&quot; placeholder=&quot;Комментарий...&quot;&gt;
+    &lt;input id=&quot;comment-input&quot; u-prop=&quot;text&quot; name=&quot;text&quot; placeholder=&quot;Комментарий...&quot;&gt;
     &lt;button type=&quot;submit&quot;&gt;Отправить&lt;/button&gt;
   &lt;/form&gt;
 &lt;/div&gt;
 &lt;ul id=&quot;comment-list&quot;&gt;&lt;/ul&gt;
 
-&lt;div @ajax:notify.document=&quot;onNotify($event.detail)&quot; v-data=&quot;ajaxToasts&quot;&gt;
-  &lt;div v-each=&quot;item in items&quot; class=&quot;ajax-toast&quot;&gt;
-    &lt;span v-text=&quot;item.message&quot;&gt;&lt;/span&gt;
+&lt;div @ajax:notify.document=&quot;onNotify($event.detail)&quot; u-data=&quot;ajaxToasts&quot;&gt;
+  &lt;div u-each=&quot;item in items&quot; class=&quot;ajax-toast&quot;&gt;
+    &lt;span u-text=&quot;item.message&quot;&gt;&lt;/span&gt;
   &lt;/div&gt;
 &lt;/div&gt;
 </pre>
@@ -409,18 +409,18 @@ Youla.data('ajaxToasts', () =&gt; ({
     <button type="button" class="example__tab" data-tab="js">JS</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo example-ajax" v-data="{ outcome: '' }">
+    <div class="demo example-ajax" u-data="{ outcome: '' }">
       <button type="button" @click="$ajax('/demo/echo').then(value => outcome = value)">Отправить</button>
-      <div v-text="outcome"></div>
+      <div u-text="outcome"></div>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-data=&quot;{ outcome: '' }&quot;&gt;
+&lt;div u-data=&quot;{ outcome: '' }&quot;&gt;
   &lt;button type=&quot;button&quot; @click=&quot;$ajax('/demo/echo').then(value =&gt; outcome = value)&quot;&gt;
     Отправить
   &lt;/button&gt;
-  &lt;div v-text=&quot;outcome&quot;&gt;&lt;/div&gt;
+  &lt;div u-text=&quot;outcome&quot;&gt;&lt;/div&gt;
 &lt;/div&gt;
 </pre>
   </div>

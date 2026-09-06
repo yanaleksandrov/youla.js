@@ -988,7 +988,7 @@ document.addEventListener('youla:init', () => {
    */
   Youla.directive('ranger', (el, output) => {
     if (!(el instanceof HTMLInputElement) || el.type !== 'range') {
-      console.warn('Youla.js: "v-ranger" requires an <input type="range">.');
+      console.warn('Youla.js: "u-ranger" requires an <input type="range">.');
       return;
     }
 
@@ -1001,11 +1001,11 @@ document.addEventListener('youla:init', () => {
 
     el._x_ranger = new Ranger(el, options);
 
-    // The cloned second handle inherits directive attributes (e.g. v-ref) from "el" — strip them to avoid collisions.
+    // The cloned second handle inherits directive attributes (e.g. u-ref) from "el" — strip them to avoid collisions.
     if (el._x_ranger.toSlider) {
       [...el._x_ranger.toSlider.attributes]
         .map(({ name }) => name)
-        .filter((name) => /^(v-|@|:)/.test(name))
+        .filter((name) => /^(u-|@|:)/.test(name))
         .forEach((name) => el._x_ranger.toSlider.removeAttribute(name));
     }
   });

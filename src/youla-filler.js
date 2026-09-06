@@ -26,8 +26,8 @@ const classNames = (prefix, suffixes) => Object.fromEntries(
   Object.entries(suffixes).map(([key, suffix]) => [key, suffix ? `${prefix}-${suffix}` : prefix]),
 );
 
-// Exported so other UI built outside the v-data/directive system can attach a real filler to an
-// <input> it built by hand, the same way the "v-filler" directive below does.
+// Exported so other UI built outside the u-data/directive system can attach a real filler to an
+// <input> it built by hand, the same way the "u-filler" directive below does.
 export class Filler {
   static DEFAULTS = {
     classes: {
@@ -1839,7 +1839,7 @@ document.addEventListener('youla:init', ()=> {
   // Turns `<input type="text">` into a Figma-style fill field: swatch, HEX input, and a transparency field.
   Youla.directive('filler', (el, output) => {
     if (!(el instanceof HTMLInputElement)) {
-      console.warn('Youla.js: "v-filler" requires an <input>.');
+      console.warn('Youla.js: "u-filler" requires an <input>.');
       return;
     }
 

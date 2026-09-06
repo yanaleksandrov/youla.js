@@ -29,10 +29,10 @@ export function domReady() {
 
 /**
  * Checks whether an element carries a directive, matching by base name so any modifiers
- * on it (e.g. "v-data.local") are ignored.
+ * on it (e.g. "u-data.local") are ignored.
  *
  * @param {Element} el - The element to check.
- * @param {string} name - The directive's base name, e.g. "v-data".
+ * @param {string} name - The directive's base name, e.g. "u-data".
  * @returns {boolean} True if the element has this directive, with or without modifiers.
  */
 export function hasDirective(el, name) {
@@ -43,7 +43,7 @@ export function hasDirective(el, name) {
  * Finds the nearest element, starting at "el" itself, that carries the given directive.
  *
  * @param {Element} el - The element to start searching from.
- * @param {string} name - The directive's base name, e.g. "v-data".
+ * @param {string} name - The directive's base name, e.g. "u-data".
  * @returns {Element|null} The matching element, or null if none is found.
  */
 export function closestDirective(el, name) {
@@ -55,7 +55,7 @@ export function closestDirective(el, name) {
 
 /**
  * Walks the DOM tree rooted at "el" depth-first, invoking "callback" for "el" itself and every
- * descendant. Stops at a nested "v-data" component's boundary, and treats a "v-each" template
+ * descendant. Stops at a nested "u-data" component's boundary, and treats a "u-each" template
  * element as a leaf rather than walking into its unrendered children. A same-origin "<iframe>"
  * with content already in it (the editrix canvas, say — see getCanvasList() in youla-editrix.js)
  * walks straight into its own "<body>" too, transparently: refresh()'s own domWalk(self.root, ...)
@@ -76,12 +76,12 @@ export function domWalk(el, callback) {
   const children = Array.from(iframeBody ? iframeBody.children : el.children);
 
   for (const node of children) {
-    if (hasDirective(node, 'v-data')) {
+    if (hasDirective(node, 'u-data')) {
       return;
     }
 
-    // "v-each" elements are templates: the directive itself clones and walks each rendered item, so descending into the raw template here would evaluate its children without loop scope.
-    if (node.hasAttribute('v-each')) {
+    // "u-each" elements are templates: the directive itself clones and walks each rendered item, so descending into the raw template here would evaluate its children without loop scope.
+    if (node.hasAttribute('u-each')) {
       callback(node);
     } else {
       domWalk(node, callback);

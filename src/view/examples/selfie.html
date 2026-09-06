@@ -1,27 +1,28 @@
 <% var data = {
-  title: "Селфи с камеры ($stream)"
+  title: "Селфи с камеры (stream)"
 }; %>
 <%= _.template(require('../parts/header.html').default)(data) %>
 
-<h1>Селфи с камеры ($stream)</h1>
+<h1>Селфи с камеры (<code>u-data="stream"</code>)</h1>
 
 <p>
-  <code>$stream</code> оборачивает <code>getUserMedia</code> в готовый сценарий «превью с
+  <code>u-data="stream"</code> оборачивает <code>getUserMedia</code> в готовый сценарий «превью с
   веб-камеры → снимок в <code>&lt;canvas&gt;</code> → результат в <code>&lt;img&gt;</code>».
-  Разметке нужны только два элемента, помеченных <a href="/v-ref"><code>v-ref</code></a> —
-  <code>video</code> и <code>image</code>, — а вся работа с камерой и кадрированием снимка
-  спрятана внутри него.
+  Разметке нужны только два элемента с <code>u-bind="videoRef"</code> и
+  <code>u-bind="imageRef"</code> — сами эти наборы ставят <a href="/u-ref"><code>u-ref</code></a>
+  из данных компонента, а вся работа с камерой и кадрированием снимка спрятана внутри него.
 </p>
 
 <p>
-  <code>&lt;canvas&gt;</code> в разметке не обязателен — если не передать <code>v-ref="canvas"</code>,
-  <code>$stream</code> заведёт его сам, вне DOM, как черновик для кадрирования кадра.
+  <code>&lt;canvas&gt;</code> в разметке не обязателен — если не передать <code>u-bind="canvasRef"</code>
+  (ставит <code>u-ref="canvas"</code>), компонент заведёт его сам, вне DOM, как черновик для
+  кадрирования кадра.
 </p>
 
 <p>
-  <code>$stream</code> — переменная (<code>Youla.variable()</code>), поэтому доступна в
-  любом выражении, не только в <code>@click</code>: например, <code>$stream.error</code> можно
-  читать прямо в <code>v-show</code>, чтобы показать причину, по которой камера не заработала.
+  <code>stream</code> — именованный провайдер (<code>Youla.data()</code>), поэтому его свойства
+  и методы доступны внутри <code>u-data="stream"</code> без префикса: например, <code>error</code>
+  можно читать прямо в <code>u-show</code>, чтобы показать причину, по которой камера не заработала.
 </p>
 
 <div class="example">
@@ -30,36 +31,36 @@
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo example-stream" v-data>
-      <video v-ref="video" autoplay playsinline muted></video>
-      <img v-ref="image" alt="Селфи">
+    <div class="demo example-stream" u-data="stream">
+      <video u-bind="videoRef" autoplay playsinline muted></video>
+      <img u-bind="imageRef" alt="Селфи">
 
-      <p class="example-stream__error" v-show="$stream.error" hidden>
-        <span v-show="$stream.error === 'denied'">Доступ к камере запрещён — разрешите его в настройках браузера.</span>
-        <span v-show="$stream.error === 'unavailable'">Не удалось получить доступ к камере.</span>
-        <span v-show="$stream.error === 'unsupported'">Браузер не поддерживает камеру.</span>
+      <p class="example-stream__error" u-show="error" hidden>
+        <span u-show="error === 'denied'">Доступ к камере запрещён — разрешите его в настройках браузера.</span>
+        <span u-show="error === 'unavailable'">Не удалось получить доступ к камере.</span>
+        <span u-show="error === 'unsupported'">Браузер не поддерживает камеру.</span>
       </p>
 
       <div class="example-stream__actions">
-        <button type="button" @click="$stream.snap()">Сделать снимок</button>
-        <button type="button" @click="$stream.stop()">Остановить камеру</button>
+        <button type="button" @click="snap()">Сделать снимок</button>
+        <button type="button" @click="stop()">Остановить камеру</button>
       </div>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-data&gt;
-  &lt;video v-ref=&quot;video&quot; autoplay playsinline muted&gt;&lt;/video&gt;
-  &lt;img v-ref=&quot;image&quot; alt=&quot;Селфи&quot;&gt;
+&lt;div u-data=&quot;stream&quot;&gt;
+  &lt;video u-bind=&quot;videoRef&quot; autoplay playsinline muted&gt;&lt;/video&gt;
+  &lt;img u-bind=&quot;imageRef&quot; alt=&quot;Селфи&quot;&gt;
 
-  &lt;p v-show=&quot;$stream.error&quot;&gt;
-    &lt;span v-show=&quot;$stream.error === 'denied'&quot;&gt;Доступ к камере запрещён.&lt;/span&gt;
-    &lt;span v-show=&quot;$stream.error === 'unavailable'&quot;&gt;Не удалось получить доступ к камере.&lt;/span&gt;
-    &lt;span v-show=&quot;$stream.error === 'unsupported'&quot;&gt;Браузер не поддерживает камеру.&lt;/span&gt;
+  &lt;p u-show=&quot;error&quot;&gt;
+    &lt;span u-show=&quot;error === 'denied'&quot;&gt;Доступ к камере запрещён.&lt;/span&gt;
+    &lt;span u-show=&quot;error === 'unavailable'&quot;&gt;Не удалось получить доступ к камере.&lt;/span&gt;
+    &lt;span u-show=&quot;error === 'unsupported'&quot;&gt;Браузер не поддерживает камеру.&lt;/span&gt;
   &lt;/p&gt;
 
-  &lt;button type=&quot;button&quot; @click=&quot;$stream.snap()&quot;&gt;Сделать снимок&lt;/button&gt;
-  &lt;button type=&quot;button&quot; @click=&quot;$stream.stop()&quot;&gt;Остановить камеру&lt;/button&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;snap()&quot;&gt;Сделать снимок&lt;/button&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;stop()&quot;&gt;Остановить камеру&lt;/button&gt;
 &lt;/div&gt;
 </pre>
   </div>
@@ -98,13 +99,20 @@
   полученный поток, не запрашивая разрешение заново.
 </p>
 
-<h2>Методы и свойства $stream вкратце</h2>
+<h2>Методы и свойства <code>stream</code> вкратце</h2>
 
 <table>
   <tbody>
     <tr>
       <th>Имя</th>
       <th>Что делает</th>
+    </tr>
+    <tr>
+      <td><code>videoRef</code>, <code>imageRef</code>, <code>canvasRef</code></td>
+      <td>
+        Готовые наборы для <code>u-bind</code>, каждый ставит соответствующий <code>u-ref</code>
+        (<code>video</code>, <code>image</code>, <code>canvas</code>) на элемент, к которому применён
+      </td>
     </tr>
     <tr>
       <td><code>error</code></td>
@@ -142,7 +150,7 @@
     </tr>
     <tr>
       <td><code>getCanvas()</code></td>
-      <td>Возвращает <code>v-ref="canvas"</code> из разметки, если он есть, иначе — созданный один раз и переиспользуемый закадровый <code>&lt;canvas&gt;</code></td>
+      <td>Возвращает элемент с <code>u-bind="canvasRef"</code> из разметки, если он есть, иначе — созданный один раз и переиспользуемый закадровый <code>&lt;canvas&gt;</code></td>
     </tr>
     <tr>
       <td><code>isVisible(el)</code></td>
@@ -152,7 +160,7 @@
 </table>
 
 <p>
-  Поток привязан к конкретному <code>video</code>: если на странице несколько <code>$stream</code>,
+  Поток привязан к конкретному <code>video</code>: если на странице несколько <code>u-data="stream"</code>,
   у каждого — свой запрос камеры и свой набор треков, остановка одного не трогает другие.
 </p>
 

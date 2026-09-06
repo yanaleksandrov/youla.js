@@ -1,12 +1,12 @@
 <% var data = {
-title: "v-data"
+title: "u-data"
 }; %>
 <%= _.template(require('./parts/header.html').default)(data) %>
 
-<h1>v-data</h1>
+<h1>u-data</h1>
 
 <p>
-  Директива <code>v-data</code> — стартовая точка в Youla.js. Она превращает элемент HTML
+  Директива <code>u-data</code> — стартовая точка в Youla.js. Она превращает элемент HTML
   в компонент и задаёт его реактивные данные, доступные во всех дочерних выражениях.
 </p>
 
@@ -21,16 +21,16 @@ title: "v-data"
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data="{ count: 0 }">
+    <div class="demo" u-data="{ count: 0 }">
       <button type="button" @click="count++">+1</button>
-      <span v-text="count"></span>
+      <span u-text="count"></span>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-data=&quot;{ count: 0 }&quot;&gt;
+&lt;div u-data=&quot;{ count: 0 }&quot;&gt;
   &lt;button type=&quot;button&quot; @click=&quot;count++&quot;&gt;+1&lt;/button&gt;
-  &lt;span v-text=&quot;count&quot;&gt;&lt;/span&gt;
+  &lt;span u-text=&quot;count&quot;&gt;&lt;/span&gt;
 &lt;/div&gt;
 </pre>
   </div>
@@ -45,7 +45,7 @@ title: "v-data"
 </p>
 
 <p>
-  <code>v-data="выражение as имя"</code> даёт данным ещё и явное локальное имя — например,
+  <code>u-data="выражение as имя"</code> даёт данным ещё и явное локальное имя — например,
   <code>counter.count</code> вместо просто <code>count</code>. Так на пару символов длиннее, зато
   сразу видно, какому объекту принадлежит значение или вызов — связь между частями компонента
   явная, а не подразумевается. Беспрефиксный доступ никуда не девается, псевдоним — просто ещё
@@ -58,32 +58,32 @@ title: "v-data"
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data="{ count: 0 } as counter">
+    <div class="demo" u-data="{ count: 0 } as counter">
       <button type="button" @click="counter.count++">+1</button>
-      <span v-text="counter.count"></span>
+      <span u-text="counter.count"></span>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-data=&quot;{ count: 0 } as counter&quot;&gt;
+&lt;div u-data=&quot;{ count: 0 } as counter&quot;&gt;
   &lt;button type=&quot;button&quot; @click=&quot;counter.count++&quot;&gt;+1&lt;/button&gt;
-  &lt;span v-text=&quot;counter.count&quot;&gt;&lt;/span&gt;
+  &lt;span u-text=&quot;counter.count&quot;&gt;&lt;/span&gt;
 &lt;/div&gt;
 </pre>
   </div>
 </div>
 
 <p>
-  Псевдоним и без него доступ работают одинаково реактивно — <code>v-show</code>, <code>:class</code>,
-  <code>v-each</code> и остальные директивы реагируют на изменения в обоих случаях. Про то, почему
+  Псевдоним и без него доступ работают одинаково реактивно — <code>u-show</code>, <code>:class</code>,
+  <code>u-each</code> и остальные директивы реагируют на изменения в обоих случаях. Про то, почему
   псевдоним не пересекается с другими компонентами на странице, — в следующем разделе.
 </p>
 
-<h2>Вложенные <code>v-data</code></h2>
+<h2>Вложенные <code>u-data</code></h2>
 
 <p>
-  Каждый элемент с <code>v-data</code> — самостоятельный компонент, даже если он лежит внутри
-  другого <code>v-data</code>. У вложенного компонента свои данные: он не видит данные родителя,
+  Каждый элемент с <code>u-data</code> — самостоятельный компонент, даже если он лежит внутри
+  другого <code>u-data</code>. У вложенного компонента свои данные: он не видит данные родителя,
   а родитель не видит его — поэтому можно без опаски использовать одинаковые имена свойств на
   разных уровнях вложенности, конфликтов не будет.
 </p>
@@ -94,24 +94,24 @@ title: "v-data"
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data="{ count: 0 }">
-      Внешний счётчик: <span v-text="count"></span>
+    <div class="demo" u-data="{ count: 0 }">
+      Внешний счётчик: <span u-text="count"></span>
       <button type="button" @click="count++">+1</button>
 
-      <div v-data="{ count: 100 }">
-        Внутренний счётчик: <span v-text="count"></span>
+      <div u-data="{ count: 100 }">
+        Внутренний счётчик: <span u-text="count"></span>
         <button type="button" @click="count++">+1</button>
       </div>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-data=&quot;{ count: 0 }&quot;&gt;
-  Внешний счётчик: &lt;span v-text=&quot;count&quot;&gt;&lt;/span&gt;
+&lt;div u-data=&quot;{ count: 0 }&quot;&gt;
+  Внешний счётчик: &lt;span u-text=&quot;count&quot;&gt;&lt;/span&gt;
   &lt;button type=&quot;button&quot; @click=&quot;count++&quot;&gt;+1&lt;/button&gt;
 
-  &lt;div v-data=&quot;{ count: 100 }&quot;&gt;
-    Внутренний счётчик: &lt;span v-text=&quot;count&quot;&gt;&lt;/span&gt;
+  &lt;div u-data=&quot;{ count: 100 }&quot;&gt;
+    Внутренний счётчик: &lt;span u-text=&quot;count&quot;&gt;&lt;/span&gt;
     &lt;button type=&quot;button&quot; @click=&quot;count++&quot;&gt;+1&lt;/button&gt;
   &lt;/div&gt;
 &lt;/div&gt;
@@ -130,9 +130,9 @@ title: "v-data"
 <h2>Компонент без данных</h2>
 
 <p>
-  Данные в <code>v-data</code> не обязательны. Если нужен просто рабочий компонент — чтобы
+  Данные в <code>u-data</code> не обязательны. Если нужен просто рабочий компонент — чтобы
   повесить обработчик <code>@событие</code>, обратиться к <code>$el</code> или использовать
-  <code>v-ref</code> — пишите директиву без значения. Это частый случай для небольших изолированных
+  <code>u-ref</code> — пишите директиву без значения. Это частый случай для небольших изолированных
   виджетов вроде переключателя или аккордеона, которым не нужно собственное состояние.
 </p>
 
@@ -142,13 +142,13 @@ title: "v-data"
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data @click="$el.classList.toggle('is-open')">
+    <div class="demo" u-data @click="$el.classList.toggle('is-open')">
       Нажмите, чтобы переключить класс <code>is-open</code> на этом блоке
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-data @click=&quot;$el.classList.toggle('is-open')&quot;&gt;
+&lt;div u-data @click=&quot;$el.classList.toggle('is-open')&quot;&gt;
   Нажмите, чтобы переключить класс &lt;code&gt;is-open&lt;/code&gt; на этом блоке
 &lt;/div&gt;
 </pre>
@@ -170,7 +170,7 @@ title: "v-data"
 </p>
 
 <p>
-  Те же модификаторы поддерживает и <a href="/v-prop"><code>v-prop</code></a> — используйте их
+  Те же модификаторы поддерживает и <a href="/u-prop"><code>u-prop</code></a> — используйте их
   там, если нужно сохранять между визитами значение конкретного поля формы, а не всего компонента.
 </p>
 
@@ -252,20 +252,20 @@ title: "v-data"
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data.local.30d="{ theme: 'light' }">
+    <div class="demo" u-data.local.30d="{ theme: 'light' }">
       <button type="button" @click="theme = theme === 'light' ? 'dark' : 'light'">
         Переключить тему
       </button>
-      <p>Тема: <span v-text="theme"></span> — хранится в localStorage 30 дней.</p>
+      <p>Тема: <span u-text="theme"></span> — хранится в localStorage 30 дней.</p>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-data.local.30d=&quot;{ theme: 'light' }&quot;&gt;
+&lt;div u-data.local.30d=&quot;{ theme: 'light' }&quot;&gt;
   &lt;button type=&quot;button&quot; @click=&quot;theme = theme === 'light' ? 'dark' : 'light'&quot;&gt;
     Переключить тему
   &lt;/button&gt;
-  &lt;p&gt;Тема: &lt;span v-text=&quot;theme&quot;&gt;&lt;/span&gt; — хранится в localStorage 30 дней.&lt;/p&gt;
+  &lt;p&gt;Тема: &lt;span u-text=&quot;theme&quot;&gt;&lt;/span&gt; — хранится в localStorage 30 дней.&lt;/p&gt;
 &lt;/div&gt;
 </pre>
   </div>
@@ -277,20 +277,20 @@ title: "v-data"
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data.cookie.1y="{ locale: 'ru' }">
+    <div class="demo" u-data.cookie.1y="{ locale: 'ru' }">
       <button type="button" @click="locale = locale === 'ru' ? 'en' : 'ru'">
         Сменить язык
       </button>
-      <p>Язык: <span v-text="locale"></span> — хранится в cookie год, сервер тоже его увидит.</p>
+      <p>Язык: <span u-text="locale"></span> — хранится в cookie год, сервер тоже его увидит.</p>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-data.cookie.1y=&quot;{ locale: 'ru' }&quot;&gt;
+&lt;div u-data.cookie.1y=&quot;{ locale: 'ru' }&quot;&gt;
   &lt;button type=&quot;button&quot; @click=&quot;locale = locale === 'ru' ? 'en' : 'ru'&quot;&gt;
     Сменить язык
   &lt;/button&gt;
-  &lt;p&gt;Язык: &lt;span v-text=&quot;locale&quot;&gt;&lt;/span&gt; — хранится в cookie год, сервер тоже его увидит.&lt;/p&gt;
+  &lt;p&gt;Язык: &lt;span u-text=&quot;locale&quot;&gt;&lt;/span&gt; — хранится в cookie год, сервер тоже его увидит.&lt;/p&gt;
 &lt;/div&gt;
 </pre>
   </div>
@@ -309,9 +309,9 @@ title: "v-data"
 </blockquote>
 
 <p>
-  Та же длительность работает и у <a href="/v-prop"><code>v-prop</code></a> — например,
-  <code>v-prop.cookie.30d="name"</code> сохранит значение поля на тридцать дней, точно как в
-  примере с <code>v-data</code> выше.
+  Та же длительность работает и у <a href="/u-prop"><code>u-prop</code></a> — например,
+  <code>u-prop.cookie.30d="name"</code> сохранит значение поля на тридцать дней, точно как в
+  примере с <code>u-data</code> выше.
 </p>
 
 <h3>Принять всплывающее окно с файлами cookie</h3>
@@ -327,24 +327,24 @@ title: "v-data"
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data="{popup: false}">
-      <div v-prop.cookie="popup" v-show="!popup" hidden>
+    <div class="demo" u-data="{popup: false}">
+      <div u-prop.cookie="popup" u-show="!popup" hidden>
         <span>We use cookie!</span>
         <button type="button" @click="popup = !popup">Ок, принято</button>
       </div>
-      <p v-show="popup">
+      <p u-show="popup">
         Модальное окно уже было показано
       </p>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-data=&quot;{popup: false}&quot;&gt;
-  &lt;div v-prop.cookie=&quot;popup&quot; v-show=&quot;!popup&quot; hidden&gt;
+&lt;div u-data=&quot;{popup: false}&quot;&gt;
+  &lt;div u-prop.cookie=&quot;popup&quot; u-show=&quot;!popup&quot; hidden&gt;
     &lt;span&gt;We use cookie!&lt;/span&gt;
     &lt;button type=&quot;button&quot; @click=&quot;popup = !popup&quot;&gt;Ок, принято&lt;/button&gt;
   &lt;/div&gt;
-  &lt;p v-show=&quot;popup&quot;&gt;
+  &lt;p u-show=&quot;popup&quot;&gt;
     Модальное окно уже было показано
   &lt;/p&gt;
 &lt;/div&gt;
@@ -358,39 +358,39 @@ title: "v-data"
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data="{voices: 1000, voted: false}">
+    <div class="demo" u-data="{voices: 1000, voted: false}">
       <h3>Голосование без повторов</h3>
       <p>
         Youla.js сохраняет отметку о голосе в localStorage, поэтому перезагрузка страницы не позволит проголосовать ещё раз.
       </p>
-      <div v-prop.local="voices" v-prop.local="voted">
+      <div u-prop.local="voices" u-prop.local="voted">
         <button type="button" @click="--voices; voted = true" :disabled="voted">
           <i class="ph ph-thumbs-down"></i>
         </button>
-        <span v-text="voices"></span>
+        <span u-text="voices"></span>
         <button type="button" @click="++voices; voted = true" :disabled="voted">
           <i class="ph ph-thumbs-up"></i>
         </button>
-        <span class="hidden" @click="voices = 1000; voted = false" v-show="voted">Reset</span>
+        <span class="hidden" @click="voices = 1000; voted = false" u-show="voted">Reset</span>
       </div>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-data=&quot;{voices: 1000, voted: false}&quot;&gt;
+&lt;div u-data=&quot;{voices: 1000, voted: false}&quot;&gt;
   &lt;h3&gt;Голосование без повторов&lt;/h3&gt;
   &lt;p&gt;
     Youla.js сохраняет отметку о голосе в localStorage, поэтому перезагрузка страницы не позволит проголосовать ещё раз.
   &lt;/p&gt;
-  &lt;div v-prop.local=&quot;voices&quot; v-prop.local=&quot;voted&quot;&gt;
+  &lt;div u-prop.local=&quot;voices&quot; u-prop.local=&quot;voted&quot;&gt;
     &lt;button type=&quot;button&quot; @click=&quot;--voices; voted = true&quot; :disabled=&quot;voted&quot;&gt;
       &lt;i class=&quot;ph ph-thumbs-down&quot;&gt;&lt;/i&gt;
     &lt;/button&gt;
-    &lt;span v-text=&quot;voices&quot;&gt;&lt;/span&gt;
+    &lt;span u-text=&quot;voices&quot;&gt;&lt;/span&gt;
     &lt;button type=&quot;button&quot; @click=&quot;++voices; voted = true&quot; :disabled=&quot;voted&quot;&gt;
       &lt;i class=&quot;ph ph-thumbs-up&quot;&gt;&lt;/i&gt;
     &lt;/button&gt;
-    &lt;span class=&quot;hidden&quot; @click=&quot;voices = 1000; voted = false&quot; v-show=&quot;voted&quot;&gt;Reset&lt;/span&gt;
+    &lt;span class=&quot;hidden&quot; @click=&quot;voices = 1000; voted = false&quot; u-show=&quot;voted&quot;&gt;Reset&lt;/span&gt;
   &lt;/div&gt;
 &lt;/div&gt;
 </pre>
@@ -403,18 +403,18 @@ title: "v-data"
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo" v-data>
+    <div class="demo" u-data>
       <h3>Запоминание момента просмотра</h3>
       <p>
         Youla.js сохраняет время просмотра в cookie, и при следующей загрузке страницы предложит продолжить с того же места.
       </p>
       <div>
-        <input type="hidden" v-prop.cookie="time">
-        <video v-ref="video" @play="$el.ontimeupdate = () => time = $el.currentTime" width="640px" height="267px" controls muted>
+        <input type="hidden" u-prop.cookie="time">
+        <video u-ref="video" @play="$el.ontimeupdate = () => time = $el.currentTime" width="640px" height="267px" controls muted>
           <source src="https://vjs.zencdn.net/v/oceans.mp4" type='video/mp4' />
         </video>
-        <div v-show="time > 0">
-          Start playback from <span v-text="parseInt(time, 10)"></span> seconds?
+        <div u-show="time > 0">
+          Start playback from <span u-text="parseInt(time, 10)"></span> seconds?
           <button type="button" @click="$refs.video.currentTime = time; $refs.video.play()">Yes</button>
         </div>
       </div>
@@ -422,18 +422,18 @@ title: "v-data"
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-data&gt;
+&lt;div u-data&gt;
   &lt;h3&gt;Запоминание момента просмотра&lt;/h3&gt;
   &lt;p&gt;
     Youla.js сохраняет время просмотра в cookie, и при следующей загрузке страницы предложит продолжить с того же места.
   &lt;/p&gt;
   &lt;div&gt;
-    &lt;input type=&quot;hidden&quot; v-prop.cookie=&quot;time&quot;&gt;
-    &lt;video v-ref=&quot;video&quot; @play=&quot;$el.ontimeupdate = () =&gt; time = $el.currentTime&quot; width=&quot;640px&quot; height=&quot;267px&quot; controls muted&gt;
+    &lt;input type=&quot;hidden&quot; u-prop.cookie=&quot;time&quot;&gt;
+    &lt;video u-ref=&quot;video&quot; @play=&quot;$el.ontimeupdate = () =&gt; time = $el.currentTime&quot; width=&quot;640px&quot; height=&quot;267px&quot; controls muted&gt;
       &lt;source src=&quot;https://vjs.zencdn.net/v/oceans.mp4&quot; type=&#039;video/mp4&#039; /&gt;
     &lt;/video&gt;
-    &lt;div v-show=&quot;time &gt; 0&quot;&gt;
-      Start playback from &lt;span v-text=&quot;parseInt(time, 10)&quot;&gt;&lt;/span&gt; seconds?
+    &lt;div u-show=&quot;time &gt; 0&quot;&gt;
+      Start playback from &lt;span u-text=&quot;parseInt(time, 10)&quot;&gt;&lt;/span&gt; seconds?
       &lt;button type=&quot;button&quot; @click=&quot;$refs.video.currentTime = time; $refs.video.play()&quot;&gt;Yes&lt;/button&gt;
     &lt;/div&gt;
   &lt;/div&gt;
@@ -448,12 +448,12 @@ title: "v-data"
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <div class="demo test test--content" v-data :class="dark && 'dark'">
+    <div class="demo test test--content" u-data :class="dark && 'dark'">
       <h3>Переключатель тёмной темы</h3>
       <p>
         Кнопка переключает тему и сохраняет выбор в localStorage — он останется в силе после перезагрузки страницы.
       </p>
-      <button type="button" v-prop.local="dark" @click="dark = !dark">
+      <button type="button" u-prop.local="dark" @click="dark = !dark">
         <i class="ph ph-sun" :class="{ 'ph-sun': !dark, 'ph-moon': dark }"></i>
       </button>
       <style>
@@ -475,12 +475,12 @@ title: "v-data"
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;div v-data class=&quot;test test--content&quot; :class=&quot;dark &amp;&amp; 'dark'&quot;&gt;
+&lt;div u-data class=&quot;test test--content&quot; :class=&quot;dark &amp;&amp; 'dark'&quot;&gt;
   &lt;h3&gt;Переключатель тёмной темы&lt;/h3&gt;
   &lt;p&gt;
     Кнопка переключает тему и сохраняет выбор в localStorage — он останется в силе после перезагрузки страницы.
   &lt;/p&gt;
-  &lt;button type=&quot;button&quot; v-prop.local=&quot;dark&quot; @click=&quot;dark = !dark&quot;&gt;
+  &lt;button type=&quot;button&quot; u-prop.local=&quot;dark&quot; @click=&quot;dark = !dark&quot;&gt;
     &lt;i class=&quot;ph ph-sun&quot; :class=&quot;{ 'ph-sun': !dark, 'ph-moon': dark }&quot;&gt;&lt;/i&gt;
   &lt;/button&gt;
   &lt;style&gt;

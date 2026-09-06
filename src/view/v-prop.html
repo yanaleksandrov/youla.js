@@ -1,20 +1,20 @@
 <% var data = {
-title: "v-prop"
+title: "u-prop"
 }; %>
 <%= _.template(require('./parts/header.html').default)(data) %>
 
-<h1>v-prop</h1>
+<h1>u-prop</h1>
 
 <p>
-  Директива <code>v-prop</code> связывает поле формы — <code>input</code>, <code>select</code> или
-  <code>textarea</code> — с данными компонента <a href="/v-data"><code>v-data</code></a> одним
+  Директива <code>u-prop</code> связывает поле формы — <code>input</code>, <code>select</code> или
+  <code>textarea</code> — с данными компонента <a href="/u-data"><code>u-data</code></a> одним
   атрибутом, без ручного объявления значения и обработчика ввода.
 </p>
 
 <p>
-  <strong>Меньше кода.</strong> Без <code>v-prop</code> значение пришлось бы объявлять дважды —
+  <strong>Меньше кода.</strong> Без <code>u-prop</code> значение пришлось бы объявлять дважды —
   атрибутом <code>value</code>/<code>checked</code> в разметке и отдельным ключом в объекте
-  <code>v-data</code>, вручную синхронизируя оба места.
+  <code>u-data</code>, вручную синхронизируя оба места.
 </p>
 
 <p>
@@ -27,15 +27,15 @@ title: "v-prop"
   <tbody>
     <tr>
       <td>
-        <pre>&lt;form v-data&gt;
-  &lt;input type=&quot;text&quot; value=&quot;Hello&quot; v-prop=&quot;test&quot;&gt;
-  &lt;span v-text=&quot;test&quot;&gt;&lt;/span&gt;
+        <pre>&lt;form u-data&gt;
+  &lt;input type=&quot;text&quot; value=&quot;Hello&quot; u-prop=&quot;test&quot;&gt;
+  &lt;span u-text=&quot;test&quot;&gt;&lt;/span&gt;
 &lt;/form&gt;</pre>
       </td>
       <td>
-        <pre>&lt;form v-data=&quot;{test: 'Hello'}&quot;&gt;
+        <pre>&lt;form u-data=&quot;{test: 'Hello'}&quot;&gt;
   &lt;input type=&quot;text&quot; value=&quot;Hello&quot; @keydown.delay.1ms=&quot;test = $el.value&quot;&gt;
-  &lt;span v-text=&quot;test&quot;&gt;&lt;/span&gt;
+  &lt;span u-text=&quot;test&quot;&gt;&lt;/span&gt;
 &lt;/form&gt;</pre>
       </td>
     </tr>
@@ -43,24 +43,24 @@ title: "v-prop"
 </table>
 
 <p>
-  В первом случае, с <code>v-prop</code>, не требуется ни отдельного объявления значения в
-  <code>v-data</code>, ни обработчика события ввода — всё это делает один атрибут на поле формы.
+  В первом случае, с <code>u-prop</code>, не требуется ни отдельного объявления значения в
+  <code>u-data</code>, ни обработчика события ввода — всё это делает один атрибут на поле формы.
 </p>
 
 <p>
-  <strong>Мерцание при загрузке.</strong> <code>v-prop</code> считывает значение поля прямо из уже
+  <strong>Мерцание при загрузке.</strong> <code>u-prop</code> считывает значение поля прямо из уже
   отрисованной разметки при инициализации компонента — до того, как данные становятся реактивными.
 </p>
 
 <p>
-  Поэтому состояние в <code>v-data</code> сразу совпадает с тем, что видно на экране. При ручном
+  Поэтому состояние в <code>u-data</code> сразу совпадает с тем, что видно на экране. При ручном
   подходе значение и атрибут <code>value</code> объявлены отдельно: стоит им разойтись — и зависящая
   от них разметка на первом кадре покажет неверное значение.
 </p>
 
 <p>
   <strong>Разные типы полей.</strong> Чекбоксы, радиокнопки и <code>select</code> по-разному хранят
-  своё значение в DOM. <code>v-prop</code> сам определяет тип поля и обрабатывает его — писать
+  своё значение в DOM. <code>u-prop</code> сам определяет тип поля и обрабатывает его — писать
   отдельную логику синхронизации для каждого вида не нужно.
 </p>
 
@@ -78,16 +78,16 @@ title: "v-prop"
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <form class="demo" v-data>
-      <input v-prop="message" type="text">
-      <span v-text="message"></span>
+    <form class="demo" u-data>
+      <input u-prop="message" type="text">
+      <span u-text="message"></span>
     </form>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;form v-data&gt;
-  &lt;input v-prop=&quot;message&quot; type=&quot;text&quot;&gt;
-  &lt;span v-text=&quot;message&quot;&gt;&lt;/span&gt;
+&lt;form u-data&gt;
+  &lt;input u-prop=&quot;message&quot; type=&quot;text&quot;&gt;
+  &lt;span u-text=&quot;message&quot;&gt;&lt;/span&gt;
 &lt;/form&gt;
 </pre>
   </div>
@@ -101,16 +101,16 @@ title: "v-prop"
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <form class="demo" v-data>
-      <textarea v-prop="message"></textarea>
-      <span v-text="message"></span>
+    <form class="demo" u-data>
+      <textarea u-prop="message"></textarea>
+      <span u-text="message"></span>
     </form>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;form v-data&gt;
-  &lt;textarea v-prop=&quot;message&quot;&gt;&lt;/textarea&gt;
-  &lt;span v-text=&quot;message&quot;&gt;&lt;/span&gt;
+&lt;form u-data&gt;
+  &lt;textarea u-prop=&quot;message&quot;&gt;&lt;/textarea&gt;
+  &lt;span u-text=&quot;message&quot;&gt;&lt;/span&gt;
 &lt;/form&gt;
 </pre>
   </div>
@@ -126,16 +126,16 @@ title: "v-prop"
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <form class="demo" v-data>
-      <input type="checkbox" id="checkbox" v-prop="show">
-      <label for="checkbox" v-text="show"></label>
+    <form class="demo" u-data>
+      <input type="checkbox" id="checkbox" u-prop="show">
+      <label for="checkbox" u-text="show"></label>
     </form>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;form v-data&gt;
-  &lt;input type=&quot;checkbox&quot; id=&quot;checkbox&quot; v-prop=&quot;show&quot;&gt;
-  &lt;label for=&quot;checkbox&quot; v-text=&quot;show&quot;&gt;&lt;/label&gt;
+&lt;form u-data&gt;
+  &lt;input type=&quot;checkbox&quot; id=&quot;checkbox&quot; u-prop=&quot;show&quot;&gt;
+  &lt;label for=&quot;checkbox&quot; u-text=&quot;show&quot;&gt;&lt;/label&gt;
 &lt;/form&gt;
 </pre>
   </div>
@@ -149,20 +149,20 @@ title: "v-prop"
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <form class="demo" v-data>
-      <input type="checkbox" value="red" v-prop="colors">
-      <input type="checkbox" value="orange" v-prop="colors">
-      <input type="checkbox" value="yellow" v-prop="colors">
-      Colors: <span v-text="colors"></span>
+    <form class="demo" u-data>
+      <input type="checkbox" value="red" u-prop="colors">
+      <input type="checkbox" value="orange" u-prop="colors">
+      <input type="checkbox" value="yellow" u-prop="colors">
+      Colors: <span u-text="colors"></span>
     </form>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;form v-data&gt;
-  &lt;input type=&quot;checkbox&quot; value=&quot;red&quot; v-prop=&quot;colors&quot;&gt;
-  &lt;input type=&quot;checkbox&quot; value=&quot;orange&quot; v-prop=&quot;colors&quot;&gt;
-  &lt;input type=&quot;checkbox&quot; value=&quot;yellow&quot; v-prop=&quot;colors&quot;&gt;
-  Colors: &lt;span v-text=&quot;colors&quot;&gt;&lt;/span&gt;
+&lt;form u-data&gt;
+  &lt;input type=&quot;checkbox&quot; value=&quot;red&quot; u-prop=&quot;colors&quot;&gt;
+  &lt;input type=&quot;checkbox&quot; value=&quot;orange&quot; u-prop=&quot;colors&quot;&gt;
+  &lt;input type=&quot;checkbox&quot; value=&quot;yellow&quot; u-prop=&quot;colors&quot;&gt;
+  Colors: &lt;span u-text=&quot;colors&quot;&gt;&lt;/span&gt;
 &lt;/form&gt;
 </pre>
   </div>
@@ -176,18 +176,18 @@ title: "v-prop"
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <form class="demo" v-data>
-      <input type="radio" value="yes" v-prop="answer">
-      <input type="radio" value="no" v-prop="answer">
-      Answer: <span v-text="answer"></span>
+    <form class="demo" u-data>
+      <input type="radio" value="yes" u-prop="answer">
+      <input type="radio" value="no" u-prop="answer">
+      Answer: <span u-text="answer"></span>
     </form>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;form v-data&gt;
-  &lt;input type=&quot;radio&quot; value=&quot;yes&quot; v-prop=&quot;answer&quot;&gt;
-  &lt;input type=&quot;radio&quot; value=&quot;no&quot; v-prop=&quot;answer&quot;&gt;
-  Answer: &lt;span v-text=&quot;answer&quot;&gt;&lt;/span&gt;
+&lt;form u-data&gt;
+  &lt;input type=&quot;radio&quot; value=&quot;yes&quot; u-prop=&quot;answer&quot;&gt;
+  &lt;input type=&quot;radio&quot; value=&quot;no&quot; u-prop=&quot;answer&quot;&gt;
+  Answer: &lt;span u-text=&quot;answer&quot;&gt;&lt;/span&gt;
 &lt;/form&gt;
 </pre>
   </div>
@@ -203,26 +203,26 @@ title: "v-prop"
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <form class="demo" v-data>
-      <select v-prop="color">
+    <form class="demo" u-data>
+      <select u-prop="color">
         <option>Red</option>
         <option>Orange</option>
         <option>Yellow</option>
       </select>
 
-      Color: <span v-text="color"></span>
+      Color: <span u-text="color"></span>
     </form>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;form v-data&gt;
-  &lt;select v-prop=&quot;color&quot;&gt;
+&lt;form u-data&gt;
+  &lt;select u-prop=&quot;color&quot;&gt;
     &lt;option&gt;Red&lt;/option&gt;
     &lt;option&gt;Orange&lt;/option&gt;
     &lt;option&gt;Yellow&lt;/option&gt;
   &lt;/select&gt;
 
-  Color: &lt;span v-text=&quot;color&quot;&gt;&lt;/span&gt;
+  Color: &lt;span u-text=&quot;color&quot;&gt;&lt;/span&gt;
 &lt;/form&gt;
 </pre>
   </div>
@@ -236,26 +236,26 @@ title: "v-prop"
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <form class="demo" v-data>
-      <select v-prop="color" multiple>
+    <form class="demo" u-data>
+      <select u-prop="color" multiple>
         <option>Red</option>
         <option>Orange</option>
         <option>Yellow</option>
       </select>
 
-      Colors: <span v-text="color"></span>
+      Colors: <span u-text="color"></span>
     </form>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;form v-data&gt;
-  &lt;select v-prop=&quot;color&quot; multiple&gt;
+&lt;form u-data&gt;
+  &lt;select u-prop=&quot;color&quot; multiple&gt;
     &lt;option&gt;Red&lt;/option&gt;
     &lt;option&gt;Orange&lt;/option&gt;
     &lt;option&gt;Yellow&lt;/option&gt;
   &lt;/select&gt;
 
-  Colors: &lt;span v-text=&quot;color&quot;&gt;&lt;/span&gt;
+  Colors: &lt;span u-text=&quot;color&quot;&gt;&lt;/span&gt;
 &lt;/form&gt;
 </pre>
   </div>
@@ -269,16 +269,16 @@ title: "v-prop"
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <form class="demo" v-data>
-      <input type="range" v-prop="range" min="0" max="1" step="0.1">
-      <span v-text="range"></span>
+    <form class="demo" u-data>
+      <input type="range" u-prop="range" min="0" max="1" step="0.1">
+      <span u-text="range"></span>
     </form>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;form v-data&gt;
-  &lt;input type=&quot;range&quot; v-prop=&quot;range&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.1&quot;&gt;
-  &lt;span v-text=&quot;range&quot;&gt;&lt;/span&gt;
+&lt;form u-data&gt;
+  &lt;input type=&quot;range&quot; u-prop=&quot;range&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.1&quot;&gt;
+  &lt;span u-text=&quot;range&quot;&gt;&lt;/span&gt;
 &lt;/form&gt;
 </pre>
   </div>
@@ -302,25 +302,25 @@ title: "v-prop"
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <form class="demo" v-data>
-      <code>https://site.com/<span v-text="`${terms.lvl1 && terms.lvl1 + '/'}`"></span><span v-text="`${terms.lvl2 && terms.lvl2 + '/'}`"></span>product-slug</code>
+    <form class="demo" u-data>
+      <code>https://site.com/<span u-text="`${terms.lvl1 && terms.lvl1 + '/'}`"></span><span u-text="`${terms.lvl2 && terms.lvl2 + '/'}`"></span>product-slug</code>
       <ul>
         <li>
-          <label><input type="radio" value="electronic" v-prop="terms.lvl1" @click="$el.checked && (terms = {lvl1: '', lvl2: ''})"> Electronics</label>
+          <label><input type="radio" value="electronic" u-prop="terms.lvl1" @click="$el.checked && (terms = {lvl1: '', lvl2: ''})"> Electronics</label>
           <ul>
             <li>
-              <label><input type="radio" value="phone" v-prop="terms.lvl2" @click="$el.checked && (terms = {lvl1: 'electronic', lvl2: ''})"> Phones</label>
+              <label><input type="radio" value="phone" u-prop="terms.lvl2" @click="$el.checked && (terms = {lvl1: 'electronic', lvl2: ''})"> Phones</label>
             </li>
             <li>
-              <label><input type="radio" value="laptops" v-prop="terms.lvl2" @click="$el.checked && (terms = {lvl1: 'electronic', lvl2: ''})"> Laptops</label>
+              <label><input type="radio" value="laptops" u-prop="terms.lvl2" @click="$el.checked && (terms = {lvl1: 'electronic', lvl2: ''})"> Laptops</label>
             </li>
           </ul>
         </li>
         <li>
-          <label><input type="radio" value="books" v-prop="terms.lvl1" @click="$el.checked && (terms = {lvl1: '', lvl2: ''})"> Books</label>
+          <label><input type="radio" value="books" u-prop="terms.lvl1" @click="$el.checked && (terms = {lvl1: '', lvl2: ''})"> Books</label>
           <ul>
             <li>
-              <label><input type="radio" value="drama" v-prop="terms.lvl2" @click="$el.checked && (terms = {lvl1: 'books', lvl2: ''})"> Drama</label>
+              <label><input type="radio" value="drama" u-prop="terms.lvl2" @click="$el.checked && (terms = {lvl1: 'books', lvl2: ''})"> Drama</label>
             </li>
           </ul>
         </li>
@@ -331,21 +331,21 @@ title: "v-prop"
     <pre>
 &lt;ul&gt;
   &lt;li&gt;
-    &lt;label&gt;&lt;input type=&quot;radio&quot; value=&quot;electronic&quot; v-prop=&quot;terms.lvl1&quot; @click=&quot;$el.checked &amp;&amp; (terms = {lvl1: &#039;&#039;, lvl2: &#039;&#039;})&quot;&gt; Electronics&lt;/label&gt;
+    &lt;label&gt;&lt;input type=&quot;radio&quot; value=&quot;electronic&quot; u-prop=&quot;terms.lvl1&quot; @click=&quot;$el.checked &amp;&amp; (terms = {lvl1: &#039;&#039;, lvl2: &#039;&#039;})&quot;&gt; Electronics&lt;/label&gt;
     &lt;ul&gt;
       &lt;li&gt;
-        &lt;label&gt;&lt;input type=&quot;radio&quot; value=&quot;phone&quot; v-prop=&quot;terms.lvl2&quot; @click=&quot;$el.checked &amp;&amp; (terms = {lvl1: &#039;electronic&#039;, lvl2: &#039;&#039;})&quot;&gt; Phones&lt;/label&gt;
+        &lt;label&gt;&lt;input type=&quot;radio&quot; value=&quot;phone&quot; u-prop=&quot;terms.lvl2&quot; @click=&quot;$el.checked &amp;&amp; (terms = {lvl1: &#039;electronic&#039;, lvl2: &#039;&#039;})&quot;&gt; Phones&lt;/label&gt;
       &lt;/li&gt;
       &lt;li&gt;
-        &lt;label&gt;&lt;input type=&quot;radio&quot; value=&quot;laptops&quot; v-prop=&quot;terms.lvl2&quot; @click=&quot;$el.checked &amp;&amp; (terms = {lvl1: &#039;electronic&#039;, lvl2: &#039;&#039;})&quot;&gt; Laptops&lt;/label&gt;
+        &lt;label&gt;&lt;input type=&quot;radio&quot; value=&quot;laptops&quot; u-prop=&quot;terms.lvl2&quot; @click=&quot;$el.checked &amp;&amp; (terms = {lvl1: &#039;electronic&#039;, lvl2: &#039;&#039;})&quot;&gt; Laptops&lt;/label&gt;
       &lt;/li&gt;
     &lt;/ul&gt;
   &lt;/li&gt;
   &lt;li&gt;
-    &lt;label&gt;&lt;input type=&quot;radio&quot; value=&quot;books&quot; v-prop=&quot;terms.lvl1&quot; @click=&quot;$el.checked &amp;&amp; (terms = {lvl1: &#039;&#039;, lvl2: &#039;&#039;})&quot;&gt; Books&lt;/label&gt;
+    &lt;label&gt;&lt;input type=&quot;radio&quot; value=&quot;books&quot; u-prop=&quot;terms.lvl1&quot; @click=&quot;$el.checked &amp;&amp; (terms = {lvl1: &#039;&#039;, lvl2: &#039;&#039;})&quot;&gt; Books&lt;/label&gt;
     &lt;ul&gt;
       &lt;li&gt;
-        &lt;label&gt;&lt;input type=&quot;radio&quot; value=&quot;drama&quot; v-prop=&quot;terms.lvl2&quot; @click=&quot;$el.checked &amp;&amp; (terms = {lvl1: &#039;books&#039;, lvl2: &#039;&#039;})&quot;&gt; Drama&lt;/label&gt;
+        &lt;label&gt;&lt;input type=&quot;radio&quot; value=&quot;drama&quot; u-prop=&quot;terms.lvl2&quot; @click=&quot;$el.checked &amp;&amp; (terms = {lvl1: &#039;books&#039;, lvl2: &#039;&#039;})&quot;&gt; Drama&lt;/label&gt;
       &lt;/li&gt;
     &lt;/ul&gt;
   &lt;/li&gt;
@@ -359,7 +359,7 @@ title: "v-prop"
 <p><code>.number</code></p>
 
 <p>
-  По умолчанию <code>v-prop</code> хранит значение поля как строку. Добавьте модификатор
+  По умолчанию <code>u-prop</code> хранит значение поля как строку. Добавьте модификатор
   <code>.number</code>, чтобы Youla.js автоматически приводила его к числовому типу данных.
 </p>
 
@@ -369,16 +369,16 @@ title: "v-prop"
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <form class="demo" v-data>
-      <input type="text" value="10" v-prop.number="age">
-      <div>Значение: <span v-text="age"></span>, тип: <span v-text="typeof age"></span></div>
+    <form class="demo" u-data>
+      <input type="text" value="10" u-prop.number="age">
+      <div>Значение: <span u-text="age"></span>, тип: <span u-text="typeof age"></span></div>
     </form>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;form v-data&gt;
-  &lt;input type=&quot;text&quot; value=&quot;10&quot; v-prop.number=&quot;age&quot;&gt;
-  &lt;div&gt;Значение: &lt;span v-text=&quot;age&quot;&gt;&lt;/span&gt;, тип: &lt;span v-text=&quot;typeof age&quot;&gt;&lt;/span&gt;&lt;/div&gt;
+&lt;form u-data&gt;
+  &lt;input type=&quot;text&quot; value=&quot;10&quot; u-prop.number=&quot;age&quot;&gt;
+  &lt;div&gt;Значение: &lt;span u-text=&quot;age&quot;&gt;&lt;/span&gt;, тип: &lt;span u-text=&quot;typeof age&quot;&gt;&lt;/span&gt;&lt;/div&gt;
 &lt;/form&gt;
 </pre>
   </div>
@@ -397,16 +397,16 @@ title: "v-prop"
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <form class="demo" v-data>
-      <input type="text" v-prop.trim="name">
-      <div v-text="name"></div>
+    <form class="demo" u-data>
+      <input type="text" u-prop.trim="name">
+      <div u-text="name"></div>
     </form>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;form v-data&gt;
-  &lt;input type=&quot;text&quot; v-prop.trim=&quot;name&quot;&gt;
-  &lt;div v-text=&quot;name&quot;&gt;&lt;/div&gt;
+&lt;form u-data&gt;
+  &lt;input type=&quot;text&quot; u-prop.trim=&quot;name&quot;&gt;
+  &lt;div u-text=&quot;name&quot;&gt;&lt;/div&gt;
 &lt;/form&gt;
 </pre>
   </div>
@@ -414,7 +414,7 @@ title: "v-prop"
 
 <p>
   Если пробелы нужно убирать только после завершения ввода, а не при каждом нажатии клавиши,
-  добавьте к <code>v-prop.trim</code> ещё и модификатор <code>.lazy</code> для этого поля.
+  добавьте к <code>u-prop.trim</code> ещё и модификатор <code>.lazy</code> для этого поля.
 </p>
 
 <div class="example">
@@ -423,16 +423,16 @@ title: "v-prop"
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <form class="demo" v-data>
-      <input type="text" v-prop.lazy.trim="name">
-      <div v-text="name"></div>
+    <form class="demo" u-data>
+      <input type="text" u-prop.lazy.trim="name">
+      <div u-text="name"></div>
     </form>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;form v-data&gt;
-  &lt;input type=&quot;text&quot; v-prop.lazy.trim=&quot;name&quot;&gt;
-  &lt;div v-text=&quot;name&quot;&gt;&lt;/div&gt;
+&lt;form u-data&gt;
+  &lt;input type=&quot;text&quot; u-prop.lazy.trim=&quot;name&quot;&gt;
+  &lt;div u-text=&quot;name&quot;&gt;&lt;/div&gt;
 &lt;/form&gt;
 </pre>
   </div>
@@ -447,7 +447,7 @@ title: "v-prop"
 
 <p>
   Чем local storage и куки отличаются по объёму и назначению и как выбрать между ними — читайте
-  на странице <a href="/v-data">v-data</a>, в разделе про модификаторы <code>.local</code> и
+  на странице <a href="/u-data">u-data</a>, в разделе про модификаторы <code>.local</code> и
   <code>.cookie</code>.
 </p>
 
@@ -457,35 +457,35 @@ title: "v-prop"
     <button type="button" class="example__tab" data-tab="html">HTML</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
-    <form class="demo" v-data>
+    <form class="demo" u-data>
       <div>Сохранение в local storage</div>
-      <input type="text" v-prop.local="firstName">
-      <div v-text="firstName"></div>
+      <input type="text" u-prop.local="firstName">
+      <div u-text="firstName"></div>
       <br>
       <div>Сохранение в куках</div>
-      <input type="text" v-prop.cookie="lastName">
-      <div v-text="lastName"></div>
+      <input type="text" u-prop.cookie="lastName">
+      <div u-text="lastName"></div>
     </form>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
-&lt;form v-data&gt;
+&lt;form u-data&gt;
   &lt;div&gt;Сохранение в local storage&lt;/div&gt;
-  &lt;input type=&quot;text&quot; v-prop.local=&quot;firstName&quot;&gt;
-  &lt;div v-text=&quot;firstName&quot;&gt;&lt;/div&gt;
+  &lt;input type=&quot;text&quot; u-prop.local=&quot;firstName&quot;&gt;
+  &lt;div u-text=&quot;firstName&quot;&gt;&lt;/div&gt;
   &lt;br&gt;
   &lt;div&gt;Сохранение в куках&lt;/div&gt;
-  &lt;input type=&quot;text&quot; v-prop.cookie=&quot;lastName&quot;&gt;
-  &lt;div v-text=&quot;lastName&quot;&gt;&lt;/div&gt;
+  &lt;input type=&quot;text&quot; u-prop.cookie=&quot;lastName&quot;&gt;
+  &lt;div u-text=&quot;lastName&quot;&gt;&lt;/div&gt;
 &lt;/form&gt;
 </pre>
   </div>
 </div>
 
 <p>
-  Значение поля обычно выводится через <a href="/v-text"><code>v-text</code></a>, как в примерах
-  выше. Полный практический пример со связкой <code>v-prop</code>, <code>v-each</code> и
-  <code>v-show</code> — на странице <a href="/to-do">Список задач</a>.
+  Значение поля обычно выводится через <a href="/u-text"><code>u-text</code></a>, как в примерах
+  выше. Полный практический пример со связкой <code>u-prop</code>, <code>u-each</code> и
+  <code>u-show</code> — на странице <a href="/to-do">Список задач</a>.
 </p>
 
 <%= _.template(require('./parts/footer.html').default)(data) %>

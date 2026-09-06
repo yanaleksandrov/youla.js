@@ -19,7 +19,9 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "normalize.css": "^8.0.1"
+    "air-datepicker": "^3.6.0",
+    "normalize.css": "^8.0.1",
+    "slim-select": "^2.12.1"
   },
   "browserslist": [
     "last 4 versions",

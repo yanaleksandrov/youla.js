@@ -67,6 +67,17 @@ class TextMask {
     TextMask.setCaretPosition(this.el, adjustedCaretPosition);
   }
 
+  /** Non-PLACEHOLDER characters in the first "length" characters of a placeholder string. */
+  static countFixedChars(placeholderStr, length) {
+    let count = 0;
+    for (let i = 0; i < length; i++) {
+      if (placeholderStr[i] !== TextMask.PLACEHOLDER) {
+        count++;
+      }
+    }
+    return count;
+  }
+
   /** "_H:__" style template: one PLACEHOLDER per RegExp slot, the mask's own literals elsewhere. */
   static buildPlaceholder(mask) {
     if (mask.includes(TextMask.PLACEHOLDER)) {
@@ -161,8 +172,8 @@ class TextMask {
       const intersection = leftHalfChars.filter((char) => normalizedConformedValue.includes(char));
       targetChar = intersection[intersection.length - 1];
 
-      const previousLeftMaskChars = previousPlaceholder.slice(0, intersection.length).split('').filter((char) => char !== PLACEHOLDER).length;
-      const leftMaskChars = placeholder.slice(0, intersection.length).split('').filter((char) => char !== PLACEHOLDER).length;
+      const previousLeftMaskChars = TextMask.countFixedChars(previousPlaceholder, intersection.length);
+      const leftMaskChars = TextMask.countFixedChars(placeholder, intersection.length);
       const maskLengthChanged = leftMaskChars !== previousLeftMaskChars;
       const targetIsMaskMovingLeft = previousPlaceholder[intersection.length - 1] !== undefined
         && placeholder[intersection.length - 2] !== undefined
@@ -264,8 +275,6 @@ document.addEventListener('youla:init', ()=> {
    * Each character is its own token: `H`/`i`/`D`/`M` are digit slots that self-limit (the first
    * digit narrows what the second accepts, e.g. an "H" of "2" only allows "0-3" next), `Y`/`0` are
    * plain digits, `{regexp}` embeds a custom character class, anything else is a literal.
-   *
-   * @see discussion //javascript.ru/forum/dom-window/82008-kak-preobrazovat-stroku-v-massiv.html
    */
   function buildMaskTokens(pattern, rawValue) {
     function limit(position, symbol, max) {

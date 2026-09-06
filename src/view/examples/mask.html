@@ -23,7 +23,7 @@ title: "Маска ввода (u-mask)"
     </tr>
     <tr>
       <td><code>u-mask</code></td>
-      <td>Пусто/не указано — фильтрует по собственному <code>type</code> поля (<code>tel</code>, <code>number</code>, <code>color</code>, <code>domain</code>).</td>
+      <td>Пусто/не указано — фильтрует по собственному <code>type</code> поля (<code>tel</code>, <code>number</code>, <code>color</code>, <code>url</code>).</td>
     </tr>
     <tr>
       <td><code>u-mask="/regexp/"</code></td>
@@ -59,7 +59,7 @@ title: "Маска ввода (u-mask)"
     <form class="demo" u-data>
       <div>Телефон: <input type="tel" u-mask u-prop="phone"> <span u-text="phone"></span></div>
       <div>Число: <input type="number" u-mask u-prop="amount"> <span u-text="amount"></span></div>
-      <div>Домен: <input type="domain" u-mask u-prop="domain"> <span u-text="domain"></span></div>
+      <div>Домен: <input type="url" u-mask u-prop="domain"> <span u-text="domain"></span></div>
     </form>
   </div>
   <div class="example__panel" data-panel="html">
@@ -67,7 +67,7 @@ title: "Маска ввода (u-mask)"
 &lt;form u-data&gt;
   &lt;input type=&quot;tel&quot; u-mask u-prop=&quot;phone&quot;&gt;
   &lt;input type=&quot;number&quot; u-mask u-prop=&quot;amount&quot;&gt;
-  &lt;input type=&quot;domain&quot; u-mask u-prop=&quot;domain&quot;&gt;
+  &lt;input type=&quot;url&quot; u-mask u-prop=&quot;domain&quot;&gt;
 &lt;/form&gt;
 </pre>
   </div>
@@ -97,6 +97,36 @@ title: "Маска ввода (u-mask)"
 &lt;form u-data&gt;
   &lt;input type=&quot;text&quot; u-mask=&quot;/[^A-Z0-9]/g&quot; u-prop=&quot;promo&quot;&gt;
   &lt;span u-text=&quot;promo&quot;&gt;&lt;/span&gt;
+&lt;/form&gt;
+</pre>
+  </div>
+</div>
+
+<p>
+  Ещё пара примеров: код подтверждения, куда можно вводить только цифры, и поле CSS-цвета —
+  для него разрешены буквы, цифры, пробел, запятая и скобки, чтобы поместились и <code>red</code>,
+  и <code>rgba(255, 0, 0, .5)</code>. Это тот же набор символов, что и у автофильтра для
+  <code>type="color"</code> выше — просто он написан явно, а не выбран по <code>type</code> поля.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <form class="demo" u-data>
+      <div>Код: <input type="text" placeholder="0000" u-mask="/[^\d]/g" u-prop="code"> <span u-text="code"></span></div>
+      <div>Цвет: <input type="text" placeholder="rgba(255, 0, 0, .5)" u-mask="/[^ a-zA-Z(),\d]/g" u-prop="color"> <span u-text="color"></span></div>
+      <div>HEX-цвет: <input type="text" placeholder="#RRGGBB" u-mask="/[^#0-9A-Fa-f]/g" u-prop="hex"> <span u-text="hex"></span></div>
+    </form>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;form u-data&gt;
+  &lt;input type=&quot;text&quot; u-mask=&quot;/[^\d]/g&quot; u-prop=&quot;code&quot;&gt;
+  &lt;input type=&quot;text&quot; u-mask=&quot;/[^ a-zA-Z(),\d]/g&quot; u-prop=&quot;color&quot;&gt;
+  &lt;input type=&quot;text&quot; u-mask=&quot;/[^#0-9A-Fa-f]/g&quot; u-prop=&quot;hex&quot;&gt;
 &lt;/form&gt;
 </pre>
   </div>
@@ -135,6 +165,67 @@ title: "Маска ввода (u-mask)"
   &lt;input type=&quot;text&quot; u-mask=&quot;&#039;DD.MM.YYYY&#039;&quot; u-prop=&quot;date&quot;&gt;
   &lt;input type=&quot;text&quot; u-mask=&quot;&#039;HH:ii&#039;&quot; u-prop=&quot;time&quot;&gt;
   &lt;input type=&quot;text&quot; u-mask=&quot;&#039;{[A-Z]}{[A-Z]}-0000&#039;&quot; u-prop=&quot;serial&quot;&gt;
+&lt;/form&gt;
+</pre>
+  </div>
+</div>
+
+<p>
+  <code>M</code> и <code>H</code>/<code>i</code> самоограничиваются и при повторении — вторая
+  цифра сужается по уже введённой первой, так что месяц выше 12, а часы выше 23 набрать не
+  получится. На этом держится, например, срок действия карты. А <code>{regexp}</code> работает и
+  с кириллицей — годится для автономера.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <form class="demo" u-data>
+      <div>Номер карты: <input type="text" placeholder="0000 0000 0000 0000" u-mask="'0000 0000 0000 0000'" u-prop="card"> <span u-text="card"></span></div>
+      <div>Срок действия: <input type="text" placeholder="MM/YY" u-mask="'MM/YY'" u-prop="expiry"> <span u-text="expiry"></span></div>
+      <div>Автономер: <input type="text" placeholder="A000AA00" u-mask="'{[АВЕКМНОРСТУХ]}000{[АВЕКМНОРСТУХ]}{[АВЕКМНОРСТУХ]}00'" u-prop="plate"> <span u-text="plate"></span></div>
+    </form>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;form u-data&gt;
+  &lt;input type=&quot;text&quot; u-mask=&quot;&#039;0000 0000 0000 0000&#039;&quot; u-prop=&quot;card&quot;&gt;
+  &lt;input type=&quot;text&quot; u-mask=&quot;&#039;MM/YY&#039;&quot; u-prop=&quot;expiry&quot;&gt;
+  &lt;input type=&quot;text&quot; u-mask=&quot;&#039;{[АВЕКМНОРСТУХ]}000{[АВЕКМНОРСТУХ]}{[АВЕКМНОРСТУХ]}00&#039;&quot; u-prop=&quot;plate&quot;&gt;
+&lt;/form&gt;
+</pre>
+  </div>
+</div>
+
+<p>
+  И ещё пара форматов из реальных форм — СНИЛС и серия/номер паспорта РФ, тут маска просто
+  расставляет цифры по литералам-разделителям. С IP-адресом осторожнее: <code>0</code> — это
+  просто цифра без ограничения диапазона (самоограничение, как у <code>H</code>/<code>M</code>,
+  для октетов не реализовано), поэтому маска пропустит и <code>999.999.999.999</code> — для
+  проверки 0-255 в каждом октете нужна отдельная валидация значения из <code>u-prop</code>.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <form class="demo" u-data>
+      <div>СНИЛС: <input type="text" placeholder="000-000-000 00" u-mask="'000-000-000 00'" u-prop="snils"> <span u-text="snils"></span></div>
+      <div>Паспорт РФ: <input type="text" placeholder="0000 000000" u-mask="'0000 000000'" u-prop="passport"> <span u-text="passport"></span></div>
+      <div>IP-адрес: <input type="text" placeholder="000.000.000.000" u-mask="'000.000.000.000'" u-prop="ip"> <span u-text="ip"></span></div>
+    </form>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;form u-data&gt;
+  &lt;input type=&quot;text&quot; u-mask=&quot;&#039;000-000-000 00&#039;&quot; u-prop=&quot;snils&quot;&gt;
+  &lt;input type=&quot;text&quot; u-mask=&quot;&#039;0000 000000&#039;&quot; u-prop=&quot;passport&quot;&gt;
+  &lt;input type=&quot;text&quot; u-mask=&quot;&#039;000.000.000.000&#039;&quot; u-prop=&quot;ip&quot;&gt;
 &lt;/form&gt;
 </pre>
   </div>

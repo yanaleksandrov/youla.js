@@ -31,9 +31,9 @@ document.addEventListener('youla:init', ()=> {
       multipleDatesSeparator: ' — ',
       // "locale" must be omitted, not passed as undefined — AirDatepicker's own locale merge
       // (deep-clones the default via JSON.stringify/parse) breaks on an explicit undefined.
-      ...(window.expansa?.datepicker ? { locale: window.expansa.datepicker } : {}),
-      firstDay: window.expansa?.weekStart || 0,
-      dateFormat: window.expansa?.dateFormat || 'yyyy-MM-dd',
+      ...(window.youla?.datepicker ? { locale: window.youla.datepicker } : {}),
+      firstDay: window.youla?.weekStart || 0,
+      dateFormat: window.youla?.dateFormat || 'yyyy-MM-dd',
       container: el.closest('div'),
       view: 'days',
       ...options,

@@ -1,4 +1,4 @@
-import { domWalk, isNode } from './dom';
+import { domWalk, isNode, closestDirective } from './dom';
 import { debounce } from './timing';
 import { makeObservable, RAW, toRaw } from './reactivity';
 import { saferEval } from './eval';
@@ -75,7 +75,13 @@ export default class Component {
     // u-data="object as o" gives the whole data object a local alias
     const [, dataExpression, alias] = expression.trim().match(/^([\s\S]+?)\s+as\s+([A-Za-z_$][\w$]*)$/) || [];
 
+    // Alpine-style scope inheritance: the nearest ancestor "u-data" component (already
+    // constructed — componentDiscover() walks the document in order, so an ancestor is always
+    // initialized before its descendants), if any. See the "scope" getter below.
+    const parentEl = closestDirective(el.parentElement, 'u-data');
+
     this.root          = el;
+    this.parent        = parentEl ? parentEl.__x : null;
     this.name          = (dataExpression ?? expression).trim();
     this.alias         = alias || null;
     this.storageType   = isStorageModifier(modifiers) ? getStorageType(modifiers) : null;
@@ -118,6 +124,54 @@ export default class Component {
   }
 
   /**
+   * Alpine-style scope inheritance: an expression evaluated against this component sees its
+   * own data first, falling back to the closest ancestor "u-data" component's own scope
+   * (recursively) for any name this component doesn't declare itself — same as Alpine's nested
+   * `x-data`. Delegates every get/set to the real "this.data"/"parent.scope" proxies instead of
+   * reparenting raw objects, so a change is still attributed (onChange/refresh/persist) to
+   * whichever component actually owns that property, however it was reached.
+   *
+   * A nested write (`user.password = x`) first reads `user` (found on this component or, falling
+   * through, an ancestor's — either way the real, live object reference) and only then writes
+   * `.password` directly on it, so it always lands on whichever component's data the object
+   * actually lives on. A bare top-level name (`installed = x`) writes through the chain too — to
+   * whichever component already declares it, same as Alpine's `mergeProxies` — falling back to
+   * this component only when no ancestor declares that name either.
+   *
+   * @returns {Object} "this.data" itself when this component has no parent; otherwise a Proxy
+   *   merging it with the parent's own scope.
+   */
+  get scope() {
+    if (!this.parent) {
+      return this.data;
+    }
+
+    if (!this._scope) {
+      const self = this;
+
+      this._scope = new Proxy({}, {
+        has: (_, prop) => prop in self.data || prop in self.parent.scope,
+        get: (_, prop) => {
+          if (prop === RAW) {
+            return toRaw(self.data);
+          }
+          return (prop in self.data) ? self.data[prop] : self.parent.scope[prop];
+        },
+        set: (_, prop, value) => {
+          if (prop in self.data || !(prop in self.parent.scope)) {
+            self.data[prop] = value;
+          } else {
+            self.parent.scope[prop] = value;
+          }
+          return true;
+        },
+      });
+    }
+
+    return this._scope;
+  }
+
+  /**
    * Evaluates an expression (or calls a function) against the component's data, tracking
    * which top-level data properties were read via a dependency-tracking proxy.
    *
@@ -146,7 +200,7 @@ export default class Component {
       }
     });
 
-    const proxiedData = makeProxy(this.data);
+    const proxiedData = makeProxy(this.scope);
 
     // Magic variables skip the tracking proxy since wrapping a DOM element would break native calls like $el.closest(); they're layered onto $data instead (see withMagicVariables).
     const { magicVariables, otherVariables } = splitMagicVariables(additionalHelperVariables);
@@ -508,7 +562,7 @@ export default class Component {
    * @param {HTMLElement} target - The element the listener is attached to.
    */
   invokeListener(expressionOrFn, e, target) {
-    const contextData = withMagicVariables(this.data, this.getMagicVariables(target, e));
+    const contextData = withMagicVariables(this.scope, this.getMagicVariables(target, e));
 
     // A u-bind entry may hand back a method instead of an expression string — call it directly with "this" as the component's reactive data, so writes to it still trigger refresh().
     if (typeof expressionOrFn === 'function') {

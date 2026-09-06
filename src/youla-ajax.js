@@ -1,8 +1,12 @@
 document.addEventListener('youla:init', () => {
   const BYTES_IN_MB = 1048576;
 
-  // Prefix for a non-absolute `route`; left blank, routes resolve relative to the page.
-  Youla.baseURL ??= '';
+  // Prefix for a non-absolute `route`; defaults to the page's own "youla.apiurl" config, e.g.
+  // Expansa's inline `const youla = {...}`. A top-level "const" in a classic <script> only
+  // creates a global *lexical* binding, never a "window" property, so this can't check
+  // "window.youla" — but it also never throws on a page that declares no such global at all,
+  // since "typeof" is the one operator that tolerates an undeclared identifier.
+  Youla.baseURL ??= (typeof youla !== 'undefined' ? youla?.apiurl : null) ?? '';
 
   /**
    * Registers `$ajax(route, payload, onProgress, options)`. Dispatches an `ajax:${route}`

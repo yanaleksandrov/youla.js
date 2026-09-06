@@ -1,7 +1,7 @@
 <% var data = {
   title: "Таблица с выбором строк"
 }; %>
-<%= _.template(require('./parts/header.html').default)(data) %>
+<%= _.template(require('../parts/header.html').default)(data) %>
 
 <h1>Таблица с выбором строк</h1>
 
@@ -153,4 +153,4 @@ document.addEventListener('youla:init', () =&gt; {
   на нужных чекбоксах.
 </p>
 
-<%= _.template(require('./parts/footer.html').default)(data) %>
+<%= _.template(require('../parts/footer.html').default)(data) %>

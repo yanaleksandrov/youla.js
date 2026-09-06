@@ -1,7 +1,7 @@
 <% var data = {
   title: "Условия отображения (builder)"
 }; %>
-<%= _.template(require('./parts/header.html').default)(data) %>
+<%= _.template(require('../parts/header.html').default)(data) %>
 
 <h1>Условия отображения (builder)</h1>
 
@@ -219,4 +219,4 @@ function matches(groups, context) {
   </tbody>
 </table>
 
-<%= _.template(require('./parts/footer.html').default)(data) %>
+<%= _.template(require('../parts/footer.html').default)(data) %>

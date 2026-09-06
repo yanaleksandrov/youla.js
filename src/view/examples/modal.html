@@ -1,7 +1,7 @@
 <% var data = {
   title: "Модальное окно"
 }; %>
-<%= _.template(require('./parts/header.html').default)(data) %>
+<%= _.template(require('../parts/header.html').default)(data) %>
 
 <h1>Модальное окно</h1>
 
@@ -156,4 +156,4 @@ document.addEventListener('youla:init', () =&gt; {
   прямо в разметке.
 </p>
 
-<%= _.template(require('./parts/footer.html').default)(data) %>
+<%= _.template(require('../parts/footer.html').default)(data) %>

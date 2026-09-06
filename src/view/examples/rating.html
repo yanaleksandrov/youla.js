@@ -1,7 +1,7 @@
 <% var data = {
   title: "Рейтинг"
 }; %>
-<%= _.template(require('./parts/header.html').default)(data) %>
+<%= _.template(require('../parts/header.html').default)(data) %>
 
 <h1>Рейтинг звёздами</h1>
 
@@ -131,4 +131,4 @@ document.addEventListener('youla:init', () =&gt; {
   именно звездой сейчас курсор.
 </p>
 
-<%= _.template(require('./parts/footer.html').default)(data) %>
+<%= _.template(require('../parts/footer.html').default)(data) %>

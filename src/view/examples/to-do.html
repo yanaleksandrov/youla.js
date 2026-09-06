@@ -1,7 +1,7 @@
 <% var data = {
   title: "Список задач"
 }; %>
-<%= _.template(require('./parts/header.html').default)(data) %>
+<%= _.template(require('../parts/header.html').default)(data) %>
 
 <h1>Список задач</h1>
 
@@ -137,4 +137,4 @@ document.addEventListener('youla:init', () =&gt; {
   });
 </script>
 
-<%= _.template(require('./parts/footer.html').default)(data) %>
+<%= _.template(require('../parts/footer.html').default)(data) %>

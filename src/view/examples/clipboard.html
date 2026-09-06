@@ -1,7 +1,7 @@
 <% var data = {
   title: "Буфер обмена"
 }; %>
-<%= _.template(require('./parts/header.html').default)(data) %>
+<%= _.template(require('../parts/header.html').default)(data) %>
 
 <h1>Копирование в буфер обмена</h1>
 
@@ -95,4 +95,4 @@ document.addEventListener('youla:init', () =&gt; {
   откажет в разрешении, и <code>copied</code> просто не переключится.
 </p>
 
-<%= _.template(require('./parts/footer.html').default)(data) %>
+<%= _.template(require('../parts/footer.html').default)(data) %>

@@ -1,7 +1,7 @@
 <% var data = {
   title: "Обратный отсчёт"
 }; %>
-<%= _.template(require('./parts/header.html').default)(data) %>
+<%= _.template(require('../parts/header.html').default)(data) %>
 
 <h1>Обратный отсчёт до даты</h1>
 
@@ -105,4 +105,4 @@ document.addEventListener('youla:init', () =&gt; {
   вычисляется от настоящей даты события.
 </p>
 
-<%= _.template(require('./parts/footer.html').default)(data) %>
+<%= _.template(require('../parts/footer.html').default)(data) %>

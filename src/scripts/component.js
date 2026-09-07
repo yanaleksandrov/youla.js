@@ -90,7 +90,7 @@ export default class Component {
     this.storageExpire = this.storageType ? getNextModifier(modifiers, this.storageType) : null;
 
     this.rawData = saferEval(this.name || '{}', dataProviderContext);
-    this.rawData = hydrateProps(el, this.rawData);
+    this.rawData = hydrateProps(el, this.rawData, this.parent);
 
     // Rehydrate from whatever was persisted last time, on top of the fresh factory defaults, so new keys added later still show up for visitors with stale storage.
     if (this.storageType) {
@@ -443,24 +443,34 @@ export default class Component {
    * Re-evaluates every element's bindings, re-running only those whose dependencies changed
    * since the last flush. Clears "concernedData" once the pass completes.
    *
-   * @param {boolean} [force] - Re-runs every binding unconditionally, for state that lives outside the reactive data.
+   * @param {boolean|HTMLElement} [force] - `true` re-runs every binding in this component; an
+   *   `HTMLElement` re-runs only that element's own bindings (e.g. u-step.required's checkValidity()).
    */
   refresh(force = false) {
     const self = this;
 
-    // OR'd across calls before the debounced flush runs, so a forced call is never lost to a later plain one.
-    this.pendingForceRefresh = this.pendingForceRefresh || force;
+    if (force instanceof HTMLElement) {
+      this.pendingForceElements ??= new Set();
+      this.pendingForceElements.add(force);
+    } else {
+      // OR'd across calls before the debounced flush runs, so a forced call is never lost to a later plain one.
+      this.pendingForceRefresh = this.pendingForceRefresh || force;
+    }
 
     // Built once and reused, not recreated per call — otherwise each write in a fast burst (e.g. dragging a u-filler/u-ranger slider) would queue its own full domWalk instead of coalescing.
     this.scheduleRefresh ??= debounce(() => {
-      const force = self.pendingForceRefresh;
-      self.pendingForceRefresh = false;
+      const force         = self.pendingForceRefresh;
+      const forceElements = self.pendingForceElements;
+      self.pendingForceRefresh   = false;
+      self.pendingForceElements = null;
 
       domWalk(self.root, el => {
         const attributes = self.resolveAttributes(el);
         if (attributes.length === 0) {
           return;
         }
+
+        const elementForced = force || !!forceElements?.has(el);
 
         // An element inside a "u-each" clone only carries its loop variables on "__x_for_data", so resolve them here too or bindings referencing them stop updating after the first render.
         // Same cost as resolveAttributes()'s own lazy computation (see its doc comment) — skipped
@@ -479,14 +489,14 @@ export default class Component {
             el.__x_deps ??= {};
             const previousDeps = el.__x_deps[name];
 
-            if (!force && previousDeps && !previousDeps.some(dep => self.concernedData.includes(dep))) {
+            if (!elementForced && previousDeps && !previousDeps.some(dep => self.concernedData.includes(dep))) {
               return;
             }
 
             const { output, deps } = self.computeOutput(attribute, additionalHelperVariables, { withDeps: true });
             el.__x_deps[name] = deps;
 
-            if (force || !previousDeps || self.concernedData.some(dep => deps.includes(dep))) {
+            if (elementForced || !previousDeps || self.concernedData.some(dep => deps.includes(dep))) {
               self.applyAttribute(el, attribute, output, additionalHelperVariables);
             }
           }

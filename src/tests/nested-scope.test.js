@@ -56,4 +56,27 @@ describe('u-prop inside a nested u-data', () => {
     // A sibling binding elsewhere in the outer form reacts to the nested field's write.
     expect(submit.disabled).toBe(false);
   });
+
+  it('reflects a programmatic write back onto the field once the nested component itself re-renders (u-prop reads through "scope", not just "data")', async () => {
+    // "tick" mimics the real password provider's own local state (see youla-expansa.js's
+    // generate(), which also mutates local fields as a side effect) — that local write is what
+    // wakes the nested component's own refresh(); a pure ancestor-only write wouldn't (see
+    // Component#refresh(): each component only walks its own subtree).
+    document.body.innerHTML = `
+      <form u-data="{ user: {} }">
+        <div u-data="{ tick: 0 } as p">
+          <input id="pwd" u-prop="user.password">
+          <button type="button" id="gen" @click="user.password = 'GENERATED'; tick++"></button>
+        </div>
+      </form>
+    `;
+
+    initAll();
+    await tick();
+
+    document.getElementById('gen').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await tick();
+
+    expect(document.getElementById('pwd').value).toBe('GENERATED');
+  });
 });

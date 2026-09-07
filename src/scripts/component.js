@@ -346,8 +346,10 @@ export default class Component {
     } else if (directive === 'u-prop') {
       // "expression" here is a property path ("user.name"/"user[name]"), not a JS expression —
       // evaluating it generically like every other directive would misread a bracket segment as
-      // a bare (data-scoped) identifier instead of a literal key. Read straight off "data" instead.
-      output = getNestedObjectValue(this.data, expression);
+      // a bare (data-scoped) identifier instead of a literal key. Read straight off "scope" instead
+      // (not "data": a nested "u-data" component's own u-prop field can be bound to an ancestor's
+      // property — see hydrateProps() in props.js — and "scope" is what falls through to it).
+      output = getNestedObjectValue(this.scope, expression);
 
       if (withDeps) {
         const [rootIdentifier] = parsePropPath(expression);

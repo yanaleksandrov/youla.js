@@ -7,14 +7,19 @@ import { storage, isStorageModifier, getStorageType, castToType } from './storag
 
 /**
  * Prepares every `u-prop`-bound form field under `rootElement`: ensures each field has a
- * `name`, seeds a default value into `data` for any property that doesn't exist yet, evaluates
- * the field's current DOM value into `data`, and applies any persisted `.local`/`.cookie` value.
+ * `name`, seeds a default value for any property that doesn't exist yet, evaluates the field's
+ * current DOM value into the data, and applies any persisted `.local`/`.cookie` value.
+ *
+ * When `key` (e.g. "user" in "user.password") is already declared by an ancestor `u-data`
+ * component, the default and every write go through `parent.scope` instead of `data` — otherwise
+ * they'd create a same-named local property that permanently shadows the ancestor's one.
  *
  * @param {HTMLElement} rootElement - The component's root element.
  * @param {Object} data - The component's raw data object, mutated in place.
+ * @param {import('./component').default} [parent] - This component's own parent, if any (see `Component#parent`/`#scope`).
  * @returns {Object} `data`, for convenience (it's also mutated directly).
  */
-export function hydrateProps(rootElement, data) {
+export function hydrateProps(rootElement, data, parent) {
   domWalk(rootElement, el => getAttributes(el).filter(({directive}) => directive === 'u-prop').forEach(attribute => {
     let {expression, modifiers} = attribute;
 
@@ -35,20 +40,22 @@ export function hydrateProps(rootElement, data) {
       return;
     }
 
-    if (data[key] === undefined) {
+    const owner = parent && key in parent.scope ? parent.scope : data;
+
+    if (owner[key] === undefined) {
       let fields = [];
       if (el.type === 'checkbox') {
         // CSS.escape() only covers identifiers, not the quoted attribute-value part, so a "\"/"\\" in "expression" is escaped by hand to keep it from breaking out of the selector.
         fields = closestDirective(el, 'u-data').querySelectorAll(`[${CSS.escape(attribute.name)}="${expression.replace(/["\\]/g, '\\$&')}"]`);
       }
 
-      data[key] = setNestedObjectValue(prop, fields.length > 1 ? [] : '');
+      owner[key] = setNestedObjectValue(prop, fields.length > 1 ? [] : '');
     }
 
-    let value = generateExpressionForProp(el, data, attribute);
+    let value = generateExpressionForProp(el, owner, attribute);
 
     // assign the field's current value onto data
-    saferEval(value, withMagicVariables(data, createMagicVariables(rootElement, el)));
+    saferEval(value, withMagicVariables(owner, createMagicVariables(rootElement, el)));
 
     // get data from localStorage or cookie
     if (isStorageModifier(modifiers)) {
@@ -56,7 +63,7 @@ export function hydrateProps(rootElement, data) {
       const value = storage.get(expression, type);
 
       if (value) {
-        data[expression] = castToType(data[expression], value);
+        owner[expression] = castToType(owner[expression], value);
       }
     }
   }));

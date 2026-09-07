@@ -77,7 +77,8 @@ export function domWalk(el, callback) {
 
   for (const node of children) {
     if (hasDirective(node, 'u-data')) {
-      return;
+      // Skip this nested component's own subtree, but keep visiting its later siblings.
+      continue;
     }
 
     // "u-each" elements are templates: the directive itself clones and walks each rendered item, so descending into the raw template here would evaluate its children without loop scope.

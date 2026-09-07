@@ -1,45 +1,13 @@
 document.addEventListener('youla:init', ()=> {
   /**
-   * Multi-step wizard: `u-step="condition"` marks a panel's completion state; the `step`
-   * data provider drives navigation via `goNext()`/`goBack()`. Use it as `u-data="step"` — any
-   * `u-prop`-bound field referenced by a `u-step` condition (e.g. `name`) gets merged in
-   * automatically by hydrateProps(), no need to declare it. It isn't a global `$step`, only local
-   * to that `u-data`; spread it instead (`u-data="{ ...step, total: 0 }"`) only if you need a
-   * field or method that isn't backed by a form input. The directive and the data provider are
-   * grouped in one IIFE since neither is useful without the other.
-   *
-   * `u-step.required` (with or without an expression) additionally requires every
-   * `input[required]`/`select[required]`/`textarea[required]` inside the panel to pass its own
-   * native `checkValidity()` (so `type="email"`, `pattern`, `minlength`, etc. are enforced for
-   * free, not just "has a value") before the step counts as complete. With no expression at all
-   * (`u-step.required`) that's the *only* condition; with one (`u-step.required="condition"`) both
-   * must hold. A required radio group only needs `required` on one radio in the group — the native
-   * API resolves group-checkedness on its own. Listens for `input`/`change` on those fields itself
-   * (bound once, guarded by `el._x_stepRequiredBound`) since a plain required field with no
-   * `u-prop` binding writes no reactive data, so nothing would otherwise flag this directive to
-   * recompute when its value changes.
-   *
-   * `u-step:action="expression"` on the same panel runs `expression` (a statement, like
-   * `@click`) once each time this step becomes the current one — e.g.
-   * `u-step:action="approved = {}"` to clear a previous system check's result as soon as its
-   * step is (re-)entered, or `u-step:action="$ajax('system/test', db).then(r => approved = r)"`
-   * to kick one off. Deliberately NOT a `u-step.action` modifier: any attribute whose directive
-   * name is "u-step" (a dot-modifier only ever changes the name *after* the dot) would still run
-   * through Component's own generic evaluate-to-get-"output" step — the same eager evaluation
-   * this doc block used to warn about — since that's core, unconditional behavior for every
-   * matching directive attribute, not something this plugin can special-case from the outside.
-   * A colon isn't a modifier separator, so "u-step:action" isn't recognized as any directive at
-   * all (core's own resolveAttributes()/computeOutput() skip an attribute whose directive has no
-   * registered handler) — invisible to the reactive pipeline entirely, read and run by hand below,
-   * from goto() itself, the sole place currentIndex ever actually changes. Going back to a step
-   * re-enters it (and re-runs its action) the same as going forward into it.
+   * Multi-step wizard: `u-step="condition"` marks a panel's completion; use as `u-data="step"`.
+   * `u-step.required` also requires every required field's native `checkValidity()`.
+   * `u-step:action="expr"` runs once each time that panel becomes the current one.
    *
    * @since 1.0
    */
   (() => {
-    // Not exported, not shared with dom.js's own closestDirective() — kept local so this plugin
-    // never reaches into Youla's internals, only the "u-data"/".__x" contract already public to
-    // every directive callback (see the "step" directive above receiving "component").
+    // Local, not dom.js's closestDirective() — this plugin only reaches into the public "u-data"/".__x" contract.
     function hasUData(el) {
       return [...el.attributes].some(({ name }) => name === 'u-data' || name.startsWith('u-data.'));
     }
@@ -58,13 +26,12 @@ document.addEventListener('youla:init', ()=> {
       const step     = wizard.getStep(el);
       const required = attribute.modifiers.includes('required');
 
-      // Bound once per panel: a required field with no "u-prop" writes no reactive data, so
-      // nothing would otherwise mark this directive dirty when its value changes.
+      // Bound once per panel; refresh(el) recomputes only this panel's checkValidity(), not the whole component.
       if (required && !el._x_stepRequiredBound) {
         el._x_stepRequiredBound = true;
 
         el.querySelectorAll(REQUIRED_FIELDS_SELECTOR).forEach(field => {
-          ['input', 'change'].forEach(event => field.addEventListener(event, () => component.refresh(true)));
+          ['input', 'change'].forEach(event => field.addEventListener(event, () => component.refresh(el)));
         });
       }
 
@@ -76,19 +43,18 @@ document.addEventListener('youla:init', ()=> {
         isComplete = isComplete && [...el.querySelectorAll(REQUIRED_FIELDS_SELECTOR)].every(field => field.checkValidity());
       }
 
+      // "step" is a reference into the reactive "steps" array (see getStep()), so this write triggers a normal refresh on its own.
       if (step.isComplete !== isComplete) {
         step.isComplete = isComplete;
-        // step lives on el._x_step, outside u-data's own reactive wrapper, so refresh manually.
-        component.refresh(true);
       }
     });
 
     Youla.data('step', () => ({
       steps: [],
-      currentIndex: 0,
+      currentIndex: 1,
       progress() {
         const total   = this.steps.length;
-        const current = Math.min(this.currentIndex + 1, total);
+        const current = Math.min(this.currentIndex, total);
 
         let complete = 0;
         for(let index = 0; index < current; index++) {
@@ -104,11 +70,9 @@ document.addEventListener('youla:init', ()=> {
           percentage: Math.floor(complete / total * 100),
         };
       },
+      // "index" is 1-based, matching every other public step number; the "steps" array itself stays 0-based.
       stepAt(index) {
-        return this.steps[index] || {
-          el: null,
-          title: null
-        };
+        return this.steps[index - 1] || { el: null };
       },
       current() {
         return this.stepAt(this.currentIndex);
@@ -120,13 +84,21 @@ document.addEventListener('youla:init', ()=> {
         return this.stepAt(this.nextIndex());
       },
       previousIndex() {
-        return this.currentIndex - 1 >= 0 ? this.currentIndex - 1 : null;
+        return this.currentIndex - 1 >= 1 ? this.currentIndex - 1 : null;
       },
       nextIndex() {
-        return this.currentIndex + 1 < this.steps.length ? this.currentIndex + 1 : null;
+        return this.currentIndex + 1 <= this.steps.length ? this.currentIndex + 1 : null;
       },
       isStep(index) {
         return Array.isArray(index) ? index.includes(this.currentIndex) : index === this.currentIndex;
+      },
+      // Each argument is either an exact index or a [from, to] inclusive range, e.g. isSteps(1, [3, 5]).
+      isSteps(...values) {
+        return values.some(value => (
+          Array.isArray(value)
+            ? this.currentIndex >= value[0] && this.currentIndex <= value[1]
+            : value === this.currentIndex
+        ));
       },
       isFirst() {
         return this.previousIndex() === null;
@@ -183,18 +155,17 @@ document.addEventListener('youla:init', ()=> {
       goto(index) {
         const previousIndex = this.currentIndex;
 
-        if(index !== null && this.steps[index] !== void 0) {
+        if(index !== null && this.steps[index - 1] !== void 0) {
           this.currentIndex = index;
         }
         this.render();
 
         if (this.currentIndex !== previousIndex) {
-          this.runAction(this.steps[this.currentIndex]);
+          this.runAction(this.steps[this.currentIndex - 1]);
         }
         return this.current();
       },
-      // Runs the newly-entered step's "u-step:action", if any — see the doc block above this
-      // IIFE for why it's read straight off the DOM instead of through a reactive attribute.
+      // Read straight off the DOM, not as a reactive attribute: "u-step:action" has no registered directive, so core skips it entirely.
       runAction(step) {
         const expression = step?.el.getAttribute('u-step:action');
         if (!expression) {
@@ -206,30 +177,27 @@ document.addEventListener('youla:init', ()=> {
       },
       render() {
         this.steps.forEach((step, index) => {
-          const isHidden = index !== this.currentIndex;
+          const isHidden = (index + 1) !== this.currentIndex;
           if(step.el.hidden !== isHidden) {
             step.el.hidden = isHidden;
           }
         });
       },
+      // Returns a live reference into the reactive "steps" array, not a bare object outside it.
       getStep(el) {
-        let step = el._x_step;
-        if(!step) {
-          step = el._x_step = { el, title: '', isComplete: true };
-
-          this.steps.push(step);
+        let index = el._x_stepIndex;
+        if (index === undefined) {
+          index = el._x_stepIndex = this.steps.push({ el, isComplete: true }) - 1;
           this.render();
         }
-        return step;
+        return this.steps[index];
       },
     }));
   })();
 
   /**
-   * Notifications system: a single `u-data="notice"` container (parts/footer.html) holds
-   * the queue. `$notice` always resolves to that container's data, so `$notice.info('Saved')`
-   * works from any `u-data` on the page. The variable and the data provider are grouped in one
-   * IIFE since neither is useful without the other.
+   * Notifications system: a single `u-data="notice"` container (parts/footer.html) holds the
+   * queue. `$notice` resolves to that container's data, so `$notice.info('Saved')` works anywhere.
    *
    * @since 1.0
    */
@@ -781,10 +749,8 @@ document.addEventListener('youla:init', ()=> {
   }));
 
   /**
-   * Search box: `wrapper`/`button`/`input` are ready-made `u-bind` sets. `button`/`input`
-   * carry their own `u-ref`, so the wrapper's Ctrl+K shortcut reaches the input via `$refs`
-   * instead of Alpine's `x-init` (Youla.js has no such hook — `u-ref` + `$refs` is the native
-   * way to grab an element reference, see /u-ref).
+   * Search box: `wrapper`/`button`/`input` are ready-made `u-bind` sets. `button`/`input` carry
+   * their own `u-ref`, so the wrapper's Ctrl+K shortcut reaches the input via `$refs`.
    *
    * @since 1.0
    */
@@ -861,22 +827,13 @@ document.addEventListener('youla:init', ()=> {
   }));
 
   /**
-   * `$dirty` — warns about unsaved form changes: tracks a form's initial serialized state
-   * and compares it against the current one on every input/change, toggling `is-unsaved` (and a
-   * brief `is-shake`) on `document.body`, and blocking in-page link clicks while any watched form
-   * is dirty. Call `$dirty.watch($el)` once per form — e.g. `<form @load="$dirty.watch($el)">`,
-   * `.load` being Youla's equivalent of Alpine's `x-init` — and `$dirty.remove($el)` after a
-   * successful save to reset it back to clean (or on `reset`, handled automatically below).
-   *
-   * `resolveVariables()` re-invokes this factory on every single expression evaluation page-wide,
-   * so nothing here can rely on a JS variable surviving between calls — "already watching this
-   * form"/"is this form dirty" live as attributes on the form itself instead, which is what
-   * actually persists. `sync()` re-derives "is-unsaved" from every watched form on the page, so
-   * several independently-watched forms aggregate correctly, for free.
+   * `$dirty` — warns about unsaved form changes. Call `$dirty.watch($el)` once per form (e.g.
+   * `<form @load="$dirty.watch($el)">`) and `$dirty.remove($el)` after a successful save.
    *
    * @since 1.0
    */
   Youla.variable('dirty', () => {
+    // This factory re-runs on every expression evaluation page-wide, so state lives on form/body attributes, not JS variables.
     const serialize = form => JSON.stringify(Object.fromEntries(new FormData(form).entries()));
 
     const sync = () => {

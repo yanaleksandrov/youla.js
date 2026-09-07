@@ -483,6 +483,15 @@ export default class Component {
           const { directive, bind, name } = attribute;
 
           if (bind || getDirective(directive)) {
+            // "u-prop"'s own tracked dep is only its root identifier ("user" for "user.password"),
+            // but a write reports the changed LEAF prop ("password") to whichever component owns
+            // that object — never this one's "concernedData" when the field is bound through a
+            // parent scope (see hydrateProps() in props.js). Without this it works once (deps
+            // start out empty, so the first refresh always applies) and then silently goes stale
+            // forever after — so "u-prop" always re-syncs on any refresh of its own component,
+            // never gated by "concernedData", since re-reading/re-writing its value is cheap.
+            const alwaysSync = directive === 'u-prop';
+
             // Keyed per element/attribute so a binding whose last-known deps never overlapped
             // "concernedData" can skip computeOutput() entirely instead of calling it "just to
             // check": evaluate() actually runs the expression, so a binding with a side effect
@@ -491,14 +500,14 @@ export default class Component {
             el.__x_deps ??= {};
             const previousDeps = el.__x_deps[name];
 
-            if (!elementForced && previousDeps && !previousDeps.some(dep => self.concernedData.includes(dep))) {
+            if (!elementForced && !alwaysSync && previousDeps && !previousDeps.some(dep => self.concernedData.includes(dep))) {
               return;
             }
 
             const { output, deps } = self.computeOutput(attribute, additionalHelperVariables, { withDeps: true });
             el.__x_deps[name] = deps;
 
-            if (elementForced || !previousDeps || self.concernedData.some(dep => deps.includes(dep))) {
+            if (elementForced || alwaysSync || !previousDeps || self.concernedData.some(dep => deps.includes(dep))) {
               self.applyAttribute(el, attribute, output, additionalHelperVariables);
             }
           }

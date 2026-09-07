@@ -79,4 +79,37 @@ describe('u-prop inside a nested u-data', () => {
 
     expect(document.getElementById('pwd').value).toBe('GENERATED');
   });
+
+  it('keeps syncing on every later refresh, not just the first (u-prop is never gated by concernedData)', async () => {
+    // Regression: u-prop's own tracked dep is just the root identifier ("user"), but a nested
+    // write reports the changed LEAF prop ("password") to whichever component owns that object —
+    // never this component's own "concernedData". The very first refresh applied anyway (no
+    // previousDeps yet to compare against), then silently went stale on every refresh after that.
+    document.body.innerHTML = `
+      <form u-data="{ user: {} }">
+        <div u-data="{ tick: 0 } as p">
+          <input id="pwd" u-prop="user.password">
+          <button type="button" id="gen" @click="user.password = 'GEN' + tick; tick++"></button>
+        </div>
+      </form>
+    `;
+
+    initAll();
+    await tick();
+
+    const gen = document.getElementById('gen');
+    const pwd = document.getElementById('pwd');
+
+    gen.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await tick();
+    expect(pwd.value).toBe('GEN0');
+
+    gen.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await tick();
+    expect(pwd.value).toBe('GEN1');
+
+    gen.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await tick();
+    expect(pwd.value).toBe('GEN2');
+  });
 });

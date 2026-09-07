@@ -22,6 +22,19 @@
   нужно — <code>u-prop</code> сам добавит их в те же данные при первой отрисовке.
 </p>
 
+<p>
+  Модификатор <code>u-step.required</code> избавляет от необходимости писать условие вручную:
+  шаг считается завершённым, только когда у каждого <code>required</code>-поля внутри панели
+  (<code>input</code>/<code>select</code>/<code>textarea</code>) пройдена его собственная
+  нативная проверка <code>checkValidity()</code> — то есть учитываются не только заполненность,
+  но и <code>type="email"</code>, <code>pattern</code>, <code>minlength</code> и так далее.
+  Для группы радиокнопок достаточно поставить <code>required</code> на одну из них — браузер сам
+  проверяет группу целиком. Можно оставить <code>u-step.required</code> совсем без выражения (как
+  ниже) — тогда проверка required-полей это единственное условие; а можно совместить с
+  выражением — <code>u-step.required="условие"</code> — и оба условия должны выполняться
+  одновременно.
+</p>
+
 <h2>Методы провайдера step вкратце</h2>
 
 <table>
@@ -96,14 +109,14 @@
         <li u-each="n in 3" :class="{ active: isStep(n-1) }" u-text="n"></li>
       </ul>
 
-      <div u-step="name.trim().length > 0">
+      <div u-step.required>
         <label>Ваше имя</label>
-        <input u-prop="name" placeholder="Иван">
+        <input required u-prop="name" placeholder="Иван">
       </div>
 
-      <div u-step="/.+@.+\..+/.test(email)" hidden>
+      <div u-step.required hidden>
         <label>Email</label>
-        <input u-prop="email" placeholder="ivan@example.com">
+        <input required type="email" u-prop="email" placeholder="ivan@example.com">
       </div>
 
       <div u-step="true" hidden>
@@ -130,14 +143,14 @@
     &lt;li u-each=&quot;n in 3&quot; :class=&quot;{ active: isStep(n-1) }&quot; u-text=&quot;n&quot;&gt;&lt;/li&gt;
   &lt;/ul&gt;
 
-  &lt;div u-step=&quot;name.trim().length &gt; 0&quot;&gt;
+  &lt;div u-step.required&gt;
     &lt;label&gt;Ваше имя&lt;/label&gt;
-    &lt;input u-prop=&quot;name&quot; placeholder=&quot;Иван&quot;&gt;
+    &lt;input required u-prop=&quot;name&quot; placeholder=&quot;Иван&quot;&gt;
   &lt;/div&gt;
 
-  &lt;div u-step=&quot;/.+@.+\..+/.test(email)&quot; hidden&gt;
+  &lt;div u-step.required hidden&gt;
     &lt;label&gt;Email&lt;/label&gt;
-    &lt;input u-prop=&quot;email&quot; placeholder=&quot;ivan@example.com&quot;&gt;
+    &lt;input required type=&quot;email&quot; u-prop=&quot;email&quot; placeholder=&quot;ivan@example.com&quot;&gt;
   &lt;/div&gt;
 
   &lt;div u-step=&quot;true&quot; hidden&gt;

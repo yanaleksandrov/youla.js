@@ -91,6 +91,14 @@ document.addEventListener('youla:init', ()=> {
       isStep(index) {
         return Array.isArray(index) ? index.includes(this.currentIndex) : index === this.currentIndex;
       },
+      // Each argument is either an exact index or a [from, to] inclusive range, e.g. isSteps(0, [2, 4]).
+      isSteps(...values) {
+        return values.some(value => (
+          Array.isArray(value)
+            ? this.currentIndex >= value[0] && this.currentIndex <= value[1]
+            : value === this.currentIndex
+        ));
+      },
       isFirst() {
         return this.previousIndex() === null;
       },

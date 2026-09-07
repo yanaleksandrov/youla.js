@@ -9,75 +9,86 @@ document.addEventListener('youla:init', () => {
   Youla.baseURL ??= (typeof youla !== 'undefined' ? youla?.apiurl : null) ?? '';
 
   /**
-   * Registers `$ajax(route, payload, onProgress, options)`. Dispatches an `ajax:${route}`
-   * CustomEvent on `document` once the response arrives; an array `data` response is treated
-   * as fragment instructions (see applyFragment). Calling again on the same element cancels
-   * any request still in flight.
+   * Registers `$ajax(route, payload, onProgress, options)`, plus `$ajax.get(...)` /
+   * `$ajax.post(...)` / `$ajax.put(...)` / `$ajax.patch(...)` / `$ajax.delete(...)` shorthands
+   * that force the request method instead of falling back to the element's `method` attribute.
+   * Dispatches an `ajax:${route}` CustomEvent on `document` once the response arrives; an array
+   * `data` response is treated as fragment instructions (see applyFragment). Calling again on
+   * the same element cancels any request still in flight.
    *
    * @param {Event} e - Triggering event (unused).
    * @param {HTMLElement} el - Element `$ajax` was called on.
-   * @returns {Function} `(route, payload?, onProgress?, options?) => Promise`
+   * @returns {Function} `(route, payload?, onProgress?, options?) => Promise`, with `.get`/`.post`/`.put`/`.patch`/`.delete` shorthands.
    */
-  Youla.method('ajax', (e, el) => (route, payload, onProgress, options = {}) => {
-    abortPrevious(el);
+  Youla.method('ajax', (e, el) => {
+    const ajax = (route, payload, onProgress, options = {}) => {
+      abortPrevious(el);
 
-    const xhr = el.__ajax = new XMLHttpRequest();
-    const url = /^https?:\/\//.test(route) ? route : Youla.baseURL + route;
-    const done = toggleLoading(el);
+      const xhr = el.__ajax = new XMLHttpRequest();
+      const url = /^https?:\/\//.test(route) ? route : Youla.baseURL + route;
+      const done = toggleLoading(el);
 
-    xhr.open((el.getAttribute('method') || (el.tagName === 'FORM' ? 'POST' : 'GET')).toUpperCase(), url);
-    xhr.withCredentials = options.credentials ?? true;
+      xhr.open((options.method || el.getAttribute('method') || (el.tagName === 'FORM' ? 'POST' : 'GET')).toUpperCase(), url);
+      xhr.withCredentials = options.credentials ?? true;
 
-    Object.entries(options.headers || {}).forEach(([name, value]) => xhr.setRequestHeader(name, value));
+      Object.entries(options.headers || {}).forEach(([name, value]) => xhr.setRequestHeader(name, value));
 
-    // Regular sends and file uploads both funnel through the same normalizer.
-    xhr.onloadstart = xhr.upload.onprogress = event => onProgress?.(readProgress(event, xhr));
-    xhr.onloadend   = event => { onProgress?.(readProgress(event, xhr)); done(); };
+      // Regular sends and file uploads both funnel through the same normalizer.
+      xhr.onloadstart = xhr.upload.onprogress = event => onProgress?.(readProgress(event, xhr));
+      xhr.onloadend   = event => { onProgress?.(readProgress(event, xhr)); done(); };
 
-    return new Promise((resolve, reject) => {
-      xhr.__reject = reject;
+      return new Promise((resolve, reject) => {
+        xhr.__reject = reject;
 
-      xhr.onerror = () => reject(new Error('Youla.js: "$ajax" network error.'));
-      xhr.onload  = () => {
-        const parsed = parseJSON(xhr.responseText);
+        xhr.onerror = () => reject(new Error('Youla.js: "$ajax" network error.'));
+        xhr.onload  = () => {
+          const parsed = parseJSON(xhr.responseText);
 
-        if (xhr.status < 200 || xhr.status >= 300) {
-          reject(Object.assign(
-            new Error(`Youla.js: "$ajax" failed with status ${xhr.status}.`),
-            { status: xhr.status, data: parsed ?? xhr.responseText }
-          ));
-          return;
-        }
-
-        const data = parsed?.data ?? parsed ?? xhr.responseText;
-
-        // A listener can override the resolution synchronously via "resolve"; otherwise it falls through below.
-        let settled = false;
-        const override = value => { settled = true; resolve(value); };
-
-        try {
-          document.dispatchEvent(new CustomEvent(`ajax:${route}`, {
-            detail: { data, el, resolve: override },
-            bubbles: true,
-            // Allows the event to pass the shadow DOM barrier.
-            composed: true,
-            cancelable: true,
-          }));
-
-          if (Array.isArray(data)) {
-            data.forEach(applyFragment);
+          if (xhr.status < 200 || xhr.status >= 300) {
+            reject(Object.assign(
+              new Error(`Youla.js: "$ajax" failed with status ${xhr.status}.`),
+              { status: xhr.status, data: parsed ?? xhr.responseText }
+            ));
+            return;
           }
-        } catch (error) {
-          console.error('Youla.js: "$ajax" fragment handling failed.', error);
-        }
 
-        if (!settled) {
-          resolve(data);
-        }
-      };
+          const data = parsed?.data ?? parsed ?? xhr.responseText;
 
-      xhr.send(buildRequestBody(el, payload));
+          // A listener can override the resolution synchronously via "resolve"; otherwise it falls through below.
+          let settled = false;
+          const override = value => { settled = true; resolve(value); };
+
+          try {
+            document.dispatchEvent(new CustomEvent(`ajax:${route}`, {
+              detail: { data, el, resolve: override },
+              bubbles: true,
+              // Allows the event to pass the shadow DOM barrier.
+              composed: true,
+              cancelable: true,
+            }));
+
+            if (Array.isArray(data)) {
+              data.forEach(applyFragment);
+            }
+          } catch (error) {
+            console.error('Youla.js: "$ajax" fragment handling failed.', error);
+          }
+
+          if (!settled) {
+            resolve(data);
+          }
+        };
+
+        xhr.send(buildRequestBody(el, payload));
+      });
+    };
+
+    // Shorthands that force the request method regardless of the element's `method` attribute.
+    ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].forEach(method => {
+      ajax[method.toLowerCase()] = (route, payload, onProgress, options = {}) => ajax(route, payload, onProgress, { ...options, method });
     });
+
+    return ajax;
   });
 
   /**

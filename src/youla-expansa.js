@@ -51,10 +51,10 @@ document.addEventListener('youla:init', ()=> {
 
     Youla.data('step', () => ({
       steps: [],
-      currentIndex: 0,
+      currentIndex: 1,
       progress() {
         const total   = this.steps.length;
-        const current = Math.min(this.currentIndex + 1, total);
+        const current = Math.min(this.currentIndex, total);
 
         let complete = 0;
         for(let index = 0; index < current; index++) {
@@ -70,8 +70,9 @@ document.addEventListener('youla:init', ()=> {
           percentage: Math.floor(complete / total * 100),
         };
       },
+      // "index" is 1-based, matching every other public step number; the "steps" array itself stays 0-based.
       stepAt(index) {
-        return this.steps[index] || { el: null };
+        return this.steps[index - 1] || { el: null };
       },
       current() {
         return this.stepAt(this.currentIndex);
@@ -83,15 +84,15 @@ document.addEventListener('youla:init', ()=> {
         return this.stepAt(this.nextIndex());
       },
       previousIndex() {
-        return this.currentIndex - 1 >= 0 ? this.currentIndex - 1 : null;
+        return this.currentIndex - 1 >= 1 ? this.currentIndex - 1 : null;
       },
       nextIndex() {
-        return this.currentIndex + 1 < this.steps.length ? this.currentIndex + 1 : null;
+        return this.currentIndex + 1 <= this.steps.length ? this.currentIndex + 1 : null;
       },
       isStep(index) {
         return Array.isArray(index) ? index.includes(this.currentIndex) : index === this.currentIndex;
       },
-      // Each argument is either an exact index or a [from, to] inclusive range, e.g. isSteps(0, [2, 4]).
+      // Each argument is either an exact index or a [from, to] inclusive range, e.g. isSteps(1, [3, 5]).
       isSteps(...values) {
         return values.some(value => (
           Array.isArray(value)
@@ -154,13 +155,13 @@ document.addEventListener('youla:init', ()=> {
       goto(index) {
         const previousIndex = this.currentIndex;
 
-        if(index !== null && this.steps[index] !== void 0) {
+        if(index !== null && this.steps[index - 1] !== void 0) {
           this.currentIndex = index;
         }
         this.render();
 
         if (this.currentIndex !== previousIndex) {
-          this.runAction(this.steps[this.currentIndex]);
+          this.runAction(this.steps[this.currentIndex - 1]);
         }
         return this.current();
       },
@@ -176,7 +177,7 @@ document.addEventListener('youla:init', ()=> {
       },
       render() {
         this.steps.forEach((step, index) => {
-          const isHidden = index !== this.currentIndex;
+          const isHidden = (index + 1) !== this.currentIndex;
           if(step.el.hidden !== isHidden) {
             step.el.hidden = isHidden;
           }

@@ -41,11 +41,18 @@ document.addEventListener('youla:init', () =&gt; {
 <p>
   Метод запроса берётся из атрибута <code>method</code> элемента, на котором вызван
   <code>$ajax</code>; без атрибута — <code>POST</code> для <code>&lt;form&gt;</code> и
-  <code>GET</code> для всего остального.
+  <code>GET</code> для всего остального. Чтобы задать метод явно, не трогая атрибут элемента, есть короткие <code>$ajax.get(...)</code>,
+  <code>$ajax.post(...)</code>, <code>$ajax.put(...)</code>, <code>$ajax.patch(...)</code> и
+  <code>$ajax.delete(...)</code> — те же аргументы, но с принудительным методом запроса.
 </p>
 
 <pre>
 $ajax(route, payload, onProgress, options)
+$ajax.get(route, payload, onProgress, options)
+$ajax.post(route, payload, onProgress, options)
+$ajax.put(route, payload, onProgress, options)
+$ajax.patch(route, payload, onProgress, options)
+$ajax.delete(route, payload, onProgress, options)
 </pre>
 
 <table>
@@ -77,9 +84,11 @@ $ajax(route, payload, onProgress, options)
     <tr>
       <td><code>options</code></td>
       <td>
-        необязательный объект <code>{ headers, credentials }</code> — <code>headers</code>
-        добавляет заголовки запроса, <code>credentials</code> (булево, по умолчанию
-        <code>true</code>) управляет отправкой куки
+        необязательный объект <code>{ headers, credentials, method }</code> —
+        <code>headers</code> добавляет заголовки запроса, <code>credentials</code> (булево, по
+        умолчанию <code>true</code>) управляет отправкой куки, <code>method</code> переопределяет
+        HTTP-метод (то же самое, что делают <code>$ajax.get</code> / <code>$ajax.post</code> /
+        <code>$ajax.put</code> / <code>$ajax.patch</code> / <code>$ajax.delete</code>)
       </td>
     </tr>
   </tbody>

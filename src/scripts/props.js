@@ -1,5 +1,5 @@
 import { closestDirective, domWalk } from './dom';
-import { setNestedObjectValue, getNestedObjectValue, isUnsafeKey } from './object-path';
+import { setNestedObjectValue, getNestedObjectValue, isUnsafeKey, parsePropPath, toJsPropAccessor } from './object-path';
 import { saferEval } from './eval';
 import { createMagicVariables, withMagicVariables } from './magic-variables';
 import { getAttributes } from './attributes';
@@ -27,10 +27,11 @@ export function hydrateProps(rootElement, data) {
       el.setAttribute('name', expression.replace(/\.(\w+)/g, '[$1]'))
     }
 
-    let [key, ...prop] = expression.split('.');
+    let [key, ...prop] = parsePropPath(expression);
 
-    if (isUnsafeKey(key)) {
-      console.warn(`Youla.js: u-prop expression "${expression}" uses unsafe key "${key}" — skipped.`);
+    const unsafeKey = [key, ...prop].find(isUnsafeKey);
+    if (unsafeKey) {
+      console.warn(`Youla.js: u-prop expression "${expression}" uses unsafe key "${unsafeKey}" — skipped.`);
       return;
     }
 
@@ -82,28 +83,34 @@ export function hydrateProps(rootElement, data) {
 export function generateExpressionForProp(el, data, attribute) {
   let {expression, modifiers} = attribute;
 
+  // Bracket-notation segments ("user[firstName]") aren't valid bare JS on their own — inside the
+  // "with($data)" saferEval runs under, an unquoted "firstName" would be read as its own (data-scoped)
+  // identifier instead of a string key. Normalizing to a quoted member-access chain up front means
+  // every branch below can interpolate "accessor" freely, regardless of how "expression" was written.
+  const accessor = toJsPropAccessor(expression);
+
   let rightSideOfExpression, tag = el.tagName.toLowerCase();
   if (el.type === 'checkbox') {
     // If the data we are binding to is an array, toggle its value inside the array.
     let value = getNestedObjectValue(data, expression);
     if (Array.isArray(value)) {
-      rightSideOfExpression = `$el.checked ? ${expression}.concat([$el.value]) : [...${expression}.splice(0, ${expression}.indexOf($el.value)), ...${expression}.splice(${expression}.indexOf($el.value)+1)]`
+      rightSideOfExpression = `$el.checked ? ${accessor}.concat([$el.value]) : [...${accessor}.splice(0, ${accessor}.indexOf($el.value)), ...${accessor}.splice(${accessor}.indexOf($el.value)+1)]`
     } else {
       rightSideOfExpression = `$el.checked`
     }
   } else if (el.type === 'radio') {
-    rightSideOfExpression = `$el.checked ? $el.value : (typeof ${expression} !== 'undefined' ? ${expression} : '')`
+    rightSideOfExpression = `$el.checked ? $el.value : (typeof ${accessor} !== 'undefined' ? ${accessor} : '')`
   } else if (tag === 'select' && el.multiple) {
     rightSideOfExpression = `Array.from($el.selectedOptions).map(option => ${modifiers.includes('number')
       ? 'parseFloat(option.value || option.text)'
       : 'option.value || option.text'})`
   } else if (modifiers.includes('number')) {
-    return `($el.value = $el.value.replace(/[^\\d]/g, ''), $data.${expression} = $el.value === '' ? '' : parseFloat($el.value))`
+    return `($el.value = $el.value.replace(/[^\\d]/g, ''), $data.${accessor} = $el.value === '' ? '' : parseFloat($el.value))`
   } else if (modifiers.includes('trim')) {
     rightSideOfExpression = `($el.value = $el.value.replace(/^\\s+|\\s+$/g, ''), $el.value)`
   } else {
     rightSideOfExpression = '$el.value'
   }
 
-  return `$data.${expression} = ${rightSideOfExpression}`
+  return `$data.${accessor} = ${rightSideOfExpression}`
 }

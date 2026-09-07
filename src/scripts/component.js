@@ -11,7 +11,7 @@ import { storage, isStorageModifier, getStorageType, computeExpires } from './st
 import { getDirective } from './directives';
 import { parseEachExpression } from './directives/u-each';
 import { resolveMethods } from './methods';
-import { isUnsafeKey } from './object-path';
+import { isUnsafeKey, getNestedObjectValue, parsePropPath } from './object-path';
 
 /**
  * A window/document/outside listener or an intersect observer keeps its own reference to "el",
@@ -341,6 +341,16 @@ export default class Component {
         const { items } = parseEachExpression(expression);
         const [rootIdentifier] = (items ?? '').match(/^[A-Za-z_$][\w$]*/) ?? [];
 
+        deps = rootIdentifier ? [rootIdentifier] : [];
+      }
+    } else if (directive === 'u-prop') {
+      // "expression" here is a property path ("user.name"/"user[name]"), not a JS expression —
+      // evaluating it generically like every other directive would misread a bracket segment as
+      // a bare (data-scoped) identifier instead of a literal key. Read straight off "data" instead.
+      output = getNestedObjectValue(this.data, expression);
+
+      if (withDeps) {
+        const [rootIdentifier] = parsePropPath(expression);
         deps = rootIdentifier ? [rootIdentifier] : [];
       }
     } else if (!literal) {

@@ -5,15 +5,16 @@ import '../youla-expansa';
 /**
  * isSteps(...values) is isStep()'s variadic sibling: each argument is either an exact index or a
  * [from, to] inclusive range, and it's true as soon as any of them matches the current step.
+ * Step numbers are 1-based throughout.
  */
 function mountWizard() {
   document.body.innerHTML = `
     <form u-data="step">
-      <div id="step0" u-step="true"></div>
-      <div id="step1" hidden u-step="true"></div>
+      <div id="step1" u-step="true"></div>
       <div id="step2" hidden u-step="true"></div>
       <div id="step3" hidden u-step="true"></div>
       <div id="step4" hidden u-step="true"></div>
+      <div id="step5" hidden u-step="true"></div>
     </form>
   `;
   return { form: document.querySelector('form') };
@@ -39,10 +40,10 @@ describe('step.isSteps', () => {
     await tick();
     const step = form.__x.data;
 
-    step.goto(2);
+    step.goto(3);
 
-    expect(step.isSteps(2)).toBe(true);
-    expect(step.isSteps(0)).toBe(false);
+    expect(step.isSteps(3)).toBe(true);
+    expect(step.isSteps(1)).toBe(false);
   });
 
   it('matches any of several exact indexes', async () => {
@@ -51,10 +52,10 @@ describe('step.isSteps', () => {
     await tick();
     const step = form.__x.data;
 
-    step.goto(3);
+    step.goto(4);
 
-    expect(step.isSteps(0, 3)).toBe(true);
-    expect(step.isSteps(0, 1)).toBe(false);
+    expect(step.isSteps(1, 4)).toBe(true);
+    expect(step.isSteps(1, 2)).toBe(false);
   });
 
   it('matches an inclusive [from, to] range', async () => {
@@ -63,20 +64,20 @@ describe('step.isSteps', () => {
     await tick();
     const step = form.__x.data;
 
-    step.goto(2);
-    expect(step.isSteps([1, 3])).toBe(true);
-
-    step.goto(1);
-    expect(step.isSteps([1, 3])).toBe(true);
-
     step.goto(3);
-    expect(step.isSteps([1, 3])).toBe(true);
+    expect(step.isSteps([2, 4])).toBe(true);
 
-    step.goto(0);
-    expect(step.isSteps([1, 3])).toBe(false);
+    step.goto(2);
+    expect(step.isSteps([2, 4])).toBe(true);
 
     step.goto(4);
-    expect(step.isSteps([1, 3])).toBe(false);
+    expect(step.isSteps([2, 4])).toBe(true);
+
+    step.goto(1);
+    expect(step.isSteps([2, 4])).toBe(false);
+
+    step.goto(5);
+    expect(step.isSteps([2, 4])).toBe(false);
   });
 
   it('combines exact indexes and a range in the same call', async () => {
@@ -85,13 +86,13 @@ describe('step.isSteps', () => {
     await tick();
     const step = form.__x.data;
 
-    step.goto(0);
-    expect(step.isSteps(0, [2, 4])).toBe(true);
-
-    step.goto(3);
-    expect(step.isSteps(0, [2, 4])).toBe(true);
-
     step.goto(1);
-    expect(step.isSteps(0, [2, 4])).toBe(false);
+    expect(step.isSteps(1, [3, 5])).toBe(true);
+
+    step.goto(4);
+    expect(step.isSteps(1, [3, 5])).toBe(true);
+
+    step.goto(2);
+    expect(step.isSteps(1, [3, 5])).toBe(false);
   });
 });

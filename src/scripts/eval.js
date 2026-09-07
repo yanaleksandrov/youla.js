@@ -16,11 +16,24 @@
  * @param {boolean} [noReturn] - When true, runs "expression" as a statement instead of evaluating and returning it.
  * @returns {*} The expression's value, or undefined when "noReturn" is true.
  */
-export function saferEval(expression, dataContext, additionalHelperVariables = {}, noReturn = false) {
-  // No intermediate variable like "result": with($data) would let a same-named data property silently hijack it.
-  expression = noReturn ? `with($data){${expression}}` : `with($data){return (${expression})}`;
+// Every directive/event/binding attribute on the page runs through here, on every domWalk pass —
+// `new Function` is a real parse+compile, not a cheap call, so the same expression text (paired
+// with the same helper-variable names, which shape the compiled function's own parameter list)
+// is compiled once and reused instead of recompiled from scratch on every single evaluation.
+const compiledCache = new Map();
 
-  return (new Function(['$data', ...Object.keys(additionalHelperVariables)], expression))(
-    dataContext, ...Object.values(additionalHelperVariables)
-  )
+export function saferEval(expression, dataContext, additionalHelperVariables = {}, noReturn = false) {
+  const helperNames = Object.keys(additionalHelperVariables);
+  const cacheKey     = `${noReturn ? 1 : 0}:${helperNames.join(',')}:${expression}`;
+
+  let fn = compiledCache.get(cacheKey);
+  if (!fn) {
+    // No intermediate variable like "result": with($data) would let a same-named data property silently hijack it.
+    const body = noReturn ? `with($data){${expression}}` : `with($data){return (${expression})}`;
+
+    fn = new Function(['$data', ...helperNames], body);
+    compiledCache.set(cacheKey, fn);
+  }
+
+  return fn(dataContext, ...Object.values(additionalHelperVariables));
 }

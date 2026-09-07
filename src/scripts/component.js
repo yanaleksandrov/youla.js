@@ -428,12 +428,25 @@ export default class Component {
         const additionalHelperVariables = {...getForData(el), ...self.getAliasVariables(), ...self.getMagicVariables(el)};
 
         self.resolveAttributes(el).forEach(attribute => {
-          const { directive, bind } = attribute;
+          const { directive, bind, name } = attribute;
 
           if (bind || getDirective(directive)) {
-            const { output, deps } = self.computeOutput(attribute, additionalHelperVariables, { withDeps: true });
+            // Keyed per element/attribute so a binding whose last-known deps never overlapped
+            // "concernedData" can skip computeOutput() entirely instead of calling it "just to
+            // check": evaluate() actually runs the expression, so a binding with a side effect
+            // (an assignment, a method call) would otherwise re-run on every single refresh,
+            // everywhere in the tree, whether or not its output ever gets applied.
+            el.__x_deps ??= {};
+            const previousDeps = el.__x_deps[name];
 
-            if (force || self.concernedData.some(dep => deps.includes(dep))) {
+            if (!force && previousDeps && !previousDeps.some(dep => self.concernedData.includes(dep))) {
+              return;
+            }
+
+            const { output, deps } = self.computeOutput(attribute, additionalHelperVariables, { withDeps: true });
+            el.__x_deps[name] = deps;
+
+            if (force || !previousDeps || self.concernedData.some(dep => deps.includes(dep))) {
               self.applyAttribute(el, attribute, output, additionalHelperVariables);
             }
           }

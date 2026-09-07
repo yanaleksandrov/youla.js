@@ -30,6 +30,11 @@ document.addEventListener('youla:init', ()=> {
 
     Object.assign(settings, output && typeof output === 'object' ? output : {});
 
+    // A reactive refresh (e.g. a forced one from u-step) re-runs this directive on the same
+    // element; without tearing down the previous instance first, SlimSelect would stack a brand
+    // new widget and its own listeners on top of the old one every single time.
+    el._x_slimSelect?.destroy();
+
     const data = Array.from(el.options).reduce((acc, option) => {
       const image       = option.getAttribute('data-image');
       const icon        = option.getAttribute('data-icon');
@@ -68,7 +73,7 @@ document.addEventListener('youla:init', ()=> {
     }, []);
 
     try {
-      new SlimSelect({ settings, select: el, data });
+      el._x_slimSelect = new SlimSelect({ settings, select: el, data });
     } catch {
       console.error('Youla.js: "SlimSelect" is not defined — u-select requires SlimSelect to be loaded.');
     }

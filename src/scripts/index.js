@@ -63,11 +63,14 @@ export const Youla = {
       )
     );
 
+    // "attributes" is deliberately omitted: the callback above only ever looks at
+    // "mutation.addedNodes", so watching attribute mutations too would just make the browser
+    // generate (and this observer process) a MutationRecord for every reactive attribute write
+    // anywhere on the page — every u-show/:class/u-step toggle — for no benefit.
     observer.observe(
       document.querySelector('body'),
       {
         childList: true,
-        attributes: true,
         subtree: true,
       }
     )

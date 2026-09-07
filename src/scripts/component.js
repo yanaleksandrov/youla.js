@@ -9,6 +9,7 @@ import { hydrateProps, generateExpressionForProp } from './props';
 import { injectDataProviders } from './data';
 import { storage, isStorageModifier, getStorageType, computeExpires } from './storage';
 import { getDirective } from './directives';
+import { parseEachExpression } from './directives/u-each';
 import { resolveMethods } from './methods';
 import { isUnsafeKey } from './object-path';
 
@@ -232,12 +233,19 @@ export default class Component {
    */
   resolveAttributes(el) {
     const self = this;
-    const additionalHelperVariables = {...getForData(el), ...this.getAliasVariables(), ...this.getMagicVariables(el)};
+    // Computed lazily (once per call, on first use) — building it calls every registered
+    // Youla.variable() factory, several of which (see the "notice"/"dialog" magic variables in
+    // youla-expansa.js) run a document-wide querySelector every time; a "u-bind" attribute is
+    // rare, so paying that cost for the overwhelming majority of elements that have none would be
+    // pure waste, on every element, on every domWalk pass (initialize() and every refresh()).
+    let additionalHelperVariables;
 
     return getAttributes(el).flatMap(attribute => {
       if (attribute.directive !== 'u-bind') {
         return [attribute];
       }
+
+      additionalHelperVariables ??= {...getForData(el), ...this.getAliasVariables(), ...this.getMagicVariables(el)};
 
       let bindings;
       try {
@@ -325,7 +333,15 @@ export default class Component {
 
     if (directive === 'u-each') {
       if (withDeps) {
-        [, deps] = expression.split(' in ');
+        // "items" is a raw expression (e.g. "category.products"), not evaluated here, so the
+        // best dep tracking can do without running it is its own leading identifier — the same
+        // top-level name evaluate()'s tracking proxy would report for a plain "category.products"
+        // read elsewhere. Must always come back as an array: every caller (refresh()'s own
+        // "el.__x_deps" cache included) treats "deps" as one to call .some()/.includes() on.
+        const { items } = parseEachExpression(expression);
+        const [rootIdentifier] = (items ?? '').match(/^[A-Za-z_$][\w$]*/) ?? [];
+
+        deps = rootIdentifier ? [rootIdentifier] : [];
       }
     } else if (!literal) {
       try {
@@ -376,9 +392,16 @@ export default class Component {
       }
       el.__x_initialized = true;
 
+      const attributes = self.resolveAttributes(el);
+      if (attributes.length === 0) {
+        return;
+      }
+
+      // Same cost as resolveAttributes()'s own lazy computation (see its doc comment) — skipped
+      // outright for the vast majority of elements, which carry no u-*/@/: attribute at all.
       const additionalHelperVariables = {...getForData(el), ...self.getAliasVariables(), ...self.getMagicVariables(el)};
 
-      self.resolveAttributes(el).forEach(attribute => {
+      attributes.forEach(attribute => {
         let {directive, event, expression, modifiers, bind} = attribute;
 
         let propExpression;
@@ -424,10 +447,17 @@ export default class Component {
       self.pendingForceRefresh = false;
 
       domWalk(self.root, el => {
+        const attributes = self.resolveAttributes(el);
+        if (attributes.length === 0) {
+          return;
+        }
+
         // An element inside a "u-each" clone only carries its loop variables on "__x_for_data", so resolve them here too or bindings referencing them stop updating after the first render.
+        // Same cost as resolveAttributes()'s own lazy computation (see its doc comment) — skipped
+        // outright for the vast majority of elements, which carry no u-*/@/: attribute at all.
         const additionalHelperVariables = {...getForData(el), ...self.getAliasVariables(), ...self.getMagicVariables(el)};
 
-        self.resolveAttributes(el).forEach(attribute => {
+        attributes.forEach(attribute => {
           const { directive, bind, name } = attribute;
 
           if (bind || getDirective(directive)) {

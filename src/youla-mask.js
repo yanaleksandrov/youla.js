@@ -314,29 +314,13 @@ document.addEventListener('youla:init', ()=> {
   }
 
   /**
-   * Restricts an `<input>`'s value:
-   * - no expression (or an empty/falsy one): filters by the input's own `type` (tel/number/color).
-   * - a RegExp: strips characters matching it, as they're typed.
-   * - a non-empty string: a full text-mask pattern, applied via the vendored TextMask class
-   *   above (see buildMaskTokens for its syntax).
+   * (Re)builds the mask/filter for the current mode+output, tearing down whatever "el._x_mask"
+   * already had first.
    *
-   * @since 1.0
+   * @param {HTMLInputElement} el
+   * @param {*} output
    */
-  Youla.directive('mask', (el, output) => {
-    if (!(el instanceof HTMLInputElement)) {
-      console.warn('Youla.js: "u-mask" requires an <input>.');
-      return;
-    }
-
-    const mode = output instanceof RegExp ? 'regexp'
-      : (typeof output === 'string' && output) ? 'pattern'
-      : 'auto';
-
-    // Same mode+value as last run (e.g. an unrelated reactive refresh) — leave the existing listener/mask alone.
-    if (el._x_mask && el._x_mask.mode === mode && el._x_mask.output === output) {
-      return;
-    }
-
+  function applyMask(el, mode, output) {
     el._x_mask?.destroy();
 
     if (mode === 'pattern') {
@@ -367,5 +351,32 @@ document.addEventListener('youla:init', ()=> {
       output,
       destroy: () => el.removeEventListener('input', onInput)
     };
+  }
+
+  /**
+   * Restricts an `<input>`'s value:
+   * - no expression (or an empty/falsy one): filters by the input's own `type` (tel/number/color).
+   * - a RegExp: strips characters matching it, as they're typed.
+   * - a non-empty string: a full text-mask pattern, applied via the vendored TextMask class
+   *   above (see buildMaskTokens for its syntax).
+   *
+   * @since 1.0
+   */
+  Youla.directive('mask', (el, output) => {
+    if (!(el instanceof HTMLInputElement)) {
+      console.warn('Youla.js: "u-mask" requires an <input>.');
+      return;
+    }
+
+    const mode = output instanceof RegExp ? 'regexp'
+      : (typeof output === 'string' && output) ? 'pattern'
+      : 'auto';
+
+    // Same mode+value as last run (e.g. an unrelated reactive refresh) — leave the existing listener/mask alone.
+    if (el._x_mask && el._x_mask.mode === mode && el._x_mask.output === output) {
+      return;
+    }
+
+    applyMask(el, mode, output);
   });
 });

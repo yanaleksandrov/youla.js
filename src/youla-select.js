@@ -30,9 +30,10 @@ document.addEventListener('youla:init', ()=> {
 
     Object.assign(settings, output && typeof output === 'object' ? output : {});
 
-    // A reactive refresh (e.g. a forced one from u-step) re-runs this directive on the same
-    // element; without tearing down the previous instance first, SlimSelect would stack a brand
-    // new widget and its own listeners on top of the old one every single time.
+    // A reactive update (options changed) tears down the previous instance first — SlimSelect
+    // has no "update options" method of its own, only a full rebuild — so this rebuilds from
+    // "el.options"'s current, restored (post-destroy) state rather than whatever it looked like
+    // mid-render.
     el._x_slimSelect?.destroy();
 
     const data = Array.from(el.options).reduce((acc, option) => {

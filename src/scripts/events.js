@@ -68,6 +68,21 @@ export function matchesKeyModifiers(e, modifiers) {
 
     const expected = KEY_ALIASES[modifier] || modifier;
 
-    return typeof e.key === 'string' && e.key.toLowerCase() === expected.toLowerCase();
+    if (typeof e.key === 'string' && e.key.toLowerCase() === expected.toLowerCase()) {
+      return true;
+    }
+
+    // "e.key" reflects the active keyboard layout — the physical "S" key reports e.key === "ы"
+    // on a Cyrillic ЙЦУКЕН layout, not "s" — so ".ctrl.s" would otherwise never match for anyone
+    // not typing on a Latin layout. "e.code" always names the physical key itself regardless of
+    // layout, so a single letter/digit modifier (the common case for a shortcut) is checked
+    // against it too; the named aliases above (Enter, Escape, ArrowUp, …) already equal their own
+    // "code" value except "space" ("Space", not the literal " " "key" reports).
+    const expectedCode = /^[a-z]$/i.test(modifier) ? `Key${modifier.toUpperCase()}`
+      : /^[0-9]$/.test(modifier) ? `Digit${modifier}`
+      : modifier === 'space' ? 'Space'
+      : expected;
+
+    return typeof e.code === 'string' && e.code === expectedCode;
   });
 }

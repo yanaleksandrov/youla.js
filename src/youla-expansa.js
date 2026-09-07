@@ -941,6 +941,14 @@ document.addEventListener('youla:init', ()=> {
    * @since 1.0
    */
   Youla.directive('highlight', (el, output, { modifiers }) => {
+    // Wraps el's children in a <code> exactly once — a later call (e.g. an unrelated force
+    // refresh) would otherwise re-wrap the already-built wrapper in another one, nesting deeper
+    // every time instead of leaving the highlighted markup alone.
+    if (el._x_highlighted) {
+      return;
+    }
+    el._x_highlighted = true;
+
     const lang    = modifiers[0] || 'html';
     const wrapper = document.createElement('code');
 
@@ -960,6 +968,13 @@ document.addEventListener('youla:init', ()=> {
    * @since 1.0
    */
   Youla.directive('noautofill', (el) => {
+    // Attaches its focus/blur listeners exactly once — a later call would otherwise stack
+    // another pair on top, each one firing (and fighting over el.readOnly) on every focus/blur.
+    if (el._x_noautofill) {
+      return;
+    }
+    el._x_noautofill = true;
+
     const lock = () => el.readOnly = true;
 
     lock();
@@ -975,6 +990,13 @@ document.addEventListener('youla:init', ()=> {
    * @since 1.0
    */
   Youla.directive('sticky', el => {
+    // Attaches its window listeners exactly once — a later call would otherwise stack another
+    // "reposition" closure on top of the same window, each one still running forever afterward.
+    if (el._x_sticky) {
+      return;
+    }
+    el._x_sticky = true;
+
     const parent = el.parentElement;
     if (getComputedStyle(parent).position !== 'relative') {
       console.warn('Youla.js: "u-sticky" requires its parent to have position: relative.');
@@ -1056,9 +1078,12 @@ document.addEventListener('youla:init', ()=> {
    * @since 1.0
    */
   Youla.directive('textarea', (el, output) => {
-    if (el.tagName !== 'TEXTAREA') {
+    // Attaches its input listener exactly once — a later call would otherwise stack another
+    // one on top, each resizing the textarea redundantly on every keystroke from then on.
+    if (el.tagName !== 'TEXTAREA' || el._x_textarea) {
       return;
     }
+    el._x_textarea = true;
 
     el.addEventListener('input', () => {
       const maxRows = parseInt(output) || 99;

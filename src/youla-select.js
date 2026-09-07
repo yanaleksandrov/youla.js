@@ -30,6 +30,12 @@ document.addEventListener('youla:init', ()=> {
 
     Object.assign(settings, output && typeof output === 'object' ? output : {});
 
+    // A reactive update (options changed) tears down the previous instance first — SlimSelect
+    // has no "update options" method of its own, only a full rebuild — so this rebuilds from
+    // "el.options"'s current, restored (post-destroy) state rather than whatever it looked like
+    // mid-render.
+    el._x_slimSelect?.destroy();
+
     const data = Array.from(el.options).reduce((acc, option) => {
       const image       = option.getAttribute('data-image');
       const icon        = option.getAttribute('data-icon');
@@ -68,7 +74,7 @@ document.addEventListener('youla:init', ()=> {
     }, []);
 
     try {
-      new SlimSelect({ settings, select: el, data });
+      el._x_slimSelect = new SlimSelect({ settings, select: el, data });
     } catch {
       console.error('Youla.js: "SlimSelect" is not defined — u-select requires SlimSelect to be loaded.');
     }

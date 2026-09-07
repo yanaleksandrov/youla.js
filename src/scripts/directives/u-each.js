@@ -2,6 +2,23 @@ import { directive } from '../directives';
 import { saferEval } from '../eval';
 import { withMagicVariables, splitMagicVariables } from '../magic-variables';
 
+const EACH_EXPRESSION = /^\(?([\w]+)(?:,\s*(\w+))?\)?\s+in\s+(.*?)(?:\s+join\s+'([^']+)')?$/;
+
+/**
+ * Parses "i in 5", "dog in dogs", or "(car, index) in cars" syntax, with dot notation and an
+ * optional "... join '...'" suffix — shared with Component#computeOutput()'s own "u-each" case,
+ * which needs "items" (the raw collection expression) to derive tracked deps without evaluating it.
+ *
+ * @param {string} expression - The "u-each" attribute's raw expression.
+ * @returns {{item?: string, index: string, items?: string, join?: string}} The parsed parts;
+ *   all but "index" are undefined if "expression" doesn't match the expected syntax.
+ */
+export function parseEachExpression(expression) {
+  const [, item, index = 'key', items, join] = expression.match(EACH_EXPRESSION) || [];
+
+  return { item, index, items, join };
+}
+
 /**
  * Renders a clone of the template element for each item in an array, object, or integer range,
  * keeping the DOM in sync as the collection changes. Supports `item in items`, `(item, index)
@@ -19,8 +36,7 @@ directive('each', (el, output, attribute, component, additionalHelperVariables =
     return;
   }
 
-  // Parses "i in 5", "dog in dogs", or "(car, index) in cars" syntax, with dot notation support.
-  let [, item, index = 'key', items, join] = expression.match(/^\(?([\w]+)(?:,\s*(\w+))?\)?\s+in\s+(.*?)(?:\s+join\s+'([^']+)')?$/) || [];
+  const { item, index, items, join } = parseEachExpression(expression);
 
   const { magicVariables, otherVariables } = splitMagicVariables(additionalHelperVariables);
 

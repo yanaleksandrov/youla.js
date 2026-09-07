@@ -68,15 +68,29 @@ export function parseAttribute(name, value) {
 
 /**
  * Collects every directive/event/binding attribute on an element (":attr", "@event", "u-*"),
- * already parsed via parseAttribute().
+ * already parsed via parseAttribute() — this is called for every element on every single domWalk
+ * pass (initialize() and every refresh()), so the parsed result is cached on "el.__x_attrs" and
+ * reused as long as the matching ":attr"/"@event"/"u-*" attributes (name+value pairs, in order)
+ * haven't actually changed since. That "have they changed" check itself is cheap (matching the
+ * prefix and joining name/value, no parseAttribute() call) — the point is only ever to skip the
+ * heavier per-attribute parseAttribute() work, so it needs no cooperation from callers that mutate
+ * an element's own u-*, @, or : attributes after mount (u-each's ".lazy" rewrite, u-bind's unregistered-
+ * directive passthrough, or any third-party directive doing the same) — it notices on its own.
  *
  * @param {Element} el - The element to read attributes from.
  * @returns {object[]} The parsed attribute descriptors, in DOM attribute order.
  */
 export function getAttributes(el) {
-  return [...el.attributes]
-    .filter(({ name }) => ATTRIBUTE_PREFIX.test(name))
-    .map(({ name, value }) => parseAttribute(name, value));
+  const matching    = [...el.attributes].filter(({ name }) => ATTRIBUTE_PREFIX.test(name));
+  const fingerprint = matching.map(({ name, value }) => `${name}=${value}`).join('\0');
+
+  if (el.__x_attrs && el.__x_attrsFingerprint === fingerprint) {
+    return el.__x_attrs;
+  }
+
+  el.__x_attrsFingerprint = fingerprint;
+
+  return el.__x_attrs = matching.map(({ name, value }) => parseAttribute(name, value));
 }
 
 /**

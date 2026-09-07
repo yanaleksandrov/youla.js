@@ -43,7 +43,7 @@ document.addEventListener('youla:init', ()=> {
       const description = option.getAttribute('data-description') || '';
 
       const html = [
-        flag && window.youla?.spriteFlagsUrl && `<svg><use xlink:href="${window.youla.spriteFlagsUrl}#${flag}"></use></svg>`,
+        flag && window.youla?.flagsUrl && `<svg><use xlink:href="${window.youla.flagsUrl}#${flag}"></use></svg>`,
         image && `<img src="${image}" alt />`,
         icon && `<i class="${icon}"></i>`,
         `<span class="ss-text">${option.text}${description && `<span class="ss-description">${description}</span>`}</span>`,

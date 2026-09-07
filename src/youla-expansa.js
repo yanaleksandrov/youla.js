@@ -8,6 +8,17 @@ document.addEventListener('youla:init', ()=> {
    * field or method that isn't backed by a form input. The directive and the data provider are
    * grouped in one IIFE since neither is useful without the other.
    *
+   * `u-step.required` (with or without an expression) additionally requires every
+   * `input[required]`/`select[required]`/`textarea[required]` inside the panel to pass its own
+   * native `checkValidity()` (so `type="email"`, `pattern`, `minlength`, etc. are enforced for
+   * free, not just "has a value") before the step counts as complete. With no expression at all
+   * (`u-step.required`) that's the *only* condition; with one (`u-step.required="condition"`) both
+   * must hold. A required radio group only needs `required` on one radio in the group — the native
+   * API resolves group-checkedness on its own. Listens for `input`/`change` on those fields itself
+   * (bound once, guarded by `el._x_stepRequiredBound`) since a plain required field with no
+   * `u-prop` binding writes no reactive data, so nothing would otherwise flag this directive to
+   * recompute when its value changes.
+   *
    * `u-step:action="expression"` on the same panel runs `expression` (a statement, like
    * `@click`) once each time this step becomes the current one — e.g.
    * `u-step:action="approved = {}"` to clear a previous system check's result as soon as its
@@ -40,10 +51,30 @@ document.addEventListener('youla:init', ()=> {
       return el ? el.__x : null;
     }
 
-    Youla.directive('step', (el, output, _, component) => {
-      const wizard = component.data;
-      const step   = wizard.getStep(el);
-      const isComplete = !!output;
+    const REQUIRED_FIELDS_SELECTOR = 'input[required], select[required], textarea[required]';
+
+    Youla.directive('step', (el, output, attribute, component) => {
+      const wizard   = component.data;
+      const step     = wizard.getStep(el);
+      const required = attribute.modifiers.includes('required');
+
+      // Bound once per panel: a required field with no "u-prop" writes no reactive data, so
+      // nothing would otherwise mark this directive dirty when its value changes.
+      if (required && !el._x_stepRequiredBound) {
+        el._x_stepRequiredBound = true;
+
+        el.querySelectorAll(REQUIRED_FIELDS_SELECTOR).forEach(field => {
+          ['input', 'change'].forEach(event => field.addEventListener(event, () => component.refresh(true)));
+        });
+      }
+
+      // No expression at all (bare "u-step.required") means the required-fields check is the
+      // whole condition, not an extra one on top of an absent (always-false) one.
+      let isComplete = required && attribute.expression.trim() === '' ? true : !!output;
+
+      if (required) {
+        isComplete = isComplete && [...el.querySelectorAll(REQUIRED_FIELDS_SELECTOR)].every(field => field.checkValidity());
+      }
 
       if (step.isComplete !== isComplete) {
         step.isComplete = isComplete;

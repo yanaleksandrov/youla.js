@@ -39,15 +39,12 @@ document.addEventListener('youla:init', () =&gt; {
 </pre>
 
 <p>
-  Метод запроса берётся из атрибута <code>method</code> элемента, на котором вызван
-  <code>$ajax</code>; без атрибута — <code>POST</code> для <code>&lt;form&gt;</code> и
-  <code>GET</code> для всего остального. Чтобы задать метод явно, не трогая атрибут элемента, есть короткие <code>$ajax.get(...)</code>,
+  Метод запроса всегда указывается явно — короткими <code>$ajax.get(...)</code>,
   <code>$ajax.post(...)</code>, <code>$ajax.put(...)</code>, <code>$ajax.patch(...)</code> и
-  <code>$ajax.delete(...)</code> — те же аргументы, но с принудительным методом запроса.
+  <code>$ajax.delete(...)</code>; отдельного <code>$ajax(...)</code> без метода не существует.
 </p>
 
 <pre>
-$ajax(route, payload, onProgress, options)
 $ajax.get(route, payload, onProgress, options)
 $ajax.post(route, payload, onProgress, options)
 $ajax.put(route, payload, onProgress, options)
@@ -84,15 +81,21 @@ $ajax.delete(route, payload, onProgress, options)
     <tr>
       <td><code>options</code></td>
       <td>
-        необязательный объект <code>{ headers, credentials, method }</code> —
+        необязательный объект <code>{ headers, credentials }</code> —
         <code>headers</code> добавляет заголовки запроса, <code>credentials</code> (булево, по
-        умолчанию <code>true</code>) управляет отправкой куки, <code>method</code> переопределяет
-        HTTP-метод (то же самое, что делают <code>$ajax.get</code> / <code>$ajax.post</code> /
-        <code>$ajax.put</code> / <code>$ajax.patch</code> / <code>$ajax.delete</code>)
+        умолчанию <code>true</code>) управляет отправкой куки
       </td>
     </tr>
   </tbody>
 </table>
+
+<p>
+  Для мутирующих методов (всё, кроме <code>GET</code>/<code>HEAD</code>) на тот же origin, что и
+  текущая страница, автоматически добавляется заголовок <code>X-CSRF-Token</code> — значение
+  берётся живым чтением куки <code>x_csrf_token</code> при каждом запросе (double-submit
+  cookie, сервер сверяет заголовок с самой кукой). Свой заголовок <code>X-CSRF-Token</code> в
+  <code>options.headers</code> имеет приоритет и переопределяет автоматический.
+</p>
 
 <p>
   Тело запроса собирается из элемента, на котором вызван <code>$ajax</code>: для
@@ -277,7 +280,7 @@ $ajax.delete(route, payload, onProgress, options)
   </div>
   <div class="example__panel is-active" data-panel="preview">
     <div class="demo example-ajax" u-data>
-      <button type="button" id="like-button" @click="$ajax('/demo/like')">
+      <button type="button" id="like-button" @click="$ajax.post('/demo/like')">
         <span id="like-count">★ 42</span> Нравится
       </button>
     </div>
@@ -285,7 +288,7 @@ $ajax.delete(route, payload, onProgress, options)
   <div class="example__panel" data-panel="html">
     <pre>
 &lt;div u-data=&quot;{}&quot;&gt;
-  &lt;button type=&quot;button&quot; id=&quot;like-button&quot; @click=&quot;$ajax('/demo/like')&quot;&gt;
+  &lt;button type=&quot;button&quot; id=&quot;like-button&quot; @click=&quot;$ajax.post('/demo/like')&quot;&gt;
     &lt;span id=&quot;like-count&quot;&gt;★ 42&lt;/span&gt; Нравится
   &lt;/button&gt;
 &lt;/div&gt;
@@ -307,7 +310,7 @@ $ajax.delete(route, payload, onProgress, options)
   </div>
   <div class="example__panel is-active" data-panel="preview">
     <div class="demo example-ajax" u-data="{ percent: 0 }">
-      <form @submit.prevent="$ajax('/demo/upload', {}, p => percent = p.percent).then(() => percent = 0)">
+      <form @submit.prevent="$ajax.post('/demo/upload', {}, p => percent = p.percent).then(() => percent = 0)">
         <input type="file" name="file">
         <button type="submit">Загрузить</button>
         <progress :value="percent" max="100"></progress>
@@ -319,7 +322,7 @@ $ajax.delete(route, payload, onProgress, options)
     <pre>
 &lt;div u-data=&quot;{ percent: 0 }&quot;&gt;
   &lt;form @submit.prevent=&quot;
-    $ajax('/demo/upload', {}, p =&gt; percent = p.percent)
+    $ajax.post('/demo/upload', {}, p =&gt; percent = p.percent)
       .then(() =&gt; percent = 0)
   &quot;&gt;
     &lt;input type=&quot;file&quot; name=&quot;file&quot;&gt;
@@ -355,7 +358,7 @@ $ajax.delete(route, payload, onProgress, options)
   <div class="example__panel is-active" data-panel="preview">
     <div class="demo example-ajax">
       <div u-data="{ text: '' }">
-        <form @submit.prevent="$ajax('/demo/comment')">
+        <form @submit.prevent="$ajax.post('/demo/comment')">
           <input id="comment-input" u-prop="text" name="text" placeholder="Комментарий...">
           <button type="submit">Отправить</button>
         </form>
@@ -372,7 +375,7 @@ $ajax.delete(route, payload, onProgress, options)
   <div class="example__panel" data-panel="html">
     <pre>
 &lt;div u-data=&quot;{ text: '' }&quot;&gt;
-  &lt;form @submit.prevent=&quot;$ajax('/demo/comment')&quot;&gt;
+  &lt;form @submit.prevent=&quot;$ajax.post('/demo/comment')&quot;&gt;
     &lt;input id=&quot;comment-input&quot; u-prop=&quot;text&quot; name=&quot;text&quot; placeholder=&quot;Комментарий...&quot;&gt;
     &lt;button type=&quot;submit&quot;&gt;Отправить&lt;/button&gt;
   &lt;/form&gt;
@@ -419,14 +422,14 @@ Youla.data('ajaxToasts', () =&gt; ({
   </div>
   <div class="example__panel is-active" data-panel="preview">
     <div class="demo example-ajax" u-data="{ outcome: '' }">
-      <button type="button" @click="$ajax('/demo/echo').then(value => outcome = value)">Отправить</button>
+      <button type="button" @click="$ajax.get('/demo/echo').then(value => outcome = value)">Отправить</button>
       <div u-text="outcome"></div>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
     <pre>
 &lt;div u-data=&quot;{ outcome: '' }&quot;&gt;
-  &lt;button type=&quot;button&quot; @click=&quot;$ajax('/demo/echo').then(value =&gt; outcome = value)&quot;&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;$ajax.get('/demo/echo').then(value =&gt; outcome = value)&quot;&gt;
     Отправить
   &lt;/button&gt;
   &lt;div u-text=&quot;outcome&quot;&gt;&lt;/div&gt;

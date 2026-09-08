@@ -9,27 +9,39 @@ document.addEventListener('youla:init', () => {
   Youla.baseURL ??= (typeof youla !== 'undefined' ? youla?.apiurl : null) ?? '';
 
   /**
-   * Registers `$ajax(route, payload, onProgress, options)`, plus `$ajax.get(...)` /
-   * `$ajax.post(...)` / `$ajax.put(...)` / `$ajax.patch(...)` / `$ajax.delete(...)` shorthands
-   * that force the request method instead of falling back to the element's `method` attribute.
+   * Registers `$ajax.get(...)` / `$ajax.post(...)` / `$ajax.put(...)` / `$ajax.patch(...)` /
+   * `$ajax.delete(...)`, each `(route, payload, onProgress, options)` with the request method
+   * fixed accordingly — there's no bare `$ajax(...)`, the method is always explicit.
    * Dispatches an `ajax:${route}` CustomEvent on `document` once the response arrives; an array
    * `data` response is treated as fragment instructions (see applyFragment). Calling again on
    * the same element cancels any request still in flight.
    *
    * @param {Event} e - Triggering event (unused).
    * @param {HTMLElement} el - Element `$ajax` was called on.
-   * @returns {Function} `(route, payload?, onProgress?, options?) => Promise`, with `.get`/`.post`/`.put`/`.patch`/`.delete` shorthands.
+   * @returns {Object} `{ get, post, put, patch, delete }`, each `(route, payload?, onProgress?, options?) => Promise`.
    */
   Youla.method('ajax', (e, el) => {
-    const ajax = (route, payload, onProgress, options = {}) => {
+    const ajax = (method, route, payload, onProgress, options = {}) => {
       abortPrevious(el);
 
       const xhr = el.__ajax = new XMLHttpRequest();
       const url = /^https?:\/\//.test(route) ? route : Youla.baseURL + route;
       const done = toggleLoading(el);
 
-      xhr.open((options.method || el.getAttribute('method') || (el.tagName === 'FORM' ? 'POST' : 'GET')).toUpperCase(), url);
+      xhr.open(method, url);
       xhr.withCredentials = options.credentials ?? true;
+
+      // Safe methods are exempt from CSRF checks; a cross-site "url" is never sent our own
+      // cookie anyway, so there'd be nothing valid to echo back. Read fresh on every request —
+      // the backend can silently extend this cookie's lifetime after any successful request
+      // (sliding expiration via the double-submit pattern), so a cached value goes stale after
+      // the very first request that follows.
+      if (!['GET', 'HEAD'].includes(method) && isSameOrigin(url)) {
+        const token = readCookie('x_csrf_token');
+        if (token) {
+          xhr.setRequestHeader('X-CSRF-Token', token);
+        }
+      }
 
       Object.entries(options.headers || {}).forEach(([name, value]) => xhr.setRequestHeader(name, value));
 
@@ -83,13 +95,33 @@ document.addEventListener('youla:init', () => {
       });
     };
 
-    // Shorthands that force the request method regardless of the element's `method` attribute.
-    ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].forEach(method => {
-      ajax[method.toLowerCase()] = (route, payload, onProgress, options = {}) => ajax(route, payload, onProgress, { ...options, method });
-    });
-
-    return ajax;
+    return ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].reduce((methods, method) => ({
+      ...methods,
+      [method.toLowerCase()]: (route, payload, onProgress, options) => ajax(method, route, payload, onProgress, options),
+    }), {});
   });
+
+  /**
+   * Reads "name"'s value out of `document.cookie`, live — callers must not cache the result
+   * (see the CSRF header comment above ajax's `xhr.open` call).
+   *
+   * @param {string} name - Cookie name.
+   * @returns {string|null} Decoded cookie value, or null if absent.
+   */
+  function readCookie(name) {
+    const match = document.cookie.match('(?:^|; )' + name + '=([^;]*)');
+    return match ? decodeURIComponent(match[1]) : null;
+  }
+
+  /**
+   * Whether "url" resolves to the same origin as the current page.
+   *
+   * @param {string} url - Absolute or relative URL.
+   * @returns {boolean}
+   */
+  function isSameOrigin(url) {
+    return new URL(url, window.location.href).origin === window.location.origin;
+  }
 
   /**
    * Aborts and rejects the in-flight request (if any) tracked on "el", clearing its

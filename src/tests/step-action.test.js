@@ -8,7 +8,7 @@ import '../youla-ajax';
 
 /**
  * Reproduces the install wizard from src/view/examples.html closely enough to answer one
- * question: does `u-step:action="$ajax(...)"` actually call `$ajax` (i.e. open an XHR) the
+ * question: does `u-step:action="$ajax.get(...)"` actually call `$ajax` (i.e. open an XHR) the
  * moment the wizard navigates onto that step? A trimmed markup (3 steps instead of 5), no outer
  * `u-data="youla"` wrapper (unrelated to `$ajax`'s own resolution — see component.js's
  * invokeListener: methods are passed as separate saferEval parameters, never through the
@@ -23,7 +23,7 @@ function mountWizard() {
       <div id="step1" hidden u-step="[db.database].every(v => v !== undefined && v.trim())" u-step:action="approved = {}">
         <input name="db[database]" u-prop="db.database">
       </div>
-      <div id="step2" hidden u-step="Object.values(approved).every(Boolean) === true" u-step:action="$ajax('system/test', db).then(response => approved = response)"></div>
+      <div id="step2" hidden u-step="Object.values(approved).every(Boolean) === true" u-step:action="$ajax.get('system/test', db).then(response => approved = response)"></div>
       <button id="next" type="button" @click="goNext()"></button>
     </form>
   `;

@@ -350,7 +350,7 @@ table {
 	color: var(--ink-muted);
 }
 
-// The shared "$dialog" stack (parts/footer.html) — later entries are later DOM siblings, so they paint over earlier ones with no z-index math needed.
+// Later dialogs are later DOM siblings, so they stack above earlier ones with no z-index math.
 .dialog-backdrop {
 	display: flex;
 	position: fixed;
@@ -460,9 +460,7 @@ table {
 }
 
 .u-tooltip {
-	// Redefined per "--style-<name>" modifier (variant class below) — everything that gives a
-	// tooltip its color lives here so a variant only has to override these three, not restate the
-	// box and its ":after" tail separately.
+	// Variant classes below only override these three custom properties, not the box/arrow rules.
 	--u-tooltip-bg: #fff;
 	--u-tooltip-border: var(--expansa-border, #dfe2e3);
 	--u-tooltip-color: inherit;

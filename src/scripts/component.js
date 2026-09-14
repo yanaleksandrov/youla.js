@@ -13,11 +13,7 @@ import { parseEachExpression } from './directives/u-each';
 import { resolveMethods } from './methods';
 import { isUnsafeKey, getNestedObjectValue, parsePropPath } from './object-path';
 
-/**
- * A window/document/outside listener or an intersect observer keeps its own reference to "el",
- * so removing "el" from the DOM wouldn't otherwise release it. This shared MutationObserver
- * notices removal once for the whole page and runs each binding's registered cleanup (same shape as youla-tooltip.js's ensureRemovalObserver).
- */
+// Window/document/outside listeners and intersect observers hold their own reference to "el", so this shared observer runs each one's cleanup once "el" leaves the DOM.
 let disconnectObserver;
 const disconnectCleanups = new Map();
 
@@ -76,9 +72,7 @@ export default class Component {
     // u-data="object as o" gives the whole data object a local alias
     const [, dataExpression, alias] = expression.trim().match(/^([\s\S]+?)\s+as\s+([A-Za-z_$][\w$]*)$/) || [];
 
-    // Alpine-style scope inheritance: the nearest ancestor "u-data" component (already
-    // constructed — componentDiscover() walks the document in order, so an ancestor is always
-    // initialized before its descendants), if any. See the "scope" getter below.
+    // The nearest ancestor "u-data" component, if any (already initialized — componentDiscover() walks the document in order); see the "scope" getter below.
     const parentEl = closestDirective(el.parentElement, 'u-data');
 
     this.root          = el;
@@ -125,22 +119,11 @@ export default class Component {
   }
 
   /**
-   * Alpine-style scope inheritance: an expression evaluated against this component sees its
-   * own data first, falling back to the closest ancestor "u-data" component's own scope
-   * (recursively) for any name this component doesn't declare itself — same as Alpine's nested
-   * `x-data`. Delegates every get/set to the real "this.data"/"parent.scope" proxies instead of
-   * reparenting raw objects, so a change is still attributed (onChange/refresh/persist) to
-   * whichever component actually owns that property, however it was reached.
+   * Alpine-style scope inheritance: this component's own data, falling back to the nearest
+   * ancestor "u-data" component's scope for any name declared there but not here — every
+   * read/write is attributed to whichever component actually owns the property.
    *
-   * A nested write (`user.password = x`) first reads `user` (found on this component or, falling
-   * through, an ancestor's — either way the real, live object reference) and only then writes
-   * `.password` directly on it, so it always lands on whichever component's data the object
-   * actually lives on. A bare top-level name (`installed = x`) writes through the chain too — to
-   * whichever component already declares it, same as Alpine's `mergeProxies` — falling back to
-   * this component only when no ancestor declares that name either.
-   *
-   * @returns {Object} "this.data" itself when this component has no parent; otherwise a Proxy
-   *   merging it with the parent's own scope.
+   * @returns {Object} "this.data" if there's no parent; otherwise a Proxy merging it with the parent's scope.
    */
   get scope() {
     if (!this.parent) {
@@ -192,7 +175,7 @@ export default class Component {
 
         deps.push(prop);
 
-        // Same exclusion as reactivity.js's own wrap(): a DOM node read off tracked data (e.g. one array entry of a "blocks" list) must come back raw, or identity checks against it (indexOf/includes/===, e.g. against "$el") always fail — every read returns a *new* wrapper, never equal to anything else, wrapped or not.
+        // Same exclusion as reactivity.js's own wrap(): a DOM node must come back raw, or identity checks against it (indexOf/includes/===, e.g. against "$el") always fail — every read would return a *new* wrapper, never equal to anything else, wrapped or not.
         if (typeof target[prop] === 'object' && target[prop] !== null && !isNode(target[prop])) {
           return makeProxy(target[prop]);
         }
@@ -206,7 +189,7 @@ export default class Component {
     // Magic variables skip the tracking proxy since wrapping a DOM element would break native calls like $el.closest(); they're layered onto $data instead (see withMagicVariables).
     const { magicVariables, otherVariables } = splitMagicVariables(additionalHelperVariables);
 
-    // "u-each" loop variables are passed to saferEval as separate parameters rather than properties of $data, so wrap object-valued ones the same way or property reads on them go untracked. Same DOM-node exclusion as makeProxy()'s own recursive case above — a "u-each" over a list of elements shouldn't wrap them either.
+    // "u-each" loop variables are passed to saferEval as separate parameters, so object-valued ones are wrapped the same way here or property reads on them go untracked.
     const trackedHelperVariables = Object.fromEntries(
       Object.entries(otherVariables).map(([key, value]) => [
         key, (typeof value === 'object' && value !== null && !isNode(value)) ? makeProxy(value) : value
@@ -226,18 +209,14 @@ export default class Component {
   /**
    * Reads every directive/event/bind attribute off "el", expanding any "u-bind" entry into the
    * individual directive/event/bind entries its expression resolves to (e.g. u-bind="trigger"
-   * referencing "trigger" from Youla.data('dropdown', () => ({ trigger: {...} }))).
+   * referencing a Youla.data() factory's returned object).
    *
    * @param {HTMLElement} el - The element to read attributes from.
    * @returns {Array<Object>} The resolved list of attribute descriptors.
    */
   resolveAttributes(el) {
     const self = this;
-    // Computed lazily (once per call, on first use) — building it calls every registered
-    // Youla.variable() factory, several of which (see the "notice"/"dialog" magic variables in
-    // youla-expansa.js) run a document-wide querySelector every time; a "u-bind" attribute is
-    // rare, so paying that cost for the overwhelming majority of elements that have none would be
-    // pure waste, on every element, on every domWalk pass (initialize() and every refresh()).
+    // Built lazily on first use since most elements carry no "u-bind" attribute, and building it calls every registered Youla.variable() factory — paying that cost per element, per domWalk pass, would be pure waste.
     let additionalHelperVariables;
 
     return getAttributes(el).flatMap(attribute => {
@@ -288,12 +267,9 @@ export default class Component {
   }
 
   /**
-   * Wraps a plain data object (and, recursively, any nested object it contains) in a Proxy
-   * that tracks writes: each successful "set" queues the changed property in "concernedData"
-   * and triggers a refresh (plus a persist, if storage is enabled). An array mutator call (see
-   * "makeObservable") instead forces every binding to re-run unconditionally — its change isn't
-   * one property name a binding's tracked deps can match against (e.g. a "push" touches an index
-   * and "length", not the array's own key).
+   * Wraps "data" in a Proxy that tracks writes: each "set" queues the property in "concernedData"
+   * and triggers a refresh (plus persist); an array mutator instead forces every binding to
+   * re-run, since its change (e.g. a "push") isn't one property name deps can match against.
    *
    * @param {Object} data - The raw data object to make observable.
    * @returns {Object} The observable (proxied) version of "data".
@@ -302,6 +278,11 @@ export default class Component {
     this.concernedData = [];
 
     return makeObservable(data, (prop, force) => {
+      // A directive can write reactive data as a side effect of its own first application during "initialize()" — harmless, since that single top-down pass hasn't reached dependents yet, so scheduling a refresh here would just re-run everything a second time for nothing.
+      if (this._mounting) {
+        return;
+      }
+
       if (force) {
         this.refresh(true);
         this.persist();
@@ -317,9 +298,8 @@ export default class Component {
   }
 
   /**
-   * Resolves an attribute's output — and, when "withDeps" is set, the data properties it
-   * reads — sharing the "u-each"/"literal" special-casing that both "initialize()" and
-   * "refresh()" need before they can decide whether/how to dispatch an attribute.
+   * Resolves an attribute's output and (when "withDeps" is set) the deps it reads — the
+   * "u-each"/"u-prop" special-casing shared by both "initialize()" and "refresh()".
    *
    * @param {Object} attribute - A parsed attribute descriptor, as returned by "resolveAttributes()".
    * @param {Object} additionalHelperVariables - Extra variables available to the expression (see "evaluate()").
@@ -333,22 +313,14 @@ export default class Component {
 
     if (directive === 'u-each') {
       if (withDeps) {
-        // "items" is a raw expression (e.g. "category.products"), not evaluated here, so the
-        // best dep tracking can do without running it is its own leading identifier — the same
-        // top-level name evaluate()'s tracking proxy would report for a plain "category.products"
-        // read elsewhere. Must always come back as an array: every caller (refresh()'s own
-        // "el.__x_deps" cache included) treats "deps" as one to call .some()/.includes() on.
+        // "items" (e.g. "category.products") isn't evaluated here, so the best available dep is its own leading identifier; always returned as an array since callers call .some()/.includes() on it.
         const { items } = parseEachExpression(expression);
         const [rootIdentifier] = (items ?? '').match(/^[A-Za-z_$][\w$]*/) ?? [];
 
         deps = rootIdentifier ? [rootIdentifier] : [];
       }
     } else if (directive === 'u-prop') {
-      // "expression" here is a property path ("user.name"/"user[name]"), not a JS expression —
-      // evaluating it generically like every other directive would misread a bracket segment as
-      // a bare (data-scoped) identifier instead of a literal key. Read straight off "scope" instead
-      // (not "data": a nested "u-data" component's own u-prop field can be bound to an ancestor's
-      // property — see hydrateProps() in props.js — and "scope" is what falls through to it).
+      // "expression" is a property path, not a JS expression, so it's read straight off "scope" (which falls through to an ancestor component) rather than evaluated generically.
       output = getNestedObjectValue(this.scope, expression);
 
       if (withDeps) {
@@ -387,66 +359,72 @@ export default class Component {
 
   /**
    * Performs the component's first render: walks the DOM from "root", attaching listeners and
-   * running directives for every element. Idempotent per element ("el.__x_initialized"), since a
-   * directive that inserts child markup (repeaterList() in control/repeater, contentFields()
-   * in youla-editrix.js) runs within the same domWalk pass that then revisits that markup —
-   * without the guard, listeners double-attach and a self-removing handler like repeaterRemove()
-   * throws on an already-detached element.
+   * running directives once per element ("el.__x_initialized" guards re-entry, since a directive
+   * that inserts child markup gets revisited within the same domWalk pass).
    *
    * @param {HTMLElement} root - The root element to walk and initialize.
    */
   initialize(root) {
     const self = this;
 
-    domWalk(root, el => {
-      if (el.__x_initialized) {
-        return;
-      }
-      el.__x_initialized = true;
+    // Suppresses the refresh a reactive write would otherwise schedule (see observeData()) while this mount pass is still applying every binding itself, once, in document order.
+    this._mounting = true;
 
-      const attributes = self.resolveAttributes(el);
-      if (attributes.length === 0) {
-        return;
-      }
+    try {
+      domWalk(root, el => {
+        if (el.__x_initialized) {
+          return;
+        }
+        el.__x_initialized = true;
 
-      // Same cost as resolveAttributes()'s own lazy computation (see its doc comment) — skipped
-      // outright for the vast majority of elements, which carry no u-*/@/: attribute at all.
-      const additionalHelperVariables = {...getForData(el), ...self.getAliasVariables(), ...self.getMagicVariables(el)};
-
-      attributes.forEach(attribute => {
-        let {directive, event, expression, modifiers, bind} = attribute;
-
-        let propExpression;
-        if (directive === 'u-prop') {
-          propExpression = generateExpressionForProp(el, self.data, attribute);
-
-          // If the element we are binding to is a select, a radio, or checkbox we'll listen for the change event instead of the "input" event.
-          event = ['select-multiple', 'select', 'checkbox', 'radio'].includes(el.type) || modifiers.includes('lazy')
-            ? 'change'
-            : 'input';
+        const attributes = self.resolveAttributes(el);
+        if (attributes.length === 0) {
+          return;
         }
 
-        if (event) {
-          // "u-prop"'s own modifiers (.number, .trim, .local, .cookie, .lazy) shape the bound value, not the event, so only forward modifiers for a real "@event" attribute.
-          self.attachListener(el, event, directive === 'u-prop' ? [] : modifiers, propExpression || expression);
-        }
+        // Skipped for the vast majority of elements, which carry no u-*/@/: attribute at all (same lazy cost as resolveAttributes()).
+        const additionalHelperVariables = {...getForData(el), ...self.getAliasVariables(), ...self.getMagicVariables(el)};
 
-        // Attribute binding ("bind") is a distinct mechanism from directives, resolved and dispatched the same way but never looked up in the directive registry; see ./attributes
-        if (bind || getDirective(directive)) {
-          const { output } = self.computeOutput(attribute, additionalHelperVariables);
+        attributes.forEach(attribute => {
+          let {directive, event, expression, modifiers, bind} = attribute;
 
-          self.applyAttribute(el, attribute, output, additionalHelperVariables);
-        }
+          let propExpression;
+          if (directive === 'u-prop') {
+            propExpression = generateExpressionForProp(el, self.data, attribute);
+
+            // If the element we are binding to is a select, a radio, or checkbox we'll listen for the change event instead of the "input" event.
+            event = ['select-multiple', 'select', 'checkbox', 'radio'].includes(el.type) || modifiers.includes('lazy')
+              ? 'change'
+              : 'input';
+          }
+
+          if (event) {
+            // "u-prop"'s own modifiers (.number, .trim, .local, .cookie, .lazy) shape the bound value, not the event, so only forward modifiers for a real "@event" attribute.
+            self.attachListener(el, event, directive === 'u-prop' ? [] : modifiers, propExpression || expression);
+          }
+
+          // Attribute binding ("bind") is a distinct mechanism from directives, resolved and dispatched the same way but never looked up in the directive registry; see ./attributes
+          if (bind || getDirective(directive)) {
+            const { output, deps } = self.computeOutput(attribute, additionalHelperVariables, { withDeps: true });
+
+            // Seeds refresh()'s own "el.__x_deps" cache so the first change-triggered refresh already knows this attribute's real deps instead of treating it as unconditionally due for a re-run.
+            el.__x_deps ??= {};
+            el.__x_deps[attribute.name] = deps;
+
+            self.applyAttribute(el, attribute, output, additionalHelperVariables);
+          }
+        });
       });
-    });
+    } finally {
+      this._mounting = false;
+    }
   }
 
   /**
-   * Re-evaluates every element's bindings, re-running only those whose dependencies changed
-   * since the last flush. Clears "concernedData" once the pass completes.
+   * Re-evaluates every element's bindings, re-running only those whose deps changed since the
+   * last flush; clears "concernedData" once the pass completes.
    *
-   * @param {boolean|HTMLElement} [force] - `true` re-runs every binding in this component; an
-   *   `HTMLElement` re-runs only that element's own bindings (e.g. u-step.required's checkValidity()).
+   * @param {boolean|HTMLElement} [force] - `true` re-runs every binding in this component; an `HTMLElement` re-runs only that element's own bindings.
    */
   refresh(force = false) {
     const self = this;
@@ -459,7 +437,7 @@ export default class Component {
       this.pendingForceRefresh = this.pendingForceRefresh || force;
     }
 
-    // Built once and reused, not recreated per call — otherwise each write in a fast burst (e.g. dragging a u-filler/u-ranger slider) would queue its own full domWalk instead of coalescing.
+    // Built once and reused, not recreated per call — otherwise each write in a fast burst (e.g. a dragged slider) would queue its own full domWalk instead of coalescing.
     this.scheduleRefresh ??= debounce(() => {
       const force         = self.pendingForceRefresh;
       const forceElements = self.pendingForceElements;
@@ -475,28 +453,17 @@ export default class Component {
         const elementForced = force || !!forceElements?.has(el);
 
         // An element inside a "u-each" clone only carries its loop variables on "__x_for_data", so resolve them here too or bindings referencing them stop updating after the first render.
-        // Same cost as resolveAttributes()'s own lazy computation (see its doc comment) — skipped
-        // outright for the vast majority of elements, which carry no u-*/@/: attribute at all.
+        // Skipped for the vast majority of elements, which carry no u-*/@/: attribute at all (same lazy cost as resolveAttributes()).
         const additionalHelperVariables = {...getForData(el), ...self.getAliasVariables(), ...self.getMagicVariables(el)};
 
         attributes.forEach(attribute => {
           const { directive, bind, name } = attribute;
 
           if (bind || getDirective(directive)) {
-            // "u-prop"'s own tracked dep is only its root identifier ("user" for "user.password"),
-            // but a write reports the changed LEAF prop ("password") to whichever component owns
-            // that object — never this one's "concernedData" when the field is bound through a
-            // parent scope (see hydrateProps() in props.js). Without this it works once (deps
-            // start out empty, so the first refresh always applies) and then silently goes stale
-            // forever after — so "u-prop" always re-syncs on any refresh of its own component,
-            // never gated by "concernedData", since re-reading/re-writing its value is cheap.
+            // u-prop's tracked dep is only its root identifier, but a write reports the leaf prop — possibly to an ancestor's concernedData via scope — so u-prop always re-syncs on any refresh instead of being gated by "concernedData".
             const alwaysSync = directive === 'u-prop';
 
-            // Keyed per element/attribute so a binding whose last-known deps never overlapped
-            // "concernedData" can skip computeOutput() entirely instead of calling it "just to
-            // check": evaluate() actually runs the expression, so a binding with a side effect
-            // (an assignment, a method call) would otherwise re-run on every single refresh,
-            // everywhere in the tree, whether or not its output ever gets applied.
+            // Keyed per element/attribute so unrelated bindings can skip computeOutput() entirely — evaluate() runs the expression for real, so a binding with a side effect would otherwise re-run on every refresh regardless of whether its output changes.
             el.__x_deps ??= {};
             const previousDeps = el.__x_deps[name];
 
@@ -523,7 +490,7 @@ export default class Component {
   /**
    * Builds and attaches a DOM listener for "@event" (or u-prop's synthetic event), applying its
    * modifiers (retargeting, passive/capture, delay, prevent, stop, outside, key filters, once,
-   * load/intersect). Window/document/outside listeners and intersect observers auto-detach on "el" removal (see cleanupOnDisconnect()); everything else is cleaned up by GC once "el" itself is removed.
+   * load/intersect).
    *
    * @param {HTMLElement} el - The element the listener conceptually belongs to.
    * @param {string} event - The event name to listen for (e.g. "click", "load", "intersect").
@@ -538,9 +505,7 @@ export default class Component {
     let options = {};
     let handler = e => this.invokeListener(expression, e, el);
 
-    // "el"'s own document/window, not this script's — matters once "el" lives inside a same-origin
-    // iframe with its own separate document (the editrix canvas, say): a keydown while focus sits
-    // inside that iframe fires on *its* window, never bubbling out to the parent's.
+    // "el"'s own document/window, not this script's — matters inside a same-origin iframe with its own document, where a keydown on it must not bubble out to the parent's window instead.
     if (modifiers.includes('window')) {
       target = el.ownerDocument.defaultView;
     }
@@ -656,8 +621,8 @@ export default class Component {
   }
 
   /**
-   * Returns the component's local data alias (from `u-data="notice as n"`), if any — keyed like
-   * a "u-each" loop variable so it's tracked for reactivity, unlike magic variables like "$el".
+   * Returns the component's local data alias (from `u-data="expr as alias"`), if any — keyed
+   * like a "u-each" loop variable so it's tracked for reactivity, unlike magic variables like "$el".
    *
    * @returns {object} "{ [alias]: this.data }", or "{}" when "u-data" carries no alias.
    */

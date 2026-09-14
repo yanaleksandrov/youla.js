@@ -1,20 +1,15 @@
-/**
- * Air Datepicker is a modern JavaScript calendar written on ES6 with the use of CSS native variables.
- *
- * License: MIT <https://opensource.org/licenses/MIT>
- *
- * @version 3.6.0
- * @source  https://github.com/t1m0n/air-datepicker
- * @author	Copyright (c) Timofey Marochkin
- */
+// Air Datepicker — modern JS calendar built on ES6 with native CSS variables.
+// License: MIT <https://opensource.org/licenses/MIT>
+// @version 3.6.0
+// @source  https://github.com/t1m0n/air-datepicker
+// @author  Copyright (c) Timofey Marochkin
 import AirDatepicker from 'air-datepicker';
 
 document.addEventListener('youla:init', ()=> {
 
   /**
-   * Initializes an AirDatepicker instance on the element; re-run (see refresh()'s dependency
-   * tracking) whenever a data property its options expression reads changes, tearing down and
-   * rebuilding the instance so even structural options (range, view, ...) apply cleanly.
+   * Initializes AirDatepicker on the element, tearing down and rebuilding on every reactive
+   * refresh so structural options (range, view, ...) always apply cleanly.
    *
    * @since 1.0
    */
@@ -29,8 +24,7 @@ document.addEventListener('youla:init', ()=> {
       range: false,
       inline: false,
       multipleDatesSeparator: ' — ',
-      // "locale" must be omitted, not passed as undefined — AirDatepicker's own locale merge
-      // (deep-clones the default via JSON.stringify/parse) breaks on an explicit undefined.
+      // "locale" must be omitted (not undefined) — AirDatepicker's locale merge breaks on explicit undefined.
       ...(window.youla?.datepicker ? { locale: window.youla.datepicker } : {}),
       firstDay: window.youla?.weekStart || 0,
       dateFormat: window.youla?.dateFormat || 'yyyy-MM-dd',

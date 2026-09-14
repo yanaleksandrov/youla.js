@@ -35,8 +35,7 @@ document.addEventListener('youla:init', ()=> {
         });
       }
 
-      // No expression at all (bare "u-step.required") means the required-fields check is the
-      // whole condition, not an extra one on top of an absent (always-false) one.
+      // Bare "u-step.required" (no expression) means the required-fields check alone is the condition, not extra on top of an absent (false) one.
       let isComplete = required && attribute.expression.trim() === '' ? true : !!output;
 
       if (required) {
@@ -865,8 +864,7 @@ document.addEventListener('youla:init', ()=> {
           }, true);
         }
 
-        // Deferred so any reactive hydration of the form's own fields settles first — otherwise
-        // that initial fill-in would itself register as a "dirty" change.
+        // Deferred so the form's own reactive hydration settles first, or that fill-in would register as a "dirty" change.
         setTimeout(() => {
           form.dataset.initialState = serialize(form);
 
@@ -911,15 +909,16 @@ document.addEventListener('youla:init', ()=> {
    */
   Youla.method('safe', () => ({
     slug(value) {
+      // NFD-decomposes accented characters (e.g. "\u00e9" -> "e" + accent), then drops the accents and anything but letters/numbers/spaces/hyphens.
       return value
-        .toString()                                                // Convert the input to a string
-        .normalize('NFD')                                    // Normalize the string (separate characters and diacritical marks)
-        .replace(/[\u0300-\u036f]/g, '')    // Remove diacritical marks
-        .replace(/[^\p{L}\p{N}\s-]/gu, '')  // Remove everything except letters, numbers, spaces, and hyphens (Unicode support)
-        .trim()                                                   // Trim leading and trailing whitespace
-        .replace(/\s+/g, '-')               // Replace spaces with hyphens
-        .replace(/-+/g, '-')                // Remove consecutive hyphens
-        .toLowerCase();                                           // Convert the string to lowercase
+        .toString()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^\p{L}\p{N}\s-]/gu, '')
+        .trim()
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .toLowerCase();
     },
   }));
 
@@ -929,9 +928,7 @@ document.addEventListener('youla:init', ()=> {
    * @since 1.0
    */
   Youla.directive('highlight', (el, output, { modifiers }) => {
-    // Wraps el's children in a <code> exactly once — a later call (e.g. an unrelated force
-    // refresh) would otherwise re-wrap the already-built wrapper in another one, nesting deeper
-    // every time instead of leaving the highlighted markup alone.
+    // Wraps el's children in <code> exactly once — a later call would otherwise nest another wrapper around it each time.
     if (el._x_highlighted) {
       return;
     }
@@ -956,8 +953,7 @@ document.addEventListener('youla:init', ()=> {
    * @since 1.0
    */
   Youla.directive('noautofill', (el) => {
-    // Attaches its focus/blur listeners exactly once — a later call would otherwise stack
-    // another pair on top, each one firing (and fighting over el.readOnly) on every focus/blur.
+    // Attaches focus/blur listeners exactly once — a later call would otherwise stack another pair, each fighting over el.readOnly.
     if (el._x_noautofill) {
       return;
     }
@@ -978,8 +974,7 @@ document.addEventListener('youla:init', ()=> {
    * @since 1.0
    */
   Youla.directive('sticky', el => {
-    // Attaches its window listeners exactly once — a later call would otherwise stack another
-    // "reposition" closure on top of the same window, each one still running forever afterward.
+    // Attaches its window listeners exactly once — a later call would otherwise stack another "reposition" closure that runs forever.
     if (el._x_sticky) {
       return;
     }
@@ -1066,8 +1061,7 @@ document.addEventListener('youla:init', ()=> {
    * @since 1.0
    */
   Youla.directive('textarea', (el, output) => {
-    // Attaches its input listener exactly once — a later call would otherwise stack another
-    // one on top, each resizing the textarea redundantly on every keystroke from then on.
+    // Attaches its input listener exactly once — a later call would otherwise stack another, resizing the textarea redundantly on every keystroke.
     if (el.tagName !== 'TEXTAREA' || el._x_textarea) {
       return;
     }

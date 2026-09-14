@@ -37,9 +37,8 @@ export function createRefsProxy(root) {
 }
 
 /**
- * Builds the "$el"/"$event"/"$refs"/"$root" magic variables, keyed the way saferEval expects
- * for "additionalHelperVariables" — plus one entry per custom variable registered via
- * "Youla.variable()", each recomputed by calling its factory with the same "root"/"el"/"event".
+ * Builds the "$el"/"$event"/"$refs"/"$root" magic variables, plus one entry per custom
+ * variable registered via "Youla.variable()", recomputed from the same "root"/"el"/"event".
  *
  * @param {HTMLElement} root - The component's root element ("u-data"), used for "$root" and to scope "$refs".
  * @param {HTMLElement} el - The element the expression is being evaluated for/against; becomes "$el".
@@ -58,9 +57,9 @@ export function createMagicVariables(root, el, event) {
 }
 
 /**
- * Wraps "dataContext" in a Proxy that resolves the magic variables before falling through to
- * the real data, so they're reachable both as bare identifiers and as "this.$refs" inside a
- * method. Writes to a magic key are accepted but discarded, so a method never mutates real data.
+ * Wraps "dataContext" so the magic variables resolve before falling through to real data,
+ * reachable both as bare identifiers and as "this.$refs". Writes to a magic key are silently
+ * discarded, so a method can never overwrite one.
  *
  * @param {object} dataContext - The data object (or Proxy) to wrap.
  * @param {object} magicVariables - The magic variables to expose, as built by createMagicVariables().

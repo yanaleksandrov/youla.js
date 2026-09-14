@@ -1,5 +1,4 @@
-// A path segment resolving to one of these would let a crafted "u-prop"/data key repoint an
-// object's own prototype (or its constructor) instead of writing a plain data property.
+// Blocks a crafted "u-prop"/data key from repointing an object's own prototype/constructor.
 const UNSAFE_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
 
 export function isUnsafeKey(key) {

@@ -1,20 +1,14 @@
 document.addEventListener('youla:init', () => {
   const BYTES_IN_MB = 1048576;
 
-  // Prefix for a non-absolute `route`; defaults to the page's own "youla.apiurl" config, e.g.
-  // Expansa's inline `const youla = {...}`. A top-level "const" in a classic <script> only
-  // creates a global *lexical* binding, never a "window" property, so this can't check
-  // "window.youla" — but it also never throws on a page that declares no such global at all,
-  // since "typeof" is the one operator that tolerates an undeclared identifier.
+  // Prefix for a non-absolute `route`; defaults to the page's own "youla.apiurl" config, if any.
+  // "typeof" tolerates an undeclared "youla" global instead of throwing.
   Youla.baseURL ??= (typeof youla !== 'undefined' ? youla?.apiurl : null) ?? '';
 
   /**
-   * Registers `$ajax.get(...)` / `$ajax.post(...)` / `$ajax.put(...)` / `$ajax.patch(...)` /
-   * `$ajax.delete(...)`, each `(route, payload, onProgress, options)` with the request method
-   * fixed accordingly — there's no bare `$ajax(...)`, the method is always explicit.
-   * Dispatches an `ajax:${route}` CustomEvent on `document` once the response arrives; an array
-   * `data` response is treated as fragment instructions (see applyFragment). Calling again on
-   * the same element cancels any request still in flight.
+   * Registers `$ajax.get/post/put/patch/delete(route, payload, onProgress, options)`. Dispatches
+   * `ajax:${route}` on `document` when the response arrives; an array response runs as fragment
+   * instructions (see applyFragment). A new call on the same element cancels one still in flight.
    *
    * @param {Event} e - Triggering event (unused).
    * @param {HTMLElement} el - Element `$ajax` was called on.
@@ -31,11 +25,7 @@ document.addEventListener('youla:init', () => {
       xhr.open(method, url);
       xhr.withCredentials = options.credentials ?? true;
 
-      // Safe methods are exempt from CSRF checks; a cross-site "url" is never sent our own
-      // cookie anyway, so there'd be nothing valid to echo back. Read fresh on every request —
-      // the backend can silently extend this cookie's lifetime after any successful request
-      // (sliding expiration via the double-submit pattern), so a cached value goes stale after
-      // the very first request that follows.
+      // Safe methods skip CSRF; read the cookie fresh each time since the backend may rotate it.
       if (!['GET', 'HEAD'].includes(method) && isSameOrigin(url)) {
         const token = readCookie('x_csrf_token');
         if (token) {

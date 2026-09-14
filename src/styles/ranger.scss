@@ -145,7 +145,7 @@
 		}
 	}
 
-	// Dedicated fill layer, kept below marks/handles by DOM order (see reorderLayers in index.js).
+	// Dedicated fill layer, kept below marks/handles by DOM order (see reorderLayers in youla-ranger.js).
 	&-fill {
 		background-color: var(--ranger-accent);
 		// Set via the fillGradient option; defaults to 'none'.
@@ -165,7 +165,7 @@
 		}
 	}
 
-	// Invisible overlay on .ranger's track; needs a real z-index since updateHandleStackOrder (index.js) reorders it mid-drag without cancelling pointer capture.
+	// Invisible overlay on .ranger's track; needs a real z-index since updateHandleStackOrder (youla-ranger.js) reorders it mid-drag without cancelling pointer capture.
 	& > input[type="range"] {
 		background-color: transparent;
 		height: 100%;
@@ -216,7 +216,7 @@
 		}
 	}
 
-	// Appended first among .ranger's children (see reorderLayers in index.js) so it paints below other layers without z-index.
+	// Appended first among .ranger's children (see reorderLayers in youla-ranger.js) so it paints below other layers without z-index.
 	&-scale {
 		display: flex;
 		justify-content: space-between;
@@ -262,7 +262,7 @@
 				height: calc(2px + var(--ranger-scale, 0) * 12px);
 			}
 
-			// Applied automatically (createScale in index.js) to the ticks at minValue/maxValue.
+			// Applied automatically (createScale in youla-ranger.js) to the ticks at minValue/maxValue.
 			&--limit {
 				&::before {
 					background-color: var(--ranger-accent);

@@ -132,7 +132,10 @@ class Ranger {
     return lastIndex;
   }
 
-  /** @param {string|HTMLInputElement} target @param {object} [options] */
+  /**
+   * @param {string|HTMLInputElement} target - CSS selector or the range input to skin.
+   * @param {object} [options] - Overrides for Ranger.DEFAULTS.
+   */
   constructor(target, options = {}) {
     this.fromSlider = typeof target === 'string' ? document.querySelector(target) : target;
 
@@ -705,7 +708,7 @@ class Ranger {
     slider.setAttribute('aria-valuetext', this.formatDisplayValue(slider.value));
   }
 
-  // Reorders scale/label/fill/marks in the DOM; handles stay on top via the static z-index on `.ranger > input` in core.scss.
+  // Reorders scale/label/fill/marks in the DOM; handles stay on top via the static z-index on the input in ranger.scss.
   reorderLayers() {
     [this.scale, this.label, this.fill, this.marksContainer].forEach((layer) => {
       if (layer) {
@@ -983,7 +986,6 @@ document.addEventListener('youla:init', () => {
   /**
    * Turns a plain `<input type="range">` into a skinned Ranger; `data-points` adds a second handle for range mode.
    * The bound expression is passed through as Ranger's options object.
-   *
    * @since 1.0
    */
   Youla.directive('ranger', (el, output) => {

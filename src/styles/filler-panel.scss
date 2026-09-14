@@ -1,4 +1,4 @@
-@import 'filler-mixins';
+@use 'filler-mixins' as *;
 
 // Injected into a shadow root (Filler#getPanelStylesheet); restyle from outside via ::part(<class-name>).
 

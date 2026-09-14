@@ -149,6 +149,7 @@ module.exports = {
           {
             loader: 'sass-loader',
             options: {
+              api: 'modern',
               implementation: require('sass'),
               sourceMap: false,
             },
@@ -184,6 +185,7 @@ module.exports = {
           {
             loader: 'sass-loader',
             options: {
+              api: 'modern',
               implementation: require('sass'),
               sourceMap: false,
             },

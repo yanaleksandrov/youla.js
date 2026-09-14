@@ -1,27 +1,15 @@
-/**
- * A from-scratch, trimmed reimplementation of vanilla-text-mask's masking algorithm
- * (github.com/text-mask/text-mask), so u-mask needs no external script tag or npm dependency.
- * Given an array of literal characters and RegExp "slots", it conforms whatever's typed to that
- * shape and keeps the caret past the last character it actually accepted.
- *
- * Only what u-mask actually exercises survived the port: a single `mask`, and "guide" always off
- * (unfilled slots are never shown as trailing placeholder characters). The upstream library's
- * caret traps, pipes, keepCharPositions and IE-era fallbacks were all untested dead code here, so
- * they didn't come along.
- */
+// Trimmed, dependency-free reimplementation of vanilla-text-mask's algorithm (github.com/text-mask/text-mask).
+// Conforms typed input to an array of literal chars / RegExp slots, keeping the caret past the last accepted char.
+// Only what u-mask needs survived the port: a single mask, "guide" always off, no caret traps/pipes/IE fallbacks.
 class TextMask {
-  // Internal stand-in for a RegExp "slot" in the built placeholder template; a mask literal can't
-  // use it too, or the algorithm couldn't tell a real "_" apart from an open slot (see buildPlaceholder).
+  // Stand-in for an open RegExp slot in the placeholder template; a mask literal can't use it too (see buildPlaceholder).
   static PLACEHOLDER = '_';
 
   static IS_ANDROID = /Android/i.test(navigator.userAgent);
 
   /**
    * @param {HTMLInputElement} el
-   * @param {(string|RegExp)[]|(rawValue: string) => (string|RegExp)[]} mask - one entry per
-   *   position (a RegExp "slot", or a literal character), or a function returning one, called
-   *   fresh on every keystroke — needed by a self-limiting slot (buildMaskTokens' `H`/`i`/`D`/`M`)
-   *   whose accepted range depends on the digit already typed before it.
+   * @param {(string|RegExp)[]|(rawValue: string) => (string|RegExp)[]} mask - slot/literal array, or a function returning one for self-limiting slots.
    */
   constructor(el, mask) {
     this.el = el;
@@ -87,11 +75,9 @@ class TextMask {
   }
 
   /**
-   * Fits "rawValue" into "mask": a character that just retypes a literal already fixed at that
-   * position is dropped (so typing straight through a fixed "-" separator doesn't duplicate it),
-   * then each remaining character is tried, in order, against the next open slot's RegExp — a
-   * rejected character is discarded and the next one tried against that same slot. Trims back to
-   * the last slot actually filled once characters are deleted (no trailing placeholder shown).
+   * Fits "rawValue" into "mask": drops characters that just retype an already-fixed literal, then
+   * matches each remaining character against the next open slot's RegExp in order, discarding
+   * rejects. On deletion, trims back to the last slot actually filled.
    */
   static conform(rawValue, mask, placeholder, previousValue, caretPosition) {
     const { PLACEHOLDER } = TextMask;
@@ -139,9 +125,8 @@ class TextMask {
 
   /**
    * Finds where the caret should land after a conform() pass: past the newly-accepted character
-   * on insertion (skipping over any literal that immediately follows it), or at the boundary a
-   * deletion leaves behind — tracking the actual typed character through the diff so a rejected
-   * one (which never made it into "conformedValue") doesn't throw the position off.
+   * on insertion, or at the deletion boundary — tracked by the actual typed character so a
+   * rejected one (never in "conformedValue") doesn't throw the position off.
    */
   static adjustCaretPosition({ previousValue = '', previousPlaceholder = '', caretPosition = 0, conformedValue, rawValue, placeholder }) {
     const { PLACEHOLDER } = TextMask;
@@ -188,8 +173,7 @@ class TextMask {
 
       const countTargetCharInIntersection = intersection.filter((char) => char === targetChar).length;
       const countTargetCharInPlaceholder = placeholder.slice(0, placeholder.indexOf(PLACEHOLDER)).split('').filter((char, index) => (
-        // Same character as "targetChar", but only where "rawValue" doesn't already carry it at this
-        // index too — otherwise it's already counted in "countTargetCharInIntersection".
+        // Same char as "targetChar" not already counted in "countTargetCharInIntersection".
         char === targetChar && rawValue[index] !== char
       )).length;
       const requiredNumberOfMatches = countTargetCharInPlaceholder + countTargetCharInIntersection + (trackRightCharacter ? 1 : 0);
@@ -248,9 +232,7 @@ class TextMask {
 
 document.addEventListener('youla:init', ()=> {
 
-  // Strips characters a domain/subdomain can never contain, then fixes up label boundaries a plain
-  // character filter can't express: no leading dot/hyphen, no label starting/ending in a hyphen
-  // (dot-adjacent hyphens), and no empty label from a doubled-up dot.
+  // Strips invalid domain characters, then fixes label boundaries: no leading/trailing hyphen or empty label from a doubled dot.
   function sanitizeDomain(value) {
     return value
       .replace(/[^a-zA-Z0-9.-]/g, '')
@@ -269,12 +251,9 @@ document.addEventListener('youla:init', ()=> {
   };
 
   /**
-   * Turns a mask pattern string into TextMask's array-of-(char|RegExp) tokens, given the field's
-   * current raw value (self-limiting slots read the digit already typed before them, so this must
-   * be re-run on every keystroke — see the resolver-function form of TextMask's "mask" param).
-   * Each character is its own token: `H`/`i`/`D`/`M` are digit slots that self-limit (the first
-   * digit narrows what the second accepts, e.g. an "H" of "2" only allows "0-3" next), `Y`/`0` are
-   * plain digits, `{regexp}` embeds a custom character class, anything else is a literal.
+   * Turns a mask pattern into TextMask's array-of-(char|RegExp) tokens: `H`/`i`/`D`/`M` are
+   * self-limiting digit slots (read "rawValue" to narrow the next digit), `Y`/`0` are plain
+   * digits, `{regexp}` is a custom class, anything else is a literal.
    */
   function buildMaskTokens(pattern, rawValue) {
     function limit(position, symbol, max) {
@@ -354,11 +333,9 @@ document.addEventListener('youla:init', ()=> {
   }
 
   /**
-   * Restricts an `<input>`'s value:
-   * - no expression (or an empty/falsy one): filters by the input's own `type` (tel/number/color).
-   * - a RegExp: strips characters matching it, as they're typed.
-   * - a non-empty string: a full text-mask pattern, applied via the vendored TextMask class
-   *   above (see buildMaskTokens for its syntax).
+   * Restricts an `<input>`'s value: no expression filters by the input's own `type`; a RegExp
+   * strips non-matching characters as typed; a non-empty string is a full mask pattern (see
+   * buildMaskTokens).
    *
    * @since 1.0
    */

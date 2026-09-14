@@ -1,9 +1,7 @@
 /**
- * True if "value" is a DOM node — realm-safe, unlike a bare "instanceof Node": a node created by a
- * same-origin iframe's own document (the editrix canvas, say) has a prototype chain rooted in
- * *that* iframe's own "Node" constructor, not this script's, so "value instanceof Node" is false
- * for it even though it's every bit as much a real node. "nodeType" (a plain number) is on every
- * Node regardless of which window created it, so duck-typing on it works across that boundary.
+ * True if "value" is a DOM node — realm-safe, unlike a bare "instanceof Node": a node from a
+ * same-origin iframe's own document has a prototype chain rooted in *that* window's own "Node"
+ * constructor, so duck-typing on "nodeType" instead works across that boundary.
  *
  * @param {*} value
  * @returns {boolean}
@@ -55,13 +53,9 @@ export function closestDirective(el, name) {
 
 /**
  * Walks the DOM tree rooted at "el" depth-first, invoking "callback" for "el" itself and every
- * descendant. Stops at a nested "u-data" component's boundary, and treats a "u-each" template
- * element as a leaf rather than walking into its unrendered children. A same-origin "<iframe>"
- * with content already in it (the editrix canvas, say — see getCanvasList() in youla-editrix.js)
- * walks straight into its own "<body>" too, transparently: refresh()'s own domWalk(self.root, ...)
- * is rooted at the app's single top-level element, so without this, anything portaled into an
- * iframe's separate document would only ever get its very first render (via an explicit
- * initialize() call) and never react to a later state change again.
+ * descendant. Stops at a nested "u-data" component's boundary, treats a "u-each" template as a
+ * leaf, and walks transparently into a same-origin "<iframe>"'s own "<body>" too, so content
+ * portaled into its separate document still keeps reacting to later state changes.
  *
  * @param {Element} el - The root element to start walking from.
  * @param {Function} callback - Invoked once for "el" and for each element visited under it.

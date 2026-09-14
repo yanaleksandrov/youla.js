@@ -2,7 +2,7 @@
 
 // Injected into a shadow root (Filler#getPanelStylesheet); restyle from outside via ::part(<class-name>).
 
-// HEX dropdown (custom palette + library lists); max-height/overflow-y set here rather than on the shadow host so an ancestor's overflow can't clip this element's own box-shadow.
+// max-height/overflow-y set here, not on the shadow host, so an ancestor's overflow can't clip this box's shadow.
 .filler-dropdown {
 	overflow-x: hidden;
 	padding: 8px;
@@ -192,7 +192,7 @@
 	border: 4px solid #fff;
 }
 
-// --percent (unitless 0-1, set in renderDialog) keeps the handle's center inset by half its width so it never overshoots either edge.
+// --percent (0-1, set in renderDialog) insets the handle's center by half its width so it never overshoots.
 .filler-dialog-handle {
 	position: absolute;
 	top: 50%;

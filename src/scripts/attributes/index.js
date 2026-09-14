@@ -1,11 +1,7 @@
 import { setClasses } from './classes';
 import { setStyles } from './styles';
 
-/**
- * Attribute handling: parsing every directive/event/binding attribute off an element
- * (getAttributes()/parseAttribute()) and, for the fixed ":attr" syntax specifically, writing a
- * resolved value back onto the element (updateAttribute()).
- */
+// Parses directive/event/binding attributes off an element and, for ":attr", writes a resolved value back onto it.
 
 // Matches the "u-"/"@"/":" prefix marking an attribute as a directive, event, or binding.
 const ATTRIBUTE_PREFIX = /^(u-|@|:)/;
@@ -21,10 +17,9 @@ function isJavascriptUrl(value) {
 }
 
 /**
- * "onclick"/"onerror"/etc. are inline event-handler attributes: writing one via `:bind` would let
- * a bound value run as script, the same way `u-html` does for markup. `name in el` — true for
- * every real event-handler IDL property (even unset, it's `null`) and false for an unrelated
- * attribute that merely starts with "on" (e.g. a hypothetical "onetime") — tells them apart.
+ * Detects an inline event-handler attribute (e.g. "onclick"), so `:bind` refuses to write one as
+ * script. `name in el` is true for every real event-handler IDL property but false for an
+ * unrelated "on*" attribute name (e.g. a hypothetical "onetime").
  *
  * @param {HTMLElement} el
  * @param {string} name
@@ -67,15 +62,9 @@ export function parseAttribute(name, value) {
 }
 
 /**
- * Collects every directive/event/binding attribute on an element (":attr", "@event", "u-*"),
- * already parsed via parseAttribute() — this is called for every element on every single domWalk
- * pass (initialize() and every refresh()), so the parsed result is cached on "el.__x_attrs" and
- * reused as long as the matching ":attr"/"@event"/"u-*" attributes (name+value pairs, in order)
- * haven't actually changed since. That "have they changed" check itself is cheap (matching the
- * prefix and joining name/value, no parseAttribute() call) — the point is only ever to skip the
- * heavier per-attribute parseAttribute() work, so it needs no cooperation from callers that mutate
- * an element's own u-*, @, or : attributes after mount (u-each's ".lazy" rewrite, u-bind's unregistered-
- * directive passthrough, or any third-party directive doing the same) — it notices on its own.
+ * Collects every directive/event/binding attribute on an element, already parsed via
+ * parseAttribute(). Caches the result on "el.__x_attrs", keyed by a cheap fingerprint of the
+ * matching attributes' name+value pairs, so a later call skips re-parsing unless one actually changed.
  *
  * @param {Element} el - The element to read attributes from.
  * @returns {object[]} The parsed attribute descriptors, in DOM attribute order.
@@ -94,13 +83,9 @@ export function getAttributes(el) {
 }
 
 /**
- * Writes a value onto an element for a given attribute/property name, resolving what "value"
- * actually means for that pair — form control values, "class"/"style" (via setClasses/
- * setStyles), boolean attributes — so callers never need to special-case el.type themselves.
- *
- * Refuses to write an inline event-handler attribute (e.g. "onclick"), or a "javascript:" URL
- * into a navigation/URL attribute (e.g. "href", "src") — both would let a bound value run as
- * script, the same trust boundary "u-html" documents for markup.
+ * Writes a value onto an element for a given attribute/property name — form control values,
+ * "class"/"style" (via setClasses/setStyles), boolean attributes — so callers never special-case
+ * el.type. Refuses an inline event-handler attribute or a "javascript:" URL, same trust boundary as "u-html".
  *
  * @param {HTMLElement} el - The element to update.
  * @param {string} name - The attribute/property name ("value", "class", "style", or any other HTML attribute).

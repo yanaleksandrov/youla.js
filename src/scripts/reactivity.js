@@ -1,15 +1,12 @@
 import { isNode } from './dom';
 
-/**
- * Well-known symbol every proxy in this module (and component.js's own dependency-tracking
- * proxy, which cooperates with it) responds to by handing back its raw, unwrapped target.
- */
+// Well-known symbol every proxy in this module (and component.js's tracking proxy) responds to by handing back its raw, unwrapped target.
 export const RAW = Symbol('raw');
 
 /**
- * Unwraps "value" down to whatever it was before any wrap()/tracking proxy was applied — a
- * no-op for a plain or already-raw value. Without it, a value that round-trips through a proxy
- * (read, spread, write back) picks up another Proxy layer each time, eventually overflowing the call stack.
+ * Unwraps "value" down to whatever it was before any tracking proxy was applied — a no-op for a
+ * plain or already-raw value, needed since a value that round-trips through a proxy would
+ * otherwise pick up another layer each time, eventually overflowing the call stack.
  *
  * @param {*} value
  * @returns {*}
@@ -18,21 +15,13 @@ export function toRaw(value) {
   return (value && typeof value === 'object' && value[RAW]) || value;
 }
 
-/**
- * Array methods that mutate the array in place rather than returning a new one. Reading one of
- * these off an observed array (see "wrap()") hands back a wrapper that runs the native method on
- * the raw array, then reports the change — so `list.push(item)` is reactive exactly like
- * `list = [...list, item]`, without the throwaway copy.
- */
+// Array methods that mutate in place; reading one off an observed array (see "wrap()") hands back a wrapper that runs it on the raw array and then reports the change, so `list.push(item)` is reactive like `list = [...list, item]` without the copy.
 const ARRAY_MUTATORS = ['push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse', 'fill', 'copyWithin'];
 
 /**
- * Wraps "data" (and, recursively, any nested object it contains) in a Proxy that intercepts
- * writes: each successful "set" calls "onChange" with the changed property name, and each call to
- * an array mutator (push, splice, …) calls "onChange" with the method name and "force: true" —
- * a single mutator call can touch several indices plus "length", none of which necessarily match
- * the property name a binding depends on, so it's reported as one unconditional change instead. A
- * DOM node is never wrapped, since calling a native method on a wrapped node would break "this" binding.
+ * Wraps "data" (and any nested object) in a Proxy that intercepts writes: a "set" reports the
+ * changed property name; an array mutator reports the method name with "force: true", since a
+ * single mutator call can touch several indices plus "length", not one property a binding tracks.
  *
  * @param {object} data - The plain object to make observable.
  * @param {(prop: string, force?: boolean) => void} onChange - Called after each successful write or mutator call.

@@ -229,8 +229,8 @@ Youla.data(&#39;bundle&#39;, () =&gt; ({
     &#39;@click.outside&#39;: &#39;item.search = []&#39;,
   },
   itemSearchField: {
-    &#39;@focus&#39;: &quot;$ajax(&#39;/bundle/search&#39;, { search: $el.value, include: $el.dataset.include }).then(r =&gt; item.search = r)&quot;,
-    &#39;@input.delay.250ms&#39;: &quot;$ajax(&#39;/bundle/search&#39;, { search: $el.value, include: $el.dataset.include }).then(r =&gt; item.search = r)&quot;,
+    &#39;@focus&#39;: &quot;$ajax.get(&#39;/bundle/search&#39;, { search: $el.value, include: $el.dataset.include }).then(r =&gt; item.search = r)&quot;,
+    &#39;@input.delay.250ms&#39;: &quot;$ajax.get(&#39;/bundle/search&#39;, { search: $el.value, include: $el.dataset.include }).then(r =&gt; item.search = r)&quot;,
     &#39;@blur&#39;: &quot;$el.value = &#39;&#39;&quot;,
   },
   resultBtn: {
@@ -322,8 +322,8 @@ Youla.data(&#39;bundle&#39;, () =&gt; ({
     &#39;@click.outside&#39;: &#39;product.search = []&#39;,
   },
   mixSearchField: {
-    &#39;@focus&#39;: &quot;$ajax(&#39;/bundle/search&#39;, { search: $el.value, include: $el.dataset.include }).then(r =&gt; product.search = r)&quot;,
-    &#39;@input.delay.250ms&#39;: &quot;$ajax(&#39;/bundle/search&#39;, { search: $el.value, include: $el.dataset.include }).then(r =&gt; product.search = r)&quot;,
+    &#39;@focus&#39;: &quot;$ajax.get(&#39;/bundle/search&#39;, { search: $el.value, include: $el.dataset.include }).then(r =&gt; product.search = r)&quot;,
+    &#39;@input.delay.250ms&#39;: &quot;$ajax.get(&#39;/bundle/search&#39;, { search: $el.value, include: $el.dataset.include }).then(r =&gt; product.search = r)&quot;,
     &#39;@blur&#39;: &quot;$el.value = &#39;&#39;&quot;,
   },
   mixedResultBtn: {
@@ -530,8 +530,8 @@ Youla.data(&#39;bundle&#39;, () =&gt; ({
         '@click.outside': 'item.search = []',
       },
       itemSearchField: {
-        '@focus': "$ajax('/bundle/search', { search: $el.value, include: $el.dataset.include }).then(r => item.search = r)",
-        '@input.delay.250ms': "$ajax('/bundle/search', { search: $el.value, include: $el.dataset.include }).then(r => item.search = r)",
+        '@focus': "$ajax.get('/bundle/search', { search: $el.value, include: $el.dataset.include }).then(r => item.search = r)",
+        '@input.delay.250ms': "$ajax.get('/bundle/search', { search: $el.value, include: $el.dataset.include }).then(r => item.search = r)",
         '@blur': "$el.value = ''",
       },
       resultBtn: {
@@ -623,8 +623,8 @@ Youla.data(&#39;bundle&#39;, () =&gt; ({
         '@click.outside': 'product.search = []',
       },
       mixSearchField: {
-        '@focus': "$ajax('/bundle/search', { search: $el.value, include: $el.dataset.include }).then(r => product.search = r)",
-        '@input.delay.250ms': "$ajax('/bundle/search', { search: $el.value, include: $el.dataset.include }).then(r => product.search = r)",
+        '@focus': "$ajax.get('/bundle/search', { search: $el.value, include: $el.dataset.include }).then(r => product.search = r)",
+        '@input.delay.250ms': "$ajax.get('/bundle/search', { search: $el.value, include: $el.dataset.include }).then(r => product.search = r)",
         '@blur': "$el.value = ''",
       },
       mixedResultBtn: {

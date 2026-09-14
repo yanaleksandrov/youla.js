@@ -53,13 +53,13 @@ directive('each', (el, output, attribute, component, additionalHelperVariables =
     }
   }
 
-  // Remove everything already rendered, then render fresh.
   if (attribute.modifiers.includes('lazy')) {
     el.setAttribute(attribute.directive, expression);
     el.removeAttribute(attribute.name);
     return;
   }
 
+  // Remove everything already rendered, then render fresh.
   while (el.nextSibling) {
     let next = el.nextSibling;
 

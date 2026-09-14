@@ -23,7 +23,6 @@ directive('prop', (el, output, attribute, component) => {
     updateAttribute(el, 'value', output);
   }
 
-  // persist to storage when a .local/.cookie modifier is present
   if (isStorageModifier(attribute.modifiers)) {
     const type   = getStorageType(attribute.modifiers);
     const expire = getNextModifier(attribute.modifiers, type);

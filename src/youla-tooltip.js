@@ -1,9 +1,7 @@
 const PLACEMENTS = ['top', 'bottom', 'left', 'right', 'auto'];
 const TRIGGERS   = ['hover', 'click', 'focus'];
 
-// A "style-<name>" modifier (e.g. "u-tooltip.style-error") maps to a "u-tooltip--<name>" class on
-// the tooltip element (syncClasses()), the same way ".top" maps to "u-tooltip--top" — open-ended
-// rather than a fixed list like PLACEMENTS/TRIGGERS, since new skins are purely a CSS concern.
+// A "style-<name>" modifier maps to a "u-tooltip--<name>" class (syncClasses()) — open-ended, unlike PLACEMENTS/TRIGGERS, since new skins are just CSS.
 const VARIANT_PREFIX = 'style-';
 
 const OFFSET = 8;
@@ -38,7 +36,7 @@ function ensureRemovalObserver() {
   removalObserver.observe(document.body, { childList: true, subtree: true });
 }
 
-// Adds [target, type, handler, options] listeners; returns a function that removes them all.
+/** Adds [target, type, handler, options] listeners; returns a function that removes them all. */
 function bind(listeners) {
   listeners.forEach(([target, type, handler, options]) => {
     target.addEventListener(type, handler, options);
@@ -78,13 +76,9 @@ function ensureGlobalListeners() {
 }
 
 /**
- * Translates a rect measured in "el"'s own window (getBoundingClientRect(), ProseMirror's
- * coordsAtPos(), etc.) into the top-level window's own viewport coordinates — a no-op unless "el"
- * lives inside a same-origin iframe (the editrix canvas, say). A tooltip/toolbar is always appended
- * to the *top* document's <body> (this script never runs a second copy inside the iframe), so its
- * own "top"/"left" have to be expressed in that document's coordinate space regardless of which
- * document its anchor actually renders in — otherwise it lands offset by wherever the iframe itself
- * sits on the page.
+ * Translates a rect from "el"'s own window into the top-level window's viewport coordinates —
+ * a no-op unless "el" sits inside a same-origin iframe. The tooltip is always appended to the
+ * top document's <body>, so its position must be expressed in that document's coordinate space.
  *
  * @param {Element} el - The anchor element (or, for a text selection, the editor's own DOM node).
  * @param {{top: number, left: number, bottom?: number, right?: number}} rect
@@ -95,8 +89,7 @@ export function toTopViewportRect(el, rect) {
   let offsetTop = 0;
   let offsetLeft = 0;
 
-  // Walks every iframe boundary between "el" and the top window, not just one — correct even if a
-  // canvas were ever nested another level deep.
+  // Walks every iframe boundary between "el" and the top window, not just the first.
   while (view && view.frameElement) {
     const frameRect = view.frameElement.getBoundingClientRect();
     offsetTop += frameRect.top;
@@ -164,8 +157,7 @@ export function computePosition(anchorRect, size, placement, viewport, offset = 
 }
 
 // A tooltip's DOM element, positioning, triggers, and lifecycle. Cached as `el._x_tooltip`.
-// Exported so other UI built outside the u-data/directive system can attach a real u-tooltip to an
-// element it built by hand, the same way the "u-tooltip" directive below does.
+// Exported so other UI outside the directive system can attach a real tooltip by hand, same as u-tooltip below.
 export class TooltipInstance {
   constructor(el, content, placement, trigger, delay = 250, variant = null) {
     Object.assign(this, { el, content, placement, trigger, delay, variant, visible: false });
@@ -289,7 +281,7 @@ export class TooltipInstance {
     this.syncClasses();
   }
 
-  // The only place that writes the tooltip's className.
+  /** The only place that writes the tooltip's className. */
   syncClasses() {
     const classes = [TOOLTIP_CLASS];
     if (this.animationState) {
@@ -355,7 +347,7 @@ export class TooltipInstance {
     this.exitTimer = setTimeout(this.onExitEnd, EXIT_FALLBACK);
   }
 
-  // Removes the tooltip from the DOM and clears any pending exit bookkeeping.
+  /** Removes the tooltip from the DOM and clears any pending exit bookkeeping. */
   cancelExit() {
     clearTimeout(this.exitTimer);
     if (this.onExitEnd) {

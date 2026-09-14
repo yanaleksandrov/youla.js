@@ -30,10 +30,7 @@ document.addEventListener('youla:init', ()=> {
 
     Object.assign(settings, output && typeof output === 'object' ? output : {});
 
-    // A reactive update (options changed) tears down the previous instance first — SlimSelect
-    // has no "update options" method of its own, only a full rebuild — so this rebuilds from
-    // "el.options"'s current, restored (post-destroy) state rather than whatever it looked like
-    // mid-render.
+    // SlimSelect has no "update options" method, only a full rebuild — destroy before reading "el.options".
     el._x_slimSelect?.destroy();
 
     const data = Array.from(el.options).reduce((acc, option) => {

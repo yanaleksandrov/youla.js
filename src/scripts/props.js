@@ -6,13 +6,10 @@ import { getAttributes } from './attributes';
 import { storage, isStorageModifier, getStorageType, castToType } from './storage';
 
 /**
- * Prepares every `u-prop`-bound form field under `rootElement`: ensures each field has a
- * `name`, seeds a default value for any property that doesn't exist yet, evaluates the field's
- * current DOM value into the data, and applies any persisted `.local`/`.cookie` value.
- *
- * When `key` (e.g. "user" in "user.password") is already declared by an ancestor `u-data`
- * component, the default and every write go through `parent.scope` instead of `data` — otherwise
- * they'd create a same-named local property that permanently shadows the ancestor's one.
+ * Prepares every `u-prop` field under `rootElement`: assigns a name, seeds a default, syncs the
+ * field's DOM value into data, and restores any persisted `.local`/`.cookie` value.
+ * Writes go through `parent.scope` when an ancestor `u-data` already owns the key, so they
+ * never shadow it with a same-named local property.
  *
  * @param {HTMLElement} rootElement - The component's root element.
  * @param {Object} data - The component's raw data object, mutated in place.
@@ -23,7 +20,7 @@ export function hydrateProps(rootElement, data, parent) {
   domWalk(rootElement, el => getAttributes(el).filter(({directive}) => directive === 'u-prop').forEach(attribute => {
     let {expression, modifiers} = attribute;
 
-    // support directive just for form fields
+    // u-prop only binds to form fields
     if (!['input', 'select', 'textarea'].includes(el.tagName.toLowerCase())) {
       return;
     }
@@ -45,7 +42,7 @@ export function hydrateProps(rootElement, data, parent) {
     if (owner[key] === undefined) {
       let fields = [];
       if (el.type === 'checkbox') {
-        // CSS.escape() only covers identifiers, not the quoted attribute-value part, so a "\"/"\\" in "expression" is escaped by hand to keep it from breaking out of the selector.
+        // CSS.escape() doesn't cover the quoted attribute-value part, so "/\ in "expression" is escaped by hand.
         fields = closestDirective(el, 'u-data').querySelectorAll(`[${CSS.escape(attribute.name)}="${expression.replace(/["\\]/g, '\\$&')}"]`);
       }
 
@@ -54,10 +51,8 @@ export function hydrateProps(rootElement, data, parent) {
 
     let value = generateExpressionForProp(el, owner, attribute);
 
-    // assign the field's current value onto data
     saferEval(value, withMagicVariables(owner, createMagicVariables(rootElement, el)));
 
-    // get data from localStorage or cookie
     if (isStorageModifier(modifiers)) {
       const type  = getStorageType(modifiers);
       const value = storage.get(expression, type);
@@ -72,15 +67,10 @@ export function hydrateProps(rootElement, data, parent) {
 }
 
 /**
- * Builds the assignment expression used to write a `u-prop`-bound field's current DOM value
- * onto `$data.<expression>`, accounting for the element's type and the `.number`/`.trim`
- * modifiers.
- *
- * `.number`/`.trim` also write the cleaned-up value straight back onto `$el.value`, in the same
- * expression — not just `$data`. Without that, the field would show the raw keystroke (a letter,
- * a trailing space) until the next reactive refresh overwrote it with the corrected value a tick
- * later, flickering. Doing both in the same synchronous "input"/"change" handler means the browser
- * never gets to paint the uncorrected value in between.
+ * Builds the expression that writes a `u-prop` field's current DOM value onto
+ * `$data.<expression>`, per the element's type and its `.number`/`.trim` modifiers.
+ * `.number`/`.trim` also correct `$el.value` in that same expression, avoiding a flicker
+ * before the next reactive refresh would otherwise fix it.
  *
  * @param {HTMLElement} el - The bound form field (input, select, or textarea).
  * @param {Object} data - The component's data object, read to resolve the current bound value.
@@ -90,10 +80,7 @@ export function hydrateProps(rootElement, data, parent) {
 export function generateExpressionForProp(el, data, attribute) {
   let {expression, modifiers} = attribute;
 
-  // Bracket-notation segments ("user[firstName]") aren't valid bare JS on their own — inside the
-  // "with($data)" saferEval runs under, an unquoted "firstName" would be read as its own (data-scoped)
-  // identifier instead of a string key. Normalizing to a quoted member-access chain up front means
-  // every branch below can interpolate "accessor" freely, regardless of how "expression" was written.
+  // Bracket segments ("user[firstName]") aren't valid bare JS under saferEval's "with($data)", so normalize to a quoted member-access chain every branch below can interpolate freely.
   const accessor = toJsPropAccessor(expression);
 
   let rightSideOfExpression, tag = el.tagName.toLowerCase();

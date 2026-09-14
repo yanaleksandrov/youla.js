@@ -1,35 +1,37 @@
 document.addEventListener('youla:init', () => {
   const BYTES_IN_MB = 1048576;
 
-  // Prefix for a non-absolute `route`; defaults to the page's own "youla.apiurl" config, e.g.
-  // Expansa's inline `const youla = {...}`. A top-level "const" in a classic <script> only
-  // creates a global *lexical* binding, never a "window" property, so this can't check
-  // "window.youla" — but it also never throws on a page that declares no such global at all,
-  // since "typeof" is the one operator that tolerates an undeclared identifier.
+  // Prefix for a non-absolute `route`; defaults to the page's own "youla.apiurl" config, if any.
+  // "typeof" tolerates an undeclared "youla" global instead of throwing.
   Youla.baseURL ??= (typeof youla !== 'undefined' ? youla?.apiurl : null) ?? '';
 
   /**
-   * Registers `$ajax(route, payload, onProgress, options)`, plus `$ajax.get(...)` /
-   * `$ajax.post(...)` / `$ajax.put(...)` / `$ajax.patch(...)` / `$ajax.delete(...)` shorthands
-   * that force the request method instead of falling back to the element's `method` attribute.
-   * Dispatches an `ajax:${route}` CustomEvent on `document` once the response arrives; an array
-   * `data` response is treated as fragment instructions (see applyFragment). Calling again on
-   * the same element cancels any request still in flight.
+   * Registers `$ajax.get/post/put/patch/delete(route, payload, onProgress, options)`. Dispatches
+   * `ajax:${route}` on `document` when the response arrives; an array response runs as fragment
+   * instructions (see applyFragment). A new call on the same element cancels one still in flight.
    *
    * @param {Event} e - Triggering event (unused).
    * @param {HTMLElement} el - Element `$ajax` was called on.
-   * @returns {Function} `(route, payload?, onProgress?, options?) => Promise`, with `.get`/`.post`/`.put`/`.patch`/`.delete` shorthands.
+   * @returns {Object} `{ get, post, put, patch, delete }`, each `(route, payload?, onProgress?, options?) => Promise`.
    */
   Youla.method('ajax', (e, el) => {
-    const ajax = (route, payload, onProgress, options = {}) => {
+    const ajax = (method, route, payload, onProgress, options = {}) => {
       abortPrevious(el);
 
       const xhr = el.__ajax = new XMLHttpRequest();
       const url = /^https?:\/\//.test(route) ? route : Youla.baseURL + route;
       const done = toggleLoading(el);
 
-      xhr.open((options.method || el.getAttribute('method') || (el.tagName === 'FORM' ? 'POST' : 'GET')).toUpperCase(), url);
+      xhr.open(method, url);
       xhr.withCredentials = options.credentials ?? true;
+
+      // Safe methods skip CSRF; read the cookie fresh each time since the backend may rotate it.
+      if (!['GET', 'HEAD'].includes(method) && isSameOrigin(url)) {
+        const token = readCookie('x_csrf_token');
+        if (token) {
+          xhr.setRequestHeader('X-CSRF-Token', token);
+        }
+      }
 
       Object.entries(options.headers || {}).forEach(([name, value]) => xhr.setRequestHeader(name, value));
 
@@ -83,13 +85,33 @@ document.addEventListener('youla:init', () => {
       });
     };
 
-    // Shorthands that force the request method regardless of the element's `method` attribute.
-    ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].forEach(method => {
-      ajax[method.toLowerCase()] = (route, payload, onProgress, options = {}) => ajax(route, payload, onProgress, { ...options, method });
-    });
-
-    return ajax;
+    return ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].reduce((methods, method) => ({
+      ...methods,
+      [method.toLowerCase()]: (route, payload, onProgress, options) => ajax(method, route, payload, onProgress, options),
+    }), {});
   });
+
+  /**
+   * Reads "name"'s value out of `document.cookie`, live — callers must not cache the result
+   * (see the CSRF header comment above ajax's `xhr.open` call).
+   *
+   * @param {string} name - Cookie name.
+   * @returns {string|null} Decoded cookie value, or null if absent.
+   */
+  function readCookie(name) {
+    const match = document.cookie.match('(?:^|; )' + name + '=([^;]*)');
+    return match ? decodeURIComponent(match[1]) : null;
+  }
+
+  /**
+   * Whether "url" resolves to the same origin as the current page.
+   *
+   * @param {string} url - Absolute or relative URL.
+   * @returns {boolean}
+   */
+  function isSameOrigin(url) {
+    return new URL(url, window.location.href).origin === window.location.origin;
+  }
 
   /**
    * Aborts and rejects the in-flight request (if any) tracked on "el", clearing its

@@ -17,17 +17,17 @@ const PALETTE = [
   { name: 'Yellow', hex: '#FFEB3B' },
 ];
 
-// Exported so other code that needs a small set of visually-distinct colors can reuse this one
-// instead of inventing a second palette.
+// Exported so other code needing a small distinct-color set can reuse this instead of a second palette.
 export const FILLER_PALETTE = PALETTE;
 
-// Expands `{ key: suffix }` into `{ key: prefix-suffix }`; an empty suffix maps to the bare prefix.
+/**
+ * Expands `{ key: suffix }` into `{ key: prefix-suffix }`; an empty suffix maps to the bare prefix.
+ */
 const classNames = (prefix, suffixes) => Object.fromEntries(
   Object.entries(suffixes).map(([key, suffix]) => [key, suffix ? `${prefix}-${suffix}` : prefix]),
 );
 
-// Exported so other UI built outside the u-data/directive system can attach a real filler to an
-// <input> it built by hand, the same way the "u-filler" directive below does.
+// Exported so code outside the directive system can attach a real filler to a hand-built <input>.
 export class Filler {
   static DEFAULTS = {
     classes: {
@@ -263,13 +263,17 @@ export class Filler {
     { key: 'blur', css: 'blur', min: 0, max: 20, default: 0, step: 1, unit: 'px' },
   ];
 
-  // Same as the CSS unit, except degrees show "°" instead of "deg".
+  /**
+   * Same as the CSS unit, except degrees show "°" instead of "deg".
+   */
   static filterDisplayUnit(key) {
     const unit = Filler.MEDIA_FILTERS.find((f) => f.key === key).unit;
     return unit === 'deg' ? '°' : unit;
   }
 
-  // One call per MEDIA_FILTERS entry; each slider's own min/max already keeps values in range.
+  /**
+   * One call per MEDIA_FILTERS entry; each slider's own min/max already keeps values in range.
+   */
   static computeMediaFilter(media) {
     return Filler.MEDIA_FILTERS.map(({ key, css, unit }) => `${css}(${media[key]}${unit})`).join(' ');
   }
@@ -278,8 +282,10 @@ export class Filler {
     return Math.min(max, Math.max(min, value));
   }
 
-  /* Builds an element and assigns own properties (className, type, textContent, ...); mirrors
-     `className` into `part` for ::part() access from outside a shadow root (`part: false` opts out). */
+  /**
+   * Builds an element and assigns own properties (className, type, textContent, ...); mirrors
+   * `className` into `part` for ::part() access from outside a shadow root (`part: false` opts out).
+   */
   static el(tag, { part, ...props } = {}) {
     const el = Object.assign(document.createElement(tag), props);
     if (part !== false && props.className) {
@@ -288,7 +294,9 @@ export class Filler {
     return el;
   }
 
-  // Parsed once, shared via `adoptedStyleSheets` across every instance's shadow root.
+  /**
+   * Parsed once, shared via `adoptedStyleSheets` across every instance's shadow root.
+   */
   static getPanelStylesheet() {
     if (!Filler._panelStylesheet) {
       const sheet = new CSSStyleSheet();
@@ -298,7 +306,9 @@ export class Filler {
     return Filler._panelStylesheet;
   }
 
-  /* Normalizes "abc"/"#abc"/"aabbcc"/"#AABBCC" into "#AABBCC", or null if not a valid hex color. */
+  /**
+   * Normalizes "abc"/"#abc"/"aabbcc"/"#AABBCC" into "#AABBCC", or null if not a valid hex color.
+   */
   static normalizeHex(hex) {
     if (typeof hex !== 'string') {
       return null;
@@ -322,7 +332,9 @@ export class Filler {
     return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
   }
 
-  // Like hexToRgb, but also accepts 8-digit #RRGGBBAA, returning its alpha (3/6-digit forms return `a: null`).
+  /**
+   * Like hexToRgb, but also accepts 8-digit #RRGGBBAA, returning its alpha (3/6-digit forms return `a: null`).
+   */
   static hexToRgba(hex) {
     const value = typeof hex === 'string' ? hex.trim().replace(/^#/, '') : '';
     if (!/^[0-9a-f]{8}$/i.test(value)) {
@@ -341,7 +353,9 @@ export class Filler {
     return `#${[r, g, b].map((v) => Filler.clamp(Math.round(v), 0, 255).toString(16).padStart(2, '0')).join('').toUpperCase()}`;
   }
 
-  // Parses any CSS color string via the browser's own parser (assign to style.color, read back computed).
+  /**
+   * Parses any CSS color string via the browser's own parser (assign to style.color, read back computed).
+   */
   static parseCssColor(value) {
     if (typeof value !== 'string' || !value.trim()) {
       return null;
@@ -370,7 +384,9 @@ export class Filler {
     return { r, g, b, a: Filler.clamp(a, 0, 1) * 100 };
   }
 
-  // First file matching `mimePrefix` from a paste/drop DataTransfer, or null (`.items` is the fallback for pasted files).
+  /**
+   * First file matching `mimePrefix` from a paste/drop DataTransfer, or null (`.items` is the fallback for pasted files).
+   */
   static extractMediaFile(dataTransfer, mimePrefix) {
     const fromFiles = [...(dataTransfer.files || [])].find((f) => f.type.startsWith(mimePrefix));
     if (fromFiles) {
@@ -381,18 +397,24 @@ export class Filler {
     return item ? item.getAsFile() : null;
   }
 
-  /* True for white and near-white colors, where a same-color border would be invisible. */
+  /**
+   * True for white and near-white colors, where a same-color border would be invisible.
+   */
   static isNearWhite({ r, g, b }) {
     return r >= 235 && g >= 235 && b >= 235;
   }
 
-  // Strips non-digits and clamps to [min, max]; '' passes through so a field mid-clear isn't forced back.
+  /**
+   * Strips non-digits and clamps to [min, max]; '' passes through so a field mid-clear isn't forced back.
+   */
   static sanitizeDigits(value, min, max) {
     const digits = value.replace(/[^0-9]/g, '');
     return digits === '' ? '' : String(Filler.clamp(+digits, min, max));
   }
 
-  // Shared 60°-wide-sector mapping for hsvToRgb/hslToRgb: which channel gets c/x/0 depends only on hue.
+  /**
+   * Shared 60°-wide-sector mapping for hsvToRgb/hslToRgb: which channel gets c/x/0 depends only on hue.
+   */
   static hueToChannels(h, c, x) {
     return h < 60 ? [c, x, 0]
       : h < 120 ? [x, c, 0]
@@ -402,7 +424,9 @@ export class Filler {
       : [c, 0, x];
   }
 
-  // Shared hue extraction for rgbToHsv/rgbToHsl, given the already-computed max and max-min delta.
+  /**
+   * Shared hue extraction for rgbToHsv/rgbToHsl, given the already-computed max and max-min delta.
+   */
   static rgbToHue({ r, g, b }, max, d) {
     if (d === 0) {
       return 0;
@@ -458,7 +482,9 @@ export class Filler {
     return { r: (r + m) * 255, g: (g + m) * 255, b: (b + m) * 255 };
   }
 
-  // Prefers beside the field (right, then left) over stacking, falling back only if neither fits PANEL_MIN_WIDTH.
+  /**
+   * Prefers beside the field (right, then left) over stacking, falling back only if neither fits PANEL_MIN_WIDTH.
+   */
   static availableSpace(anchorRect, viewport, offset = 6) {
     const space = {
       right: viewport.width - anchorRect.right - offset,
@@ -478,7 +504,9 @@ export class Filler {
     return { side, maxSize: Math.max(space[side], 0) };
   }
 
-  // Placed on whichever side availableSpace picked, then clamped to stay on-screen (assumes `size` already fits `maxSize`).
+  /**
+   * Placed on whichever side availableSpace picked, then clamped to stay on-screen (assumes `size` already fits `maxSize`).
+   */
   static computePosition(anchorRect, size, viewport, offset = 6) {
     const { side } = Filler.availableSpace(anchorRect, viewport, offset);
 
@@ -581,11 +609,7 @@ export class Filler {
 
   addListeners() {
     const { el, alphaInput } = this;
-    // Image/video mode has no hex value to select or type — open the dialog instead of the dropdown,
-    // and — only on that initial open (not a refocus while it's already open), and only while
-    // nothing's been picked yet — jump straight to the OS file picker too, since picking a file is
-    // the very next thing anyone opening an empty one wants to do. Once a file's set, focusing back
-    // in is for tweaking it (crop/filters/replace), not another forced picker.
+    // Image/video mode opens the dialog on focus instead of the dropdown, jumping straight to the file picker on first open while nothing's uploaded yet.
     el.addEventListener('focus', () => {
       if (this.source !== 'solid') {
         const wasOpen = this.dialogOpen;
@@ -638,7 +662,9 @@ export class Filler {
     });
   }
 
-  // Samples a color from anywhere on screen; applied via `applyHex`, the same path a palette click uses.
+  /**
+   * Samples a color from anywhere on screen; applied via `applyHex`, the same path a palette click uses.
+   */
   pickWithEyeDropper() {
     if (this.disabled || !window.EyeDropper || !this.sources.includes('solid')) {
       return;
@@ -652,7 +678,9 @@ export class Filler {
     }).catch(() => {});
   }
 
-  // Whether to show a hint for the Alt+click eyedropper shortcut — only where it actually works.
+  /**
+   * Whether to show a hint for the Alt+click eyedropper shortcut — only where it actually works.
+   */
   syncSwatchTitle() {
     this.swatch.title = (window.EyeDropper && this.sources.includes('solid')) ? this.labels.eyedropper : '';
   }
@@ -675,7 +703,9 @@ export class Filler {
     this.handleMediaUpload(type, file);
   }
 
-  // Dragging the "%" suffix left/right nudges transparency, mirroring Ranger's pointer-capture drags.
+  /**
+   * Dragging the "%" suffix left/right nudges transparency, mirroring Ranger's pointer-capture drags.
+   */
   bindAlphaSuffixDrag() {
     const { suffix, alphaInput } = this;
     suffix.addEventListener('pointerdown', (event) => {
@@ -710,7 +740,9 @@ export class Filler {
     });
   }
 
-  // Applies once typed text is a complete hex (3/6/8-digit); 8-digit's alpha wins, otherwise the current one is kept.
+  /**
+   * Applies once typed text is a complete hex (3/6/8-digit); 8-digit's alpha wins, otherwise the current one is kept.
+   */
   handleHexInput() {
     const color = Filler.hexToRgba(this.el.value);
     if (!color) {
@@ -721,7 +753,9 @@ export class Filler {
     this.render({ skipHexInput: true });
   }
 
-  // Applies any recognizable pasted color (alpha included); anything else falls through to a normal paste.
+  /**
+   * Applies any recognizable pasted color (alpha included); anything else falls through to a normal paste.
+   */
   handleHexPaste(event) {
     if (this.source !== 'solid') {
       return;
@@ -760,7 +794,10 @@ export class Filler {
     this.dialogOpen ? this.closeDialog() : this.openDialog();
   }
 
-  // Repaints everything derived from `hsva`; `skipHexInput` avoids clobbering the caret while typing.
+  /**
+   * Repaints everything derived from `hsva`.
+   * @param {boolean} [skipHexInput] - Skip the hex field, to avoid clobbering the caret while typing.
+   */
   render({ skipHexInput = false } = {}) {
     const { el, hsva, alphaInput } = this;
     const hex = this.hex;
@@ -781,7 +818,9 @@ export class Filler {
     el.dispatchEvent(new Event('change', { bubbles: true }));
   }
 
-  // Repaints the swatch/field for the active source: 'solid' paints hsva, 'image'/'video' shows the uploaded thumbnail.
+  /**
+   * Repaints the swatch/field for the active source: 'solid' paints hsva, 'image'/'video' shows the uploaded thumbnail.
+   */
   renderSwatch({ skipHexInput = false } = {}) {
     const { el, hsva, swatch, swatchColor, swatchColorOpaque, swatchVideo, labels } = this;
     const isImage = this.source === 'image';
@@ -865,7 +904,9 @@ export class Filler {
     swatch.style.border = Filler.isNearWhite(rgb) ? '1px solid #dfe2e3' : 'none';
   }
 
-  // Current color as a string in the dialog's active format, for the copy-to-clipboard button.
+  /**
+   * Current color as a string in the dialog's active format, for the copy-to-clipboard button.
+   */
   getFormattedValue() {
     const { a } = this.hsva;
     const rgb = Filler.hsvToRgb(this.hsva);
@@ -901,7 +942,10 @@ export class Filler {
     });
   }
 
-  // `host` is the light-DOM element attachFloating positions; `root` is its shadow tree — restyle it via `::part(<class-name>)`.
+  /**
+   * @returns {{host: HTMLElement, root: HTMLElement}} `host` is the light-DOM element attachFloating
+   *   positions; `root` is its shadow tree, restylable via `::part(<class-name>)`.
+   */
   createShadowPanel(className) {
     const host = Filler.el('div');
     const shadow = host.attachShadow({ mode: 'open' });
@@ -918,7 +962,11 @@ export class Filler {
     return { host, root };
   }
 
-  // Scroll clamp targets `content` (panel's shadow root), not `panel`, so overflow clipping never eats its own box-shadow.
+  /**
+   * Positions a floating panel next to the field and keeps it clamped on scroll/resize.
+   * Scroll clamp targets `content` (the shadow root), not `panel`, so clipping never eats its own box-shadow.
+   * @returns {Function} Detach callback — removes listeners and the panel itself.
+   */
   attachFloating(panel, content, onClose) {
     const { wrapper } = this;
     Object.assign(panel.style, { position: 'fixed', zIndex: 999999, top: 0, left: 0 });
@@ -1036,7 +1084,9 @@ export class Filler {
     dropdown.append(section(labels.customPaletteTitle, customRow), section(labels.libraryTitle, paletteRow));
   }
 
-  // A palette row: color chip + name + hex (custom entries just repeat hex as both label and value).
+  /**
+   * A palette row: color chip + name + hex (custom entries just repeat hex as both label and value).
+   */
   createPaletteItem(hex, label, removable) {
     const { classes } = this;
     const item = Filler.el('button', { type: 'button', className: classes.paletteSwatch, title: label });
@@ -1212,7 +1262,9 @@ export class Filler {
     this.syncSourceUI();
   }
 
-  // Dialog's top row: grouped source-type buttons on the left, close button on the right (always visible).
+  /**
+   * Dialog's top row: grouped source-type buttons on the left, close button on the right (always visible).
+   */
   buildSourceButtons() {
     const { classes } = this;
     const row = this.dialogSources = Filler.el('div', { className: classes.dialogSources });
@@ -1241,7 +1293,9 @@ export class Filler {
     return row;
   }
 
-  // Split out so update({ labels }) can refresh titles without rebuilding the dialog.
+  /**
+   * Split out so update({ labels }) can refresh titles without rebuilding the dialog.
+   */
   syncSourceLabels() {
     const { dialogSourceButtons, labels } = this;
     if (!dialogSourceButtons) {
@@ -1263,7 +1317,9 @@ export class Filler {
     this.onSourceChange?.(type);
   }
 
-  // Shows/hides the source buttons and solid/image/video panels for the current `sources` and `source`.
+  /**
+   * Shows/hides the source buttons and solid/image/video panels for the current `sources` and `source`.
+   */
   syncSourceUI() {
     const { dialogSourcesGroup, dialogSourceButtons, dialogSolidPanel, dialogImagePanel, dialogVideoPanel, sources, source } = this;
     if (!dialogSourcesGroup) {
@@ -1280,7 +1336,9 @@ export class Filler {
     dialogVideoPanel.hidden = source !== 'video';
   }
 
-  // The 'Image'/'Video' panel: object-fit + rotate toolbar, upload field, plus a type-specific settings section.
+  /**
+   * The 'Image'/'Video' panel: object-fit + rotate toolbar, upload field, plus a type-specific settings section.
+   */
   buildMediaPanel(type) {
     const { classes, labels } = this;
     const { tag, accept, classKeys, labelKeys } = Filler.MEDIA[type];
@@ -1352,14 +1410,19 @@ export class Filler {
     return panel;
   }
 
-  // Current position as a 0-1 fraction, kept as `--percent` for the pure-CSS fill to read.
+  /**
+   * Current position as a 0-1 fraction, kept as `--percent` for the pure-CSS fill to read.
+   */
   static setSliderPercent(input) {
     const min = +input.min;
     const max = +input.max;
     input.style.setProperty('--percent', (+input.value - min) / (max - min));
   }
 
-  // The image panel's correction sliders — one per Filler.MEDIA_FILTERS entry; returns [title, list].
+  /**
+   * The image panel's correction sliders — one per Filler.MEDIA_FILTERS entry.
+   * @returns {[HTMLElement, HTMLElement]} [title, list].
+   */
   buildFilterSliders(type, cls, media) {
     const { labels } = this;
     const slidersTitle = Filler.el('span', { className: cls.slidersTitle, textContent: labels.adjustments });
@@ -1402,7 +1465,10 @@ export class Filler {
     return [slidersTitle, sliders];
   }
 
-  // The video panel's playback settings — one checkbox/select per Filler.VIDEO_SETTINGS entry; returns [title, list].
+  /**
+   * The video panel's playback settings — one checkbox/select per Filler.VIDEO_SETTINGS entry.
+   * @returns {[HTMLElement, HTMLElement]} [title, list].
+   */
   buildVideoSettings(type, cls, media) {
     const { labels } = this;
     const settingsTitle = Filler.el('span', { className: cls.settingsTitle, textContent: labels.videoSettingsTitle });
@@ -1443,7 +1509,9 @@ export class Filler {
     return [settingsTitle, settings];
   }
 
-  // Whether anything (filter sliders, or video settings) has moved off default; gates the reset button.
+  /**
+   * Whether anything (filter sliders, or video settings) has moved off default; gates the reset button.
+   */
   hasMediaAdjustments(type) {
     const media = this[type];
     return type === 'video'
@@ -1480,7 +1548,9 @@ export class Filler {
     this.renderMediaPreview(type);
   }
 
-  // Restores every filter/setting to its default, Figma-style; the uploaded media itself is untouched.
+  /**
+   * Restores every filter/setting to its default, Figma-style; the uploaded media itself is untouched.
+   */
   resetMediaAdjustments(type) {
     const media = this[type];
 
@@ -1511,7 +1581,9 @@ export class Filler {
     this.renderSwatch();
   }
 
-  // Repaints the upload field's preview/placeholder and the media element itself from `this[type]`.
+  /**
+   * Repaints the upload field's preview/placeholder and the media element itself from `this[type]`.
+   */
   renderMediaPreview(type) {
     const { dataUrl, fit, rotation } = this[type];
     const { previewMedia, placeholder, upload, removeButton, sliderInputs } = this.mediaRefs[type];
@@ -1546,7 +1618,9 @@ export class Filler {
     this.onMediaChange?.(type, this[type]);
   }
 
-  // Applies the computed CSS filter to the image dialog preview, and to the swatch while 'image' is active.
+  /**
+   * Applies the computed CSS filter to the image dialog preview, and to the swatch while 'image' is active.
+   */
   applyImageFilter() {
     const filter = Filler.computeMediaFilter(this.image);
     const refs = this.mediaRefs.image;
@@ -1558,7 +1632,10 @@ export class Filler {
     }
   }
 
-  // Applies playback settings from `this.video` and starts/stops playback, since setting the IDL properties alone doesn't restart an already-loaded <video>.
+  /**
+   * Applies playback settings from `this.video` and starts/stops playback — setting the IDL
+   * properties alone doesn't restart an already-loaded <video>.
+   */
   applyVideoSettings(type) {
     const media = this[type];
     const refs = this.mediaRefs[type];
@@ -1589,7 +1666,9 @@ export class Filler {
     }
   }
 
-  // Shared drag handling for the 1D hue/alpha tracks: reports the pointer's 0-1 ratio along the track.
+  /**
+   * Shared drag handling for the 1D hue/alpha tracks: reports the pointer's 0-1 ratio along the track.
+   */
   bindTrackDrag(track, onRatio) {
     const update = (event) => {
       const rect = track.getBoundingClientRect();
@@ -1660,7 +1739,9 @@ export class Filler {
     });
   }
 
-  // Rebuilds the field row from scratch; only on open/format-switch, not every drag tick (would steal focus).
+  /**
+   * Rebuilds the field row from scratch; only on open/format-switch, not every drag tick (would steal focus).
+   */
   renderDialogFields() {
     const fields = this.dialogFields;
     fields.innerHTML = '';
@@ -1722,7 +1803,9 @@ export class Filler {
     this.updateDialogFieldValues();
   }
 
-  // Cheap per-render sync of the field values, skipping whichever one the user is actively editing.
+  /**
+   * Cheap per-render sync of the field values, skipping whichever one the user is actively editing.
+   */
   updateDialogFieldValues() {
     const { format, dialogFieldInputs } = this;
     if (!dialogFieldInputs.length) {
@@ -1772,9 +1855,11 @@ export class Filler {
     this.updateDialogFieldValues();
   }
 
-  // Applies an options patch to an already-mounted instance.
+  /**
+   * Applies an options patch to an already-mounted instance.
+   */
   update(options = {}) {
-    // One-time constructor seeds; a caller like repeaterField()'s "fill" case echoes stale null/undefined values on every re-render, which would clobber this.image/this.video if reapplied here.
+    // One-time constructor seeds; a caller re-rendering with stale null/undefined values here would clobber this.image/this.video.
     const { image, video, source, alpha, ...rest } = options;
 
     const paletteChanged = 'palette' in options;
@@ -1836,7 +1921,9 @@ export class Filler {
 
 document.addEventListener('youla:init', ()=> {
 
-  // Turns `<input type="text">` into a Figma-style fill field: swatch, HEX input, and a transparency field.
+  /**
+   * Turns `<input type="text">` into a Figma-style fill field: swatch, HEX input, and a transparency field.
+   */
   Youla.directive('filler', (el, output) => {
     if (!(el instanceof HTMLInputElement)) {
       console.warn('Youla.js: "u-filler" requires an <input>.');

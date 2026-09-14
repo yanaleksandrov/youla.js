@@ -25,7 +25,10 @@ export function createEvent(eventName, detail = {}) {
  * @returns {string} The modifier found right after "modifierAfter", or "defaultValue".
  */
 export function getNextModifier(modifiers, modifierAfter, defaultValue = '') {
-  return modifiers[modifiers.indexOf(modifierAfter) + 1] || defaultValue;
+  const index = modifiers.indexOf(modifierAfter);
+
+  // "indexOf" returning -1 must not silently read "modifiers[0]" via "-1 + 1" when "modifierAfter" isn't present at all.
+  return index === -1 ? defaultValue : (modifiers[index + 1] || defaultValue);
 }
 
 // Key names/combos for filtering "$event.key" via modifiers, e.g. "@keydown.enter" or "@keyup.ctrl.s".

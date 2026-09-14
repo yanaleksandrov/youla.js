@@ -77,6 +77,11 @@ export default class Component {
 
     this.root          = el;
     this.parent        = parentEl ? parentEl.__x : null;
+    // Populated by every child as it's constructed (see the bottom of this constructor) — lets
+    // refresh() cascade a change down to a descendant whose binding falls through to this
+    // component's scope (see the "scope" getter) instead of owning the property itself.
+    this.children      = [];
+    this.parent?.children.push(this);
     this.name          = (dataExpression ?? expression).trim();
     this.alias         = alias || null;
     this.storageType   = isStorageModifier(modifiers) ? getStorageType(modifiers) : null;
@@ -224,7 +229,7 @@ export default class Component {
         return [attribute];
       }
 
-      additionalHelperVariables ??= {...getForData(el), ...this.getAliasVariables(), ...this.getMagicVariables(el)};
+      additionalHelperVariables ??= this.getHelperVariables(el);
 
       let bindings;
       try {
@@ -251,7 +256,7 @@ export default class Component {
 
         // A "u-*" key that isn't a registered directive (e.g. "u-ref") is read straight off the element instead (see createRefsProxy), so write it as a real attribute since there's none to read yet.
         if (parsed.directive && !getDirective(parsed.directive)) {
-          el.setAttribute(name, isFn ? value.call(self.data) : value);
+          el.setAttribute(name, isFn ? value.call(self.scope) : value);
           return [];
         }
 
@@ -383,14 +388,14 @@ export default class Component {
         }
 
         // Skipped for the vast majority of elements, which carry no u-*/@/: attribute at all (same lazy cost as resolveAttributes()).
-        const additionalHelperVariables = {...getForData(el), ...self.getAliasVariables(), ...self.getMagicVariables(el)};
+        const additionalHelperVariables = self.getHelperVariables(el);
 
         attributes.forEach(attribute => {
           let {directive, event, expression, modifiers, bind} = attribute;
 
           let propExpression;
           if (directive === 'u-prop') {
-            propExpression = generateExpressionForProp(el, self.data, attribute);
+            propExpression = generateExpressionForProp(el, self.scope, attribute);
 
             // If the element we are binding to is a select, a radio, or checkbox we'll listen for the change event instead of the "input" event.
             event = ['select-multiple', 'select', 'checkbox', 'radio'].includes(el.type) || modifiers.includes('lazy')
@@ -444,47 +449,86 @@ export default class Component {
       self.pendingForceRefresh   = false;
       self.pendingForceElements = null;
 
-      domWalk(self.root, el => {
-        const attributes = self.resolveAttributes(el);
-        if (attributes.length === 0) {
-          return;
-        }
-
-        const elementForced = force || !!forceElements?.has(el);
-
-        // An element inside a "u-each" clone only carries its loop variables on "__x_for_data", so resolve them here too or bindings referencing them stop updating after the first render.
-        // Skipped for the vast majority of elements, which carry no u-*/@/: attribute at all (same lazy cost as resolveAttributes()).
-        const additionalHelperVariables = {...getForData(el), ...self.getAliasVariables(), ...self.getMagicVariables(el)};
-
-        attributes.forEach(attribute => {
-          const { directive, bind, name } = attribute;
-
-          if (bind || getDirective(directive)) {
-            // u-prop's tracked dep is only its root identifier, but a write reports the leaf prop — possibly to an ancestor's concernedData via scope — so u-prop always re-syncs on any refresh instead of being gated by "concernedData".
-            const alwaysSync = directive === 'u-prop';
-
-            // Keyed per element/attribute so unrelated bindings can skip computeOutput() entirely — evaluate() runs the expression for real, so a binding with a side effect would otherwise re-run on every refresh regardless of whether its output changes.
-            el.__x_deps ??= {};
-            const previousDeps = el.__x_deps[name];
-
-            if (!elementForced && !alwaysSync && previousDeps && !previousDeps.some(dep => self.concernedData.includes(dep))) {
-              return;
-            }
-
-            const { output, deps } = self.computeOutput(attribute, additionalHelperVariables, { withDeps: true });
-            el.__x_deps[name] = deps;
-
-            if (elementForced || alwaysSync || !previousDeps || self.concernedData.some(dep => deps.includes(dep))) {
-              self.applyAttribute(el, attribute, output, additionalHelperVariables);
-            }
-          }
-        });
-      });
-
-      self.concernedData = [];
+      self.flush(force, forceElements);
     }, 0);
 
     this.scheduleRefresh();
+  }
+
+  /**
+   * Does the actual work of "refresh()": walks this component's own subtree applying whatever
+   * bindings are due, then cascades down to every nested "u-data" child so a binding there that
+   * falls through to this component's own scope (see the "scope" getter) doesn't go stale.
+   * Cascading calls this directly rather than "child.refresh()" so a change reaches every
+   * descendant within the same flush, however deep the nesting — going through "refresh()" again
+   * would chain one extra debounced tick per level.
+   *
+   * @param {boolean} force - Re-runs every binding, in this component and every descendant, regardless of "concernedData".
+   * @param {Set<HTMLElement>} [forceElements] - Elements (in this component only) to re-run regardless of "concernedData".
+   */
+  flush(force, forceElements) {
+    const self = this;
+
+    domWalk(self.root, el => {
+      const attributes = self.resolveAttributes(el);
+      if (attributes.length === 0) {
+        return;
+      }
+
+      const elementForced = force || !!forceElements?.has(el);
+
+      // An element inside a "u-each" clone only carries its loop variables on "__x_for_data", so resolve them here too or bindings referencing them stop updating after the first render.
+      // Skipped for the vast majority of elements, which carry no u-*/@/: attribute at all (same lazy cost as resolveAttributes()).
+      const additionalHelperVariables = self.getHelperVariables(el);
+
+      attributes.forEach(attribute => {
+        const { directive, bind, name } = attribute;
+
+        if (bind || getDirective(directive)) {
+          // u-prop's tracked dep is only its root identifier, but a write reports the leaf prop — possibly to an ancestor's concernedData via scope — so u-prop always re-syncs on any refresh instead of being gated by "concernedData".
+          const alwaysSync = directive === 'u-prop';
+
+          // Keyed per element/attribute so unrelated bindings can skip computeOutput() entirely — evaluate() runs the expression for real, so a binding with a side effect would otherwise re-run on every refresh regardless of whether its output changes.
+          el.__x_deps ??= {};
+          const previousDeps = el.__x_deps[name];
+
+          if (!elementForced && !alwaysSync && previousDeps && !previousDeps.some(dep => self.concernedData.includes(dep))) {
+            return;
+          }
+
+          const { output, deps } = self.computeOutput(attribute, additionalHelperVariables, { withDeps: true });
+          el.__x_deps[name] = deps;
+
+          if (elementForced || alwaysSync || !previousDeps || self.concernedData.some(dep => deps.includes(dep))) {
+            self.applyAttribute(el, attribute, output, additionalHelperVariables);
+          }
+        }
+      });
+    });
+
+    // A nested "u-data" child's binding can fall through to this component's own scope (see the
+    // "scope" getter) instead of owning the property itself — domWalk() above never reaches into
+    // it (it stops at the child's own boundary) and the child's own gating reads its own
+    // "concernedData", which this component's write never touched. Without cascading, such a
+    // binding would apply once at mount and then never again. Forwarding "concernedData" (rather
+    // than forcing) lets each child keep gating its own bindings normally; a child that happens to
+    // own a same-named local property just runs one harmless extra check.
+    self.children = self.children.filter(child => child.root.isConnected);
+
+    if (force) {
+      self.children.forEach(child => child.flush(true));
+    } else if (self.concernedData.length > 0) {
+      self.children.forEach(child => {
+        self.concernedData.forEach(prop => {
+          if (!child.concernedData.includes(prop)) {
+            child.concernedData.push(prop);
+          }
+        });
+        child.flush(false);
+      });
+    }
+
+    self.concernedData = [];
   }
 
   /**
@@ -639,5 +683,18 @@ export default class Component {
    */
   getMagicVariables(el, event) {
     return createMagicVariables(this.root, el, event);
+  }
+
+  /**
+   * Builds the full helper-variable bag for evaluating an attribute/directive on "el": an
+   * enclosing "u-each" clone's loop variables, this component's own data alias, and the magic
+   * variables (see "getMagicVariables()"). Shared by resolveAttributes(), initialize() and
+   * flush() — every site that evaluates an element's own attributes needs the same bag.
+   *
+   * @param {HTMLElement} el - The element the expression is being evaluated for/against.
+   * @returns {object} The merged helper variables.
+   */
+  getHelperVariables(el) {
+    return {...getForData(el), ...this.getAliasVariables(), ...this.getMagicVariables(el)};
   }
 }

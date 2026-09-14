@@ -43,8 +43,11 @@ export const storage = {
     if (!name) return;
 
     if (type === 'cookie') {
+      // The cookie was written under its encodeURIComponent()'d name (see set()) — a name with
+      // any character that encoding escapes (spaces, "{", ":", ...) never appears literally in
+      // "document.cookie", so matching against the raw, un-encoded "name" would never find it.
       let matches = document.cookie.match(new RegExp(
-        "(?:^|; )" + name.replace(/([.$?*|{}()\[\]\\\/+^])/g, '\\$1') + "=([^;]*)"
+        "(?:^|; )" + encodeURIComponent(name).replace(/([.$?*|{}()\[\]\\\/+^])/g, '\\$1') + "=([^;]*)"
       ));
 
       if (matches) {
@@ -69,7 +72,17 @@ export const storage = {
         return;
       }
 
-      return unwrapped !== undefined ? unwrapped : raw;
+      // set() JSON-encodes an object/array value before storing it (TTL-wrapped or not), so it
+      // must be parsed back the same way the cookie branch above does — otherwise an object/array
+      // round-trips as its raw JSON string, and a plain boolean/number round-trips as a string
+      // whose truthiness no longer matches the original value (e.g. castToType(false, "false")
+      // would coerce the non-empty string "false" back to true).
+      const stored = unwrapped !== undefined ? unwrapped : raw;
+      try {
+        return JSON.parse(stored);
+      } catch (e) {
+        return stored;
+      }
     }
   },
   /**
@@ -93,11 +106,18 @@ export const storage = {
       // "samesite" defaults to "Lax" unless the caller overrides it; a bare Object.assign target keeps whichever casing the caller used.
       options = Object.assign({ samesite: 'Lax' }, options);
 
+      // A falsy "value" clears the entry (per this function's own contract, mirrored by the
+      // "local" branch below) rather than writing the literal string "null"/"false"/"0" — expire
+      // it in the past regardless of whatever "expires" the caller passed.
+      if (!value) {
+        options.expires = new Date(0);
+      }
+
       if (options.expires instanceof Date) {
         options.expires = options.expires.toUTCString();
       }
 
-      let updatedCookie = encodeURIComponent(name) + "=" + encodeURIComponent(value);
+      let updatedCookie = encodeURIComponent(name) + "=" + (value ? encodeURIComponent(value) : '');
       for (let optionKey in options) {
         updatedCookie += "; " + optionKey;
         let optionValue = options[optionKey];
@@ -186,7 +206,11 @@ export function castToType(a, value) {
     case 'boolean':
       return Boolean(value);
     case 'object':
-      if (a instanceof Date) {
+      // "typeof null" is "object", so this — not the "undefined" case below — is where a null
+      // reference actually lands; there's no type left to coerce toward, so hand "value" back as-is.
+      if (a === null) {
+        return value;
+      } else if (a instanceof Date) {
         return new Date(value);
       } else if (Array.isArray(a)) {
         return Array.from(value);
@@ -194,9 +218,6 @@ export function castToType(a, value) {
         return Object(value);
       }
     case 'undefined':
-      if (a === null) {
-        return null;
-      }
       return value === 'true' ? true : (value === 'false' ? false : value);
     default:
       return value;

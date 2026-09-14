@@ -164,6 +164,83 @@ Youla.data(&#39;taskList&#39;, () =&gt; ({
   только с <code>$el</code>, <code>$event</code>, <code>$refs</code> и <code>$root</code> поверх них.
 </p>
 
+<h2>Пример: переключение фокуса между полями</h2>
+
+<p>
+  Частый случай для <code>$refs</code> — код подтверждения из нескольких однобуквенных
+  <code>input</code>: ввод символа сразу перекидывает фокус на следующее поле, а вставка из
+  буфера обмена (<code>@paste</code>) разносит вставленную строку по всем полям за один раз,
+  а не только в то поле, куда её вставили.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+    <button type="button" class="example__tab" data-tab="js">JS</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" u-data="pinCode" style="display: flex; gap: .5rem;">
+      <input u-ref="digit-0" type="text" inputmode="numeric" maxlength="1" style="width: 2.5rem; text-align: center;" @input="next(0)" @paste.prevent="paste($event)">
+      <input u-ref="digit-1" type="text" inputmode="numeric" maxlength="1" style="width: 2.5rem; text-align: center;" @input="next(1)" @paste.prevent="paste($event)">
+      <input u-ref="digit-2" type="text" inputmode="numeric" maxlength="1" style="width: 2.5rem; text-align: center;" @input="next(2)" @paste.prevent="paste($event)">
+      <input u-ref="digit-3" type="text" inputmode="numeric" maxlength="1" style="width: 2.5rem; text-align: center;" @input="next(3)" @paste.prevent="paste($event)">
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;div u-data=&quot;pinCode&quot;&gt;
+  &lt;input u-ref=&quot;digit-0&quot; maxlength=&quot;1&quot; @input=&quot;next(0)&quot; @paste.prevent=&quot;paste($event)&quot;&gt;
+  &lt;input u-ref=&quot;digit-1&quot; maxlength=&quot;1&quot; @input=&quot;next(1)&quot; @paste.prevent=&quot;paste($event)&quot;&gt;
+  &lt;input u-ref=&quot;digit-2&quot; maxlength=&quot;1&quot; @input=&quot;next(2)&quot; @paste.prevent=&quot;paste($event)&quot;&gt;
+  &lt;input u-ref=&quot;digit-3&quot; maxlength=&quot;1&quot; @input=&quot;next(3)&quot; @paste.prevent=&quot;paste($event)&quot;&gt;
+&lt;/div&gt;
+</pre>
+  </div>
+  <div class="example__panel" data-panel="js">
+    <pre>
+Youla.data(&#39;pinCode&#39;, () =&gt; ({
+  next(index) {
+    if (this.$refs[`digit-${index}`].value) {
+      this.$refs[`digit-${index + 1}`]?.focus();
+    }
+  },
+  paste(event) {
+    const digits = event.clipboardData.getData(&#39;text&#39;).match(/\d/g)?.slice(0, 4) ?? [];
+
+    digits.forEach((digit, index) =&gt; this.$refs[`digit-${index}`].value = digit);
+    this.$refs[`digit-${digits.length - 1}`]?.focus();
+  },
+}));
+</pre>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('youla:init', () => {
+    Youla.data('pinCode', () => ({
+      next(index) {
+        if (this.$refs[`digit-${index}`].value) {
+          this.$refs[`digit-${index + 1}`]?.focus();
+        }
+      },
+      paste(event) {
+        const digits = event.clipboardData.getData('text').match(/\d/g)?.slice(0, 4) ?? [];
+
+        digits.forEach((digit, index) => this.$refs[`digit-${index}`].value = digit);
+        this.$refs[`digit-${digits.length - 1}`]?.focus();
+      },
+    }));
+  });
+</script>
+
+<p>
+  <code>next()</code> и <code>paste()</code> — обычные методы данных компонента, как
+  <code>highlight()</code> выше: внутри них <code>this.$refs</code> доступен без явной передачи
+  аргументом, поэтому переход к соседнему полю не требует ни <code>document.querySelector</code>,
+  ни хранения ссылок на все четыре <code>input</code> в данных компонента.
+</p>
+
 <h2>Один компонент — одна область видимости</h2>
 
 <p>

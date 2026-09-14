@@ -47,7 +47,7 @@ directive('each', (el, output, attribute, component, additionalHelperVariables =
     dataItems = Array.from({length: +items}, (_, i) => i + 1);
   } else {
     try {
-      dataItems = saferEval(`${items}`, withMagicVariables(component.data, magicVariables), otherVariables);
+      dataItems = saferEval(`${items}`, withMagicVariables(component.scope, magicVariables), otherVariables);
     } catch (error) {
       return;
     }

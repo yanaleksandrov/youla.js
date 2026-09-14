@@ -1,4 +1,4 @@
-@import 'filler-mixins';
+@use 'filler-mixins' as *;
 
 // Light-DOM elements only (`.filler-*`) — dropdown/dialog panels live in a shadow root (styles/filler-panel.scss).
 .filler {

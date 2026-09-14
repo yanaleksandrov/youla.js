@@ -1,8 +1,11 @@
-@import 'normalize.css';
-@import 'styles/ranger';
-@import 'styles/filler';
-@import 'styles/select';
-@import 'styles/pickadate';
+// "@use 'normalize.css'" can't be resolved: unlike "@import", "@use"/"@forward" skip sass-loader's
+// npm-package importer (it only hooks the legacy "@import" resolution), so the package's real file
+// path is spelled out here instead of relying on its "main"/"style" field.
+@use '../node_modules/normalize.css/normalize.css';
+@use 'styles/ranger';
+@use 'styles/filler';
+@use 'styles/select';
+@use 'styles/pickadate';
 
 :root {
 	--paper: #eef3f2;

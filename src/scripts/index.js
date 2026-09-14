@@ -19,16 +19,20 @@ export const Youla = {
   variable,
 
   /**
-   * Boots Youla.js: fires the `youla:init` event (the hook user code uses to register
-   * directives/methods/data-providers), waits for the DOM to be ready, then discovers and
-   * initializes every `u-data` element on the page before watching for components added later.
+   * Boots Youla.js: waits for the DOM to be ready, then fires the `youla:init` event (the hook
+   * user code uses to register directives/methods/data-providers) before discovering and
+   * initializing every `u-data` element on the page and watching for components added later.
+   *
+   * Firing the event only once the DOM is ready — rather than immediately — means every plain
+   * `<script>` on the page has already run by then, so it doesn't matter whether a script
+   * registering a `youla:init` listener is included before or after this one.
    *
    * @returns {Promise<void>}
    */
   start: async function () {
-    document.dispatchEvent(createEvent('youla:init'));
-
     await domReady();
+
+    document.dispatchEvent(createEvent('youla:init'));
 
     this.componentDiscover(el => this.componentInitialize(el));
 

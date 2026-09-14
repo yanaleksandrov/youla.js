@@ -146,6 +146,20 @@ export default class Component {
             self.data[prop] = value;
           } else {
             self.parent.scope[prop] = value;
+
+            // Forwarding the write to the ancestor that owns "prop" triggers only *that*
+            // ancestor's own concernedData/refresh (via its own observeData callback) — this
+            // component's bindings gate their re-run on "self.concernedData", which a write
+            // routed straight to an ancestor's data never touches, and domWalk() stops at this
+            // component's own boundary so the ancestor's refresh() never reaches these elements
+            // either. Without this, a binding here that reads an inherited property (other than
+            // "u-prop", which sidesteps the gate entirely via "alwaysSync") would apply once at
+            // mount and then never again.
+            if (!self._mounting && !self.concernedData.includes(prop)) {
+              self.concernedData.push(prop);
+              self.refresh();
+              self.persist();
+            }
           }
           return true;
         },

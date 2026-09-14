@@ -112,4 +112,34 @@ describe('u-prop inside a nested u-data', () => {
     await tick();
     expect(pwd.value).toBe('GEN2');
   });
+
+  it('keeps syncing a binding inside the nested component itself, not just siblings in the ancestor', async () => {
+    // Regression: writing an inherited property through "scope" (see the "scope" getter's "set"
+    // trap) forwards straight to the ancestor that owns it, so only *that* ancestor's own
+    // concernedData/refresh fired — never this nested component's. A binding declared inside the
+    // nested component (as opposed to a sibling elsewhere in the ancestor, already covered above)
+    // applied once at mount and then silently went stale on every later change.
+    document.body.innerHTML = `
+      <form u-data="{ login: '', password: '' }">
+        <div u-data="{} as p">
+          <input id="login" u-prop="login">
+          <input id="password" u-prop="password">
+          <button id="submit" :disabled="!login.trim() || !password.trim()" disabled></button>
+        </div>
+      </form>
+    `;
+
+    initAll();
+    await tick();
+
+    const submit = document.getElementById('submit');
+    expect(submit.disabled).toBe(true);
+
+    type(document.getElementById('login'), 'yan');
+    await tick();
+    type(document.getElementById('password'), 'S3cr3t!!');
+    await tick();
+
+    expect(submit.disabled).toBe(false);
+  });
 });

@@ -3,12 +3,12 @@
   </div>
 
   <div class="notice-root" u-data="notice" @mouseenter="pause()" @mouseleave="resume()">
-    <div u-each="(item, id) in items" class="notice__item" :class="item.classes()">
+    <div u-each="item in items" class="notice__item" :class="item.classes()">
       <svg class="notice__spinner" viewBox="0 0 24 24" width="24" height="24">
         <circle cx="12" cy="12" r="11" @load="$el.style.animationDuration = item.duration + 'ms'; $el.style.animationDelay = '-' + elapsed(item) + 'ms'"></circle>
       </svg>
       <span class="notice__message" u-text="item.message"></span>
-      <button type="button" class="notice__close" u-show="item.closable" @click="close(id)">×</button>
+      <button type="button" class="notice__close" u-show="item.closable" @click="close(item.id)">×</button>
     </div>
   </div>
 

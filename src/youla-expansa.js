@@ -204,7 +204,7 @@ document.addEventListener('youla:init', ()=> {
     Youla.variable('notice', () => document.querySelector('[u-data="notice"]')?.__x?.data);
 
     Youla.data('notice', () => ({
-      items: {},
+      items: [],
       duration: 7000,
       hovering: false,
       info( message, duration ) {
@@ -226,7 +226,7 @@ document.addEventListener('youla:init', ()=> {
       pause() {
         this.hovering = true;
 
-        Object.values(this.items).forEach(item => {
+        this.items.forEach(item => {
           if ( item.timer ) {
             clearTimeout( item.timer );
             item.timer     = null;
@@ -238,10 +238,10 @@ document.addEventListener('youla:init', ()=> {
       resume() {
         this.hovering = false;
 
-        Object.keys(this.items).forEach( id => this.schedule(id) );
+        this.items.forEach( item => this.schedule(item.id) );
       },
       schedule( id ) {
-        let item = this.items[id];
+        let item = this.items.find( item => item.id === id );
         if ( item && !item.timer && item.duration ) {
           item.startedAt = Date.now();
           item.timer     = setTimeout( () => this.close(id), item.remaining );
@@ -251,22 +251,21 @@ document.addEventListener('youla:init', ()=> {
         return ( item.duration - item.remaining ) + ( item.timer ? Date.now() - item.startedAt : 0 );
       },
       close( id ) {
-        let item = this.items[id];
+        let item = this.items.find( item => item.id === id );
         if ( typeof item !== 'undefined' ) {
           clearTimeout( item.timer );
 
           // u-each only re-renders when "items" itself is reassigned, not on a mutated nested key.
-          this.items = { ...this.items, [id]: { ...item, selectors: [ ...item.selectors, 'hide' ] } };
+          this.items = this.items.map( item => item.id === id ? { ...item, selectors: [ ...item.selectors, 'hide' ] } : item );
 
           setTimeout( () => {
-            let { [id]: omit, ...rest } = this.items;
-            this.items = rest;
+            this.items = this.items.filter( item => item.id !== id );
           }, 1000 )
         }
       },
       add( message, type, duration ) {
         if ( message ) {
-          let timestamp = Date.now();
+          let id = Date.now();
 
           if ( duration === 'auto' ) {
             duration = Math.max( message.length * 70, 1500 );
@@ -275,7 +274,8 @@ document.addEventListener('youla:init', ()=> {
           }
 
           // Spinner is a real inline <svg> (parts/footer.html), animated via CSS, so it can be paused on :hover.
-          this.items = { ...this.items, [timestamp]: {
+          this.items = [ ...this.items, {
+            id: id,
             message: message,
             closable: true,
             selectors: [ type || 'info' ],
@@ -286,10 +286,10 @@ document.addEventListener('youla:init', ()=> {
             classes() {
               return this.selectors.map( x => 'is-' + x ).join(' ')
             },
-          } };
+          } ];
 
           if ( !this.hovering ) {
-            this.schedule(timestamp);
+            this.schedule(id);
           }
         }
       },

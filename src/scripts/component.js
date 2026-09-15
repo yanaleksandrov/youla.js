@@ -6,7 +6,7 @@ import { createEvent, getNextModifier, isKeyModifier, matchesKeyModifiers } from
 import { getForData, createMagicVariables, withMagicVariables, splitMagicVariables } from './magic-variables';
 import { getAttributes, parseAttribute, updateAttribute } from './attributes';
 import { hydrateProps, generateExpressionForProp } from './props';
-import { injectDataProviders } from './data';
+import { injectDataProviders, isDataProvider } from './data';
 import { storage, isStorageModifier, getStorageType, computeExpires } from './storage';
 import { getDirective } from './directives';
 import { parseEachExpression } from './directives/u-each';
@@ -89,7 +89,7 @@ export default class Component {
     this.storageExpire = this.storageType ? getNextModifier(modifiers, this.storageType) : null;
 
     this.rawData = saferEval(this.name || '{}', dataProviderContext);
-    this.rawData = hydrateProps(el, this.rawData, this.parent);
+    this.rawData = hydrateProps(el, this.rawData, this.parent, isDataProvider(this.name) ? this.name : null);
 
     // Rehydrate from whatever was persisted last time, on top of the fresh factory defaults, so new keys added later still show up for visitors with stale storage.
     if (this.storageType) {

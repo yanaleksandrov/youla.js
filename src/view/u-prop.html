@@ -490,6 +490,77 @@ title: "u-prop"
   </div>
 </div>
 
+<p><code>.up</code></p>
+
+<p>
+  Внутри вложенного <code>u-data</code> обычный <code>u-prop</code> заводит незнакомое ему имя как
+  собственное свойство именно этого вложенного компонента — молча, без единого литерала в
+  разметке (подробнее — на странице <a href="/u-data">u-data</a>, в разделе про вложенность).
+  Модификатор <code>.up</code> меняет это: он пропускает собственные данные компонента и сразу
+  ищет владельца на уровень выше, как будто поле объявлено там, а не здесь.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <form class="demo" u-data>
+      <input u-prop="login" placeholder="Логин">
+
+      <div u-data="{ visible: false }">
+        <input :type="visible ? 'text' : 'password'" u-prop.up="password" placeholder="Пароль">
+        <button type="button" @click="visible = !visible" u-text="visible ? 'Скрыть' : 'Показать'"></button>
+      </div>
+
+      <button type="button" :disabled="!login.trim() || !password.trim()">Войти</button>
+    </form>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;form u-data&gt;
+  &lt;input u-prop=&quot;login&quot; placeholder=&quot;Логин&quot;&gt;
+
+  &lt;div u-data=&quot;{ visible: false }&quot;&gt;
+    &lt;input :type=&quot;visible ? 'text' : 'password'&quot; u-prop.up=&quot;password&quot; placeholder=&quot;Пароль&quot;&gt;
+    &lt;button type=&quot;button&quot; @click=&quot;visible = !visible&quot; u-text=&quot;visible ? 'Скрыть' : 'Показать'&quot;&gt;&lt;/button&gt;
+  &lt;/div&gt;
+
+  &lt;button type=&quot;button&quot; :disabled=&quot;!login.trim() || !password.trim()&quot;&gt;Войти&lt;/button&gt;
+&lt;/form&gt;
+</pre>
+  </div>
+</div>
+
+<p>
+  Без <code>.up</code> поле пароля осело бы в данных вложенного <code>div</code> (том, что
+  отвечает только за <code>visible</code>), и кнопка снаружи никогда бы не увидела
+  <code>password</code> — ровно та ловушка, что разобрана на странице <a href="/u-data">u-data</a>.
+  С <code>.up</code> ничего предобъявлять на родителе не нужно: значение само найдёт (или заведёт)
+  себе место на уровень выше.
+</p>
+
+<p>
+  «На уровень выше» — не обязательно родитель в буквальном смысле. Если родитель тоже не объявляет
+  это имя, а объявляет его его собственный родитель (или ещё выше) — запись уйдёт именно туда,
+  по тому же правилу наследования scope, что уже используется для обычного чтения/записи (см.
+  <a href="/u-data">u-data</a>, «Вложенные u-data»). Только если имя не объявлено вообще нигде —
+  оно заведётся на ближайшем уровне выше текущего компонента, а не на самом верхнем корневом
+  <code>u-data</code> страницы.
+</p>
+
+<blockquote>
+  <p>Осторожно с уже занятым именем наверху</p>
+  <p>
+    <code>.up</code> просто пишет по имени — он не знает и не проверяет, что там было раньше.
+    Если у компонента, куда попадает запись, уже есть метод или значение с этим именем, оно будет
+    молча перезаписано. То же самое, что случилось бы при обычном <code>u-prop</code> на уже
+    объявленное родителем имя — просто с <code>.up</code> это происходит на компоненте, которого
+    не видно прямо в разметке этого поля.
+  </p>
+</blockquote>
+
 <p>
   Значение поля обычно выводится через <a href="/u-text"><code>u-text</code></a>, как в примерах
   выше. Полный практический пример со связкой <code>u-prop</code>, <code>u-each</code> и

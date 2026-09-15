@@ -9,7 +9,11 @@ import { storage, isStorageModifier, getStorageType, castToType } from './storag
  * Prepares every `u-prop` field under `rootElement`: assigns a name, seeds a default, syncs the
  * field's DOM value into data, and restores any persisted `.local`/`.cookie` value.
  * Writes go through `parent.scope` when an ancestor `u-data` already owns the key, so they
- * never shadow it with a same-named local property.
+ * never shadow it with a same-named local property. The `.up` modifier forces this even when no
+ * ancestor owns the key yet — see the `owner` line below. Note `.up` only forces the *lookup* to
+ * start one level higher; the eventual write still lands wherever `Component#scope`'s own `set`
+ * trap would put an undeclared key (the nearest ancestor that already owns it, or — if none do —
+ * the immediate parent itself, not the page's outermost root).
  *
  * @param {HTMLElement} rootElement - The component's root element.
  * @param {Object} data - The component's raw data object, mutated in place.
@@ -37,7 +41,15 @@ export function hydrateProps(rootElement, data, parent) {
       return;
     }
 
-    const owner = parent && key in parent.scope ? parent.scope : data;
+    // ".up" skips this component's own data even when nothing up the chain has declared the key
+    // yet — same target `key in parent.scope` would resolve to once an ancestor does declare it,
+    // just without waiting for that. No-op with no parent (nothing to defer to). Note this only
+    // forces ownership to be decided starting at `parent.scope` instead of `data`; it doesn't
+    // force the write past the nearest owner that scope resolution actually finds (see the
+    // function doc comment above).
+    const owner = modifiers.includes('up')
+      ? (parent ? parent.scope : data)
+      : (parent && key in parent.scope ? parent.scope : data);
 
     if (owner[key] === undefined) {
       let fields = [];

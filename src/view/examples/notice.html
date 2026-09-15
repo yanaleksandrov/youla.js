@@ -38,12 +38,12 @@
 
 &lt;!-- это в footer --&gt;
 &lt;div class=&quot;notice-root&quot; u-data=&quot;notice&quot; @mouseenter=&quot;pause()&quot; @mouseleave=&quot;resume()&quot;&gt;
-  &lt;div u-each=&quot;(item, id) in items&quot; class=&quot;notice__item&quot; :class=&quot;item.classes()&quot;&gt;
+  &lt;div u-each=&quot;item in items&quot; class=&quot;notice__item&quot; :class=&quot;item.classes()&quot;&gt;
     &lt;svg class=&quot;notice__spinner&quot; viewBox=&quot;0 0 24 24&quot; width=&quot;24&quot; height=&quot;24&quot;&gt;
       &lt;circle cx=&quot;12&quot; cy=&quot;12&quot; r=&quot;11&quot; @load=&quot;$el.style.animationDuration = item.duration + 'ms'; $el.style.animationDelay = '-' + elapsed(item) + 'ms'&quot;&gt;&lt;/circle&gt;
     &lt;/svg&gt;
     &lt;span class=&quot;notice__message&quot; u-text=&quot;item.message&quot;&gt;&lt;/span&gt;
-    &lt;button type=&quot;button&quot; class=&quot;notice__close&quot; u-show=&quot;item.closable&quot; @click=&quot;close(id)&quot;&gt;×&lt;/button&gt;
+    &lt;button type=&quot;button&quot; class=&quot;notice__close&quot; u-show=&quot;item.closable&quot; @click=&quot;close(item.id)&quot;&gt;×&lt;/button&gt;
   &lt;/div&gt;
 &lt;/div&gt;
 </pre>
@@ -117,11 +117,11 @@
         Необязательный третий аргумент (есть у всех пяти методов) переопределяет время жизни для
         этого конкретного уведомления: число — миллисекунды, <code>'auto'</code> — время
         считается по длине сообщения, <code>0</code> — уведомление не закроется само, только по
-        клику на «×» или явным <code>close(id)</code>
+        клику на «×» или явным <code>close(item.id)</code>
       </td>
     </tr>
     <tr>
-      <td><code>$notice.close(id)</code></td>
+      <td><code>$notice.close(item.id)</code></td>
       <td>Закрыть конкретное уведомление раньше времени — тот же вызов, что уже стоит на кнопке «×» в карточке</td>
     </tr>
     <tr>
@@ -142,8 +142,8 @@
 <blockquote>
   <p>Что нельзя убирать при кастомизации разметки</p>
   <p>
-    Меняя разметку карточки, сохраните перебор <code>u-each="(item, id) in items"</code>, вызов
-    <code>close(id)</code> на кнопке закрытия и атрибуты <code>@mouseenter="pause()"</code> /
+    Меняя разметку карточки, сохраните перебор <code>u-each="item in items"</code>, вызов
+    <code>close(item.id)</code> на кнопке закрытия и атрибуты <code>@mouseenter="pause()"</code> /
     <code>@mouseleave="resume()"</code> на контейнере — без них уведомления перестанут закрываться
     (и по кнопке, и по таймеру), а пауза при наведении курсора не будет работать.
   </p>

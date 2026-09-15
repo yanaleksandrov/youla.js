@@ -310,11 +310,15 @@ document.addEventListener('youla:init', () => {
       case 'removeAttribute':
         target.removeAttribute(value || '');
         break;
-      case 'notify':
-        if (value) {
-          document.dispatchEvent(new CustomEvent('ajax:notify', { detail: value, bubbles: true }));
+      case 'notify': {
+        // Value is a message string, or "[message, type, duration]" to override the defaults.
+        const notice = document.querySelector('[u-data="notice"]')?.__x?.data;
+        if (value && notice) {
+          const [message, type = 'info', duration] = Array.isArray(value) ? value : [value];
+          notice.add(message, type, duration);
         }
         break;
+      }
     }
   }
 });

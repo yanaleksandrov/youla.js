@@ -4,9 +4,7 @@ import '../scripts/directives/u-prop';
 import '../scripts/directives/u-show';
 import '../scripts/directives/u-text';
 
-// jsdom doesn't implement CSS.escape() (a real browser always does) — polyfilled here only so the
-// checkbox-array branch of hydrateProps() (which calls it) is actually exercised under vitest,
-// per https://developer.mozilla.org/en-US/docs/Web/API/CSS/escape_static, condensed.
+// jsdom has no CSS.escape() — polyfilled so hydrateProps()'s checkbox-array branch is exercised.
 if (typeof CSS === 'undefined' || !CSS.escape) {
   globalThis.CSS = globalThis.CSS || {};
   globalThis.CSS.escape = (value) => String(value).replace(/[^a-zA-Z0-9_-]/g, (ch) => `\\${ch}`);
@@ -188,12 +186,7 @@ describe('u-prop.up', () => {
   });
 
   it('auto-vivifies on the IMMEDIATE parent — not the topmost root — when nothing anywhere declares the key', async () => {
-    // ".up" only forces ownership to start the lookup one level higher than usual (skipping this
-    // component's own data). It does not force the eventual write all the way to the root: the
-    // scope Proxy's own "set" trap (component.js) claims an undeclared key locally on whichever
-    // component the write lands on, so with nothing declared anywhere it stops at the immediate
-    // parent, not the outermost ancestor. It only reaches further up when some ancestor in
-    // between already owns the key (see the "walks past an intermediate component" test above).
+    // ".up" only shifts where the lookup starts; Component#scope's own "set" trap still claims an undeclared key on the nearest component it reaches, not the outermost root.
     document.body.innerHTML = `
       <main u-data="{}">
         <div u-data="{}">
@@ -429,11 +422,7 @@ describe('u-prop.up', () => {
 });
 
 describe('u-prop.up — conflict scenarios', () => {
-  // Not specific to ".up": ANY u-prop (hoisted or not) always syncs the DOM element's current
-  // value into data at mount — see hydrateProps()'s unconditional saferEval(generateExpressionForProp
-  // (...)) call, which runs regardless of whether the owner already had a value. Documented here
-  // because it bites harder with ".up": the ancestor whose value gets silently blanked is often a
-  // component you don't otherwise control from this nested field's markup.
+  // Not ".up"-specific: any u-prop always syncs the DOM element's current value into data at mount, overwriting an existing default.
   it('an empty field mounts over — and blanks — a non-empty default already declared on the target ancestor', async () => {
     document.body.innerHTML = `
       <main u-data="{ password: 'preset' }">
@@ -451,8 +440,7 @@ describe('u-prop.up — conflict scenarios', () => {
     expect(document.getElementById('password').value).toBe('');
   });
 
-  // Give the field a matching "value" attribute (or set .value before Youla.start()/componentInitialize
-  // runs) if the ancestor's initial value is meant to survive — same rule as plain, non-hoisted u-prop.
+  // Give the field a matching "value" attribute if the ancestor's initial value must survive.
   it('...but survives if the field itself carries the matching DOM value at mount', async () => {
     document.body.innerHTML = `
       <main u-data="{ password: 'preset' }">
@@ -469,10 +457,7 @@ describe('u-prop.up — conflict scenarios', () => {
     expect(main.__x.data.password).toBe('preset');
   });
 
-  // ".up" resolves ownership purely by key name — it has no idea the name is already taken by
-  // something other than a plain string field. Since Component#scope's "set" trap writes through
-  // unconditionally, a method (or object, array, anything) already living under that name on the
-  // target ancestor is silently overwritten by the field's string value.
+  // ".up" resolves ownership purely by key name — a method already living under that name is silently overwritten.
   it('silently clobbers a pre-existing method of the same name on the target ancestor', async () => {
     document.body.innerHTML = `
       <main u-data="{ password(){ return 'original method' } }">
@@ -486,7 +471,7 @@ describe('u-prop.up — conflict scenarios', () => {
     await tick();
 
     const main = document.querySelector('main');
-    // Mount alone already replaced the method with the field's blank sync — see the previous test.
+    // Mount already replaced the method with the field's blank sync (see the previous test).
     expect(typeof main.__x.data.password).toBe('string');
 
     type(document.getElementById('password'), 'clobbered');
@@ -495,12 +480,7 @@ describe('u-prop.up — conflict scenarios', () => {
     expect(main.__x.data.password).toBe('clobbered');
   });
 
-  // Two ".up" fields that happen to target the same key on the same ancestor share one slot —
-  // by design (this is how you'd deliberately mirror one value across two widgets), but a real
-  // footgun if the name collision is accidental rather than intended. Last write wins; neither
-  // field is a stable "keyed" source, and the field NOT last edited goes stale until it is
-  // rendered again (u-prop resyncs on any refresh, so it *would* catch up on the next unrelated
-  // change — this test only checks the write itself, not a later resync).
+  // Two ".up" fields targeting the same key share one slot — last write wins, by design or by accident.
   it('two independent ".up" fields that accidentally share a key overwrite the same ancestor slot', async () => {
     document.body.innerHTML = `
       <main u-data="{}">
@@ -527,13 +507,8 @@ describe('u-prop.up — conflict scenarios', () => {
     expect(main.__x.data.value).toBe('from-b');
   });
 
-  // Nested u-data inside a u-each clone never gets its own Component at all — a separate,
-  // pre-existing gap unrelated to ".up" (see write-up): u-each clones bypass both componentDiscover's
-  // initial sweep and componentWatch's MutationObserver (which only inspects the directly-added
-  // node, not its descendants), and Component#initialize()'s own domWalk deliberately stops at any
-  // nested "u-data" boundary. So ".up" (like every other directive) is simply inert there — this
-  // test pins that down rather than silently relying on undefined behavior.
-  it('is inert inside a u-each clone\'s nested u-data (pre-existing gap, not ".up"-specific)', async () => {
+  // A u-each clone's nested u-data used to never get a Component at all — fixed in componentWatch() (full coverage in dynamic-nested-components.test.js); this only checks ".up" once it genuinely exists.
+  it('.up works once a u-each clone\'s nested u-data is actually initialized', async () => {
     document.body.innerHTML = `
       <main u-data="{ rows: [1, 2] }">
         <li u-each="row in rows">
@@ -545,13 +520,17 @@ describe('u-prop.up — conflict scenarios', () => {
     `;
 
     initAll();
+    Youla.componentWatch(el => Youla.componentInitialize(el));
     await tick();
 
     const clones = document.querySelectorAll('div.clone');
-    // One extra "phantom" clone is the u-each template element itself (CSS-hidden via [u-each],
-    // but never removed from the DOM) — it predates any cloning and so IS a real, working
-    // component, unlike the two genuine rendered rows after it.
-    const real = Array.from(clones).slice(1);
-    expect(real.every(el => el.__x === undefined)).toBe(true);
+    expect(clones.length).toBeGreaterThan(0);
+    clones.forEach(clone => expect(clone.__x).toBeTruthy());
+
+    const inputs = document.querySelectorAll('input.f');
+    type(inputs[0], 'hoisted');
+    await tick();
+
+    expect(document.querySelector('main').__x.data.shared).toBe('hoisted');
   });
 });

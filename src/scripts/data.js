@@ -29,3 +29,15 @@ export function injectDataProviders(root, obj = {}) {
   });
   return obj;
 }
+
+/**
+ * Checks whether `name` is a registered `Youla.data()` provider — so a component can tell whether
+ * its own `u-data="name"` resolved to one, rather than to an unrelated plain expression that
+ * happens to share the same bare word.
+ *
+ * @param {string} name - The bare identifier to check (e.g. a `u-data` expression's own name, with any `as alias` already stripped).
+ * @returns {boolean} True if `name` is a registered provider.
+ */
+export function isDataProvider(name) {
+  return !!name && Object.prototype.hasOwnProperty.call(datas, name);
+}

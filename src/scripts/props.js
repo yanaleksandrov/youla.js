@@ -8,19 +8,14 @@ import { storage, isStorageModifier, getStorageType, castToType } from './storag
 /**
  * Prepares every `u-prop` field under `rootElement`: assigns a name, seeds a default, syncs the
  * field's DOM value into data, and restores any persisted `.local`/`.cookie` value.
- * Writes go through `parent.scope` when an ancestor `u-data` already owns the key, so they
- * never shadow it with a same-named local property. The `.up` modifier forces this even when no
- * ancestor owns the key yet — see the `owner` line below. Note `.up` only forces the *lookup* to
- * start one level higher; the eventual write still lands wherever `Component#scope`'s own `set`
- * trap would put an undeclared key (the nearest ancestor that already owns it, or — if none do —
- * the immediate parent itself, not the page's outermost root).
  *
  * @param {HTMLElement} rootElement - The component's root element.
  * @param {Object} data - The component's raw data object, mutated in place.
- * @param {import('./component').default} [parent] - This component's own parent, if any (see `Component#parent`/`#scope`).
+ * @param {import('./component').default} [parent] - This component's own parent, if any.
+ * @param {string|null} [providerName] - The `Youla.data()` provider name `rootElement` resolved to, if any.
  * @returns {Object} `data`, for convenience (it's also mutated directly).
  */
-export function hydrateProps(rootElement, data, parent) {
+export function hydrateProps(rootElement, data, parent, providerName = null) {
   domWalk(rootElement, el => getAttributes(el).filter(({directive}) => directive === 'u-prop').forEach(attribute => {
     let {expression, modifiers} = attribute;
 
@@ -41,17 +36,17 @@ export function hydrateProps(rootElement, data, parent) {
       return;
     }
 
-    // ".up" skips this component's own data even when nothing up the chain has declared the key
-    // yet — same target `key in parent.scope` would resolve to once an ancestor does declare it,
-    // just without waiting for that. No-op with no parent (nothing to defer to). Note this only
-    // forces ownership to be decided starting at `parent.scope` instead of `data`; it doesn't
-    // force the write past the nearest owner that scope resolution actually finds (see the
-    // function doc comment above).
+    // ".up" forces ownership to start at parent.scope, even if no ancestor has declared the key yet.
     const owner = modifiers.includes('up')
       ? (parent ? parent.scope : data)
       : (parent && key in parent.scope ? parent.scope : data);
 
     if (owner[key] === undefined) {
+      // Narrow on purpose: many providers (e.g. "step") are meant to be extended with arbitrary fields — only warn when the field's own name echoes the provider's name, which is never intentional.
+      if (providerName && owner === data && key === providerName) {
+        console.warn(`Youla.js: u-prop="${expression}" on <${rootElement.tagName.toLowerCase()} u-data="${providerName}"> names its field after the very provider it's nested in — "${providerName}" (registered via Youla.data()) never declared a "${key}" field itself, so this likely wasn't meant to invoke that provider at all. Check its own fields for what you meant (e.g. "value"), or rename this field if the collision is accidental.`);
+      }
+
       let fields = [];
       if (el.type === 'checkbox') {
         // CSS.escape() doesn't cover the quoted attribute-value part, so "/\ in "expression" is escaped by hand.

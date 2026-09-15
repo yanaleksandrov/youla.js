@@ -51,19 +51,25 @@ export const Youla = {
   },
 
   /**
-   * Watches `document.body` for elements added after the initial page load
-   * (e.g. markup injected via AJAX) and invokes `callback` for any new
-   * element carrying `u-data`, so it gets initialized automatically.
+   * Watches `document.body` for elements added after the initial page load and invokes `callback`
+   * for any new element carrying `u-data`, including a `u-data` nested inside an added subtree
+   * (e.g. `u-each`'s clones), not just the subtree's own root.
    *
-   * @param {Function} callback - Called once per newly-added `u-data` element.
+   * @param {Function} callback - Called once per newly-added `u-data` element, in document order.
    * @returns {void}
    */
   componentWatch: callback => {
     let observer = new MutationObserver(mutations =>
       mutations.forEach(mutation =>
         Array.from(mutation.addedNodes)
-          .filter(node => node.nodeType === 1 && hasDirective(node, 'u-data'))
-          .forEach(callback)
+          .filter(node => node.nodeType === 1)
+          .forEach(node => {
+            const descendants = Array.from(node.querySelectorAll('*')).filter(el => hasDirective(el, 'u-data'));
+            const found       = hasDirective(node, 'u-data') ? [node, ...descendants] : descendants;
+
+            // "!el.__x" guards against acting twice on an element reported in more than one mutation.
+            found.filter(el => !el.__x).forEach(callback);
+          })
       )
     );
 

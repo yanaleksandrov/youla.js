@@ -284,7 +284,7 @@ document.addEventListener('youla:init', ()=> {
             startedAt: Date.now(),
             timer: null,
             classes() {
-              return this.selectors.map( x => 'notice__item--' + x ).join(' ')
+              return this.selectors.map( x => 'is-' + x ).join(' ')
             },
           } };
 

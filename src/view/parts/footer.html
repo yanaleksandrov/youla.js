@@ -2,22 +2,6 @@
     </div>
   </div>
 
-  <div class="notice-root" u-data="notice" @mouseenter="pause()" @mouseleave="resume()">
-    <div u-each="(item, id) in items" class="notice__item" :class="item.classes()">
-      <svg class="notice__spinner" viewBox="0 0 24 24" width="24" height="24">
-        <circle cx="12" cy="12" r="11" @load="$el.style.animationDuration = item.duration + 'ms'; $el.style.animationDelay = '-' + elapsed(item) + 'ms'"></circle>
-      </svg>
-      <span class="notice__message" u-text="item.message"></span>
-      <button type="button" class="notice__close" u-show="item.closable" @click="close(id)">×</button>
-    </div>
-  </div>
-
-  <div class="dialog" u-data="dialog" @keydown.esc.window="close()">
-    <div u-each="entry in stack" class="dialog-backdrop" @click="close(entry.id)">
-      <div class="dialog-window" role="dialog" aria-modal="true" @click.stop="null" u-html="entry.content"></div>
-    </div>
-  </div>
-
   <script>
     document.querySelectorAll('.document__menu-link').forEach(function (link) {
       if (link.getAttribute('href') === window.location.pathname) {

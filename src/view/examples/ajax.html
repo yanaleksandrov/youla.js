@@ -151,8 +151,9 @@ $ajax.delete(route, payload, onProgress, options)
     <tr>
       <td><code>notify</code></td>
       <td>
-        диспетчеризует <code>ajax:notify</code> с текстом уведомления — сам метод очередь
-        уведомлений не рисует, см. сценарий 3 ниже
+        если на странице есть элемент <code>u-data="notice"</code> со своей очередью уведомлений,
+        добавляет в неё запись — значение: строка с текстом, либо
+        <code>[текст, тип, длительность]</code>
       </td>
     </tr>
   </tbody>
@@ -181,7 +182,6 @@ $ajax.delete(route, payload, onProgress, options)
             append: `<li>${(body.get('text') || '').replace(/</g, '&lt;')}</li>`,
           },
           { target: '#comment-input', value: '' },
-          { 'notify:400': 'Комментарий опубликован' },
         ],
       }),
       '/demo/echo': () => ({ data: 'исходный ответ сервера' }),
@@ -235,17 +235,6 @@ $ajax.delete(route, payload, onProgress, options)
       detail.resolve(`перехвачено: «${detail.data}»`);
     });
 
-    // Мини-очередь уведомлений — такая же, как в примере /toasts, только подписана
-    // на событие ajax:notify вместо собственного метода notify().
-    Youla.data('ajaxToasts', () => ({
-      items: [],
-      counter: 0,
-      onNotify(message) {
-        const id = ++this.counter;
-        this.items.push({ id, message });
-        setTimeout(() => this.items.splice(this.items.findIndex(item => item.id === id), 1), 3000);
-      },
-    }));
   });
 </script>
 
@@ -255,14 +244,6 @@ $ajax.delete(route, payload, onProgress, options)
   .example-ajax progress { display: block; width: 100%; margin-top: .5rem; }
   .example-ajax ul { margin: .5rem 0; padding-left: 1.25rem; }
   .example-ajax + .example-ajax { margin-top: 1.5rem; }
-  .ajax-toast {
-    display: inline-block;
-    margin-top: .5rem;
-    padding: .35rem .75rem;
-    border: 1px solid var(--line);
-    border-radius: .35rem;
-    background: var(--surface);
-  }
 </style>
 
 <h2>Сценарий 1: обновление фрагмента одним действием</h2>
@@ -335,25 +316,17 @@ $ajax.delete(route, payload, onProgress, options)
   </div>
 </div>
 
-<h2>Сценарий 3: форма, список и уведомление в одном ответе</h2>
+<h2>Сценарий 3: форма и список в одном ответе</h2>
 
 <p>
   Один ответ сервера может нести сразу несколько независимых действий с разными целями и
-  задержками: тут это добавление пункта в список, очистка поля формы и уведомление — оно
-  показывается на 400мс позже остальных, чтобы не мигать одновременно со списком.
-</p>
-
-<p>
-  Само уведомление показывает соседний компонент <code>ajaxToasts</code>, который ничего не знает
-  про <code>$ajax</code> — он просто слушает <code>ajax:notify</code> через модификатор
-  <code>.document</code>, как обычное DOM-событие.
+  задержками: тут это добавление пункта в список и очистка поля формы.
 </p>
 
 <div class="example">
   <div class="example__tabs">
     <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
     <button type="button" class="example__tab" data-tab="html">HTML</button>
-    <button type="button" class="example__tab" data-tab="js">JS</button>
   </div>
   <div class="example__panel is-active" data-panel="preview">
     <div class="demo example-ajax">
@@ -364,12 +337,6 @@ $ajax.delete(route, payload, onProgress, options)
         </form>
       </div>
       <ul id="comment-list"></ul>
-
-      <div @ajax:notify.document="onNotify($event.detail)" u-data="ajaxToasts">
-        <div u-each="item in items" class="ajax-toast">
-          <span u-text="item.message"></span>
-        </div>
-      </div>
     </div>
   </div>
   <div class="example__panel" data-panel="html">
@@ -381,25 +348,6 @@ $ajax.delete(route, payload, onProgress, options)
   &lt;/form&gt;
 &lt;/div&gt;
 &lt;ul id=&quot;comment-list&quot;&gt;&lt;/ul&gt;
-
-&lt;div @ajax:notify.document=&quot;onNotify($event.detail)&quot; u-data=&quot;ajaxToasts&quot;&gt;
-  &lt;div u-each=&quot;item in items&quot; class=&quot;ajax-toast&quot;&gt;
-    &lt;span u-text=&quot;item.message&quot;&gt;&lt;/span&gt;
-  &lt;/div&gt;
-&lt;/div&gt;
-</pre>
-  </div>
-  <div class="example__panel" data-panel="js">
-    <pre>
-Youla.data('ajaxToasts', () =&gt; ({
-  items: [],
-  counter: 0,
-  onNotify(message) {
-    const id = ++this.counter;
-    this.items.push({ id, message });
-    setTimeout(() =&gt; this.items.splice(this.items.findIndex(item =&gt; item.id === id), 1), 3000);
-  },
-}));
 </pre>
   </div>
 </div>

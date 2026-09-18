@@ -1,19 +1,22 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { Youla } from '../scripts/index';
-import '../youla-expansa';
 
 /**
- * Regression: mounting a "u-step" wizard pushes onto the reactive "steps" array as a side
- * effect of the step directive's own first run (see getStep() in youla-expansa.js). That array
- * mutation used to force-refresh the whole component right after mount (Component#observeData),
- * re-running every directive on the page a second time for nothing — see console.log(4324234)
- * in youla-select.js, which used to fire twice for exactly this reason.
+ * Regression: a directive that pushes onto reactive data as a side effect of its own first run
+ * used to force-refresh the whole component right after mount (Component#observeData), re-running
+ * every directive on the page a second time for nothing — see console.log(4324234) in
+ * youla-select.js, which used to fire twice for exactly this reason.
  */
 function mountWizard() {
+  Youla.data('mutating', () => ({ log: [] }));
+  Youla.directive('mutate', (el, output, attribute, component) => {
+    component.data.log.push(el.id);
+  });
+
   document.body.innerHTML = `
-    <form u-data="step">
-      <div id="step1" u-step="true" u-spy></div>
-      <div id="step2" hidden u-step="true"></div>
+    <form u-data="mutating">
+      <div id="step1" u-mutate u-spy></div>
+      <div id="step2" hidden u-mutate></div>
     </form>
   `;
   return { form: document.querySelector('form') };

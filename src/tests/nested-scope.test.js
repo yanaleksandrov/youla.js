@@ -58,10 +58,9 @@ describe('u-prop inside a nested u-data', () => {
   });
 
   it('reflects a programmatic write back onto the field once the nested component itself re-renders (u-prop reads through "scope", not just "data")', async () => {
-    // "tick" mimics the real password provider's own local state (see youla-expansa.js's
-    // generate(), which also mutates local fields as a side effect) — that local write is what
-    // wakes the nested component's own refresh(); a pure ancestor-only write wouldn't (see
-    // Component#refresh(): each component only walks its own subtree).
+    // "tick" mimics a provider that mutates its own local fields as a side effect of another
+    // write — that local write is what wakes the nested component's own refresh(); a pure
+    // ancestor-only write wouldn't (see Component#refresh(): each component only walks its own subtree).
     document.body.innerHTML = `
       <form u-data="{ user: {} }">
         <div u-data="{ tick: 0 } as p">

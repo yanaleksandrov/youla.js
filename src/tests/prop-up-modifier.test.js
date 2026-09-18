@@ -76,7 +76,7 @@ describe('u-prop.up', () => {
   });
 
   it('does not pollute the provider-shaped local data with the hoisted key (the password/value mixup)', async () => {
-    // Mirrors youla-expansa.js's real Youla.data('password', ...) shape.
+    // Mimics a named provider shaped like a real password-strength one.
     Youla.data('password', () => ({
       value: '',
       visible: false,

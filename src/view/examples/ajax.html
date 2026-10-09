@@ -19,24 +19,95 @@
 <h2>Как это устроено</h2>
 
 <p>
-  <code>route</code> — единственный обязательный аргумент — играет две роли сразу. Во-первых, это
-  путь запроса: он добавляется к <code>Youla.baseURL</code>, либо используется как есть, если это
-  уже полный URL (<code>http(s)://...</code>). Во-вторых, это имя события
-  <code>ajax:route</code>, которое диспетчеризуется на <code>document</code>, когда ответ
-  приходит — на него может подписаться любая другая часть страницы.
+  <code>route</code> — путь запроса (добавляется к <code>baseURL</code>, если это не полный
+  <code>http(s)://</code> URL) и одновременно имя события <code>ajax:route</code>, которое
+  диспетчеризуется на <code>document</code>, когда приходит успешный ответ.
 </p>
 
+<h2>Настройка</h2>
+
 <p>
-  <code>Youla.baseURL</code> — пустая строка по умолчанию (маршруты используются как есть,
-  относительно текущей страницы); задать её можно один раз, в своём же обработчике
-  <code>youla:init</code>:
+  Расширение настраивается объектом <code>Youla.ajax</code>. Его можно задать в любой момент —
+  настройки читаются при каждом запросе и накладываются на значения по умолчанию.
 </p>
 
 <pre>
 document.addEventListener('youla:init', () =&gt; {
-  Youla.baseURL = 'https://api.example.com';
+  Youla.ajax = {
+    baseURL: 'https://api.example.com',
+    csrf: { cookie: 'csrf_token', header: 'X-CSRF-Token' },
+    errors: { field: '[data-error="{name}"]', wrapper: '.field' },
+  };
 });
 </pre>
+
+<table>
+  <tbody>
+    <tr>
+      <th>Опция</th>
+      <th>По умолчанию</th>
+      <th>Назначение</th>
+    </tr>
+    <tr>
+      <td><code>baseURL</code></td>
+      <td><code>''</code></td>
+      <td>префикс для относительных <code>route</code></td>
+    </tr>
+    <tr>
+      <td><code>credentials</code></td>
+      <td><code>true</code></td>
+      <td>отправлять ли куки (<code>withCredentials</code>)</td>
+    </tr>
+    <tr>
+      <td><code>timeout</code></td>
+      <td><code>0</code></td>
+      <td>таймаут запроса в мс, <code>0</code> — без ограничения</td>
+    </tr>
+    <tr>
+      <td><code>headers</code></td>
+      <td><code>{}</code></td>
+      <td>заголовки для всех запросов</td>
+    </tr>
+    <tr>
+      <td><code>csrf.cookie</code> / <code>csrf.header</code></td>
+      <td><code>'XSRF-TOKEN'</code> / <code>'X-XSRF-TOKEN'</code></td>
+      <td>
+        имя куки с токеном и заголовка, в котором он отправляется для мутирующих запросов на тот же
+        origin; <code>csrf: false</code> отключает
+      </td>
+    </tr>
+    <tr>
+      <td><code>errors.field</code></td>
+      <td><code>'[name="{name}"]'</code></td>
+      <td>селектор поля для ошибки, <code>{name}</code> заменяется ключом из ответа</td>
+    </tr>
+    <tr>
+      <td><code>errors.wrapper</code></td>
+      <td><code>null</code></td>
+      <td>селектор обёртки поля (через <code>closest</code>), получающей <code>invalidClass</code>; по умолчанию само поле</td>
+    </tr>
+    <tr>
+      <td><code>errors.anchor</code></td>
+      <td><code>null</code></td>
+      <td>селектор элемента (через <code>closest</code>), после которого вставляется текст ошибки; по умолчанию само поле</td>
+    </tr>
+    <tr>
+      <td><code>errors.messageClass</code></td>
+      <td><code>'ajax-error'</code></td>
+      <td>класс элемента с текстом ошибки</td>
+    </tr>
+    <tr>
+      <td><code>errors.invalidClass</code></td>
+      <td><code>'is-invalid'</code></td>
+      <td>класс невалидного поля или его обёртки; <code>errors: false</code> отключает ошибки у полей</td>
+    </tr>
+    <tr>
+      <td><code>messages.failed</code> / <code>messages.network</code></td>
+      <td>английские тексты</td>
+      <td>уведомления об ошибке сервера без описания и об обрыве сети</td>
+    </tr>
+  </tbody>
+</table>
 
 <p>
   Метод запроса всегда указывается явно — короткими <code>$ajax.get(...)</code>,
@@ -81,27 +152,19 @@ $ajax.delete(route, payload, onProgress, options)
     <tr>
       <td><code>options</code></td>
       <td>
-        необязательный объект <code>{ headers, credentials }</code> —
-        <code>headers</code> добавляет заголовки запроса, <code>credentials</code> (булево, по
-        умолчанию <code>true</code>) управляет отправкой куки
+        необязательный объект <code>{ headers, credentials, timeout }</code> — переопределяет
+        одноимённые настройки <code>Youla.ajax</code> для одного запроса
       </td>
     </tr>
   </tbody>
 </table>
 
 <p>
-  Для мутирующих методов (всё, кроме <code>GET</code>/<code>HEAD</code>) на тот же origin, что и
-  текущая страница, автоматически добавляется заголовок <code>X-CSRF-Token</code> — значение
-  берётся живым чтением куки <code>x_csrf_token</code> при каждом запросе (double-submit
-  cookie, сервер сверяет заголовок с самой кукой). Свой заголовок <code>X-CSRF-Token</code> в
-  <code>options.headers</code> имеет приоритет и переопределяет автоматический.
-</p>
-
-<p>
   Тело запроса собирается из элемента, на котором вызван <code>$ajax</code>: для
   <code>&lt;form&gt;</code> — вся форма целиком (файлы из <code>input[type="file"]</code> уже
   включены), для любого другого поля — только его собственное значение (или выбранные файлы, если
-  это одиночный <code>input[type="file"]</code>). Пока запрос выполняется, элемент и любые
+  это одиночный <code>input[type="file"]</code>). Для <code>GET</code> те же данные, кроме
+  файлов, передаются строкой запроса. Пока запрос выполняется, элемент и любые
   <code>[type="submit"]</code> внутри него получают класс <code>is-load</code> — оформление этого
   состояния (спиннер, затемнение) остаётся за CSS проекта.
 </p>
@@ -405,6 +468,9 @@ document.addEventListener('ajax:/demo/echo', ({ detail }) =&gt; {
   Если ответ пришёл с HTTP-статусом вне диапазона 200–299, либо запрос не смог выполниться
   (обрыв сети), промис <code>$ajax</code> отклоняется (<code>reject</code>) вместо того, чтобы
   молча обработать тело ответа как успешное — ошибку можно поймать обычным <code>.catch()</code>.
+  Ошибки из ответа вида <code>{ errors: { имя: сообщения } }</code> выводятся рядом с
+  соответствующими полями формы, остальные (и <code>message</code> ответа) — уведомлениями в
+  <code>u-data="notice"</code>.
 </p>
 
 <p>

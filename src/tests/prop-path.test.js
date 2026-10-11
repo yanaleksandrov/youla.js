@@ -11,6 +11,12 @@ import '../scripts/directives/u-text';
  * so evaluating them as if they were literal JS (as every other directive's expression is) reads
  * "firstName" as a variable instead of a string key and throws/produces "undefined".
  */
+// jsdom has no CSS.escape() — polyfilled so hydrateProps()'s checkbox branch is exercised.
+if (typeof CSS === 'undefined' || !CSS.escape) {
+  globalThis.CSS = globalThis.CSS || {};
+  globalThis.CSS.escape = (value) => String(value).replace(/[^a-zA-Z0-9_-]/g, (ch) => `\\${ch}`);
+}
+
 function type(input, value) {
   input.value = value;
   input.dispatchEvent(new Event('input', { bubbles: true }));
@@ -70,5 +76,28 @@ describe('u-prop nested paths', () => {
     await tick();
 
     expect(span.textContent).toBe('Kyiv');
+  });
+
+  it('creates deeper segments under a root key another u-prop already created', async () => {
+    document.body.innerHTML = `
+      <form u-data>
+        <input type="checkbox" id="b" u-prop="a.b">
+        <input type="checkbox" id="x" u-prop="a.c.x">
+        <input type="checkbox" id="y" u-prop="a.c.y">
+      </form>
+    `;
+    const form = document.querySelector('form');
+
+    Youla.componentInitialize(form);
+    await tick();
+
+    expect(form.__x.data.a).toEqual({ b: false, c: { x: false, y: false } });
+
+    for (const id of ['b', 'x', 'y']) {
+      document.getElementById(id).click();
+      await tick();
+    }
+
+    expect(form.__x.data.a).toEqual({ b: true, c: { x: true, y: true } });
   });
 });

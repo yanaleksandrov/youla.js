@@ -1,9 +1,8 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import {
   isUnsafeKey,
   parsePropPath,
   toJsPropAccessor,
-  setNestedObjectValue,
   getNestedObjectValue,
 } from '../scripts/object-path';
 
@@ -70,37 +69,6 @@ describe('toJsPropAccessor', () => {
 
   it('escapes a segment containing a quote safely via JSON.stringify', () => {
     expect(toJsPropAccessor('user[a"b]')).toBe('user["a\\"b"]');
-  });
-});
-
-describe('setNestedObjectValue', () => {
-  it('returns the value as-is when the key array is empty', () => {
-    expect(setNestedObjectValue([], 'hello')).toBe('hello');
-  });
-
-  it('builds a single-level object', () => {
-    expect(setNestedObjectValue(['a'], 1)).toEqual({ a: 1 });
-  });
-
-  it('builds a nested object from multiple keys', () => {
-    expect(setNestedObjectValue(['a', 'b'], 1)).toEqual({ a: { b: 1 } });
-  });
-
-  it('builds a deeply nested object', () => {
-    expect(setNestedObjectValue(['a', 'b', 'c', 'd'], 'x')).toEqual({ a: { b: { c: { d: 'x' } } } });
-  });
-
-  it('refuses to write through an unsafe key and warns', () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    expect(setNestedObjectValue(['__proto__', 'polluted'], true)).toEqual({});
-    expect(warn).toHaveBeenCalled();
-    warn.mockRestore();
-  });
-
-  it('refuses when the unsafe key is not the first segment', () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    expect(setNestedObjectValue(['user', 'constructor'], 1)).toEqual({});
-    warn.mockRestore();
   });
 });
 

@@ -49,12 +49,18 @@ export function hydrateProps(rootElement, data, parent, providerName = null) {
     // Fills in only the missing segments, so sibling paths like "a.b" and "a.c.x" share one "a" without clobbering each other.
     const path = [key, ...prop];
     const leaf = path.pop();
-    const target = path.reduce((obj, segment) => {
-      if (obj[segment] === undefined) {
-        obj[segment] = {};
+    let target = owner;
+    for (const segment of path) {
+      if (target[segment] === undefined) {
+        target[segment] = {};
       }
-      return obj[segment];
-    }, owner);
+      // E.g. u-prop="a" next to u-prop="a.b": "a" already holds a primitive.
+      if (target[segment] === null || typeof target[segment] !== 'object') {
+        console.warn(`Youla.js: u-prop="${expression}" can't nest under "${segment}", which already holds a non-object value — skipped.`);
+        return;
+      }
+      target = target[segment];
+    }
 
     if (target[leaf] === undefined) {
       let fields = [];

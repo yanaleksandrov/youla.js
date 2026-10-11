@@ -331,7 +331,7 @@ document.addEventListener('youla:init', () => {
    */
   function watchProp(input, callback) {
     const path = [...input.attributes].find(({ name }) => name === 'u-prop' || name.startsWith('u-prop.'))?.value;
-    let host   = input.parentElement;
+    let host   = input;
 
     // Not closest('[u-data]'): the attribute name may carry modifiers, e.g. "u-data.local".
     while (host && !host.__x) {

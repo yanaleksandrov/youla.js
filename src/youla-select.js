@@ -51,6 +51,8 @@ document.addEventListener('youla:init', ()=> {
         value: option.value,
         html,
         selected: option.selected,
+        // SlimSelect recreates <option>s from this data — keep the markup default for native form reset.
+        defaultSelected: option.defaultSelected,
         display: true,
         disabled: false,
         mandatory: false,
@@ -75,7 +77,20 @@ document.addEventListener('youla:init', ()=> {
     }, []);
 
     try {
-      el._x_slimSelect = new SlimSelect({ settings, select: el, data });
+      const slim = el._x_slimSelect = new SlimSelect({ settings, select: el, data });
+      const form = el.form;
+
+      if (form) {
+        // "reset" fires before the browser restores values, so sync on the next tick; native reset emits no "change".
+        const onReset = () => setTimeout(() => slim.setSelected([...el.selectedOptions].map(o => o.value), false));
+        const destroy = slim.destroy.bind(slim);
+
+        form.addEventListener('reset', onReset);
+        slim.destroy = () => {
+          form.removeEventListener('reset', onReset);
+          destroy();
+        };
+      }
     } catch {
       console.error('Youla.js: "SlimSelect" is not defined — u-select requires SlimSelect to be loaded.');
     }

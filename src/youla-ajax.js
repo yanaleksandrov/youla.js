@@ -20,6 +20,8 @@ document.addEventListener('youla:init', () => {
       cookie: 'XSRF-TOKEN',
       header: 'X-XSRF-TOKEN',
     },
+    // Class added to the requesting element and its `[type="submit"]` descendants while loading.
+    loadingClass: 'is-loading',
     // Inline validation errors from a `{ errors: { name: messages } }` response; `false` disables them.
     errors: {
       field: '[name="{name}"]',
@@ -57,7 +59,7 @@ document.addEventListener('youla:init', () => {
       const body = buildRequestBody(el, payload);
       const safe = SAFE.includes(method);
       const url  = resolveURL(route, config.baseURL, safe ? body : null);
-      const done = toggleLoading(el);
+      const done = xhr.__done = toggleLoading(el, config.loadingClass);
 
       xhr.open(method, url);
       xhr.withCredentials = options.credentials ?? config.credentials;
@@ -385,8 +387,8 @@ document.addEventListener('youla:init', () => {
   }
 
   /**
-   * Aborts and rejects the in-flight request on "el", detaching its handlers first
-   * so it can't touch the loading state or the page afterwards.
+   * Aborts and rejects the in-flight request on "el", resetting its loading state and
+   * detaching its handlers first so it can't touch the page afterwards.
    *
    * @param {HTMLElement} el - Element to check for a tracked request.
    * @returns {void}
@@ -399,21 +401,27 @@ document.addEventListener('youla:init', () => {
 
     xhr.onload = xhr.onerror = xhr.ontimeout = xhr.onloadstart = xhr.onloadend = xhr.upload.onprogress = null;
     xhr.abort();
+    xhr.__done?.();
     xhr.__reject?.(handled(new DOMException('Superseded by a new "$ajax" call on the same element.', 'AbortError')));
   }
 
   /**
-   * Adds an `is-load` class to "el" and its `[type="submit"]` descendants.
+   * Adds "className" to "el" and its `[type="submit"]` descendants and marks "el" `aria-busy`.
    *
    * @param {HTMLElement} el - Element the request was made from.
-   * @returns {Function} Removes the class again.
+   * @param {string} className - Loading class.
+   * @returns {Function} Reverts both again.
    */
-  function toggleLoading(el) {
+  function toggleLoading(el, className) {
     const elements = [el, ...el.querySelectorAll('[type="submit"]')];
 
-    elements.forEach(element => element.classList.add('is-load'));
+    elements.forEach(element => element.classList.add(className));
+    el.setAttribute('aria-busy', 'true');
 
-    return () => elements.forEach(element => element.classList.remove('is-load'));
+    return () => {
+      elements.forEach(element => element.classList.remove(className));
+      el.removeAttribute('aria-busy');
+    };
   }
 
   /**

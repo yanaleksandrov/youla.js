@@ -77,6 +77,11 @@ document.addEventListener('youla:init', () =&gt; {
       </td>
     </tr>
     <tr>
+      <td><code>loadingClass</code></td>
+      <td><code>'is-loading'</code></td>
+      <td>класс элемента и его <code>[type="submit"]</code> на время запроса</td>
+    </tr>
+    <tr>
       <td><code>errors.field</code></td>
       <td><code>'[name="{name}"]'</code></td>
       <td>селектор поля для ошибки, <code>{name}</code> заменяется ключом из ответа</td>
@@ -165,7 +170,8 @@ $ajax.delete(route, payload, onProgress, options)
   включены), для любого другого поля — только его собственное значение (или выбранные файлы, если
   это одиночный <code>input[type="file"]</code>). Для <code>GET</code> те же данные, кроме
   файлов, передаются строкой запроса. Пока запрос выполняется, элемент и любые
-  <code>[type="submit"]</code> внутри него получают класс <code>is-load</code> — оформление этого
+  <code>[type="submit"]</code> внутри него получают класс <code>loadingClass</code>
+  (<code>is-loading</code>), а сам элемент — <code>aria-busy="true"</code>. Оформление этого
   состояния (спиннер, затемнение) остаётся за CSS проекта.
 </p>
 
@@ -302,7 +308,7 @@ $ajax.delete(route, payload, onProgress, options)
 </script>
 
 <style>
-  .example-ajax .is-load { opacity: .5; pointer-events: none; }
+  .example-ajax .is-loading { opacity: .5; pointer-events: none; }
   .example-ajax .is-liked { color: #d64545; font-weight: 600; }
   .example-ajax progress { display: block; width: 100%; margin-top: .5rem; }
   .example-ajax ul { margin: .5rem 0; padding-left: 1.25rem; }
@@ -313,7 +319,7 @@ $ajax.delete(route, payload, onProgress, options)
 
 <p>
   Клик по кнопке отправляет запрос без формы — тело пустое, вызывающий элемент лишь определяет,
-  куда добавить класс <code>is-load</code> на время запроса. Ответ обновляет счётчик и подсвечивает
+  куда добавить класс <code>is-loading</code> на время запроса. Ответ обновляет счётчик и подсвечивает
   саму кнопку.
 </p>
 

@@ -227,7 +227,6 @@ class Ranger {
       if (this.toSlider) {
         this.toSlider.disabled = this.disabled;
       }
-      this.wrapper.classList.toggle('is-disabled', this.disabled);
     }
 
     // Re-derives rangeSize the same way initialize() does, in case fixedRange just turned on.
@@ -343,7 +342,6 @@ class Ranger {
       if (this.toSlider) {
         this.toSlider.disabled = true;
       }
-      wrapper.classList.add('is-disabled');
     } else if (this.isRange) {
       this.fill.classList.add('is-draggable');
     }

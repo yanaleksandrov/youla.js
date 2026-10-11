@@ -121,7 +121,7 @@
 	margin-block: var(--ranger-gap-top) var(--ranger-gap-bottom);
 	position: relative;
 
-	&.is-disabled {
+	&:has(input[type="range"]:disabled) {
 		opacity: 0.5;
 		pointer-events: none;
 	}

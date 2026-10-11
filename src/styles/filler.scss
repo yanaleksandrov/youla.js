@@ -20,7 +20,7 @@
 		border-color: #4c9ffe;
 	}
 
-	&.is-disabled {
+	&:has(input:disabled) {
 		opacity: 0.5;
 		pointer-events: none;
 	}

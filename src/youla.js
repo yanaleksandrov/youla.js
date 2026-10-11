@@ -7,6 +7,7 @@ import './scripts/directives/u-text';
 
 // Methods available to all Youla.js expressions.
 import './scripts/methods/$dispatch';
+import './scripts/methods/$watch';
 
 // Core object exposing Youla.js's public API.
 import { Youla } from './scripts/index';

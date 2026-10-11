@@ -284,7 +284,7 @@ document.addEventListener('youla:init', () => {
   }
 
   /**
-   * Inserts an error message after the field and flags it as invalid until the user edits it.
+   * Inserts an error message after the field and flags it as invalid until its value changes.
    *
    * @param {HTMLElement} input - Field to mark.
    * @param {string[]} texts - Error messages.
@@ -305,7 +305,10 @@ document.addEventListener('youla:init', () => {
     input.setAttribute('aria-invalid', 'true');
     input.setAttribute('aria-errormessage', error.id);
 
+    const unwatch = watchProp(input, () => clear());
+
     const clear = input.__ajaxClear = () => {
+      unwatch?.();
       error.remove();
       wrapper.classList.remove(options.invalidClass);
       input.removeAttribute('aria-invalid');
@@ -317,6 +320,25 @@ document.addEventListener('youla:init', () => {
 
     input.addEventListener('input', clear);
     input.addEventListener('change', clear);
+  }
+
+  /**
+   * Calls "callback" when the data bound to the field's `u-prop` changes, including programmatic writes.
+   *
+   * @param {HTMLElement} input - Field that may carry `u-prop`.
+   * @param {Function} callback - Called on change.
+   * @returns {Function|undefined} Stops watching; undefined if the field isn't bound.
+   */
+  function watchProp(input, callback) {
+    const path = [...input.attributes].find(({ name }) => name === 'u-prop' || name.startsWith('u-prop.'))?.value;
+    let host   = input.parentElement;
+
+    // Not closest('[u-data]'): the attribute name may carry modifiers, e.g. "u-data.local".
+    while (host && !host.__x) {
+      host = host.parentElement;
+    }
+
+    return path ? host?.__x.watch(path, callback) : undefined;
   }
 
   /**

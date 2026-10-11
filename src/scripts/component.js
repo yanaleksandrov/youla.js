@@ -56,6 +56,15 @@ function isArrowFunction(fn) {
   return arrowIndex !== -1 && (braceIndex === -1 || arrowIndex < braceIndex);
 }
 
+// Compared by content so in-place mutations (e.g. an array "push") count as a change; falls back to identity for values JSON can't represent.
+function serialize(value) {
+  try {
+    return JSON.stringify(value);
+  } catch (error) {
+    return value;
+  }
+}
+
 export default class Component {
   /**
    * Builds a component rooted at "el": reads its "u-data" expression and modifiers, builds the
@@ -82,6 +91,7 @@ export default class Component {
     // component's scope (see the "scope" getter) instead of owning the property itself.
     this.children      = [];
     this.parent?.children.push(this);
+    this.watchers      = [];
     this.name          = (dataExpression ?? expression).trim();
     this.alias         = alias || null;
     this.storageType   = isStorageModifier(modifiers) ? getStorageType(modifiers) : null;
@@ -529,6 +539,40 @@ export default class Component {
     }
 
     self.concernedData = [];
+
+    // After the reset, so a callback's own write isn't dropped from the next refresh.
+    self.watchers.forEach(watcher => watcher.check());
+  }
+
+  /**
+   * Calls "callback(value, oldValue)" whenever the value at "path" changes, checked after each refresh.
+   *
+   * @param {string} path - A dot/bracket property path, resolved through "scope".
+   * @param {Function} callback - Receives the new and previous values.
+   * @returns {Function} Stops watching.
+   */
+  watch(path, callback) {
+    let value    = getNestedObjectValue(this.scope, path);
+    let snapshot = serialize(value);
+
+    const watcher = {
+      check: () => {
+        const next         = getNestedObjectValue(this.scope, path);
+        const nextSnapshot = serialize(next);
+
+        if (nextSnapshot !== snapshot) {
+          const oldValue = value;
+          [value, snapshot] = [next, nextSnapshot];
+          callback(next, oldValue);
+        }
+      },
+    };
+
+    this.watchers.push(watcher);
+
+    return () => {
+      this.watchers = this.watchers.filter(item => item !== watcher);
+    };
   }
 
   /**

@@ -21,7 +21,7 @@ document.addEventListener('youla:init', ()=> {
    * @since 1.0
    */
   Youla.directive('select', (el, output) => {
-    const settings = { showSearch: false, hideSelected: false, closeOnSelect: true };
+    const settings = { showSearch: false, hideSelected: false, closeOnSelect: true, contentPosition: 'fixed' };
 
     if (el.hasAttribute('multiple')) {
       settings.hideSelected  = true;

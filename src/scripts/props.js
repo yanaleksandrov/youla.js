@@ -1,5 +1,5 @@
 import { closestDirective, domWalk } from './dom';
-import { setNestedObjectValue, getNestedObjectValue, isUnsafeKey, parsePropPath, toJsPropAccessor } from './object-path';
+import { getNestedObjectValue, isUnsafeKey, parsePropPath, toJsPropAccessor } from './object-path';
 import { saferEval } from './eval';
 import { createMagicVariables, withMagicVariables } from './magic-variables';
 import { getAttributes } from './attributes';
@@ -41,19 +41,29 @@ export function hydrateProps(rootElement, data, parent, providerName = null) {
       ? (parent ? parent.scope : data)
       : (parent && key in parent.scope ? parent.scope : data);
 
-    if (owner[key] === undefined) {
-      // Narrow on purpose: many providers (e.g. "step") are meant to be extended with arbitrary fields — only warn when the field's own name echoes the provider's name, which is never intentional.
-      if (providerName && owner === data && key === providerName) {
-        console.warn(`Youla.js: u-prop="${expression}" on <${rootElement.tagName.toLowerCase()} u-data="${providerName}"> names its field after the very provider it's nested in — "${providerName}" (registered via Youla.data()) never declared a "${key}" field itself, so this likely wasn't meant to invoke that provider at all. Check its own fields for what you meant (e.g. "value"), or rename this field if the collision is accidental.`);
-      }
+    // Narrow on purpose: many providers (e.g. "step") are meant to be extended with arbitrary fields — only warn when the field's own name echoes the provider's name, which is never intentional.
+    if (owner[key] === undefined && providerName && owner === data && key === providerName) {
+      console.warn(`Youla.js: u-prop="${expression}" on <${rootElement.tagName.toLowerCase()} u-data="${providerName}"> names its field after the very provider it's nested in — "${providerName}" (registered via Youla.data()) never declared a "${key}" field itself, so this likely wasn't meant to invoke that provider at all. Check its own fields for what you meant (e.g. "value"), or rename this field if the collision is accidental.`);
+    }
 
+    // Fills in only the missing segments, so sibling paths like "a.b" and "a.c.x" share one "a" without clobbering each other.
+    const path = [key, ...prop];
+    const leaf = path.pop();
+    const target = path.reduce((obj, segment) => {
+      if (obj[segment] === undefined) {
+        obj[segment] = {};
+      }
+      return obj[segment];
+    }, owner);
+
+    if (target[leaf] === undefined) {
       let fields = [];
       if (el.type === 'checkbox') {
         // CSS.escape() doesn't cover the quoted attribute-value part, so "/\ in "expression" is escaped by hand.
         fields = closestDirective(el, 'u-data').querySelectorAll(`[${CSS.escape(attribute.name)}="${expression.replace(/["\\]/g, '\\$&')}"]`);
       }
 
-      owner[key] = setNestedObjectValue(prop, fields.length > 1 ? [] : '');
+      target[leaf] = fields.length > 1 ? [] : '';
     }
 
     let value = generateExpressionForProp(el, owner, attribute);

@@ -84,12 +84,18 @@ export const Youla = {
   },
 
   /**
-   * Creates a `Component` instance for `el` and stashes it on `el.__x`.
+   * Creates a `Component` instance for `el` (stashed on `el.__x`); an error is logged
+   * instead of thrown, so one broken component doesn't stop the rest from initializing.
    *
    * @param {HTMLElement} el - The root element carrying `u-data`.
    * @returns {void}
    */
   componentInitialize: el => {
-    el.__x = new Component(el)
+    try {
+      new Component(el);
+    } catch (error) {
+      delete el.__x;
+      console.error('Youla.js: failed to initialize component', el, error);
+    }
   }
 }

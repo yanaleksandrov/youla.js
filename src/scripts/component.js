@@ -73,6 +73,9 @@ export default class Component {
    * @param {HTMLElement} el - The element carrying the "u-data" attribute.
    */
   constructor(el) {
+    // Set before any directive runs, so lookups through "__x" (e.g. a Youla.variable() factory) see this component while it's still initializing.
+    el.__x = this;
+
     let dataProviderContext = injectDataProviders(el);
 
     // Modifiers only ever live in the attribute's own name (e.g. "u-data.local"), never in its value, so find the entry by directive root instead of assuming it's literally named "u-data".
@@ -653,8 +656,9 @@ export default class Component {
       options.once = true;
     }
 
+    // Deferred to a microtask so components later in the document are initialized before "@load" looks them up.
     if (event === 'load') {
-      handler(createEvent(event,{}));
+      queueMicrotask(() => handler(createEvent(event,{})));
     }
 
     if (event === 'intersect') {

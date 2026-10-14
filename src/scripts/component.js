@@ -5,7 +5,7 @@ import { saferEval } from './eval';
 import { createEvent, getNextModifier, isKeyModifier, matchesKeyModifiers } from './events';
 import { getForData, createMagicVariables, withMagicVariables, splitMagicVariables } from './magic-variables';
 import { getAttributes, parseAttribute, updateAttribute } from './attributes';
-import { hydrateProps, generateExpressionForProp } from './props';
+import { hydrateProps, generateExpressionForProp, resolvePropSource } from './props';
 import { injectDataProviders, isDataProvider } from './data';
 import { storage, isStorageModifier, getStorageType, computeExpires } from './storage';
 import { getDirective } from './directives';
@@ -338,8 +338,9 @@ export default class Component {
         deps = rootIdentifier ? [rootIdentifier] : [];
       }
     } else if (directive === 'u-prop') {
-      // "expression" is a property path, not a JS expression, so it's read straight off "scope" (which falls through to an ancestor component) rather than evaluated generically.
-      output = getNestedObjectValue(this.scope, expression);
+      // "expression" is a property path, not a JS expression, so it's read straight off "scope" (which falls through to an ancestor component), or off a loop variable that declares its first segment.
+      const { otherVariables } = splitMagicVariables(additionalHelperVariables);
+      output = getNestedObjectValue(resolvePropSource(expression, this.scope, otherVariables), expression);
 
       if (withDeps) {
         const [rootIdentifier] = parsePropPath(expression);
@@ -408,7 +409,7 @@ export default class Component {
 
           let propExpression;
           if (directive === 'u-prop') {
-            propExpression = generateExpressionForProp(el, self.scope, attribute);
+            propExpression = generateExpressionForProp(el, self.scope, attribute, splitMagicVariables(additionalHelperVariables).otherVariables);
 
             // If the element we are binding to is a select, a radio, or checkbox we'll listen for the change event instead of the "input" event.
             event = ['select-multiple', 'select', 'checkbox', 'radio'].includes(el.type) || modifiers.includes('lazy')

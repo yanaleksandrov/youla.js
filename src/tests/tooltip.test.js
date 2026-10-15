@@ -746,6 +746,90 @@ describe('tooltipDirective — click trigger', () => {
   });
 });
 
+describe('tooltipDirective — click inside a <label>', () => {
+  function mountInLabel() {
+    const label = mount('label');
+    const el = document.createElement('span');
+    const input = Object.assign(document.createElement('input'), { type: 'checkbox' });
+    label.append(el, input);
+    return { label, el, input };
+  }
+
+  it.each([[['click']], [['click', 'prevent']]])('stays open with modifiers %j', modifiers => {
+    const { el } = mountInLabel();
+    tooltipDirective(el, 'Tip', attr(modifiers));
+
+    el.click();
+    expect(el._x_tooltip.visible).toBe(true);
+  });
+
+  it('.prevent cancels the default action, so the label does not toggle its control', () => {
+    const { el, input } = mountInLabel();
+    tooltipDirective(el, 'Tip', attr(['click', 'prevent']));
+
+    el.click();
+    expect(input.checked).toBe(false);
+  });
+
+  it('still closes on an outside click, Escape and a second click on the anchor', () => {
+    const { el } = mountInLabel();
+    tooltipDirective(el, 'Tip', attr(['click', 'prevent']));
+
+    el.click();
+    mount().click();
+    expect(el._x_tooltip.visible).toBe(false);
+
+    el.click();
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect(el._x_tooltip.visible).toBe(false);
+
+    el.click();
+    el.click();
+    expect(el._x_tooltip.visible).toBe(false);
+  });
+
+  it('closes on a later click on the label control itself', async () => {
+    const { el, input } = mountInLabel();
+    tooltipDirective(el, 'Tip', attr(['click']));
+
+    el.click();
+    await new Promise(resolve => setTimeout(resolve));
+    input.click();
+    expect(el._x_tooltip.visible).toBe(false);
+  });
+});
+
+describe('tooltipDirective — .stop', () => {
+  it('keeps the click from reaching the parent', () => {
+    const parent = mount();
+    const el = document.createElement('button');
+    parent.appendChild(el);
+    const onParentClick = vi.fn();
+    parent.addEventListener('click', onParentClick);
+
+    tooltipDirective(el, 'Tip', attr(['click', 'stop']));
+    el.click();
+
+    expect(el._x_tooltip.visible).toBe(true);
+    expect(onParentClick).not.toHaveBeenCalled();
+  });
+
+  it('re-binds the listener when .prevent/.stop change on a later run', () => {
+    const parent = mount();
+    const el = document.createElement('button');
+    parent.appendChild(el);
+    const onParentClick = vi.fn();
+    parent.addEventListener('click', onParentClick);
+
+    tooltipDirective(el, 'Tip', attr(['click']));
+    tooltipDirective(el, 'Tip', attr(['click', 'stop']));
+    el.click();
+
+    expect(el._x_tooltip.visible).toBe(true);
+    expect(onParentClick).not.toHaveBeenCalled();
+  });
+});
+
 describe('tooltipDirective — different target elements', () => {
   it.each(['div', 'span', 'p', 'a', 'button', 'input', 'img'])('works on a <%s> element', tag => {
     const el = mount(tag);

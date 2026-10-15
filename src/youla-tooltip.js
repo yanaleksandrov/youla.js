@@ -159,8 +159,8 @@ export function computePosition(anchorRect, size, placement, viewport, offset = 
 // A tooltip's DOM element, positioning, triggers, and lifecycle. Cached as `el._x_tooltip`.
 // Exported so other UI outside the directive system can attach a real tooltip by hand, same as u-tooltip below.
 export class TooltipInstance {
-  constructor(el, content, placement, trigger, delay = 250, variant = null) {
-    Object.assign(this, { el, content, placement, trigger, delay, variant, visible: false });
+  constructor(el, content, placement, trigger, delay = 250, variant = null, { prevent = false, stop = false } = {}) {
+    Object.assign(this, { el, content, placement, trigger, delay, variant, prevent, stop, visible: false });
 
     // Only inserted into the DOM while shown — see show()/hide().
     this.tooltip = Object.assign(document.createElement('div'), {
@@ -219,6 +219,15 @@ export class TooltipInstance {
     this.attachTriggers();
   }
 
+  updateEventModifiers({ prevent = false, stop = false } = {}) {
+    if (this.prevent === prevent && this.stop === stop) {
+      return;
+    }
+    this.detachTriggers();
+    Object.assign(this, { prevent, stop });
+    this.attachTriggers();
+  }
+
   updateDelay(delay) {
     this.delay = delay;
   }
@@ -227,7 +236,14 @@ export class TooltipInstance {
     const el = this.el;
 
     if (this.trigger === 'click') {
-      this.detach = bind([[el, 'click', () => this.toggle()]]);
+      this.detach = bind([[el, 'click', e => {
+        this.prevent && e.preventDefault();
+        this.stop && e.stopPropagation();
+        // A wrapping <label> re-dispatches this click on its control (with isTrusted: true); show() skips it.
+        this.labelControl = e.defaultPrevented ? null : el.closest('label')?.control;
+        setTimeout(() => this.labelControl = null);
+        this.toggle();
+      }]]);
       return;
     }
 
@@ -319,6 +335,10 @@ export class TooltipInstance {
     // Outside click/tap or Escape closes it; capture phase so it can't fire for the opening click itself.
     this.detachDocListeners = bind([
       [document, 'click', e => {
+        if (e.target === this.labelControl) {
+          this.labelControl = null;
+          return;
+        }
         if (!this.el.contains(e.target) && !this.tooltip.contains(e.target)) {
           this.deactivate();
         }
@@ -393,19 +413,21 @@ export function tooltipDirective(el, output, { modifiers, duration }) {
   const placement = modifiers.find(m => PLACEMENTS.includes(m)) || 'auto';
   const trigger   = modifiers.find(m => TRIGGERS.includes(m)) || 'hover';
   const variant   = modifiers.find(m => m.startsWith(VARIANT_PREFIX))?.slice(VARIANT_PREFIX.length) || null;
+  const eventModifiers = { prevent: modifiers.includes('prevent'), stop: modifiers.includes('stop') };
 
   const delay   = duration?.unit === 'ms' ? duration.value : 250;
   const content = output == null ? '' : String(output);
 
   const instance = el._x_tooltip;
   if (!instance) {
-    el._x_tooltip = new TooltipInstance(el, content, placement, trigger, delay, variant);
+    el._x_tooltip = new TooltipInstance(el, content, placement, trigger, delay, variant, eventModifiers);
     return;
   }
 
   instance.updateContent(content);
   instance.updatePlacement(placement);
   instance.updateTrigger(trigger);
+  instance.updateEventModifiers(eventModifiers);
   instance.updateDelay(delay);
   instance.updateVariant(variant);
 }

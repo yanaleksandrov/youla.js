@@ -46,14 +46,19 @@ document.addEventListener('youla:init', () => {
    *
    * @param {Event} e - Triggering event (unused).
    * @param {HTMLElement} el - Element `$ajax` was called on.
-   * @returns {Object} `{ get, post, put, patch, delete }`, each `(route, payload?, onProgress?, options?) => Promise`.
+   * @returns {Object} `{ get, post, put, patch, delete }`, each `(route, payload?, onProgress?, options?) => Promise`;
+   *   options: `{ headers, credentials, timeout, clearErrors }`.
    */
   Youla.method('ajax', (e, el) => {
     const ajax = (method, route, payload, onProgress, options = {}) => {
       const config = settings();
 
       abortPrevious(el);
-      clearErrors(scopeOf(el));
+
+      // Background requests (e.g. autocomplete) keep the errors of the last submit.
+      if (options.clearErrors ?? true) {
+        clearErrors(scopeOf(el));
+      }
 
       const xhr  = el.__ajax = new XMLHttpRequest();
       const body = buildRequestBody(el, payload);
@@ -297,6 +302,9 @@ document.addEventListener('youla:init', () => {
     const wrapper = (options.wrapper && input.closest(options.wrapper)) || input;
     const anchor  = (options.anchor && input.closest(options.anchor)) || input;
     const error   = document.createElement('div');
+
+    // A field may still carry an error when the request skipped clearing.
+    input.__ajaxClear?.();
 
     error.className   = options.messageClass;
     error.id          = `ajax-error-${++errorId}`;

@@ -157,12 +157,60 @@ $ajax.delete(route, payload, onProgress, options)
     <tr>
       <td><code>options</code></td>
       <td>
-        необязательный объект <code>{ headers, credentials, timeout }</code> — переопределяет
-        одноимённые настройки <code>Youla.ajax</code> для одного запроса
+        необязательный объект <code>{ headers, credentials, timeout, clearErrors }</code> — настройки
+        одного запроса (см. таблицу ниже)
       </td>
     </tr>
   </tbody>
 </table>
+
+<table>
+  <tbody>
+    <tr>
+      <th>Опция запроса</th>
+      <th>По умолчанию</th>
+      <th>Назначение</th>
+    </tr>
+    <tr>
+      <td><code>headers</code></td>
+      <td><code>{}</code></td>
+      <td>дополнительные заголовки, накладываются на <code>Youla.ajax.headers</code></td>
+    </tr>
+    <tr>
+      <td><code>credentials</code></td>
+      <td><code>Youla.ajax.credentials</code></td>
+      <td>отправлять ли куки для этого запроса</td>
+    </tr>
+    <tr>
+      <td><code>timeout</code></td>
+      <td><code>Youla.ajax.timeout</code></td>
+      <td>таймаут этого запроса в мс</td>
+    </tr>
+    <tr>
+      <td><code>clearErrors</code></td>
+      <td><code>true</code></td>
+      <td>
+        убирать ли ошибки полей в ближайшей форме или компоненте перед запросом; <code>false</code> —
+        для фоновых запросов, которые не должны стирать ошибки последнего сохранения. Ошибки из
+        ответа самого запроса выводятся в любом случае
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  Фоновый запрос, например генерация slug по мере ввода заголовка, не трогает уже показанные
+  ошибки формы:
+</p>
+
+<pre>
+&lt;form u-data=&quot;{ title: '', slug: '' }&quot;&gt;
+  &lt;input name=&quot;title&quot; u-prop=&quot;title&quot;
+    @input.delay.250ms=&quot;$ajax.post('slugs/generate', { text: title }, null, { clearErrors: false })
+      .then(value =&gt; slug = value)&quot;&gt;
+  &lt;input name=&quot;slug&quot; u-prop=&quot;slug&quot;&gt;
+&lt;/form&gt;
+</pre>
 
 <p>
   Тело запроса собирается из элемента, на котором вызван <code>$ajax</code>: для

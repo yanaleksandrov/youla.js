@@ -17,6 +17,7 @@ class FakeXHR {
   upload = {};
   status = 422;
   open() {}
+  abort() {}
   setRequestHeader() {}
   send() {
     this.responseText = JSON.stringify({ errors: FakeXHR.errors });
@@ -59,6 +60,7 @@ describe('$ajax inline errors', () => {
         <button type="button" id="fill" @click="user.password = 'x'.repeat(12)"></button>
         <button type="button" id="other" @click="user.login = 'admin'"></button>
         <button type="button" id="submit" @click="$ajax.post('/save').catch(() => {})"></button>
+        <button type="button" id="background" @click="$ajax.post('/slug', null, null, { clearErrors: false }).catch(() => {})"></button>
       </form>
     `;
 
@@ -96,6 +98,29 @@ describe('$ajax inline errors', () => {
 
     expect(login.value).toBe('admin');
     expect(password.getAttribute('aria-invalid')).toBe('true');
+  });
+
+  it('keeps errors on a request with "clearErrors: false" and clears them on a plain one', async () => {
+    await submit();
+
+    FakeXHR.errors = {};
+    document.getElementById('background').click();
+    await tick();
+    expect(password.getAttribute('aria-invalid')).toBe('true');
+
+    document.getElementById('submit').click();
+    await tick();
+    expect(password.hasAttribute('aria-invalid')).toBe(false);
+  });
+
+  it('does not duplicate an error the request did not clear', async () => {
+    await submit();
+
+    document.getElementById('background').click();
+    await tick();
+
+    expect(password.getAttribute('aria-invalid')).toBe('true');
+    expect(form.querySelectorAll('.ajax-error')).toHaveLength(1);
   });
 
   it('still clears the error on manual input', async () => {

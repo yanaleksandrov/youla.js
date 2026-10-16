@@ -30,6 +30,13 @@ document.addEventListener('youla:init', ()=> {
 
     Object.assign(settings, output && typeof output === 'object' ? output : {});
 
+    // flush() re-runs the directive on every forced refresh — keep the instance unless its settings changed.
+    const settingsKey = JSON.stringify(settings);
+    if (el._x_slimSelect && el._x_slimSelectSettings === settingsKey) {
+      return;
+    }
+    el._x_slimSelectSettings = settingsKey;
+
     // SlimSelect has no "update options" method, only a full rebuild — destroy before reading "el.options".
     el._x_slimSelect?.destroy();
 
@@ -77,7 +84,20 @@ document.addEventListener('youla:init', ()=> {
     }, []);
 
     try {
-      const slim = el._x_slimSelect = new SlimSelect({ settings, select: el, data });
+      const selectedValues = () => [...el.selectedOptions].map(o => o.value).join('\n');
+      const initialValue   = selectedValues();
+
+      // The constructor rebuilds the <option>s and always emits a bubbling "change" — drop it while the value stays the same.
+      el.dispatchEvent = event => (event.type === 'change' && selectedValues() === initialValue)
+        || EventTarget.prototype.dispatchEvent.call(el, event);
+
+      let slim;
+      try {
+        slim = el._x_slimSelect = new SlimSelect({ settings, select: el, data });
+      } finally {
+        delete el.dispatchEvent;
+      }
+
       const form = el.form;
 
       if (form) {

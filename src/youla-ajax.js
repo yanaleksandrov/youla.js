@@ -47,24 +47,25 @@ document.addEventListener('youla:init', () => {
    * @param {Event} e - Triggering event (unused).
    * @param {HTMLElement} el - Element `$ajax` was called on.
    * @returns {Object} `{ get, post, put, patch, delete }`, each `(route, payload?, onProgress?, options?) => Promise`;
-   *   options: `{ headers, credentials, timeout, clearErrors }`.
+   *   options: `{ headers, credentials, timeout, clearErrors, el }`.
    */
   Youla.method('ajax', (e, el) => {
     const ajax = (method, route, payload, onProgress, options = {}) => {
       const config = settings();
+      const target = requestElement(el, options.el);
 
-      abortPrevious(el);
+      abortPrevious(target);
 
       // Background requests (e.g. autocomplete) keep the errors of the last submit.
       if (options.clearErrors ?? true) {
-        clearErrors(scopeOf(el));
+        clearErrors(scopeOf(target));
       }
 
-      const xhr  = el.__ajax = new XMLHttpRequest();
-      const body = buildRequestBody(el, payload);
+      const xhr  = target.__ajax = new XMLHttpRequest();
+      const body = buildRequestBody(target, payload);
       const safe = SAFE.includes(method);
       const url  = resolveURL(route, config.baseURL, safe ? body : null);
-      const done = xhr.__done = toggleLoading(el, config.loadingClass);
+      const done = xhr.__done = toggleLoading(target, config.loadingClass);
 
       xhr.open(method, url);
       xhr.withCredentials = options.credentials ?? config.credentials;
@@ -104,7 +105,7 @@ document.addEventListener('youla:init', () => {
           const parsed = parseJSON(xhr.responseText);
 
           if (xhr.status < 200 || xhr.status >= 300) {
-            showErrors(el, parsed, config);
+            showErrors(target, parsed, config);
 
             reject(handled(Object.assign(new Error(`Youla.js: "$ajax" failed with status ${xhr.status}.`), {
               status: xhr.status,
@@ -124,7 +125,7 @@ document.addEventListener('youla:init', () => {
 
           try {
             document.dispatchEvent(new CustomEvent(`ajax:${route}`, {
-              detail: { data, el, resolve: override },
+              detail: { data, el: target, resolve: override },
               bubbles: true,
               composed: true,
               cancelable: true,
@@ -175,6 +176,25 @@ document.addEventListener('youla:init', () => {
       errors: merge('errors'),
       messages: merge('messages'),
     };
+  }
+
+  /**
+   * Picks the element a request runs on behalf of: the `el` option when it's an Element, else "el".
+   *
+   * @param {HTMLElement} el - Element `$ajax` was called on.
+   * @param {*} [override] - The `el` request option.
+   * @returns {HTMLElement}
+   */
+  function requestElement(el, override) {
+    if (override === undefined || override === null) {
+      return el;
+    }
+    if (override instanceof Element) {
+      return override;
+    }
+
+    console.warn('Youla.js: "$ajax" option "el" must be an Element; the request runs on the calling element instead.', override);
+    return el;
   }
 
   /**

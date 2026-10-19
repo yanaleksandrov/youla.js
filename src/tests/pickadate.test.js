@@ -111,4 +111,75 @@ describe('u-pickadate', () => {
     expect(el.getAttribute('form')).toBe('f');
     expect(el.value).toBe('2026-10-19');
   });
+
+  describe('form reset', () => {
+    const settle = async () => {
+      for (let i = 0; i < 4; i++) await tick();
+    };
+
+    it('restores the initial date in both fields', async () => {
+      const { el, events, hidden } = mount('2026-10-16T17:45');
+      pickadateDirective(el, { timepicker: true, dateFormat: 'dd.MM.yyyy' });
+      const visible = el.value;
+      expect(visible).toContain('16.10.2026');
+
+      el._x_pickadate.selectDate(new Date(2026, 9, 20, 9, 30));
+      await settle();
+      expect(hidden()[0].value).toBe('2026-10-20T09:30');
+      events.length = 0;
+
+      el.form.reset();
+      await settle();
+
+      expect(el.value).toBe(visible);
+      expect(hidden()[0].value).toBe('2026-10-16T17:45');
+      expect(el._x_pickadate.selectedDates).toHaveLength(1);
+      expect(el._x_pickadate.selectedDates[0].getDate()).toBe(16);
+      expect(events).toEqual([]);
+    });
+
+    it('keeps an empty field empty', async () => {
+      const { el, events, hidden } = mount('');
+      pickadateDirective(el, {});
+
+      el._x_pickadate.selectDate(new Date(2026, 9, 20));
+      await settle();
+      expect(hidden()[0].value).toBe('2026-10-20');
+      events.length = 0;
+
+      el.form.reset();
+      await settle();
+
+      expect(el.value).toBe('');
+      expect(hidden()[0].value).toBe('');
+      expect(el._x_pickadate.selectedDates).toEqual([]);
+      expect(events).toEqual([]);
+    });
+
+    it('listens on a form referenced by the "form" attribute', async () => {
+      document.body.innerHTML = `<form id="g"></form><div><input form="g" name="date" value="2026-10-19"></div>`;
+      const el = document.querySelector('input');
+      pickadateDirective(el, {});
+
+      el._x_pickadate.selectDate(new Date(2026, 9, 25));
+      await settle();
+
+      document.getElementById('g').reset();
+      await settle();
+
+      expect(document.querySelector('input[type=hidden]').value).toBe('2026-10-19');
+    });
+
+    it('removes the reset listener on destroy', () => {
+      const { el } = mount('2026-10-19');
+      const add = vi.spyOn(el.form, 'addEventListener');
+      const remove = vi.spyOn(el.form, 'removeEventListener');
+      pickadateDirective(el, {});
+
+      const onReset = add.mock.calls.find(([type]) => type === 'reset')[1];
+      el._x_pickadate.destroy();
+
+      expect(remove).toHaveBeenCalledWith('reset', onReset);
+    });
+  });
 });

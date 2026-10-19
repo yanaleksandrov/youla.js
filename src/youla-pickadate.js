@@ -230,9 +230,15 @@ document.addEventListener('youla:init', ()=> {
     }
 
     let synced = hidden.value;
+    let resetting = false;
+
+    const initialDates = [...dp.selectedDates];
+    const initialHidden = hidden.value;
 
     // The library fires a non-bubbling "change" on the field after every write, so the hidden value is final here.
     const sync = () => {
+      if (resetting) return;
+
       if (!el.value && hidden.value) {
         dp.clear();
         return;
@@ -248,6 +254,33 @@ document.addEventListener('youla:init', ()=> {
     el.addEventListener('input', sync);
     el.addEventListener('change', sync);
 
+    // "reset" fires before the browser restores values, and a hidden field's value isn't restored at all; native reset emits no "change".
+    const resetForm = el.form;
+    const onReset = () => setTimeout(() => {
+      if (dp.isDestroyed) return;
+
+      resetting = true;
+      dp.selectedDates.length && dp.clear({ silent: true });
+      initialDates.length && dp.selectDate(initialDates.map((date) => new Date(date)), { silent: true });
+
+      // Runs after the library's own deferred write of both fields.
+      setTimeout(() => {
+        if (dp.isDestroyed) return;
+
+        if (initialDates.length) {
+          dp._setInputValue();
+        } else {
+          el.value = initial;
+          hidden.value = initialHidden;
+        }
+
+        synced = hidden.value;
+        resetting = false;
+      });
+    });
+
+    resetForm?.addEventListener('reset', onReset);
+
     const destroy = dp.destroy;
 
     dp.destroy = () => {
@@ -258,6 +291,7 @@ document.addEventListener('youla:init', ()=> {
       listen(false);
       el.removeEventListener('input', sync);
       el.removeEventListener('change', sync);
+      resetForm?.removeEventListener('reset', onReset);
       destroy();
 
       name !== null && el.setAttribute('name', name);

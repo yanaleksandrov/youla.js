@@ -1,6 +1,7 @@
 import { directive } from '../directives';
 import { saferEval } from '../eval';
 import { withMagicVariables, splitMagicVariables } from '../magic-variables';
+import { getElementMethods } from '../methods';
 
 const EACH_EXPRESSION = /^\(?([\w]+)(?:,\s*(\w+))?\)?\s+in\s+(.*?)(?:\s+join\s+'([^']+)')?$/;
 
@@ -48,7 +49,7 @@ directive('each', (el, output, attribute, component, additionalHelperVariables =
     dataItems = Array.from({length: +items}, (_, i) => i + 1);
   } else {
     try {
-      dataItems = saferEval(`${items}`, withMagicVariables(component.scope, magicVariables), otherVariables);
+      dataItems = saferEval(`${items}`, withMagicVariables(component.scope, magicVariables, getElementMethods(el, component)), otherVariables);
     } catch (error) {
       return;
     }

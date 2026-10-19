@@ -7,7 +7,7 @@ let methods = {}
  * registers `$foo`), available inside any directive or event expression.
  *
  * @param {string} name - The method's name, without the `$` prefix.
- * @param {Function} callback - Factory called as `(event, el, component)`, returning the actual callable exposed to expressions.
+ * @param {Function} callback - Factory called as `(event, el, component)`, returning the actual callable exposed to expressions; `event` is undefined in directive expressions.
  * @returns {void}
  */
 export function method(name, callback) {
@@ -31,4 +31,42 @@ export function resolveMethods(e, el, component) {
   });
 
   return resolved;
+}
+
+// Cached per element so every evaluation of its directives, and closures created by them, share one instance (e.g. "$ajax" aborting its previous request).
+const elementMethods = new WeakMap();
+
+/**
+ * Returns the registered methods for a directive expression on "el", each created on first access
+ * with an undefined event and cached for later evaluations.
+ *
+ * @param {HTMLElement} el - The element the directive is declared on.
+ * @param {Component} component - The owning component instance.
+ * @returns {Proxy} An object resolving `$name` to the method's callable.
+ */
+export function getElementMethods(el, component) {
+  let cached = elementMethods.get(el);
+
+  if (cached?.component !== component) {
+    const resolved = {};
+
+    cached = {
+      component,
+      methods: new Proxy(resolved, {
+        has: (_, prop) => Object.hasOwn(methods, prop),
+        get: (_, prop) => {
+          if (!Object.hasOwn(methods, prop)) {
+            return undefined;
+          }
+          if (!Object.hasOwn(resolved, prop)) {
+            resolved[prop] = methods[prop](undefined, el, component);
+          }
+          return resolved[prop];
+        },
+      }),
+    };
+    elementMethods.set(el, cached);
+  }
+
+  return cached.methods;
 }

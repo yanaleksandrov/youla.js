@@ -10,7 +10,7 @@ import { injectDataProviders, isDataProvider } from './data';
 import { storage, isStorageModifier, getStorageType, computeExpires } from './storage';
 import { getDirective } from './directives';
 import { parseEachExpression } from './directives/u-each';
-import { resolveMethods } from './methods';
+import { resolveMethods, getElementMethods } from './methods';
 import { isUnsafeKey, getNestedObjectValue, parsePropPath } from './object-path';
 
 // Window/document/outside listeners and intersect observers hold their own reference to "el", so this shared observer runs each one's cleanup once "el" leaves the DOM.
@@ -214,7 +214,9 @@ export default class Component {
       ])
     );
 
-    const contextData = withMagicVariables(proxiedData, magicVariables);
+    // Read straight from the methods Proxy, so a method never lands in "deps".
+    const methods     = magicVariables.$el ? getElementMethods(magicVariables.$el, this) : undefined;
+    const contextData = withMagicVariables(proxiedData, magicVariables, methods);
 
     // A u-bind entry may hand back a method instead of an expression string — call it with "this" bound to the same context, so property access is tracked exactly like an expression string's.
     const output = typeof expressionOrFn === 'function'

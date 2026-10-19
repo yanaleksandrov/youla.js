@@ -6,7 +6,7 @@ import { createEvent, getNextModifier, isKeyModifier, matchesKeyModifiers } from
 import { getForData, createMagicVariables, withMagicVariables, splitMagicVariables } from './magic-variables';
 import { getAttributes, parseAttribute, updateAttribute } from './attributes';
 import { hydrateProps, generateExpressionForProp, resolvePropSource } from './props';
-import { injectDataProviders, isDataProvider } from './data';
+import { createDataProviderContext, isDataProvider } from './data';
 import { storage, isStorageModifier, getStorageType, computeExpires } from './storage';
 import { getDirective } from './directives';
 import { parseEachExpression } from './directives/u-each';
@@ -76,8 +76,6 @@ export default class Component {
     // Set before any directive runs, so lookups through "__x" (e.g. a Youla.variable() factory) see this component while it's still initializing.
     el.__x = this;
 
-    let dataProviderContext = injectDataProviders(el);
-
     // Modifiers only ever live in the attribute's own name (e.g. "u-data.local"), never in its value, so find the entry by directive root instead of assuming it's literally named "u-data".
     const { expression, modifiers } = getAttributes(el).find(({ directive }) => directive === 'u-data') || { expression: '{}', modifiers: [] };
 
@@ -101,7 +99,7 @@ export default class Component {
     // A duration modifier (e.g. "u-data.cookie.30d") sits right after "cookie"/"local" in the modifier list, same convention as "u-prop"; omitting it means a session cookie or no expiration at all.
     this.storageExpire = this.storageType ? getNextModifier(modifiers, this.storageType) : null;
 
-    this.rawData = saferEval(this.name || '{}', dataProviderContext);
+    this.rawData = saferEval(this.name || '{}', createDataProviderContext(el));
     this.rawData = hydrateProps(el, this.rawData, this.parent, isDataProvider(this.name) ? this.name : null);
 
     // Rehydrate from whatever was persisted last time, on top of the fresh factory defaults, so new keys added later still show up for visitors with stale storage.

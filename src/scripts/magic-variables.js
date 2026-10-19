@@ -63,7 +63,7 @@ export function createMagicVariables(root, el, event) {
  *
  * @param {object} dataContext - The data object (or Proxy) to wrap.
  * @param {object} magicVariables - The magic variables to expose, as built by createMagicVariables().
- * @param {object} [methods] - Lazy method lookup, as built by getElementMethods().
+ * @param {object} [methods] - Lazy method lookup, as built by getElementMethods() or getListenerMethods().
  * @returns {Proxy} The wrapped context, safe to pass as "$data" to saferEval.
  */
 export function withMagicVariables(dataContext, magicVariables, methods) {

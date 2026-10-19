@@ -122,3 +122,94 @@ describe('methods in directive expressions', () => {
     expect(FakeXHR.all).toHaveLength(1);
   });
 });
+
+describe('methods via "this" in component methods called from event handlers', () => {
+  it('gives a method called from a string handler a working this.$ajax bound to the handler element', async () => {
+    Youla.data('stringSaver', () => ({
+      save() {
+        this.$ajax.post('route').catch(() => {});
+      },
+    }));
+
+    const root = mount(`<div u-data="stringSaver"><button @click="save()"></button></div>`);
+    await tick();
+
+    const button = root.querySelector('button');
+    button.click();
+
+    expect(FakeXHR.all).toHaveLength(1);
+    expect(button.__ajax).toBe(FakeXHR.all[0]);
+  });
+
+  it('gives a method called from a function handler a working this.$ajax bound to the handler element', async () => {
+    Youla.data('fnSaver', () => ({
+      trigger: {
+        '@click'(e) {
+          this.save();
+        },
+      },
+      save() {
+        this.$ajax.post('route').catch(() => {});
+      },
+    }));
+
+    const root = mount(`<div u-data="fnSaver"><button u-bind="trigger"></button></div>`);
+    await tick();
+
+    const button = root.querySelector('button');
+    button.click();
+
+    expect(FakeXHR.all).toHaveLength(1);
+    expect(button.__ajax).toBe(FakeXHR.all[0]);
+  });
+
+  it('bubbles this.$dispatch from the handler element', async () => {
+    Youla.data('notifier', () => ({
+      notify() {
+        this.$dispatch('saved', { id: 7 });
+      },
+    }));
+
+    const root = mount(`<div u-data="notifier"><button @click="notify()"></button></div>`);
+    await tick();
+
+    const button = root.querySelector('button');
+    const seen = vi.fn();
+    root.addEventListener('saved', e => seen(e.target, e.detail));
+    button.click();
+
+    expect(seen).toHaveBeenCalledWith(button, { id: 7 });
+  });
+
+  it('passes the current event to methods on every run', async () => {
+    const factory = vi.fn(() => () => {});
+    Youla.method('eventProbe', factory);
+
+    const root = mount(`<div u-data="{run() { this.$eventProbe() }}"><button @click="run()"></button></div>`);
+    await tick();
+
+    const button = root.querySelector('button');
+    button.click();
+    button.click();
+
+    expect(factory).toHaveBeenCalledTimes(2);
+    expect(factory.mock.calls[0][0]).not.toBe(factory.mock.calls[1][0]);
+    expect(factory.mock.calls[1][1]).toBe(button);
+  });
+
+  it('creates no methods for a handler that does not use them', async () => {
+    const factory = vi.fn(() => () => {});
+    Youla.method('unused', factory);
+
+    const root = mount(`<div u-data="{count: 0}"><button @click="count++"></button></div>`);
+    await tick();
+
+    const button = root.querySelector('button');
+    for (let i = 0; i < 1000; i++) {
+      button.click();
+    }
+
+    expect(root.__x.data.count).toBe(1000);
+    expect(factory).not.toHaveBeenCalled();
+  });
+});

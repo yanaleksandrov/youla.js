@@ -10,7 +10,7 @@ import { injectDataProviders, isDataProvider } from './data';
 import { storage, isStorageModifier, getStorageType, computeExpires } from './storage';
 import { getDirective } from './directives';
 import { parseEachExpression } from './directives/u-each';
-import { resolveMethods, getElementMethods } from './methods';
+import { getElementMethods, getListenerMethods } from './methods';
 import { isUnsafeKey, getNestedObjectValue, parsePropPath } from './object-path';
 
 // Window/document/outside listeners and intersect observers hold their own reference to "el", so this shared observer runs each one's cleanup once "el" leaves the DOM.
@@ -688,16 +688,16 @@ export default class Component {
   }
 
   /**
-   * Runs an event handler: a function is called directly with the component's data as "this";
-   * a string expression is evaluated with the magic variables, every registered method, and
-   * any enclosing "u-each" loop variables available to it.
+   * Runs an event handler with the component's data as "this": a function is called directly; a
+   * string expression is evaluated with any enclosing "u-each" loop variables. Magic variables and
+   * registered methods are reachable both as bare names and via "this", including inside called methods.
    *
    * @param {string|Function} expressionOrFn - The handler to run.
    * @param {Event} e - The DOM event that triggered the handler.
    * @param {HTMLElement} target - The element the listener is attached to.
    */
   invokeListener(expressionOrFn, e, target) {
-    const contextData = withMagicVariables(this.scope, this.getMagicVariables(target, e));
+    const contextData = withMagicVariables(this.scope, this.getMagicVariables(target, e), getListenerMethods(e, target, this));
 
     // A u-bind entry may hand back a method instead of an expression string — call it directly with "this" as the component's reactive data, so writes to it still trigger refresh().
     if (typeof expressionOrFn === 'function') {
@@ -705,14 +705,10 @@ export default class Component {
       return;
     }
 
-    const expression = expressionOrFn;
-    const methods = resolveMethods(e, target, this);
-    const data = getForData(target);
-
-    saferEval(expression, contextData, {
+    // Methods resolve through "with($data)" rather than as parameters, so only the ones the expression touches are created.
+    saferEval(expressionOrFn, contextData, {
       ...this.getAliasVariables(),
-      ...methods,
-      ...data
+      ...getForData(target)
     }, true);
   }
 

@@ -15,19 +15,27 @@ export function data(name, callback) {
 }
 
 /**
- * Runs every registered data-provider factory once and collects their results
- * keyed by name, so a component's `u-data="name"` expression can resolve to a
- * provider's output through a plain property lookup.
+ * Builds the context a component's `u-data` expression is evaluated against: a provider is called
+ * with "root" only when the expression reads its name, and at most once per context.
  *
- * @param {HTMLElement} [root] - The component's root element ("u-data"), forwarded to each factory.
- * @param {Object} [obj] - Object to populate with the resolved providers.
- * @returns {Object} `obj`, populated with one entry per registered provider.
+ * @param {HTMLElement} root - The component's root element ("u-data"), forwarded to the factory.
+ * @returns {Proxy} A context exposing only registered provider names; anything else falls through to globals.
  */
-export function injectDataProviders(root, obj = {}) {
-  Object.entries(datas).forEach(([name, callback]) => {
-    obj[name] = callback(root);
+export function createDataProviderContext(root) {
+  const resolved = {};
+
+  return new Proxy({}, {
+    has: (target, name) => typeof name === 'string' && isDataProvider(name),
+    get: (target, name) => {
+      if (typeof name !== 'string' || !isDataProvider(name)) {
+        return undefined;
+      }
+      if (!Object.hasOwn(resolved, name)) {
+        resolved[name] = datas[name](root);
+      }
+      return resolved[name];
+    },
   });
-  return obj;
 }
 
 /**

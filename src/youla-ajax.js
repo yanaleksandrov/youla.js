@@ -514,6 +514,7 @@ document.addEventListener('youla:init', () => {
 
   /**
    * Applies one fragment instruction `{ target?, [action[:delay]]: value }` to every matching element.
+   * Actions without a delay run synchronously, so they are in place before the `$ajax` promise resolves.
    *
    * @param {Object} item - Fragment instruction.
    * @param {Object} config - Effective configuration.
@@ -535,13 +536,19 @@ document.addEventListener('youla:init', () => {
           return;
         }
 
-        setTimeout(() => {
+        const run = () => {
           try {
             runFragmentAction(action, element, value, config);
           } catch (error) {
             console.error(`Youla.js: "$ajax" fragment action "${action}" failed.`, error);
           }
-        }, Number(delay) || 0);
+        };
+
+        if (delay === undefined) {
+          run();
+        } else {
+          setTimeout(run, Number(delay) || 0);
+        }
       });
     });
   }

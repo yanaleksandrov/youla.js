@@ -51,4 +51,27 @@ describe('u-select', () => {
 
     expect(el._x_slimSelect).not.toBe(slim);
   });
+
+  it('keeps events out of settings and updates them on the existing instance', async () => {
+    const { el } = mount();
+    selectDirective(el, { showSearch: true, events: { search: () => [{ text: 'X', value: 'x' }] } });
+    const slim = el._x_slimSelect;
+
+    expect(el._x_slimSelectSettings).not.toContain('events');
+
+    selectDirective(el, { showSearch: true, events: { search: () => ({ options: [{ text: 'Y', value: 'y' }] }) } });
+
+    expect(el._x_slimSelect).toBe(slim);
+    await expect(slim.events.search('')).resolves.toEqual([{ text: 'Y', value: 'y' }]);
+  });
+
+  it('keeps the search pending when the request is aborted', async () => {
+    const { el } = mount();
+    const abort = Object.assign(new Error('aborted'), { name: 'AbortError' });
+    selectDirective(el, { events: { search: () => Promise.reject(abort) } });
+
+    const result = await Promise.race([el._x_slimSelect.events.search(''), new Promise(r => setTimeout(() => r('pending'), 20))]);
+
+    expect(result).toBe('pending');
+  });
 });

@@ -368,6 +368,51 @@
   в отличие от привычных нулевых индексов обычного массива в JavaScript.
 </p>
 
+<h2>Цикл на &lt;template&gt;</h2>
+
+<p>
+  Директиву <code>u-each</code> можно поставить на <code>&lt;template&gt;</code>: для каждого
+  элемента данных рендерится всё его содержимое, включая несколько корневых узлов. Содержимое
+  шаблона инертно, поэтому его не нужно скрывать через CSS, а поля формы внутри него не участвуют
+  в валидации и не попадают в <code>FormData</code>, — это удобно для репитеров полей с
+  <code>required</code>.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <form class="demo" u-data="{ guests: [{ name: '' }], sent: false }" @submit.prevent="sent = true">
+      <template u-each="(guest, i) in guests">
+        <div>
+          <input name="guests[]" placeholder="Имя гостя" required u-prop="guest.name">
+          <button type="button" @click="guests.splice(i, 1)">Удалить</button>
+        </div>
+      </template>
+      <button type="button" @click="guests.push({ name: '' })">Добавить гостя</button>
+      <button type="submit">Отправить</button>
+      <span u-text="sent ? 'Отправлено' : ''"></span>
+    </form>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;form u-data=&quot;{ guests: [{ name: &#039;&#039; }], sent: false }&quot; @submit.prevent=&quot;sent = true&quot;&gt;
+  &lt;template u-each=&quot;(guest, i) in guests&quot;&gt;
+    &lt;div&gt;
+      &lt;input name=&quot;guests[]&quot; placeholder=&quot;Имя гостя&quot; required u-prop=&quot;guest.name&quot;&gt;
+      &lt;button type=&quot;button&quot; @click=&quot;guests.splice(i, 1)&quot;&gt;Удалить&lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/template&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;guests.push({ name: &#039;&#039; })&quot;&gt;Добавить гостя&lt;/button&gt;
+  &lt;button type=&quot;submit&quot;&gt;Отправить&lt;/button&gt;
+  &lt;span u-text=&quot;sent ? &#039;Отправлено&#039; : &#039;&#039;&quot;&gt;&lt;/span&gt;
+&lt;/form&gt;
+</pre>
+  </div>
+</div>
+
 <h2>Модификаторы</h2>
 
 <p><code>.lazy</code></p>

@@ -23,6 +23,7 @@ export function parseEachExpression(expression) {
  * Renders a clone of the template element for each item in an array, object, or integer range,
  * keeping the DOM in sync as the collection changes. Supports `item in items`, `(item, index)
  * in items`, and an optional `... join 'separator'` suffix; `.lazy` skips rendering on init.
+ * On a `<template>`, its inert content is rendered instead of the element itself.
  *
  * @param {HTMLElement} el - the template element carrying u-each; cloned once per rendered item.
  * @param {string} output - the raw expression string; u-each parses `attribute.expression` itself rather than using an evaluated value.
@@ -59,6 +60,11 @@ directive('each', (el, output, attribute, component, additionalHelperVariables =
     return;
   }
 
+  if (el.tagName === 'TEMPLATE') {
+    renderTemplate(el, dataItems, { item, index, join }, component, otherVariables);
+    return;
+  }
+
   // Remove everything already rendered, then render fresh.
   while (el.nextSibling) {
     let next = el.nextSibling;
@@ -76,10 +82,7 @@ directive('each', (el, output, attribute, component, additionalHelperVariables =
     clone.removeAttribute('u-each');
 
     (async () => {
-      // "+key || key" would wrongly fall back to "0" for the first entry since 0 is falsy; only fall back when the key truly isn't numeric.
-      const numericKey = +key;
-
-      clone.__x_for_data = {...otherVariables, [item]: dataItem, [index]: Number.isNaN(numericKey) ? key : numericKey};
+      clone.__x_for_data = {...otherVariables, [item]: dataItem, [index]: toLoopKey(key)};
 
       await component.initialize(clone);
 
@@ -90,3 +93,51 @@ directive('each', (el, output, attribute, component, additionalHelperVariables =
     })();
   });
 });
+
+/**
+ * Converts an "Object.entries()" key to a number when it's numeric, keeping it a string otherwise.
+ *
+ * @param {string} key
+ * @returns {number|string}
+ */
+function toLoopKey(key) {
+  // "+key || key" would wrongly fall back to "0" for the first entry since 0 is falsy; only fall back when the key truly isn't numeric.
+  const numericKey = +key;
+
+  return Number.isNaN(numericKey) ? key : numericKey;
+}
+
+/**
+ * Renders every root node of a "<template>"'s content per item, inserted after the template in order.
+ * Rendered nodes are tracked on "el.__x_each_nodes", so a re-render removes only this loop's own output.
+ */
+function renderTemplate(el, dataItems, { item, index, join }, component, otherVariables) {
+  el.__x_each_nodes?.forEach(node => node.remove());
+
+  const rendered = el.__x_each_nodes = [];
+
+  Object.entries(dataItems ?? []).forEach(([key, dataItem], idx, array) => {
+    const nodes    = [...el.content.cloneNode(true).childNodes];
+    const elements = nodes.filter(node => node.nodeType === Node.ELEMENT_NODE);
+
+    elements.forEach(node => {
+      node.__x_for_data = {...otherVariables, [item]: dataItem, [index]: toLoopKey(key)};
+    });
+
+    (async () => {
+      await Promise.all(elements.map(node => component.initialize(node)));
+
+      // A newer render already replaced this one, so its nodes must not reach the DOM.
+      if (el.__x_each_nodes !== rendered || !el.parentNode) {
+        return;
+      }
+
+      if (array[idx + 1] && join) {
+        nodes.push(document.createTextNode(join));
+      }
+
+      (rendered.at(-1) ?? el).after(...nodes);
+      rendered.push(...nodes);
+    })();
+  });
+}

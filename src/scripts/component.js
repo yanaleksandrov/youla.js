@@ -214,7 +214,7 @@ export default class Component {
       ])
     );
 
-    // Read straight from the methods Proxy, so a method never lands in "deps".
+    // Resolved outside the tracking proxy, so a method never lands in "deps".
     const methods     = magicVariables.$el ? getElementMethods(magicVariables.$el, this) : undefined;
     const contextData = withMagicVariables(proxiedData, magicVariables, methods);
 

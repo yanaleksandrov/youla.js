@@ -37,12 +37,12 @@ export function resolveMethods(e, el, component) {
 const elementMethods = new WeakMap();
 
 /**
- * Returns the registered methods for a directive expression on "el", each created on first access
- * with an undefined event and cached for later evaluations.
+ * Returns a lazy lookup of the registered methods for a directive expression on "el": each one is
+ * created on first access with an undefined event and cached for later evaluations.
  *
  * @param {HTMLElement} el - The element the directive is declared on.
  * @param {Component} component - The owning component instance.
- * @returns {Proxy} An object resolving `$name` to the method's callable.
+ * @returns {{has: Function, get: Function}} `has(name)`/`get(name)` for a `$name` method.
  */
 export function getElementMethods(el, component) {
   let cached = elementMethods.get(el);
@@ -52,21 +52,16 @@ export function getElementMethods(el, component) {
 
     cached = {
       component,
-      methods: new Proxy(resolved, {
-        has: (_, prop) => Object.hasOwn(methods, prop),
-        get: (_, prop) => {
-          if (!Object.hasOwn(methods, prop)) {
-            return undefined;
-          }
-          if (!Object.hasOwn(resolved, prop)) {
-            resolved[prop] = methods[prop](undefined, el, component);
-          }
-          return resolved[prop];
-        },
-      }),
+      has: name => Object.hasOwn(methods, name),
+      get: name => {
+        if (!Object.hasOwn(resolved, name)) {
+          resolved[name] = methods[name](undefined, el, component);
+        }
+        return resolved[name];
+      },
     };
     elementMethods.set(el, cached);
   }
 
-  return cached.methods;
+  return cached;
 }

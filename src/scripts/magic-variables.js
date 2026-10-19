@@ -63,16 +63,16 @@ export function createMagicVariables(root, el, event) {
  *
  * @param {object} dataContext - The data object (or Proxy) to wrap.
  * @param {object} magicVariables - The magic variables to expose, as built by createMagicVariables().
- * @param {object} [methods] - Registered methods, resolved lazily (see getElementMethods()).
+ * @param {object} [methods] - Lazy method lookup, as built by getElementMethods().
  * @returns {Proxy} The wrapped context, safe to pass as "$data" to saferEval.
  */
 export function withMagicVariables(dataContext, magicVariables, methods) {
-  // Only "$" names can be methods, so plain data lookups skip the methods Proxy entirely.
-  const isMethod = prop => methods !== undefined && typeof prop === 'string' && prop[0] === '$' && prop in methods;
+  // Only "$" names can be methods, so plain data lookups skip the registry entirely.
+  const isMethod = prop => methods !== undefined && typeof prop === 'string' && prop[0] === '$' && methods.has(prop);
   const isMagic  = prop => prop in magicVariables || isMethod(prop);
 
   return new Proxy(dataContext, {
-    get: (target, prop) => prop in magicVariables ? magicVariables[prop] : isMethod(prop) ? methods[prop] : target[prop],
+    get: (target, prop) => prop in magicVariables ? magicVariables[prop] : isMethod(prop) ? methods.get(prop) : target[prop],
     has: (target, prop) => isMagic(prop) || prop in target,
     set: (target, prop, value) => isMagic(prop) ? true : Reflect.set(target, prop, value)
   });

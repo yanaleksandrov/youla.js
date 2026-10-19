@@ -28,11 +28,24 @@ document.addEventListener('youla:init', ()=> {
       settings.closeOnSelect = false;
     }
 
-    Object.assign(settings, output && typeof output === 'object' ? output : {});
+    const { events: userEvents = {}, ...options } = output && typeof output === 'object' ? output : {};
+    const events = { ...userEvents };
+    Object.assign(settings, options);
+
+    if (typeof events.search === 'function') {
+      const search = events.search;
+      // Accept "{options: [...]}" or an array; an aborted request leaves the indicator until the next response.
+      events.search = (...args) => Promise.resolve(search(...args)).then(
+        response => Array.isArray(response) ? response : response?.options ?? [],
+        error => error?.name === 'AbortError' ? new Promise(() => {}) : Promise.reject(error),
+      );
+    }
 
     // flush() re-runs the directive on every forced refresh — keep the instance unless its settings changed.
     const settingsKey = JSON.stringify(settings);
     if (el._x_slimSelect && el._x_slimSelectSettings === settingsKey) {
+      // Functions don't survive JSON, so events are refreshed on the existing instance.
+      Object.assign(el._x_slimSelect.events, events);
       return;
     }
     el._x_slimSelectSettings = settingsKey;
@@ -93,7 +106,7 @@ document.addEventListener('youla:init', ()=> {
 
       let slim;
       try {
-        slim = el._x_slimSelect = new SlimSelect({ settings, select: el, data });
+        slim = el._x_slimSelect = new SlimSelect({ settings, select: el, data, events });
       } finally {
         delete el.dispatchEvent;
       }

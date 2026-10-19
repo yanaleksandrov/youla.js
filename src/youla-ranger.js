@@ -5,7 +5,7 @@ class Ranger {
   // Keys treated as a keyboard-driven nudge/drag (label visibility, onStart/onEnd).
   static NAVIGATION_KEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown'];
 
-  // How sharply the --ranger-scale arc peaks; squaring narrows/heightens it vs a plain raised cosine.
+  // How sharply the scaleVar arc peaks; squaring narrows/heightens it vs a plain raised cosine.
   static ARC_SHARPNESS = 2;
 
   static DEFAULTS = {
@@ -31,8 +31,10 @@ class Ranger {
     scaleTicksCount: 10,
     // Unlabeled ticks inserted between each pair of major ticks, evenly splitting that gap.
     scaleMinorTicksCount: 0,
-    // Radius (in ticks) of the --ranger-scale arc on either side of a handle — see updateScale.
+    // Radius (in ticks) of the scaleVar arc on either side of a handle — see updateScale.
     scaleAnimatedTicksCount: 1,
+    // CSS custom property each tick receives its live 0–1 arc value in.
+    scaleVar: '--ranger-scale',
 
     labelIsVisible: true,
     labelPrefix: '',
@@ -42,7 +44,7 @@ class Ranger {
 
     disabled: false,
 
-    // CSS background (e.g. a linear-gradient) painted on the fill instead of --ranger-fill-color.
+    // CSS background image (e.g. a linear-gradient) painted over the fill's background color.
     fillGradient: null,
 
     // Display values (labels, dates, ...) to pick by index — min/max/step derived automatically.
@@ -112,11 +114,6 @@ class Ranger {
   /** Percentage `value` falls at between `start` and `end`. */
   static calculatePercent(start, end, value) {
     return ((value - start) / (end - start)) * 100;
-  }
-
-  /** CSS length of `percent` of the track's handle travel (the track minus --ranger-inset at both ends). */
-  static trackSpan(percent) {
-    return `(100% - 2 * var(--ranger-inset, 0px)) * ${percent / 100}`;
   }
 
   /**
@@ -358,10 +355,8 @@ class Ranger {
     this.fillSlider();
     this.addListeners();
 
-    // Re-fills on resize since fillGradient positions itself in px (stale otherwise).
-    if (this.fillGradient) {
-      new ResizeObserver(() => this.fillSlider()).observe(this.wrapper);
-    }
+    // Re-fills on resize since the inset and fillGradient are applied in px (stale otherwise).
+    new ResizeObserver(() => this.fillSlider()).observe(this.wrapper);
 
     if (this.labelIsVisible) {
       this.label = this.createLabel();
@@ -571,9 +566,14 @@ class Ranger {
     return value;
   }
 
-  // Track inset in px, read back from the wrapper's padding (set from --ranger-inset in CSS).
+  // Track inset in px, read back from the wrapper's inline padding.
   trackInset() {
     return parseFloat(getComputedStyle(this.wrapper).paddingInlineStart) || 0;
+  }
+
+  /** CSS length of `percent` of the track's handle travel (the track minus the inset at both ends). */
+  static trackSpan(percent, inset) {
+    return `(100% - ${inset * 2}px) * ${percent / 100}`;
   }
 
   positionToValue(clientX) {
@@ -703,20 +703,30 @@ class Ranger {
     const fromPercent = toSlider ? percent(fromSlider.value) : 0;
     const toPercent = percent(toSlider ? toSlider.value : fromSlider.value);
 
-    fill.style.setProperty('--ranger-fill-gradient', this.fillGradient || 'none');
-    // Logical (not left/right) so the fill mirrors correctly under RTL; it extends --ranger-inset past each handle to cover it.
-    fill.style.insetInlineStart = `calc(${Ranger.trackSpan(fromPercent)})`;
-    fill.style.width = `calc(${Ranger.trackSpan(toPercent - fromPercent)} + 2 * var(--ranger-inset, 0px))`;
+    const inset = this.trackInset();
 
-    // Sized to the full track and offset by the fill's own start, so gradient colors stay pinned to absolute values.
+    // Logical (not left/right) so the fill mirrors correctly under RTL; it extends the inset past each handle to cover it.
+    fill.style.insetInlineStart = `calc(${Ranger.trackSpan(fromPercent, inset)})`;
+    fill.style.width = `calc(${Ranger.trackSpan(toPercent - fromPercent, inset)} + ${inset * 2}px)`;
+
+    this.wrapper.classList.toggle('has-gradient', Boolean(this.fillGradient));
+
+    // Top layer spans exactly the handle travel, so gradient stops match values; the full-track layer below only paints the inset overhangs.
     if (this.fillGradient) {
       const trackWidth = this.wrapper.getBoundingClientRect().width;
-      const offset = (fromPercent / 100) * (trackWidth - this.trackInset() * 2);
-      fill.style.backgroundSize = `${trackWidth}px 100%`;
-      fill.style.backgroundPosition = this.isRTL ? `right -${offset}px top 0` : `left -${offset}px top 0`;
+      const travel = trackWidth - inset * 2;
+      const offset = (fromPercent / 100) * travel;
+      const side = this.isRTL ? 'right' : 'left';
+
+      fill.style.backgroundImage = `${this.fillGradient}, ${this.fillGradient}`;
+      fill.style.backgroundSize = `${travel}px 100%, ${trackWidth}px 100%`;
+      fill.style.backgroundPosition = `${side} ${inset - offset}px top 0, ${side} ${-offset}px top 0`;
+      fill.style.backgroundRepeat = 'no-repeat';
     } else {
+      fill.style.backgroundImage = '';
       fill.style.backgroundSize = '';
       fill.style.backgroundPosition = '';
+      fill.style.backgroundRepeat = '';
     }
 
     // Handles exactly overlapping would hide one behind the other (see .is-overlapping in CSS).
@@ -861,7 +871,7 @@ class Ranger {
   }
 
   /**
-   * Builds the tick scale — major + minor ticks, each with a live --ranger-scale property to animate.
+   * Builds the tick scale — major + minor ticks, each with a live scaleVar property to animate.
    */
   createScale() {
     const scale = Ranger.createElement('div', this.classes.scale);
@@ -911,7 +921,7 @@ class Ranger {
     return scale;
   }
 
-  // Sets --ranger-scale per tick: a raised-cosine arc, 1 at the handle, easing to 0 by scaleAnimatedTicksCount away.
+  // Sets scaleVar per tick: a raised-cosine arc, 1 at the handle, easing to 0 by scaleAnimatedTicksCount away.
   updateScale() {
     const { fromSlider, toSlider, scaleTicks, scaleAnimatedTicksCount } = this;
 
@@ -927,7 +937,7 @@ class Ranger {
         ? ((Math.cos((distance / maxDistance) * Math.PI) + 1) / 2) ** Ranger.ARC_SHARPNESS
         : 0;
 
-      tick.style.setProperty('--ranger-scale', scale.toFixed(2));
+      tick.style.setProperty(this.scaleVar, scale.toFixed(2));
     });
   }
 

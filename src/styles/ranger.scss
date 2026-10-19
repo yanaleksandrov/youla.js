@@ -18,15 +18,16 @@
 // Default "Coral" skin tokens; declared on :root so they reach both the pre-init input and the post-init .ranger tree.
 :root {
 	--ranger-height: 1.5rem;
-	--ranger-radius: 7px;
+	--ranger-radius: 6px;
 	--ranger-gap-top: 2.5rem;
 	--ranger-gap-bottom: 4rem;
 	// Keeps handles off the track ends; needs a unit (0px, not 0) since it is used in calc().
 	--ranger-inset: 8px;
 	--ranger-bg: #f7f7f7;
 	--ranger-fill-color: #dce8fc;
-	--ranger-fill-radius: 7px;
+	--ranger-fill-radius: 6px;
 	--ranger-thumb-color: #005cf4;
+	--ranger-thumb-gradient-color: #fff;
 	--ranger-thumb-width: 1.25rem;
 	--ranger-thumb-height: 2rem;
 	--ranger-thumb-radius: 0;
@@ -128,7 +129,7 @@
 	height: var(--ranger-height);
 	margin-block: var(--ranger-gap-top) var(--ranger-gap-bottom);
 	box-sizing: border-box;
-	// youla-ranger.js reads the inset back from this padding; absolute layers ignore it and position via --ranger-inset.
+	// youla-ranger.js reads the inset back from this padding; absolute layers ignore it and use --ranger-inset directly.
 	padding-inline: var(--ranger-inset);
 	position: relative;
 	// Horizontal touch drags from the track move the handle instead of scrolling the page.
@@ -158,11 +159,22 @@
 		}
 	}
 
+	// Handles over a fillGradient use their own color; the focus ring keeps --ranger-thumb-color.
+	&.has-gradient > input[type="range"] {
+		&::-webkit-slider-thumb,
+		&::-webkit-slider-thumb:hover {
+			color: var(--ranger-thumb-gradient-color);
+		}
+
+		&::-moz-range-thumb,
+		&::-moz-range-thumb:hover {
+			color: var(--ranger-thumb-gradient-color);
+		}
+	}
+
 	// Dedicated fill layer, kept below marks/handles by DOM order (see reorderLayers in youla-ranger.js).
 	&-fill {
 		background-color: var(--ranger-fill-color);
-		// Set via the fillGradient option; defaults to 'none'.
-		background-image: var(--ranger-fill-gradient, none);
 		// Falls back to the track radius so a rounded track keeps a matching fill by default.
 		border-radius: var(--ranger-fill-radius, var(--ranger-radius));
 		height: 100%;
@@ -264,7 +276,7 @@
 				height: 4px;
 			}
 
-			// Opt-in via the classes option; grows with the live --ranger-scale property as a handle passes.
+			// Opt-in via the classes option; grows with the live --ranger-scale property (scaleVar option) as a handle passes.
 			&--animated::before {
 				background-color: var(--ranger-tick-color);
 				height: calc(4px + var(--ranger-scale, 0) * 12px);

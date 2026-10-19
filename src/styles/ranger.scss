@@ -17,12 +17,16 @@
 
 // Default "Coral" skin tokens; declared on :root so they reach both the pre-init input and the post-init .ranger tree.
 :root {
-	--ranger-height: 6px;
-	--ranger-radius: 0;
+	--ranger-height: 1.5rem;
+	--ranger-radius: 7px;
 	--ranger-gap-top: 2.5rem;
 	--ranger-gap-bottom: 4rem;
-	--ranger-bg: #e2e2e2;
-	--ranger-accent: #ff6f59;
+	// Keeps handles off the track ends; needs a unit (0px, not 0) since it is used in calc().
+	--ranger-inset: 8px;
+	--ranger-bg: #f7f7f7;
+	--ranger-fill-color: #dce8fc;
+	--ranger-fill-radius: 7px;
+	--ranger-thumb-color: #005cf4;
 	--ranger-thumb-width: 1.25rem;
 	--ranger-thumb-height: 2rem;
 	--ranger-thumb-radius: 0;
@@ -34,12 +38,12 @@
 	--ranger-thumb-shadow: none;
 	--ranger-tick-color: #bdbdbd;
 	--ranger-tick-label-color: #888;
-	--ranger-mark-color: #f59e0b;
+	--ranger-mark-color: #ffd794;
 
 	// Element selector, not a class, so this reaches the raw input before Ranger runs.
 	input[type="range"] {
 		// Must apply from first paint or the native control briefly renders unstyled.
-		accent-color: var(--ranger-accent);
+		accent-color: var(--ranger-fill-color);
 		appearance: none;
 		border-radius: var(--ranger-radius);
 		box-sizing: border-box;
@@ -67,14 +71,18 @@
 			@include ranger-thumb;
 		}
 
+		&:focus-visible {
+			outline: none;
+		}
+
 		// Custom thumbs don't reliably show the native focus ring, so draw one explicitly.
 		&:focus-visible::-webkit-slider-thumb {
-			outline: 2px solid var(--ranger-accent);
+			outline: 2px solid var(--ranger-thumb-color);
 			outline-offset: 2px;
 		}
 
 		&:focus-visible::-moz-range-thumb {
-			outline: 2px solid var(--ranger-accent);
+			outline: 2px solid var(--ranger-thumb-color);
 			outline-offset: 2px;
 		}
 
@@ -90,23 +98,23 @@
 		}
 
 		&::-webkit-slider-runnable-track {
-			margin-inline: calc(var(--ranger-thumb-width) / 2 * -1);
+			margin-inline: calc(var(--ranger-inset) - var(--ranger-thumb-width) / 2);
 		}
 
 		&::-moz-range-track {
-			margin-inline: calc(var(--ranger-thumb-width) / 2 * -1);
+			margin-inline: calc(var(--ranger-inset) - var(--ranger-thumb-width) / 2);
 		}
 
 		&::-webkit-slider-thumb,
 		&::-webkit-slider-thumb:hover {
-			color: var(--ranger-accent);
+			color: var(--ranger-thumb-color);
 			mask: url("data:image/svg+xml,%3Csvg width='3' height='16' viewBox='0 0 3 16' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='3' height='16' fill='white'/%3E%3C/svg%3E") center / 3px 16px no-repeat;
 			background-color: currentColor;
 		}
 
 		&::-moz-range-thumb,
 		&::-moz-range-thumb:hover {
-			color: var(--ranger-accent);
+			color: var(--ranger-thumb-color);
 			mask: url("data:image/svg+xml,%3Csvg width='3' height='16' viewBox='0 0 3 16' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='3' height='16' fill='white'/%3E%3C/svg%3E") center / 3px 16px no-repeat;
 			background-color: currentColor;
 		}
@@ -119,7 +127,12 @@
 	cursor: pointer;
 	height: var(--ranger-height);
 	margin-block: var(--ranger-gap-top) var(--ranger-gap-bottom);
+	box-sizing: border-box;
+	// youla-ranger.js reads the inset back from this padding; absolute layers ignore it and position via --ranger-inset.
+	padding-inline: var(--ranger-inset);
 	position: relative;
+	// Horizontal touch drags from the track move the handle instead of scrolling the page.
+	touch-action: pan-y;
 
 	&:has(input[type="range"]:disabled) {
 		opacity: 0.5;
@@ -147,10 +160,11 @@
 
 	// Dedicated fill layer, kept below marks/handles by DOM order (see reorderLayers in youla-ranger.js).
 	&-fill {
-		background-color: var(--ranger-accent);
+		background-color: var(--ranger-fill-color);
 		// Set via the fillGradient option; defaults to 'none'.
 		background-image: var(--ranger-fill-gradient, none);
-		border-radius: var(--ranger-radius);
+		// Falls back to the track radius so a rounded track keeps a matching fill by default.
+		border-radius: var(--ranger-fill-radius, var(--ranger-radius));
 		height: 100%;
 		inset-inline-start: 0;
 		pointer-events: none;
@@ -179,7 +193,7 @@
 
 	&-label {
 		position: absolute;
-		inset-inline: 0;
+		inset-inline: var(--ranger-inset);
 		top: calc(-1 * var(--ranger-gap-top));
 		transition: opacity 0.2s ease-out;
 		min-height: 1.25rem;
@@ -220,11 +234,11 @@
 	&-scale {
 		display: flex;
 		justify-content: space-between;
-		inset-inline-start: 0;
+		inset-inline-start: var(--ranger-inset);
 		position: absolute;
 		top: calc(var(--ranger-height, 8px) - 2px);
 		white-space: nowrap;
-		width: calc(100% - 1px);
+		width: calc(100% - 2 * var(--ranger-inset) - 1px);
 		box-sizing: border-box;
 		padding: 0;
 		cursor: initial;
@@ -265,11 +279,11 @@
 			// Applied automatically (createScale in youla-ranger.js) to the ticks at minValue/maxValue.
 			&--limit {
 				&::before {
-					background-color: var(--ranger-accent);
+					background-color: var(--ranger-fill-color);
 				}
 
 				ins {
-					color: var(--ranger-accent);
+					color: var(--ranger-fill-color);
 					font-weight: 600;
 				}
 			}
@@ -291,7 +305,7 @@
 
 	// Separate from &-scale since marks are arbitrary positions, not an evenly spaced grid.
 	&-marks {
-		inset-inline: 0;
+		inset-inline: var(--ranger-inset);
 		height: 100%;
 		pointer-events: none;
 		position: absolute;
@@ -321,13 +335,13 @@
 			opacity: 0.25;
 		}
 
-		// Opt-in via a mark's own className — wider, accent-colored highlight variant.
+		// Opt-in via a mark's own className — wider, fill-colored highlight variant.
 		&--highlight {
-			background-color: var(--ranger-accent);
+			background-color: var(--ranger-fill-color);
 			width: 4px;
 
 			ins {
-				color: var(--ranger-accent);
+				color: var(--ranger-fill-color);
 				font-weight: 600;
 			}
 		}

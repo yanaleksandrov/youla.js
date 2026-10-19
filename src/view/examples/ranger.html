@@ -106,7 +106,7 @@
     <tr>
       <td><code>fillGradient</code></td>
       <td>CSS-фон (например, <code>linear-gradient</code>), которым закрашивается заливка вместо
-        одного сплошного <code>accentColor</code>.</td>
+        одного сплошного цвета <code>--ranger-fill-color</code>.</td>
       <td><code>null</code></td>
     </tr>
     <tr>
@@ -138,6 +138,83 @@
     </tr>
   </tbody>
 </table>
+
+<h2>CSS-переменные</h2>
+
+<p>
+  Внешний вид слайдера настраивается CSS-переменными — глобально на <code>:root</code> или для
+  отдельного слайдера на любом его родителе.
+</p>
+
+<table>
+  <tbody>
+    <tr>
+      <th>Переменная</th>
+      <th>Описание</th>
+      <th>По умолчанию</th>
+    </tr>
+    <tr>
+      <td><code>--ranger-fill-color</code></td>
+      <td>Цвет заливки выбранной части трека, крайних делений <code>minValue</code>/<code>maxValue</code>
+        и выделенных меток.</td>
+      <td><code>#dce8fc</code></td>
+    </tr>
+    <tr>
+      <td><code>--ranger-thumb-color</code></td>
+      <td>Цвет ползунков и их обводки при фокусе.</td>
+      <td><code>#005cf4</code></td>
+    </tr>
+    <tr>
+      <td><code>--ranger-bg</code></td>
+      <td>Цвет незаполненного трека.</td>
+      <td><code>#f7f7f7</code></td>
+    </tr>
+    <tr>
+      <td><code>--ranger-height</code>, <code>--ranger-radius</code></td>
+      <td>Толщина трека и скругление его углов.</td>
+      <td><code>1.5rem</code>, <code>7px</code></td>
+    </tr>
+    <tr>
+      <td><code>--ranger-fill-radius</code></td>
+      <td>Скругление углов заливки.</td>
+      <td><code>7px</code>; без значения — <code>--ranger-radius</code></td>
+    </tr>
+    <tr>
+      <td><code>--ranger-inset</code></td>
+      <td>Внутренний отступ от краёв трека: на <code>min</code> и <code>max</code> ползунок останавливается на этом расстоянии от края, заливка выступает на него за каждый ползунок, а подписи, шкала и метки пересчитываются под него.</td>
+      <td><code>0px</code></td>
+    </tr>
+    <tr>
+      <td><code>--ranger-gap-top</code>, <code>--ranger-gap-bottom</code></td>
+      <td>Отступы над треком (место для подписи) и под ним (место для шкалы).</td>
+      <td><code>2.5rem</code>, <code>4rem</code></td>
+    </tr>
+    <tr>
+      <td><code>--ranger-thumb-width</code>, <code>--ranger-thumb-height</code></td>
+      <td>Размер области захвата ползунка.</td>
+      <td><code>1.25rem</code>, <code>2rem</code></td>
+    </tr>
+    <tr>
+      <td><code>--ranger-thumb-radius</code>, <code>--ranger-thumb-border</code>, <code>--ranger-thumb-shadow</code></td>
+      <td>Скругление, цвет рамки и тень ползунка.</td>
+      <td><code>0</code>, <code>transparent</code>, <code>none</code></td>
+    </tr>
+    <tr>
+      <td><code>--ranger-tick-color</code>, <code>--ranger-tick-label-color</code></td>
+      <td>Цвет делений шкалы и их подписей.</td>
+      <td><code>#bdbdbd</code>, <code>#888</code></td>
+    </tr>
+    <tr>
+      <td><code>--ranger-mark-color</code></td>
+      <td>Цвет меток и зон из опции <code>marks</code>.</td>
+      <td><code>#ffd794</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<blockquote>
+  Значение <code>--ranger-inset</code> указывается с единицей измерения: <code>0px</code>, а не <code>0</code>, иначе вычисления в CSS не сработают.
+</blockquote>
 
 <h2>Громкость, яркость и недоступный фильтр</h2>
 
@@ -614,7 +691,7 @@ Youla.data(&#39;bookingDates&#39;, () =&gt; {
 <h2>Градиент заливки: риск портфеля и сложность пароля</h2>
 
 <p>
-  <code>fillGradient</code> заменяет один сплошной <code>accent-color</code> CSS-градиентом —
+  <code>fillGradient</code> заменяет сплошной цвет <code>--ranger-fill-color</code> CSS-градиентом —
   здесь зелёный→жёлтый→красный на шкале риска инвестиционного портфеля. В диапазонном режиме
   градиент растягивается на выбранный поддиапазон, а не на постоянную позицию по всей дорожке.
   Второй слайдер использует тот же приём для пяти чётких зон — как индикатор сложности пароля
@@ -687,7 +764,7 @@ Youla.data(&#39;bookingDates&#39;, () =&gt; {
         u-ranger="{
           scaleTicksCount: 5,
           marks: [
-            { value: 300, label: 'Типично' },
+            { value: 400, label: 'Типично' },
             { value: 700, label: 'Рекомендовано', className: 'ranger-mark--highlight' },
             { from: 200, to: 500, label: 'Комфортная зона' },
           ],
@@ -703,7 +780,7 @@ Youla.data(&#39;bookingDates&#39;, () =&gt; {
   u-ranger=&quot;{
     scaleTicksCount: 5,
     marks: [
-      { value: 300, label: &#39;Типично&#39; },
+      { value: 400, label: &#39;Типично&#39; },
       { value: 700, label: &#39;Рекомендовано&#39;, className: &#39;ranger-mark--highlight&#39; },
       { from: 200, to: 500, label: &#39;Комфортная зона&#39; },
     ],

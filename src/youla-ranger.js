@@ -42,7 +42,7 @@ class Ranger {
 
     disabled: false,
 
-    // CSS background (e.g. a linear-gradient) painted on the fill instead of accentColor.
+    // CSS background (e.g. a linear-gradient) painted on the fill instead of --ranger-fill-color.
     fillGradient: null,
 
     // Display values (labels, dates, ...) to pick by index — min/max/step derived automatically.
@@ -112,6 +112,11 @@ class Ranger {
   /** Percentage `value` falls at between `start` and `end`. */
   static calculatePercent(start, end, value) {
     return ((value - start) / (end - start)) * 100;
+  }
+
+  /** CSS length of `percent` of the track's handle travel (the track minus --ranger-inset at both ends). */
+  static trackSpan(percent) {
+    return `(100% - 2 * var(--ranger-inset, 0px)) * ${percent / 100}`;
   }
 
   /**
@@ -406,7 +411,7 @@ class Ranger {
       this.fill.addEventListener('pointerdown', (event) => this.handleFillDragStart(event));
     }
 
-    this.wrapper.addEventListener('click', (event) => this.handleTrackClick(event));
+    this.wrapper.addEventListener('pointerdown', (event) => this.handleTrackPress(event));
 
     [['fromInput', 'fromSlider'], ['toInput', 'toSlider']].forEach(([inputKey, sliderKey]) => {
       const input = this[inputKey];
@@ -566,11 +571,17 @@ class Ranger {
     return value;
   }
 
+  // Track inset in px, read back from the wrapper's padding (set from --ranger-inset in CSS).
+  trackInset() {
+    return parseFloat(getComputedStyle(this.wrapper).paddingInlineStart) || 0;
+  }
+
   positionToValue(clientX) {
     const { left, width } = this.wrapper.getBoundingClientRect();
+    const inset = this.trackInset();
     const min = Number(this.fromSlider.min);
     const max = Number(this.fromSlider.max);
-    const ratio = (clientX - left) / width;
+    const ratio = Math.min(1, Math.max(0, (clientX - left - inset) / (width - inset * 2)));
 
     return min + (this.isRTL ? 1 - ratio : ratio) * (max - min);
   }
@@ -605,19 +616,39 @@ class Ranger {
     this.activeStep = null;
   }
 
-  // Track clicks jump the nearest handle; clicks on a handle itself never reach the wrapper.
-  handleTrackClick(event) {
-    if (event.target !== this.wrapper) {
+  // Track presses jump the nearest handle and keep dragging it; presses on a handle itself never reach the wrapper.
+  handleTrackPress(event) {
+    if (event.target !== this.wrapper || event.button !== 0) {
       return;
     }
+    event.preventDefault();
 
     const value = this.positionToValue(event.clientX);
     const target = this.isRange && Math.abs(value - this.toSlider.value) < Math.abs(value - this.fromSlider.value)
       ? this.toSlider
       : this.fromSlider;
 
-    target.value = this.resolveValue(value, this.step);
-    target.dispatchEvent(new Event('input'));
+    const moveTo = (clientX) => {
+      target.value = this.resolveValue(this.positionToValue(clientX), this.step);
+      target.dispatchEvent(new Event('input'));
+    };
+
+    // The document-level pointerup listener (bindCallbackListeners) ends the drag and fires onEnd.
+    this.startDrag(target);
+    target.focus({ preventScroll: true });
+    moveTo(event.clientX);
+
+    const onMove = (moveEvent) => moveTo(moveEvent.clientX);
+    const onUp = () => {
+      this.wrapper.removeEventListener('pointermove', onMove);
+      this.wrapper.removeEventListener('pointerup', onUp);
+      this.wrapper.removeEventListener('pointercancel', onUp);
+    };
+
+    this.wrapper.setPointerCapture(event.pointerId);
+    this.wrapper.addEventListener('pointermove', onMove);
+    this.wrapper.addEventListener('pointerup', onUp);
+    this.wrapper.addEventListener('pointercancel', onUp);
   }
 
   // Dragging the fill slides both handles together, keeping their distance fixed.
@@ -632,7 +663,7 @@ class Ranger {
     const startTo = Number(this.toSlider.value);
     const min = Number(this.fromSlider.min);
     const max = Number(this.fromSlider.max);
-    const trackWidth = this.wrapper.getBoundingClientRect().width;
+    const trackWidth = this.wrapper.getBoundingClientRect().width - this.trackInset() * 2;
 
     this.fill.setPointerCapture(event.pointerId);
     this.onStart?.([startFrom, startTo], this.fill);
@@ -672,17 +703,15 @@ class Ranger {
     const fromPercent = toSlider ? percent(fromSlider.value) : 0;
     const toPercent = percent(toSlider ? toSlider.value : fromSlider.value);
 
-    // Re-read every time so a live skin change is picked up on the very next value change.
-    fill.style.backgroundColor = getComputedStyle(fromSlider).accentColor;
     fill.style.setProperty('--ranger-fill-gradient', this.fillGradient || 'none');
-    // Logical (not left/right) so the fill mirrors correctly under RTL.
-    fill.style.insetInlineStart = `${fromPercent}%`;
-    fill.style.width = `${toPercent - fromPercent}%`;
+    // Logical (not left/right) so the fill mirrors correctly under RTL; it extends --ranger-inset past each handle to cover it.
+    fill.style.insetInlineStart = `calc(${Ranger.trackSpan(fromPercent)})`;
+    fill.style.width = `calc(${Ranger.trackSpan(toPercent - fromPercent)} + 2 * var(--ranger-inset, 0px))`;
 
     // Sized to the full track and offset by the fill's own start, so gradient colors stay pinned to absolute values.
     if (this.fillGradient) {
       const trackWidth = this.wrapper.getBoundingClientRect().width;
-      const offset = (fromPercent / 100) * trackWidth;
+      const offset = (fromPercent / 100) * (trackWidth - this.trackInset() * 2);
       fill.style.backgroundSize = `${trackWidth}px 100%`;
       fill.style.backgroundPosition = this.isRTL ? `right -${offset}px top 0` : `left -${offset}px top 0`;
     } else {
@@ -779,6 +808,7 @@ class Ranger {
       slider.addEventListener('keyup', (event) => Ranger.NAVIGATION_KEYS.includes(event.key) && hide());
     });
 
+    this.wrapper.addEventListener('pointerdown', (event) => event.target === this.wrapper && show());
     document.addEventListener('pointerup', hide);
   }
 
@@ -929,7 +959,7 @@ class Ranger {
     return Array.from({ length: segments + 1 }, (_, index) => min + ((max - min) / segments) * index);
   }
 
-  // Fixed points/zones along the track, positioned by percent — the same units the fill layer uses.
+  // Fixed points/zones along the track, positioned by percent of the inset .ranger-marks container.
   createMarks() {
     const container = Ranger.createElement('div', this.classes.mark);
     container.setAttribute('aria-hidden', 'true');

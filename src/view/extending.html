@@ -157,15 +157,17 @@ document.addEventListener(&#39;youla:init&#39;, () =&gt; {
 <h2>Пользовательские методы</h2>
 
 <p>
-  <code>Youla.method(имя, callback)</code> регистрирует метод, доступный внутри обработчика любого
-  события (<code>@click</code>, <code>@input</code> и т.п.) как <code>$имя</code> — рядом со
-  встроенными <code>$el</code>, <code>$event</code>, <code>$refs</code> и <code>$root</code>.
+  <code>Youla.method(имя, callback)</code> регистрирует метод <code>$имя</code>, доступный в
+  обработчиках событий (<code>@click</code>, <code>@input</code> и т.п.) и в выражениях директив
+  (<code>u-text</code>, <code>u-bind</code> и т.п.) — рядом со встроенными <code>$el</code>,
+  <code>$event</code>, <code>$refs</code> и <code>$root</code>.
 </p>
 
 <p>
-  В отличие от директивы, <code>callback</code> здесь — не сам метод, а фабрика: она вызывается
-  один раз на каждое обращение к <code>$имя</code> с текущими <code>el</code> и
-  <code>component</code>, а возвращённая ею функция и есть то, что реально вызывается в выражении.
+  В отличие от директивы, <code>callback</code> здесь — не сам метод, а фабрика: она получает
+  текущие <code>event</code>, <code>el</code> и <code>component</code>, а возвращённая ею функция и
+  есть то, что реально вызывается в выражении. В выражениях директив фабрика вызывается один раз на
+  элемент, и все вычисления выражения получают один и тот же экземпляр метода.
 </p>
 
 <table>
@@ -176,11 +178,11 @@ document.addEventListener(&#39;youla:init&#39;, () =&gt; {
     </tr>
     <tr>
       <td><code>event</code></td>
-      <td>Объект события, вызвавшего обработчик</td>
+      <td>Объект события, вызвавшего обработчик; <code>undefined</code>, если метод вызван из выражения директивы</td>
     </tr>
     <tr>
       <td><code>el</code></td>
-      <td>Элемент, на котором объявлен обработчик события</td>
+      <td>Элемент, на котором объявлен обработчик события или директива</td>
     </tr>
     <tr>
       <td><code>component</code></td>

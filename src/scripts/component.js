@@ -412,7 +412,8 @@ export default class Component {
             propExpression = generateExpressionForProp(el, self.scope, attribute, splitMagicVariables(additionalHelperVariables).otherVariables);
 
             // If the element we are binding to is a select, a radio, or checkbox we'll listen for the change event instead of the "input" event.
-            event = ['select-multiple', 'select', 'checkbox', 'radio'].includes(el.type) || modifiers.includes('lazy')
+            // A single <select> reports type "select-one"; widgets like SlimSelect dispatch only "change".
+            event = el.tagName === 'SELECT' || ['checkbox', 'radio'].includes(el.type) || modifiers.includes('lazy')
               ? 'change'
               : 'input';
           }

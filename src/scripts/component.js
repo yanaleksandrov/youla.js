@@ -102,6 +102,21 @@ export default class Component {
     this.rawData = saferEval(this.name || '{}', createDataProviderContext(el));
     this.rawData = hydrateProps(el, this.rawData, this.parent, isDataProvider(this.name) ? this.name : null);
 
+    // Pulled out before observeData(), so "self" never becomes reactive, persisted, or visible in scope (where it would shadow window.self).
+    this.selfBindings = null;
+    if (this.rawData && typeof this.rawData === 'object' && Object.hasOwn(this.rawData, 'self')) {
+      const selfBindings = this.rawData.self;
+      delete this.rawData.self;
+
+      if (selfBindings && typeof selfBindings === 'object' && !Array.isArray(selfBindings)) {
+        this.selfBindings = selfBindings;
+        // Snapshot taken before the first render writes "self" attributes, so only real markup counts as explicit.
+        this.rootAttributeNames = new Set([...el.attributes].map(({ name }) => name));
+      } else {
+        console.warn(`Youla.js: "self" in u-data="${this.name}" must be an object of root bindings — ignored.`);
+      }
+    }
+
     // Rehydrate from whatever was persisted last time, on top of the fresh factory defaults, so new keys added later still show up for visitors with stale storage.
     if (this.storageType) {
       const saved = storage.get(`u-data:${this.name}`, this.storageType);
@@ -227,17 +242,16 @@ export default class Component {
   /**
    * Reads every directive/event/bind attribute off "el", expanding any "u-bind" entry into the
    * individual directive/event/bind entries its expression resolves to (e.g. u-bind="trigger"
-   * referencing a Youla.data() factory's returned object).
+   * referencing a Youla.data() factory's returned object), plus the "self" bindings on the root.
    *
    * @param {HTMLElement} el - The element to read attributes from.
    * @returns {Array<Object>} The resolved list of attribute descriptors.
    */
   resolveAttributes(el) {
-    const self = this;
     // Built lazily on first use since most elements carry no "u-bind" attribute, and building it calls every registered Youla.variable() factory — paying that cost per element, per domWalk pass, would be pure waste.
     let additionalHelperVariables;
 
-    return getAttributes(el).flatMap(attribute => {
+    const attributes = getAttributes(el).flatMap(attribute => {
       if (attribute.directive !== 'u-bind') {
         return [attribute];
       }
@@ -246,7 +260,7 @@ export default class Component {
 
       let bindings;
       try {
-        ({ output: bindings } = self.evaluate(attribute.expression, additionalHelperVariables));
+        ({ output: bindings } = this.evaluate(attribute.expression, additionalHelperVariables));
       } catch (error) {
         return [];
       }
@@ -255,32 +269,55 @@ export default class Component {
         return [];
       }
 
-      return Object.entries(bindings).flatMap(([name, value]) => {
-        const isFn    = typeof value === 'function';
-        const parsed  = parseAttribute(name, value);
+      return this.expandBindings(el, Object.entries(bindings));
+    });
 
-        // Arrow functions ignore .call()/.apply() and silently keep their original "this", so detect one from its source text — an arrow's "=>" appears before its body's opening "{" (or there's none), which a function/method never does.
-        if (isFn && isArrowFunction(value)) {
-          console.warn(`Youla.js: u-bind key "${name}" is an arrow function — arrow functions don't bind "this" to the component's data. Use a regular function or method shorthand instead: "${name}"() { ... }.`);
-        }
+    if (el !== this.root || !this.selfBindings) {
+      return attributes;
+    }
 
-        // A key with no u-/@/: prefix (e.g. "type") is a plain HTML attribute, written directly as markup.
-        const isPlainAttribute = !parsed.directive && !parsed.event && !parsed.bind;
+    // Explicit markup and the root's own "u-bind" win on a key collision; events never collide, both handlers are attached.
+    const explicitNames = new Set(attributes.map(({ name }) => name));
+    const selfEntries   = Object.entries(this.selfBindings).filter(([name]) => {
+      return name.startsWith('@') || (!this.rootAttributeNames.has(name) && !explicitNames.has(name));
+    });
 
-        // A "u-*" key that isn't a registered directive (e.g. "u-ref") is read straight off the element instead (see createRefsProxy), so write it as a real attribute since there's none to read yet.
-        if (parsed.directive && !getDirective(parsed.directive)) {
-          el.setAttribute(name, isFn ? value.call(self.scope) : value);
-          return [];
-        }
+    return [...this.expandBindings(el, selfEntries), ...attributes];
+  }
 
-        return [{
-          ...parsed,
-          expression: value,
-          bind: parsed.bind || isPlainAttribute,
-          // Strings on a "u-*"/"@"/":" key are expressions (evaluated, reactive); functions are always computed; anything else is a one-time static value applied as-is.
-          literal: !isFn && (isPlainAttribute || typeof value !== 'string')
-        }];
-      });
+  /**
+   * Turns "u-bind"-style [key, value] entries into attribute descriptors for "el".
+   *
+   * @param {HTMLElement} el - The element the bindings apply to.
+   * @param {Array<Array>} entries - The binding object's entries.
+   * @returns {Array<Object>} The resolved attribute descriptors.
+   */
+  expandBindings(el, entries) {
+    return entries.flatMap(([name, value]) => {
+      const isFn    = typeof value === 'function';
+      const parsed  = parseAttribute(name, value);
+
+      // Arrow functions ignore .call()/.apply() and silently keep their original "this", so detect one from its source text — an arrow's "=>" appears before its body's opening "{" (or there's none), which a function/method never does.
+      if (isFn && isArrowFunction(value)) {
+        console.warn(`Youla.js: u-bind key "${name}" is an arrow function — arrow functions don't bind "this" to the component's data. Use a regular function or method shorthand instead: "${name}"() { ... }.`);
+      }
+
+      // A key with no u-/@/: prefix (e.g. "type") is a plain HTML attribute, written directly as markup.
+      const isPlainAttribute = !parsed.directive && !parsed.event && !parsed.bind;
+
+      // A "u-*" key that isn't a registered directive (e.g. "u-ref") is read straight off the element instead (see createRefsProxy), so write it as a real attribute since there's none to read yet.
+      if (parsed.directive && !getDirective(parsed.directive)) {
+        el.setAttribute(name, isFn ? value.call(this.scope) : value);
+        return [];
+      }
+
+      return [{
+        ...parsed,
+        expression: value,
+        bind: parsed.bind || isPlainAttribute,
+        // Strings on a "u-*"/"@"/":" key are expressions (evaluated, reactive); functions are always computed; anything else is a one-time static value applied as-is.
+        literal: !isFn && (isPlainAttribute || typeof value !== 'string')
+      }];
     });
   }
 

@@ -269,7 +269,7 @@ export default class Component {
         return [];
       }
 
-      return this.expandBindings(el, Object.entries(bindings));
+      return this.withoutCloneLoop(el, this.expandBindings(el, Object.entries(bindings)));
     });
 
     if (el !== this.root || !this.selfBindings) {
@@ -282,7 +282,18 @@ export default class Component {
       return name.startsWith('@') || (!this.rootAttributeNames.has(name) && !explicitNames.has(name));
     });
 
-    return [...this.expandBindings(el, selfEntries), ...attributes];
+    return [...this.withoutCloneLoop(el, this.expandBindings(el, selfEntries)), ...attributes];
+  }
+
+  /**
+   * Drops a bound "u-each" from a "u-each" clone, which inherits its template's "u-bind" and would otherwise loop forever.
+   *
+   * @param {HTMLElement} el - The element the bindings apply to.
+   * @param {Array<Object>} attributes - The expanded attribute descriptors.
+   * @returns {Array<Object>} The descriptors without "u-each" when "el" is a clone.
+   */
+  withoutCloneLoop(el, attributes) {
+    return el.__x_each_clone ? attributes.filter(({ directive }) => directive !== 'u-each') : attributes;
   }
 
   /**

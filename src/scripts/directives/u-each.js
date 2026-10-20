@@ -81,6 +81,7 @@ directive('each', (el, output, attribute, component, additionalHelperVariables =
     const clone = el.cloneNode(true);
 
     clone.removeAttribute('u-each');
+    clone.__x_each_clone = true;
 
     (async () => {
       clone.__x_for_data = {...otherVariables, [item]: dataItem, [index]: toLoopKey(key)};
@@ -123,6 +124,7 @@ function renderTemplate(el, dataItems, { item, index, join }, component, otherVa
 
     elements.forEach(node => {
       node.__x_for_data = {...otherVariables, [item]: dataItem, [index]: toLoopKey(key)};
+      node.__x_each_clone = true;
     });
 
     (async () => {

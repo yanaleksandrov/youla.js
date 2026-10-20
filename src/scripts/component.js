@@ -56,6 +56,18 @@ function isArrowFunction(fn) {
   return arrowIndex !== -1 && (braceIndex === -1 || arrowIndex < braceIndex);
 }
 
+/**
+ * Keeps only the "u-each" of a loop template, whose other bindings belong to its clones and have no loop variables yet.
+ *
+ * @param {Array<Object>} attributes - The element's resolved attribute descriptors.
+ * @returns {Array<Object>} The first "u-each" alone, or "attributes" unchanged.
+ */
+function onlyLoop(attributes) {
+  const loop = attributes.find(({ directive }) => directive === 'u-each');
+
+  return loop ? [loop] : attributes;
+}
+
 // Compared by content so in-place mutations (e.g. an array "push") count as a change; falls back to identity for values JSON can't represent.
 function serialize(value) {
   try {
@@ -273,7 +285,7 @@ export default class Component {
     });
 
     if (el !== this.root || !this.selfBindings) {
-      return attributes;
+      return onlyLoop(attributes);
     }
 
     // Explicit markup and the root's own "u-bind" win on a key collision; events never collide, both handlers are attached.
@@ -282,7 +294,7 @@ export default class Component {
       return name.startsWith('@') || (!this.rootAttributeNames.has(name) && !explicitNames.has(name));
     });
 
-    return [...this.withoutCloneLoop(el, this.expandBindings(el, selfEntries)), ...attributes];
+    return onlyLoop([...this.withoutCloneLoop(el, this.expandBindings(el, selfEntries)), ...attributes]);
   }
 
   /**

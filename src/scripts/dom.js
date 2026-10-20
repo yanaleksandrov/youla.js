@@ -64,6 +64,11 @@ export function closestDirective(el, name) {
 export function domWalk(el, callback) {
   callback(el);
 
+  // A "u-each" template's children are walked per clone, with loop scope; checked after "callback" since a bound "u-each" only becomes an attribute once applied.
+  if (el.hasAttribute('u-each')) {
+    return;
+  }
+
   const iframeBody = el.tagName === 'IFRAME' ? el.contentDocument?.body : null;
 
   // Snapshot first: "callback(node)" may alter the DOM, so re-reading "nextElementSibling" could traverse injected markup instead of "el"'s original siblings.
@@ -75,11 +80,6 @@ export function domWalk(el, callback) {
       continue;
     }
 
-    // "u-each" elements are templates: the directive itself clones and walks each rendered item, so descending into the raw template here would evaluate its children without loop scope.
-    if (node.hasAttribute('u-each')) {
-      callback(node);
-    } else {
-      domWalk(node, callback);
-    }
+    domWalk(node, callback);
   }
 }

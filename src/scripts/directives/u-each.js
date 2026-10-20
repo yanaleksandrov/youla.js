@@ -38,6 +38,11 @@ directive('each', (el, output, attribute, component, additionalHelperVariables =
     return;
   }
 
+  // Mirrors a "u-bind"/self expression as a real attribute, so CSS hides the template and domWalk() stops at it; clones drop it again.
+  if (el.tagName !== 'TEMPLATE' && attribute.name === 'u-each') {
+    el.setAttribute('u-each', expression);
+  }
+
   const { item, index, items, join } = parseEachExpression(expression);
 
   const { magicVariables, otherVariables } = splitMagicVariables(additionalHelperVariables);

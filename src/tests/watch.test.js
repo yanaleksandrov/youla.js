@@ -104,4 +104,16 @@ describe('$watch', () => {
 
     expect(document.querySelector('span').textContent).toBe('20');
   });
+
+  it('accepts a getter instead of a path', async () => {
+    mount(`<div u-data="{ a: 1 }"></div>`);
+    const c = document.querySelector('[u-data]').__x;
+    const calls = [];
+
+    c.watch(() => c.data.a * 2, (value, old) => calls.push([value, old]));
+    c.data.a = 2;
+    await tick();
+
+    expect(calls).toEqual([[4, 2]]);
+  });
 });

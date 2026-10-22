@@ -612,17 +612,19 @@ export default class Component {
   /**
    * Calls "callback(value, oldValue)" whenever the value at "path" changes, checked after each refresh.
    *
-   * @param {string} path - A dot/bracket property path, resolved through "scope".
+   * @param {string|Function} path - A dot/bracket property path, resolved through "scope", or a getter returning the watched value.
    * @param {Function} callback - Receives the new and previous values.
    * @returns {Function} Stops watching.
    */
   watch(path, callback) {
-    let value    = getNestedObjectValue(this.scope, path);
+    const read = typeof path === 'function' ? path : () => getNestedObjectValue(this.scope, path);
+
+    let value    = read();
     let snapshot = serialize(value);
 
     const watcher = {
       check: () => {
-        const next         = getNestedObjectValue(this.scope, path);
+        const next         = read();
         const nextSnapshot = serialize(next);
 
         if (nextSnapshot !== snapshot) {

@@ -20,7 +20,7 @@ document.addEventListener('youla:init', ()=> {
    * @see   https://github.com/brianvoe/slim-select
    * @since 1.0
    */
-  Youla.directive('select', (el, output) => {
+  Youla.directive('select', (el, output, attribute, component) => {
     const settings = { showSearch: false, hideSelected: false, closeOnSelect: true, contentPosition: 'fixed' };
 
     if (el.hasAttribute('multiple')) {
@@ -40,6 +40,22 @@ document.addEventListener('youla:init', ()=> {
         error => error?.name === 'AbortError' ? new Promise(() => {}) : Promise.reject(error),
       );
     }
+
+    const selectedValues = () => [...el.selectedOptions].map(o => o.value);
+
+    /**
+     * Runs fn, dropping the bubbling "change" SlimSelect emits on rebuilding the <option>s while the value stays the same.
+     */
+    const silently = fn => {
+      const initialValue = selectedValues().join('\n');
+      el.dispatchEvent = event => (event.type === 'change' && selectedValues().join('\n') === initialValue)
+        || EventTarget.prototype.dispatchEvent.call(el, event);
+      try {
+        return fn();
+      } finally {
+        delete el.dispatchEvent;
+      }
+    };
 
     // flush() re-runs the directive on every forced refresh — keep the instance unless its settings changed.
     const settingsKey = JSON.stringify(settings);
@@ -97,33 +113,30 @@ document.addEventListener('youla:init', ()=> {
     }, []);
 
     try {
-      const selectedValues = () => [...el.selectedOptions].map(o => o.value).join('\n');
-      const initialValue   = selectedValues();
+      // The constructor rebuilds the <option>s and always emits a bubbling "change".
+      const slim = el._x_slimSelect = silently(() => new SlimSelect({ settings, select: el, data, events }));
 
-      // The constructor rebuilds the <option>s and always emits a bubbling "change" — drop it while the value stays the same.
-      el.dispatchEvent = event => (event.type === 'change' && selectedValues() === initialValue)
-        || EventTarget.prototype.dispatchEvent.call(el, event);
+      const form    = el.form;
+      const destroy = slim.destroy.bind(slim);
 
-      let slim;
-      try {
-        slim = el._x_slimSelect = new SlimSelect({ settings, select: el, data, events });
-      } finally {
-        delete el.dispatchEvent;
-      }
+      // Setting "option.selected" (e.g. by u-prop) causes no mutation, so SlimSelect's observer misses it — re-check after each refresh.
+      // A removed element stops the watcher; its last "undefined" read is skipped below.
+      let unwatch;
+      unwatch = component?.watch(() => el.isConnected ? selectedValues() : unwatch?.(), values => {
+        if (values && values.join('\n') !== slim.getSelected().join('\n')) {
+          silently(() => slim.setSelected(values, false));
+        }
+      });
 
-      const form = el.form;
+      // "reset" fires before the browser restores values, so sync on the next tick; native reset emits no "change".
+      const onReset = () => setTimeout(() => slim.setSelected(selectedValues(), false));
+      form?.addEventListener('reset', onReset);
 
-      if (form) {
-        // "reset" fires before the browser restores values, so sync on the next tick; native reset emits no "change".
-        const onReset = () => setTimeout(() => slim.setSelected([...el.selectedOptions].map(o => o.value), false));
-        const destroy = slim.destroy.bind(slim);
-
-        form.addEventListener('reset', onReset);
-        slim.destroy = () => {
-          form.removeEventListener('reset', onReset);
-          destroy();
-        };
-      }
+      slim.destroy = () => {
+        unwatch?.();
+        form?.removeEventListener('reset', onReset);
+        destroy();
+      };
     } catch {
       console.error('Youla.js: "SlimSelect" is not defined — u-select requires SlimSelect to be loaded.');
     }

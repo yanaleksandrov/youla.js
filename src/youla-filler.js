@@ -124,6 +124,8 @@ export class Filler {
     format: 'hex',
     // Initial transparency (0-100); falls back to data-alpha, then 100.
     alpha: null,
+    // false locks the color opaque (e.g. email styles, where #RRGGBBAA/rgba() aren't supported) and drops every transparency control.
+    opacity: true,
     // {name, hex}[] for the dropdown's library list, sorted by name.
     palette: PALETTE,
     // Source-type buttons to show — 'solid', 'image' and/or 'video'; a single entry locks the dialog to it.
@@ -544,7 +546,7 @@ export class Filler {
     this.disabled = options.disabled ?? el.disabled;
 
     const initialHex = Filler.normalizeHex(el.value) || '#000000';
-    const initialAlpha = Filler.clamp(options.alpha ?? parseFloat(el.dataset.alpha ?? '100'), 0, 100);
+    const initialAlpha = this.toAlpha(options.alpha ?? parseFloat(el.dataset.alpha ?? '100'));
     this.hsva = { ...Filler.rgbToHsv(Filler.hexToRgb(initialHex)), a: initialAlpha };
 
     // Which panel the dialog shows; "options.source" seeds it (e.g. restoring a fill saved elsewhere), else the first configured source.
@@ -569,6 +571,13 @@ export class Filler {
     return Filler.rgbToHex(Filler.hsvToRgb(this.hsva));
   }
 
+  /**
+   * Clamps an incoming transparency value; with `opacity: false` every source collapses to 100.
+   */
+  toAlpha(value) {
+    return this.opacity ? Filler.clamp(value, 0, 100) : 100;
+  }
+
   initialize() {
     const { el, classes } = this;
     el.classList.add(classes.input);
@@ -587,27 +596,52 @@ export class Filler {
     swatch.append(swatchColor, swatchColorOpaque, swatchVideo);
     this.syncSwatchTitle();
 
-    const alphaInput = this.alphaInput = Filler.el('input', {
-      type: 'text', inputMode: 'numeric', maxLength: 3, className: classes.alphaInput,
-    });
-    const suffix = this.suffix = Filler.el('span', { className: classes.alphaSuffix, textContent: this.suffixText });
-    // Not a native range input, so nothing else marks it as draggable — spell it out for a mouse user.
-    Object.assign(suffix.style, { cursor: 'ew-resize', touchAction: 'none' });
-    const alphaWrapper = this.alphaWrapper = Filler.el('label', { className: classes.alpha });
-    alphaWrapper.append(alphaInput, suffix);
-
-    wrapper.append(swatch, el, alphaWrapper);
+    wrapper.append(swatch, el);
 
     if (this.disabled) {
-      [el, alphaInput, swatch].forEach((e) => { e.disabled = true; });
+      [el, swatch].forEach((e) => { e.disabled = true; });
+    }
+
+    if (this.opacity) {
+      this.buildAlphaField();
     }
 
     this.addListeners();
     this.render();
   }
 
+  /**
+   * The "NN %" transparency field after the hex input; built on demand, so `opacity: false` never creates it.
+   */
+  buildAlphaField() {
+    const { classes } = this;
+    const alphaInput = this.alphaInput = Filler.el('input', {
+      type: 'text', inputMode: 'numeric', maxLength: 3, className: classes.alphaInput, disabled: this.disabled,
+      value: Math.round(this.hsva.a),
+    });
+    const suffix = this.suffix = Filler.el('span', { className: classes.alphaSuffix, textContent: this.suffixText });
+    // Not a native range input, so nothing else marks it as draggable — spell it out for a mouse user.
+    Object.assign(suffix.style, { cursor: 'ew-resize', touchAction: 'none' });
+    const alphaWrapper = this.alphaWrapper = Filler.el('label', { className: classes.alpha });
+    alphaWrapper.append(alphaInput, suffix);
+    this.wrapper.append(alphaWrapper);
+
+    alphaInput.addEventListener('input', () => {
+      const value = Filler.sanitizeDigits(alphaInput.value, 0, 100);
+      if (value !== alphaInput.value) {
+        alphaInput.value = value;
+      }
+      if (value !== '') {
+        this.setAlpha(+value);
+      }
+    });
+    alphaInput.addEventListener('blur', () => { alphaInput.value = Math.round(this.hsva.a); });
+
+    this.bindAlphaSuffixDrag();
+  }
+
   addListeners() {
-    const { el, alphaInput } = this;
+    const { el } = this;
     // Image/video mode opens the dialog on focus instead of the dropdown, jumping straight to the file picker on first open while nothing's uploaded yet.
     el.addEventListener('focus', () => {
       if (this.source !== 'solid') {
@@ -624,19 +658,6 @@ export class Filler {
     el.addEventListener('input', () => this.handleHexInput());
     el.addEventListener('blur', () => this.renderSwatch());
     el.addEventListener('paste', (event) => this.handleHexPaste(event));
-
-    alphaInput.addEventListener('input', () => {
-      const value = Filler.sanitizeDigits(alphaInput.value, 0, 100);
-      if (value !== alphaInput.value) {
-        alphaInput.value = value;
-      }
-      if (value !== '') {
-        this.setAlpha(+value);
-      }
-    });
-    alphaInput.addEventListener('blur', () => { alphaInput.value = Math.round(this.hsva.a); });
-
-    this.bindAlphaSuffixDrag();
 
     const { swatch } = this;
     // Alt+click samples a color from the screen instead of opening the dialog (see syncSwatchTitle for the hint).
@@ -748,7 +769,7 @@ export class Filler {
       return;
     }
 
-    this.hsva = { ...Filler.rgbToHsv(color), a: color.a ?? this.hsva.a };
+    this.hsva = { ...Filler.rgbToHsv(color), a: this.toAlpha(color.a ?? this.hsva.a) };
     this.render({ skipHexInput: true });
   }
 
@@ -766,12 +787,12 @@ export class Filler {
     }
 
     event.preventDefault();
-    this.hsva = { ...Filler.rgbToHsv(color), a: color.a };
+    this.hsva = { ...Filler.rgbToHsv(color), a: this.toAlpha(color.a) };
     this.render();
   }
 
   setAlpha(value) {
-    this.hsva.a = Filler.clamp(value, 0, 100);
+    this.hsva.a = this.toAlpha(value);
     this.render();
   }
 
@@ -802,7 +823,7 @@ export class Filler {
     const hex = this.hex;
 
     const alphaRounded = Math.round(hsva.a);
-    if (this.draggingAlpha || document.activeElement !== alphaInput) {
+    if (alphaInput && (this.draggingAlpha || document.activeElement !== alphaInput)) {
       alphaInput.value = alphaRounded;
     }
 
@@ -912,7 +933,7 @@ export class Filler {
     const r = Math.round(rgb.r);
     const g = Math.round(rgb.g);
     const b = Math.round(rgb.b);
-    const opaque = a >= 100;
+    const opaque = !this.opacity || a >= 100;
     const alpha = Math.round((a / 100) * 100) / 100;
 
     if (this.format === 'rgb') {
@@ -1193,12 +1214,6 @@ export class Filler {
     hue.appendChild(hueHandle);
     this.bindTrackDrag(hue, (ratio) => { this.hsva.h = ratio * 360; this.render(); });
 
-    const alpha = Filler.el('div', { className: classes.dialogAlpha });
-    const alphaGradient = Filler.el('div', { className: classes.dialogAlphaGradient });
-    const alphaHandle = Filler.el('div', { className: classes.dialogHandle });
-    alpha.append(alphaGradient, alphaHandle);
-    this.bindTrackDrag(alpha, (ratio) => this.setAlpha(ratio * 100));
-
     const tabs = Filler.el('div', { className: classes.dialogTabs });
     ['hex', 'rgb', 'hsl'].forEach((format) => {
       const tab = Filler.el('button', {
@@ -1231,7 +1246,7 @@ export class Filler {
     fields.append(eyedropperButton, fieldsValues, copyButton);
 
     const solidPanel = Filler.el('div', { className: classes.dialogSolid });
-    solidPanel.append(area, hue, alpha, tabs, fields);
+    solidPanel.append(area, hue, tabs, fields);
 
     const sourceButtons = this.buildSourceButtons();
     const imagePanel = this.buildMediaPanel('image');
@@ -1247,9 +1262,6 @@ export class Filler {
       dialogAreaHandle: areaHandle,
       dialogHue: hue,
       dialogHueHandle: hueHandle,
-      dialogAlpha: alpha,
-      dialogAlphaGradient: alphaGradient,
-      dialogAlphaHandle: alphaHandle,
       dialogTabs: tabs,
       dialogFields: fieldsValues,
       dialogFieldInputs: [],
@@ -1258,7 +1270,54 @@ export class Filler {
       dialogVideoPanel: videoPanel,
     });
 
+    if (this.opacity) {
+      this.buildDialogAlpha();
+    }
+
     this.syncSourceUI();
+  }
+
+  /**
+   * The dialog's transparency track, slotted right after the hue track; built on demand like buildAlphaField.
+   */
+  buildDialogAlpha() {
+    const { classes } = this;
+    const alpha = Filler.el('div', { className: classes.dialogAlpha });
+    const alphaGradient = Filler.el('div', { className: classes.dialogAlphaGradient });
+    const alphaHandle = Filler.el('div', { className: classes.dialogHandle });
+    alpha.append(alphaGradient, alphaHandle);
+    this.bindTrackDrag(alpha, (ratio) => this.setAlpha(ratio * 100));
+    this.dialogHue.after(alpha);
+
+    Object.assign(this, { dialogAlpha: alpha, dialogAlphaGradient: alphaGradient, dialogAlphaHandle: alphaHandle });
+  }
+
+  /**
+   * Shows/hides the transparency controls for the current `opacity`, building any that were skipped at init.
+   */
+  syncOpacityUI() {
+    const { opacity } = this;
+
+    if (opacity && !this.alphaWrapper) {
+      this.buildAlphaField();
+    }
+    if (this.alphaWrapper) {
+      this.alphaWrapper.hidden = !opacity;
+    }
+
+    if (!this.dialog) {
+      return;
+    }
+    if (opacity && !this.dialogAlpha) {
+      this.buildDialogAlpha();
+    }
+    if (this.dialogAlpha) {
+      this.dialogAlpha.hidden = !opacity;
+    }
+    this.renderDialogFields();
+    if (this.dialogOpen) {
+      this.renderDialog();
+    }
   }
 
   /**
@@ -1798,7 +1857,10 @@ export class Filler {
       });
     }
 
-    addField('A', { max: 100 }, (v) => this.setAlpha(Filler.clamp(+v || 0, 0, 100)));
+    // Always the last field, so updateDialogFieldValues' trailing alpha value simply goes unused without it.
+    if (this.opacity) {
+      addField('A', { max: 100 }, (v) => this.setAlpha(Filler.clamp(+v || 0, 0, 100)));
+    }
     this.updateDialogFieldValues();
   }
 
@@ -1848,8 +1910,10 @@ export class Filler {
     // Unitless 0-1 fraction; CSS insets the actual `left` by half the handle's width so it stays inside the track at ratio 0/1.
     this.dialogHueHandle.style.setProperty('--percent', h / 360);
 
-    this.dialogAlphaGradient.style.backgroundImage = `linear-gradient(to right, rgba(${rgbTriplet}, 0), rgba(${rgbTriplet}, 1))`;
-    this.dialogAlphaHandle.style.setProperty('--percent', a / 100);
+    if (this.dialogAlpha) {
+      this.dialogAlphaGradient.style.backgroundImage = `linear-gradient(to right, rgba(${rgbTriplet}, 0), rgba(${rgbTriplet}, 1))`;
+      this.dialogAlphaHandle.style.setProperty('--percent', a / 100);
+    }
 
     this.updateDialogFieldValues();
   }
@@ -1864,6 +1928,8 @@ export class Filler {
     const paletteChanged = 'palette' in options;
     const sourcesChanged = 'sources' in options;
     const labelsChanged = 'labels' in options;
+    // Compared, not just checked for presence — the directive re-sends the same options on every re-evaluation.
+    const opacityChanged = 'opacity' in options && options.opacity !== this.opacity;
 
     Object.assign(this, rest, {
       classes: options.classes ? { ...this.classes, ...options.classes } : this.classes,
@@ -1874,11 +1940,22 @@ export class Filler {
 
     if ('disabled' in options) {
       const { disabled, el, alphaInput, swatch } = this;
-      el.disabled = alphaInput.disabled = swatch.disabled = disabled;
+      el.disabled = swatch.disabled = disabled;
+      if (alphaInput) {
+        alphaInput.disabled = disabled;
+      }
 
       if (disabled) {
         this.closeDropdown();
         this.closeDialog();
+      }
+    }
+
+    if (opacityChanged) {
+      this.syncOpacityUI();
+      if (!this.opacity) {
+        this.hsva.a = 100;
+        this.render();
       }
     }
 

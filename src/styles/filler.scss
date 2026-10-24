@@ -120,6 +120,10 @@ input[u-filler]:not(.filler-input) {
 	padding-left: 8px;
 	border-left: 1px solid #dfe2e3;
 
+	&[hidden] {
+		display: none;
+	}
+
 	.filler-alpha-input {
 		width: 3ch;
 		border: none;

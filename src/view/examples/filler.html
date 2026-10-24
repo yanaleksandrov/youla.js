@@ -43,6 +43,13 @@
       <td><code>null</code></td>
     </tr>
     <tr>
+      <td><code>opacity</code></td>
+      <td>Включает прозрачность. При <code>false</code> поле «%» и ползунок прозрачности не
+        показываются, цвет всегда непрозрачный, а значение копируется как <code>#RRGGBB</code>,
+        <code>rgb()</code> или <code>hsl()</code>. Можно переключать на лету.</td>
+      <td><code>true</code></td>
+    </tr>
+    <tr>
       <td><code>format</code></td>
       <td>Формат полей и кнопки копирования внутри диалога — <code>'hex'</code>, <code>'rgb'</code>
         или <code>'hsl'</code>. Само поле рядом с образцом цвета всегда остаётся HEX.</td>
@@ -195,6 +202,21 @@
     ],
   }"
 &gt;</code></pre>
+
+<h2>Без прозрачности</h2>
+
+<p>
+  Для мест, где прозрачность не поддерживается — например, стилей писем: почтовые клиенты не
+  понимают <code>#RRGGBBAA</code>, а Outlook игнорирует <code>rgba()</code>. С
+  <code>opacity: false</code> пикер выдаёт только непрозрачные цвета, а прозрачность из вставленного
+  или введённого значения отбрасывается.
+</p>
+
+<div class="demo" u-data>
+  <input type="text" value="#0E7A6B" u-filler="{ sources: ['solid'], opacity: false }">
+</div>
+
+<pre><code>&lt;input type="text" value="#0E7A6B" u-filler="{ sources: ['solid'], opacity: false }"&gt;</code></pre>
 
 <h2>Заливка изображением и видео</h2>
 

@@ -7,6 +7,7 @@ import { directive } from './directives';
 import { method } from './methods';
 import { data } from './data';
 import { variable } from './variables';
+import { storage } from './storage';
 
 export const Youla = {
   data,
@@ -16,6 +17,7 @@ export const Youla = {
   method,
   pulsate,
   reactive,
+  storage,
   variable,
 
   /**

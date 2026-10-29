@@ -92,19 +92,27 @@ export const storage = {
    * @param {string} name - The key (localStorage) or cookie name to write.
    * @param {*} value - The value to store; falsy clears the existing entry.
    * @param {'local'|'cookie'} [type] - Which storage to write to.
-   * @param {object} [options] - Cookie attributes (expires converted to UTC string); for localStorage only "expires" is used, to fake a TTL.
+   * @param {object} [options] - Cookie attributes; "expires" takes a Date or a duration like "1y"/"30d" (for localStorage it's the only option used, to fake a TTL).
    * @returns {void}
    */
-  set: (name, value, type = 'local', options = {path: '/'}) => {
+  set: (name, value, type = 'local', options = {}) => {
     if (!name) return;
+
+    options = { ...options };
+    if (typeof options.expires === 'string') {
+      options.expires = computeExpires(options.expires);
+    }
+    if (!(options.expires instanceof Date)) {
+      delete options.expires;
+    }
 
     if (value instanceof Object) {
       value = JSON.stringify(value);
     }
 
     if (type === 'cookie') {
-      // "samesite" defaults to "Lax" unless the caller overrides it; a bare Object.assign target keeps whichever casing the caller used.
-      options = Object.assign({ samesite: 'Lax' }, options);
+      // A bare Object.assign target keeps whichever casing the caller used; "secure" on plain HTTP would make the browser drop the cookie.
+      options = Object.assign({ path: '/', samesite: 'Lax', secure: location.protocol === 'https:' }, options);
 
       // A falsy "value" clears the entry (per this function's own contract, mirrored by the
       // "local" branch below) rather than writing the literal string "null"/"false"/"0" — expire
@@ -119,8 +127,11 @@ export const storage = {
 
       let updatedCookie = encodeURIComponent(name) + "=" + (value ? encodeURIComponent(value) : '');
       for (let optionKey in options) {
-        updatedCookie += "; " + optionKey;
         let optionValue = options[optionKey];
+        if (optionValue === false) {
+          continue;
+        }
+        updatedCookie += "; " + optionKey;
         if (optionValue !== true) {
           updatedCookie += "=" + optionValue;
         }
@@ -130,22 +141,32 @@ export const storage = {
 
     if (type === 'local') {
       if (value) {
-        localStorage.setItem(name, options && options.expires instanceof Date ? wrapWithTTL(value, options.expires) : value);
+        localStorage.setItem(name, options.expires ? wrapWithTTL(value, options.expires) : value);
       } else {
         localStorage.removeItem(name);
       }
     }
-  }
+  },
+  /**
+   * Removes a stored value; a cookie is expired on the default "/" path that set() writes to.
+   *
+   * @param {string} name - The key (localStorage) or cookie name to remove.
+   * @param {'local'|'cookie'} [type] - Which storage to remove from.
+   * @returns {void}
+   */
+  forget: (name, type = 'local') => storage.set(name, null, type)
 }
 
 /**
  * Converts a relative duration string (e.g. "365d", "1y") into an absolute Date, by adding the
  * given amount to the current date and time.
  *
- * @param {string} str - A number followed by a unit: "y" (years), "m" (months), "d" (days), "h" (hours), "i" (minutes), or "s" (seconds).
+ * @param {string} [str] - A number followed by a unit: "y" (years), "m" (months), "d" (days), "h" (hours), "i" (minutes), or "s" (seconds).
  * @returns {Date|null} The resulting Date, or null if the string doesn't end in a recognized unit.
  */
 export function computeExpires(str) {
+  if (!str) return null;
+
   let lastCh = str.charAt(str.length - 1),
     value  = parseInt(str, 10);
 

@@ -51,6 +51,47 @@ Youla.js ships with:
 | `:attr`          | Binds any HTML attribute to an expression (e.g. `:class`, `:style`)  |
 | `@event`         | Listens for a browser event, with modifiers like `.prevent`/`.once`  |
 
+## Storage
+
+`Youla.storage` persists values in `localStorage` or cookies — useful for state that isn't bound to a
+form field, such as a theme switch or a dismissed banner. The same object is available as `$storage`
+in expressions and as `this.$storage` in data provider methods, and it also powers the `.local` and
+`.cookie` modifiers of `u-prop` and `u-data`.
+
+| Method                                         | Description                                                    |
+| ---------------------------------------------- | -------------------------------------------------------------- |
+| `get(name, type = 'local')`                    | Returns the stored value, or `undefined` if missing or expired |
+| `set(name, value, type = 'local', options = {})` | Stores a value; objects and arrays are saved as JSON         |
+| `forget(name, type = 'local')`                 | Removes the stored value                                       |
+
+| Parameter         | Description                                                                                  |
+| ----------------- | -------------------------------------------------------------------------------------------- |
+| `type`            | `'local'` for `localStorage`, `'cookie'` for a cookie                                        |
+| `options.expires` | A `Date` or a duration: `'1y'`, `'30d'`, `'2h'`, etc. Without it, a cookie lasts for the session and a `localStorage` value never expires |
+| `options.*`       | Any other cookie attribute. Cookies default to `path=/`, `SameSite=Lax` and `Secure` on HTTPS |
+
+A provider that toggles a flag and remembers it in a cookie for a year:
+
+```html
+<div u-data="darkMode">
+  <button @click="toggle()" u-text="dark ? 'Light theme' : 'Dark theme'"></button>
+</div>
+
+<script>
+  document.addEventListener('youla:init', () => {
+    Youla.data('darkMode', () => ({
+      dark: !!Youla.storage.get('dark', 'cookie'),
+      toggle() {
+        this.dark = !this.dark;
+        this.$storage.set('dark', this.dark, 'cookie', { expires: '1y' });
+      },
+    }));
+  });
+</script>
+```
+
+> Setting a falsy value (`false`, `0`, `''`, `null`) removes the entry instead of storing it, so read flags back with `!!` as in the example above.
+
 Run `npm start` and open `/syntax` for the full syntax reference, or browse the other pages under
 `src/view` for live, editable examples of every directive covered in this README.
 

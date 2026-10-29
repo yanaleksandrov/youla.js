@@ -1,5 +1,6 @@
 import { domWalk } from './dom';
 import { resolveVariables } from './variables';
+import { storage } from './storage';
 
 /**
  * Walks up from "el" to the nearest ancestor (or itself) carrying loop variables from an
@@ -37,7 +38,7 @@ export function createRefsProxy(root) {
 }
 
 /**
- * Builds the "$el"/"$event"/"$refs"/"$root" magic variables, plus one entry per custom
+ * Builds the "$el"/"$event"/"$refs"/"$root"/"$storage" magic variables, plus one entry per custom
  * variable registered via "Youla.variable()", recomputed from the same "root"/"el"/"event".
  *
  * @param {HTMLElement} root - The component's root element ("u-data"), used for "$root" and to scope "$refs".
@@ -52,7 +53,8 @@ export function createMagicVariables(root, el, event) {
     '$el': el,
     '$event': event,
     '$refs': createRefsProxy(root),
-    '$root': root
+    '$root': root,
+    '$storage': storage
   };
 }
 

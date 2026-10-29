@@ -1,7 +1,7 @@
 import { directive } from '../directives';
 import { getNextModifier } from '../events';
 import { updateAttribute } from '../attributes';
-import { storage, isStorageModifier, getStorageType, computeExpires } from '../storage';
+import { storage, isStorageModifier, getStorageType } from '../storage';
 
 /**
  * Writes the bound expression's value onto the element as its form value — the write side of
@@ -27,10 +27,6 @@ directive('prop', (el, output, attribute, component) => {
     const type   = getStorageType(attribute.modifiers);
     const expire = getNextModifier(attribute.modifiers, type);
 
-    if (output) {
-      storage.set(attribute.expression, output, type,{expires: computeExpires(expire), path: '/', secure: true});
-    } else {
-      storage.set(attribute.expression, null, type, {expires: new Date(), path: '/'})
-    }
+    storage.set(attribute.expression, output, type, { expires: expire });
   }
 });

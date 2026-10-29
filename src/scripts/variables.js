@@ -1,14 +1,14 @@
 import { register } from './registry';
 
 // Built-ins always win over a same-named custom variable, so registering one of these names is rejected up front instead of silently doing nothing.
-const RESERVED = ['$el', '$event', '$refs', '$root'];
+const RESERVED = ['$el', '$event', '$refs', '$root', '$storage'];
 
 let variables = {}
 
 /**
  * Registers a custom variable under `$name` (e.g. `variable('now', ...)`
  * registers `$now`), available inside any directive or event expression
- * alongside the built-in `$el`, `$event`, `$refs` and `$root`.
+ * alongside the built-in `$el`, `$event`, `$refs`, `$root` and `$storage`.
  *
  * @param {string} name - The variable's name, without the `$` prefix.
  * @param {Function} callback - Factory called as `(root, el, event)`; its return value becomes `$name`.

@@ -7,7 +7,7 @@ import { getForData, createMagicVariables, withMagicVariables, splitMagicVariabl
 import { getAttributes, parseAttribute, updateAttribute } from './attributes';
 import { hydrateProps, generateExpressionForProp, resolvePropSource } from './props';
 import { createDataProviderContext, isDataProvider } from './data';
-import { storage, isStorageModifier, getStorageType, computeExpires } from './storage';
+import { storage, isStorageModifier, getStorageType } from './storage';
 import { getDirective } from './directives';
 import { parseEachExpression } from './directives/u-each';
 import { getElementMethods, getListenerMethods } from './methods';
@@ -157,7 +157,7 @@ export default class Component {
    */
   persist() {
     if (this.storageType) {
-      storage.set(`u-data:${this.name}`, this.rawData, this.storageType, { path: '/', secure: true, expires: computeExpires(this.storageExpire) });
+      storage.set(`u-data:${this.name}`, this.rawData, this.storageType, { expires: this.storageExpire });
     }
   }
 
@@ -783,7 +783,7 @@ export default class Component {
   }
 
   /**
-   * Builds the "$el"/"$event"/"$refs"/"$root" magic variables for evaluation against/for "el".
+   * Builds the "$el"/"$event"/"$refs"/"$root"/"$storage" magic variables for evaluation against/for "el".
    *
    * @param {HTMLElement} el - The element the expression is being evaluated for/against; becomes "$el".
    * @param {Event} [event] - The triggering DOM event, if any; becomes "$event".

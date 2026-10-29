@@ -45,6 +45,15 @@ function bind(listeners) {
   return () => listeners.forEach(([target, type, handler, options]) => target.removeEventListener(type, handler, options));
 }
 
+/** Whether el got focus from the keyboard; assumes so where :focus-visible is unsupported. */
+function isKeyboardFocus(el) {
+  try {
+    return el.matches(':focus-visible');
+  } catch {
+    return true;
+  }
+}
+
 // Coalesces bursts of scroll/resize events into one reposition pass per frame.
 let repositionQueued = false;
 const raf = window.requestAnimationFrame || (fn => setTimeout(fn, 16));
@@ -247,14 +256,28 @@ export class TooltipInstance {
       return;
     }
 
+    const isHover = this.trigger === 'hover';
+
     // "hover" adds mouseenter/mouseleave (delayed) on top of focus/blur.
     const listeners = [
-      [el, 'focus', () => this.activate()],
+      [el, 'focus', () => {
+        // Only keyboard focus bypasses the hover delay; text fields match :focus-visible even on click, hence pointerFocus.
+        if (isHover && (this.pointerFocus || !isKeyboardFocus(el))) return;
+        this.activate();
+      }],
       [el, 'blur', () => this.deactivate()],
     ];
 
-    if (this.trigger === 'hover') {
+    if (isHover) {
       listeners.push(
+        // A click cancels a pending or open tooltip; the next mouseenter starts over.
+        [el, 'pointerdown', e => {
+          if (e.pointerType === 'touch') return;
+          clearTimeout(this.hoverTimer);
+          this.deactivate();
+          this.pointerFocus = true;
+          setTimeout(() => this.pointerFocus = false);
+        }],
         [el, 'mouseenter', () => {
           if (this.delay > 0) {
             this.hoverTimer = setTimeout(() => this.activate(), this.delay);

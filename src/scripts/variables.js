@@ -43,3 +43,14 @@ export function resolveVariables(root, el, event) {
 
   return resolved;
 }
+
+/**
+ * Returns the current value of the custom variable `$name` outside expressions, e.g. for
+ * extensions; the factory gets `document.body` as `root` and `el`.
+ *
+ * @param {string} name - The variable's name, without the `$` prefix.
+ * @returns {*} The factory's result, or undefined if no such variable is registered.
+ */
+export function resolve(name) {
+  return variables[`$${name}`]?.(document.body, document.body);
+}

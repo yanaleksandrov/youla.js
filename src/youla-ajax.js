@@ -198,7 +198,7 @@ document.addEventListener('youla:init', () => {
   }
 
   /**
-   * Adds a message to the page's `u-data="notice"` component, if there is one.
+   * Adds a message to the `$notice` variable registered by the app, if there is one.
    *
    * @param {string} message - Notification text.
    * @param {string} [type] - Notification type, e.g. "error" or "info".
@@ -206,7 +206,7 @@ document.addEventListener('youla:init', () => {
    * @returns {void}
    */
   function notify(message, type, duration) {
-    document.querySelector('[u-data="notice"]')?.__x?.data?.add(message, type, duration);
+    Youla.resolve('notice')?.add(message, type, duration);
   }
 
   /**

@@ -6,7 +6,7 @@ import { createEvent } from './events';
 import { directive } from './directives';
 import { method } from './methods';
 import { data } from './data';
-import { variable } from './variables';
+import { resolve, variable } from './variables';
 import { storage } from './storage';
 
 export const Youla = {
@@ -17,6 +17,7 @@ export const Youla = {
   method,
   pulsate,
   reactive,
+  resolve,
   storage,
   variable,
 

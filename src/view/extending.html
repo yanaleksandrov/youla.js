@@ -317,4 +317,26 @@ document.addEventListener(&#39;youla:init&#39;, () =&gt; {
   регистрация уже занятого имени тоже не перезапишет первую.
 </p>
 
+<p>
+  <code>Youla.resolve(имя)</code> возвращает текущее значение зарегистрированной переменной
+  вне выражений — например, в расширениях, которым нужен общий сервис приложения вроде
+  <code>$notice</code>, без привязки к разметке страницы.
+</p>
+
+<table>
+  <tbody>
+    <tr>
+      <th>Вызов</th>
+      <th>Результат</th>
+    </tr>
+    <tr>
+      <td><code>Youla.resolve(&#39;notice&#39;)</code></td>
+      <td>
+        Результат фабрики <code>$notice</code>, вызванной с <code>document.body</code> в качестве
+        <code>root</code> и <code>el</code>; <code>undefined</code>, если переменная не зарегистрирована
+      </td>
+    </tr>
+  </tbody>
+</table>
+
 <%= _.template(require('./parts/footer.html').default)(data) %>

@@ -111,6 +111,10 @@ export default class Component {
     // A duration modifier (e.g. "u-data.cookie.30d") sits right after "cookie"/"local" in the modifier list, same convention as "u-prop"; omitting it means a session cookie or no expiration at all.
     this.storageExpire = this.storageType ? getNextModifier(modifiers, this.storageType) : null;
 
+    if (this.alias && this.parent && this.alias in this.parent.scope) {
+      console.warn(`Youla.js: alias "${this.alias}" in u-data="${expression.trim()}" shadows "${this.alias}" of a parent component.`);
+    }
+
     this.rawData = saferEval(this.name || '{}', createDataProviderContext(el));
     this.rawData = hydrateProps(el, this.rawData, this.parent, isDataProvider(this.name) ? this.name : null);
 
@@ -766,20 +770,18 @@ export default class Component {
     }
 
     // Methods resolve through "with($data)" rather than as parameters, so only the ones the expression touches are created.
-    saferEval(expressionOrFn, contextData, {
-      ...this.getAliasVariables(),
-      ...getForData(target)
-    }, true);
+    saferEval(expressionOrFn, contextData, this.getLocalVariables(target), true);
   }
 
   /**
-   * Returns the component's local data alias (from `u-data="expr as alias"`), if any — keyed
-   * like a "u-each" loop variable so it's tracked for reactivity, unlike magic variables like "$el".
+   * Returns the `u-data="expr as alias"` alias and the "u-each" loop variables visible to "el";
+   * a loop variable wins a name clash, being closer. Unlike magic variables, both are tracked for reactivity.
    *
-   * @returns {object} "{ [alias]: this.data }", or "{}" when "u-data" carries no alias.
+   * @param {HTMLElement} el - The element the expression is being evaluated for/against.
+   * @returns {object} The local variables, keyed by name.
    */
-  getAliasVariables() {
-    return this.alias ? { [this.alias]: this.data } : {};
+  getLocalVariables(el) {
+    return {...(this.alias ? { [this.alias]: this.data } : {}), ...getForData(el)};
   }
 
   /**
@@ -794,15 +796,15 @@ export default class Component {
   }
 
   /**
-   * Builds the full helper-variable bag for evaluating an attribute/directive on "el": an
-   * enclosing "u-each" clone's loop variables, this component's own data alias, and the magic
-   * variables (see "getMagicVariables()"). Shared by resolveAttributes(), initialize() and
-   * flush() — every site that evaluates an element's own attributes needs the same bag.
+   * Builds the full helper-variable bag for evaluating an attribute/directive on "el": its local
+   * variables (see "getLocalVariables()") and the magic variables (see "getMagicVariables()").
+   * Shared by resolveAttributes(), initialize() and flush() — every site that evaluates an
+   * element's own attributes needs the same bag.
    *
    * @param {HTMLElement} el - The element the expression is being evaluated for/against.
    * @returns {object} The merged helper variables.
    */
   getHelperVariables(el) {
-    return {...getForData(el), ...this.getAliasVariables(), ...this.getMagicVariables(el)};
+    return {...this.getLocalVariables(el), ...this.getMagicVariables(el)};
   }
 }

@@ -5,6 +5,9 @@ import { getElementMethods } from '../methods';
 
 const EACH_EXPRESSION = /^\(?([\w]+)(?:,\s*(\w+))?\)?\s+in\s+(.*?)(?:\s+join\s+'([^']+)')?$/;
 
+// Loop templates already warned about, so a refresh doesn't repeat the warning.
+const warnedShadowing = new WeakSet();
+
 /**
  * Parses "i in 5", "dog in dogs", or "(car, index) in cars" syntax, with dot notation and an
  * optional "... join '...'" suffix — shared with Component#computeOutput()'s own "u-each" case,
@@ -44,6 +47,13 @@ directive('each', (el, output, attribute, component, additionalHelperVariables =
   }
 
   const { item, index, items, join } = parseEachExpression(expression);
+
+  if (!warnedShadowing.has(el)) {
+    warnedShadowing.add(el);
+    [item, index].filter(name => name && name in component.scope).forEach(name => {
+      console.warn(`Youla.js: loop variable "${name}" in u-each="${expression}" shadows "${name}" of the component data.`);
+    });
+  }
 
   const { magicVariables, otherVariables } = splitMagicVariables(additionalHelperVariables);
 

@@ -983,14 +983,23 @@ export class Filler {
   }
 
   /**
-   * Positions a floating panel next to the field and keeps it clamped on scroll/resize.
+   * Shows a floating panel as a manual popover next to the field and keeps it clamped on scroll/resize.
    * Scroll clamp targets `content` (the shadow root), not `panel`, so clipping never eats its own box-shadow.
    * @returns {Function} Detach callback — removes listeners and the panel itself.
    */
   attachFloating(panel, content, onClose) {
     const { wrapper } = this;
-    Object.assign(panel.style, { position: 'fixed', zIndex: 999999, top: 0, left: 0 });
-    document.body.appendChild(panel);
+    // inset…background reset the UA [popover] box.
+    Object.assign(panel.style, {
+      position: 'fixed', zIndex: 999999, inset: 'auto', top: 0, left: 0,
+      margin: 0, border: 0, padding: 0, overflow: 'visible', color: 'inherit', background: 'none',
+    });
+    // "manual", not "auto": an auto popover would close other auto popovers on the page.
+    panel.setAttribute('popover', 'manual');
+    // A modal <dialog> makes everything outside its subtree inert, so the panel must live inside it.
+    (wrapper.closest('dialog') ?? document.body).appendChild(panel);
+    // The top layer lifts it above a modal <dialog>, which no z-index can do.
+    panel.showPopover?.();
 
     // Hidden while sized/positioned so nothing flashes unstyled first.
     panel.style.visibility = 'hidden';
@@ -1026,7 +1035,13 @@ export class Filler {
       }
       onClose();
     };
-    const onKeydown = (event) => event.key === 'Escape' && onClose();
+    // preventDefault() keeps the same Escape from also cancelling the enclosing <dialog>.
+    const onKeydown = (event) => {
+      if (event.key === 'Escape') {
+        onClose();
+        event.preventDefault();
+      }
+    };
 
     // Deferred so the gesture that opened this panel (e.g. a focus-triggered open) isn't misread as an outside click.
     const addClickListenerTimer = setTimeout(() => document.addEventListener('click', onDocClick, true), 0);
@@ -1040,6 +1055,7 @@ export class Filler {
       document.removeEventListener('keydown', onKeydown);
       window.removeEventListener('scroll', reposition, true);
       window.removeEventListener('resize', reposition);
+      panel.hidePopover?.();
       panel.remove();
     };
   }

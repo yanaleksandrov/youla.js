@@ -86,8 +86,8 @@ function ensureGlobalListeners() {
 
 /**
  * Translates a rect from "el"'s own window into the top-level window's viewport coordinates —
- * a no-op unless "el" sits inside a same-origin iframe. The tooltip is always appended to the
- * top document's <body>, so its position must be expressed in that document's coordinate space.
+ * a no-op unless "el" sits inside a same-origin iframe. The tooltip lives in the top document,
+ * so its position must be expressed in that document's coordinate space.
  *
  * @param {Element} el - The anchor element (or, for a text selection, the editor's own DOM node).
  * @param {{top: number, left: number, bottom?: number, right?: number}} rect
@@ -177,6 +177,8 @@ export class TooltipInstance {
       innerHTML: content,
     });
     this.tooltip.setAttribute('role', 'tooltip');
+    // "manual", not "auto": an auto popover would close other auto popovers on the page.
+    this.tooltip.setAttribute('popover', 'manual');
     this.syncClasses();
 
     this.attachTriggers();
@@ -345,7 +347,10 @@ export class TooltipInstance {
 
     // Hidden while positioning, so it doesn't flash at the wrong spot.
     this.tooltip.style.visibility = 'hidden';
-    document.body.appendChild(this.tooltip);
+    // A modal <dialog> makes everything outside its subtree inert, so the tooltip must live inside it.
+    (this.el.closest('dialog[open]') ?? document.body).appendChild(this.tooltip);
+    // The top layer lifts it above a modal <dialog>, which no z-index can do.
+    this.tooltip.showPopover?.();
 
     this.reposition();
     this.tooltip.style.visibility = 'visible';
@@ -366,7 +371,13 @@ export class TooltipInstance {
           this.deactivate();
         }
       }, true],
-      [document, 'keydown', e => e.key === 'Escape' && this.deactivate()],
+      // preventDefault() keeps the same Escape from also cancelling the enclosing <dialog>.
+      [document, 'keydown', e => {
+        if (e.key === 'Escape' && this.visible) {
+          this.deactivate();
+          e.preventDefault();
+        }
+      }],
     ]);
   }
 
@@ -399,6 +410,7 @@ export class TooltipInstance {
     }
     this.animationState = null;
     this.syncClasses();
+    this.tooltip.hidePopover?.();
     this.tooltip.remove();
   }
 

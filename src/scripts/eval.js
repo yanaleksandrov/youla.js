@@ -3,12 +3,12 @@ const compiledCache = new Map();
 
 /**
  * Evaluates a JS expression (or runs a statement, if "noReturn" is set) against a data context —
- * every property of "dataContext" is reachable by name via "with". Runs as real, unrestricted
- * JavaScript: never interpolate untrusted data into an expression that reaches this function.
+ * every property of "dataContext" is reachable by name via "with", and helper variables shadow it.
+ * Runs as real, unrestricted JavaScript: never interpolate untrusted data into an expression that reaches this function.
  *
  * @param {string} expression - The expression (or, if "noReturn" is true, statement) to evaluate.
  * @param {object} dataContext - The component's reactive data, made available as bare identifiers.
- * @param {object} [additionalHelperVariables] - Extra named values (e.g. "$el", "$event") exposed to the expression.
+ * @param {object} [additionalHelperVariables] - Extra named values (e.g. loop variables) that take precedence over "dataContext".
  * @param {boolean} [noReturn] - When true, runs "expression" as a statement instead of evaluating and returning it.
  * @returns {*} The expression's value, or undefined when "noReturn" is true.
  */
@@ -18,12 +18,12 @@ export function saferEval(expression, dataContext, additionalHelperVariables = {
 
   let fn = compiledCache.get(cacheKey);
   if (!fn) {
-    // No intermediate variable like "result": with($data) would let a same-named data property silently hijack it.
-    const body = noReturn ? `with($data){${expression}}` : `with($data){return (${expression})}`;
+    // Helpers are the arrow's parameters, so they sit lexically inside with($data) and win over same-named data; an assignment to one stays local to the call.
+    const body = noReturn ? `{${expression}\n}` : `(${expression}\n)`;
 
-    fn = new Function(['$data', ...helperNames], body);
+    fn = new Function('$data', `with($data){return (${helperNames.join(',')}) => ${body}}`);
     compiledCache.set(cacheKey, fn);
   }
 
-  return fn(dataContext, ...Object.values(additionalHelperVariables));
+  return fn(dataContext)(...Object.values(additionalHelperVariables));
 }

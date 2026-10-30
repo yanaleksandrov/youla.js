@@ -42,12 +42,23 @@ describe('saferEval — additional helper variables', () => {
     expect(saferEval('count + $extra', { count: 1 }, { $extra: 9 })).toBe(10);
   });
 
-  it('a same-named data property shadows the additional helper (with($data) resolves first)', () => {
-    // "with($data){...}" checks $data's own properties before falling through to the outer
-    // helper-variable function parameter of the same name — this is exactly why
-    // withMagicVariables() exists: it wraps $data in a Proxy whose own "get" trap checks the
-    // magic variables FIRST, so a data property named e.g. "$el" can never shadow the real $el.
-    expect(saferEval('$el', { $el: 'from-data' }, { $el: 'from-helper' })).toBe('from-data');
+  it('a helper shadows a same-named data property', () => {
+    expect(saferEval('item', { item: 'from-data' }, { item: 'from-helper' })).toBe('from-helper');
+  });
+
+  it('assigning to a helper never writes to the data context', () => {
+    const data = { item: 'from-data' };
+    saferEval('item = 1', data, { item: 'from-helper' }, true);
+    expect(data.item).toBe('from-data');
+  });
+
+  it('caches per helper-name set, so different helpers compile separately', () => {
+    expect(saferEval('a', { a: 'data' }, { a: 'helper' })).toBe('helper');
+    expect(saferEval('a', { a: 'data' })).toBe('data');
+  });
+
+  it('allows a trailing line comment in an expression', () => {
+    expect(saferEval('count // note', { count: 2 })).toBe(2);
   });
 });
 

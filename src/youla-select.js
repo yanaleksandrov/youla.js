@@ -132,6 +132,29 @@ document.addEventListener('youla:init', ()=> {
       const onReset = () => setTimeout(() => slim.setSelected(selectedValues(), false));
       form?.addEventListener('reset', onReset);
 
+      const { render } = slim;
+
+      // A modal <dialog> makes everything outside its subtree inert; checked on open, as the <select> may move between dialogs.
+      if (!options.contentLocation) {
+        const open = render.open.bind(render);
+        render.open = () => {
+          const content = render.content.main;
+          const location = el.closest('dialog') ?? document.body;
+          if (content.parentNode !== location) {
+            location.appendChild(content);
+            // A re-inserted node has no start style to transition from — flush it so the open animation still plays.
+            void content.offsetWidth;
+          }
+          open();
+        };
+      }
+
+      // SlimSelect cancels every Escape (return false), which also blocks closing the <dialog> while the list is closed.
+      [render.main.main, render.content.search.input].forEach(node => {
+        const onkeydown = node.onkeydown;
+        node.onkeydown = e => e.key === 'Escape' && !slim.settings.isOpen || onkeydown(e);
+      });
+
       slim.destroy = () => {
         unwatch?.();
         form?.removeEventListener('reset', onReset);

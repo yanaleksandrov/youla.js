@@ -47,6 +47,7 @@ Youla.js ships with:
 | `u-html`         | Sets the element's HTML content                                     |
 | `u-show`         | Toggles element visibility via `display`                            |
 | `u-each`         | Renders a template element for each item of an array, object, or range |
+| `u-key`          | Optional unique item key that `u-each` uses to reuse nodes across re-renders |
 | `u-prop`         | Two-way binds a form field's value to data                          |
 | `:attr`          | Binds any HTML attribute to an expression (e.g. `:class`, `:style`)  |
 | `@event`         | Listens for a browser event, with modifiers like `.prevent`/`.once`  |

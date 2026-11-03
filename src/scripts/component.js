@@ -451,6 +451,8 @@ export default class Component {
     const self = this;
 
     // Suppresses the refresh a reactive write would otherwise schedule (see observeData()) while this mount pass is still applying every binding itself, once, in document order.
+    // Restored rather than reset, since "u-each" initializes its new clones synchronously from inside an outer pass.
+    const wasMounting = this._mounting;
     this._mounting = true;
 
     try {
@@ -500,7 +502,7 @@ export default class Component {
         });
       });
     } finally {
-      this._mounting = false;
+      this._mounting = wasMounting;
     }
   }
 
@@ -549,12 +551,16 @@ export default class Component {
     const self = this;
 
     domWalk(self.root, el => {
+      // Set by "u-each" on nodes it reused, whose loop variables just changed.
+      const reused = !!el.__x_force_refresh;
+      delete el.__x_force_refresh;
+
       const attributes = self.resolveAttributes(el);
       if (attributes.length === 0) {
         return;
       }
 
-      const elementForced = force || !!forceElements?.has(el);
+      const elementForced = force || reused || !!forceElements?.has(el);
 
       // An element inside a "u-each" clone only carries its loop variables on "__x_for_data", so resolve them here too or bindings referencing them stop updating after the first render.
       // Skipped for the vast majority of elements, which carry no u-*/@/: attribute at all (same lazy cost as resolveAttributes()).

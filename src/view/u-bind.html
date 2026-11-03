@@ -401,4 +401,10 @@ Youla.data(&#39;priorityList&#39;, () =&gt; ({
   <code>u-each</code>.
 </p>
 
+<p>
+  Сам цикл тоже можно описать набором: <code>list: { 'u-each': 'item in items', 'u-key': 'item.id' }</code>
+  на <code>&lt;template u-bind="list"&gt;</code>. Необязательный ключ <code>u-key</code>
+  помогает узнавать элементы при перерисовке — подробнее на странице <a href="/u-each">u-each</a>.
+</p>
+
 <%= _.template(require('./parts/footer.html').default)(data) %>

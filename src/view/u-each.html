@@ -453,6 +453,76 @@
   </div>
 </div>
 
+<h2>Ключи элементов</h2>
+
+<p>
+  При перерисовке <code>u-each</code> сохраняет DOM-узлы уже показанных элементов: обновляются
+  только их данные и порядок, создаются узлы новых элементов и удаляются узлы исчезнувших. Поэтому
+  у существующих элементов не перезапускаются CSS-анимации появления и не теряются фокус и
+  введённые значения. По умолчанию элемент узнаётся по самому значению: тот же объект или то же
+  примитивное значение. Если массив пересобирается из копий объектов, например с сервера, задайте
+  ключ через <code>u-key</code>.
+</p>
+
+<table>
+  <tbody>
+    <tr>
+      <th>Атрибут</th>
+      <th>Значение</th>
+      <th>Описание</th>
+    </tr>
+    <tr>
+      <td><code>u-key</code></td>
+      <td>Выражение, например <code>item.id</code></td>
+      <td>
+        Необязательный. Вычисляется для каждого элемента с доступом к переменным цикла. Ставится
+        рядом с <code>u-each</code>, в том числе в наборе <a href="/u-bind"><code>u-bind</code></a>.
+        Ключи должны быть уникальными строками или числами.
+      </td>
+    </tr>
+    <tr>
+      <td><code>:key</code></td>
+      <td>То же, что <code>u-key</code></td>
+      <td>Альтернативная запись в разметке. В наборе <code>u-bind</code> используйте <code>u-key</code>.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" u-data="{ tasks: [{ id: 1, title: 'Купить хлеб' }, { id: 2, title: 'Позвонить' }], next: 3 }">
+      <button type="button" @click="tasks = [...tasks, { id: next++, title: 'Новая задача' }]">Добавить</button>
+      <ul>
+        <template u-each="task in tasks" u-key="task.id">
+          <li>
+            <input u-prop="task.title">
+            <button type="button" @click="tasks = tasks.filter(item => item.id !== task.id)">Удалить</button>
+          </li>
+        </template>
+      </ul>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;div u-data=&quot;{ tasks: [{ id: 1, title: &#039;Купить хлеб&#039; }, { id: 2, title: &#039;Позвонить&#039; }], next: 3 }&quot;&gt;
+  &lt;button type=&quot;button&quot; @click=&quot;tasks = [...tasks, { id: next++, title: &#039;Новая задача&#039; }]&quot;&gt;Добавить&lt;/button&gt;
+  &lt;ul&gt;
+    &lt;template u-each=&quot;task in tasks&quot; u-key=&quot;task.id&quot;&gt;
+      &lt;li&gt;
+        &lt;input u-prop=&quot;task.title&quot;&gt;
+        &lt;button type=&quot;button&quot; @click=&quot;tasks = tasks.filter(item =&gt; item.id !== task.id)&quot;&gt;Удалить&lt;/button&gt;
+      &lt;/li&gt;
+    &lt;/template&gt;
+  &lt;/ul&gt;
+&lt;/div&gt;
+</pre>
+  </div>
+</div>
+
 <h2>Модификаторы</h2>
 
 <p><code>.lazy</code></p>

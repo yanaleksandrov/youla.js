@@ -133,3 +133,68 @@ describe('$ajax inline errors', () => {
     expect(password.hasAttribute('aria-invalid')).toBe(false);
   });
 });
+
+describe('$ajax error key to field name mapping', () => {
+  let notices;
+
+  beforeAll(() => {
+    notices = [];
+    Youla.variable('notice', () => ({ add: text => notices.push(text) }));
+  });
+
+  async function submitWith(errors, html) {
+    notices.length = 0;
+    FakeXHR.errors = errors;
+    document.body.innerHTML = `
+      <form u-data>
+        ${html}
+        <button type="button" id="submit" @click="$ajax.post('/save').catch(() => {})"></button>
+      </form>
+    `;
+    Youla.componentInitialize(document.querySelector('form'));
+    await tick();
+    document.getElementById('submit').click();
+    await tick();
+  }
+
+  const invalid = id => document.getElementById(id).getAttribute('aria-invalid') === 'true';
+
+  it('maps dotted keys to bracket names', async () => {
+    await submitWith(
+      { 'user.email': ['Bad.'], 'rules.0.from': ['Required.'] },
+      '<input id="email" name="user[email]"><input id="from" name="rules[0][from]">',
+    );
+
+    expect(invalid('email')).toBe(true);
+    expect(invalid('from')).toBe(true);
+    expect(notices).toEqual([]);
+  });
+
+  it('falls back to array names, with or without dots', async () => {
+    await submitWith(
+      { types: ['Pick one.'], 'user.tags': ['Too many.'] },
+      '<input id="types" type="checkbox" name="types[]"><input id="tags" type="checkbox" name="user[tags][]">',
+    );
+
+    expect(invalid('types')).toBe(true);
+    expect(invalid('tags')).toBe(true);
+  });
+
+  it('prefers the key as is and skips hidden inputs', async () => {
+    await submitWith(
+      { 'user.email': ['Bad.'], 'user.role': ['Invalid.'] },
+      `<input id="dotted" name="user.email"><input id="bracket" name="user[email]">
+       <input type="hidden" name="user[role]"><input id="role" type="checkbox" name="user[role][]">`,
+    );
+
+    expect(invalid('dotted')).toBe(true);
+    expect(invalid('bracket')).toBe(false);
+    expect(invalid('role')).toBe(true);
+  });
+
+  it('notifies when no field matches', async () => {
+    await submitWith({ 'user.phone': ['Required.'] }, '<input name="user[email]">');
+
+    expect(notices).toEqual(['Required.']);
+  });
+});

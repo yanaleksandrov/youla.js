@@ -543,6 +543,34 @@ document.addEventListener('ajax:/demo/echo', ({ detail }) =&gt; {
 </p>
 
 <p>
+  Ключ ошибки сопоставляется с атрибутом <code>name</code> поля: вложенные ключи из ответа API
+  пишутся через точку, а имена полей формы — через скобки. Варианты подставляются в
+  <code>errors.field</code> по порядку, ошибка выводится у первого видимого поля, кроме
+  <code>type="hidden"</code>. Если подходящего поля нет, текст показывается уведомлением.
+</p>
+
+<table>
+  <tbody>
+    <tr>
+      <th>Ключ в ответе</th>
+      <th>Проверяемые <code>name</code> по порядку</th>
+    </tr>
+    <tr>
+      <td><code>email</code></td>
+      <td><code>email</code>, <code>email[]</code></td>
+    </tr>
+    <tr>
+      <td><code>user.email</code></td>
+      <td><code>user.email</code>, <code>user[email]</code>, <code>user[email][]</code></td>
+    </tr>
+    <tr>
+      <td><code>rules.0.from</code></td>
+      <td><code>rules.0.from</code>, <code>rules[0][from]</code>, <code>rules[0][from][]</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
   Контейнер уведомлений расширение не ищет в разметке: <code>$notice</code> регистрирует само
   приложение через <code>Youla.variable()</code>, а расширение вызывает у полученного объекта
   <code>add(текст, тип, длительность)</code>. Если переменная не зарегистрирована, уведомления

@@ -294,7 +294,7 @@ document.addEventListener('youla:init', () => {
   }
 
   /**
-   * Finds the first visible, non-hidden field matching the error key.
+   * Finds the first visible, non-hidden field for the error key, trying `a.b.c`, `a[b][c]`, `a[b][c][]`.
    *
    * @param {ParentNode} scope - Where to search.
    * @param {string} name - Error key from the response.
@@ -302,12 +302,23 @@ document.addEventListener('youla:init', () => {
    * @returns {HTMLElement|null}
    */
   function findField(scope, name, options) {
-    const selector = options.field.replaceAll('{name}', CSS.escape(name));
+    const [head, ...rest] = name.split('.');
+    const brackets = head + rest.map(part => `[${part}]`).join('');
+    const names    = [...new Set([name, brackets, `${brackets}[]`])];
 
-    return [...scope.querySelectorAll(selector)].find(input => {
-      const box = (options.wrapper && input.closest(options.wrapper)) || input;
-      return input.type !== 'hidden' && (box.checkVisibility?.() ?? true);
-    }) ?? null;
+    for (const candidate of names) {
+      const selector = options.field.replaceAll('{name}', CSS.escape(candidate));
+      const input    = [...scope.querySelectorAll(selector)].find(field => {
+        const box = (options.wrapper && field.closest(options.wrapper)) || field;
+        return field.type !== 'hidden' && (box.checkVisibility?.() ?? true);
+      });
+
+      if (input) {
+        return input;
+      }
+    }
+
+    return null;
   }
 
   /**

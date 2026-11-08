@@ -123,6 +123,22 @@ describe('$ajax inline errors', () => {
     expect(form.querySelectorAll('.ajax-error')).toHaveLength(1);
   });
 
+  it('focuses the first invalid field after a submit', async () => {
+    document.getElementById('submit').focus();
+    await submit();
+
+    expect(document.activeElement).toBe(password);
+  });
+
+  it('keeps focus where the user moved it during the request', async () => {
+    document.getElementById('background').click();
+    login.focus();
+    await tick();
+
+    expect(password.getAttribute('aria-invalid')).toBe('true');
+    expect(document.activeElement).toBe(login);
+  });
+
   it('still clears the error on manual input', async () => {
     await submit();
 

@@ -92,6 +92,9 @@ document.addEventListener('youla:init', () => {
         done();
       };
 
+      // Errors move focus only if the user hasn't moved it since the request started.
+      const focused = document.activeElement;
+
       return new Promise((resolve, reject) => {
         xhr.__reject = reject;
 
@@ -105,7 +108,7 @@ document.addEventListener('youla:init', () => {
           const parsed = parseJSON(xhr.responseText);
 
           if (xhr.status < 200 || xhr.status >= 300) {
-            showErrors(target, parsed, config);
+            showErrors(target, parsed, config, focused);
 
             reject(handled(Object.assign(new Error(`Youla.js: "$ajax" failed with status ${xhr.status}.`), {
               status: xhr.status,
@@ -262,9 +265,10 @@ document.addEventListener('youla:init', () => {
    * @param {HTMLElement} el - Element the request was made from.
    * @param {*} data - Parsed response body.
    * @param {Object} config - Effective configuration.
+   * @param {Element|null} focused - Element focused when the request was sent.
    * @returns {void}
    */
-  function showErrors(el, data, config) {
+  function showErrors(el, data, config, focused) {
     const scope    = scopeOf(el);
     const errors   = data?.errors && typeof data.errors === 'object' ? data.errors : {};
     const unplaced = [];
@@ -289,8 +293,10 @@ document.addEventListener('youla:init', () => {
 
     [...new Set(unplaced)].forEach(text => notify(text, 'error'));
 
-    first?.focus({ preventScroll: true });
-    first?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    if (first && document.activeElement === focused) {
+      first.focus({ preventScroll: true });
+      first.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
   }
 
   /**

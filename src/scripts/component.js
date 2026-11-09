@@ -116,7 +116,7 @@ export default class Component {
     }
 
     this.rawData = saferEval(this.name || '{}', createDataProviderContext(el));
-    this.rawData = hydrateProps(el, this.rawData, this.parent, isDataProvider(this.name) ? this.name : null);
+    this.rawData = hydrateProps(el, this.rawData, this.parent, isDataProvider(this.name) ? this.name : null, node => this.resolveRawBindings(node));
 
     // Pulled out before observeData(), so "self" never becomes reactive, persisted, or visible in scope (where it would shadow window.self).
     this.selfBindings = null;
@@ -299,6 +299,43 @@ export default class Component {
     });
 
     return onlyLoop([...this.withoutCloneLoop(el, this.expandBindings(el, selfEntries)), ...attributes]);
+  }
+
+  /**
+   * Resolves "el"'s "u-bind" sets before "this.data" exists, against the raw data falling back to the parent's scope.
+   * Side-effect free, unlike "expandBindings()": only parses the entries, never writes attributes.
+   *
+   * @param {HTMLElement} el - The element to read "u-bind" attributes from.
+   * @returns {Array<Object>} The parsed attribute descriptors of every "u-bind" entry.
+   */
+  resolveRawBindings(el) {
+    const bindAttributes = getAttributes(el).filter(({ directive }) => directive === 'u-bind');
+    if (bindAttributes.length === 0) {
+      return [];
+    }
+
+    const raw         = this.rawData;
+    const parentScope = this.parent?.scope;
+    const context     = parentScope ? new Proxy({}, {
+      has: (_, prop) => prop in raw || prop in parentScope,
+      get: (_, prop) => (prop in raw) ? raw[prop] : parentScope[prop],
+    }) : raw;
+
+    const contextData    = withMagicVariables(context, this.getMagicVariables(el));
+    const localVariables = {...(this.alias ? { [this.alias]: raw } : {}), ...getForData(el)};
+
+    return bindAttributes.flatMap(({ expression }) => {
+      let bindings;
+      try {
+        bindings = saferEval(expression, contextData, localVariables);
+      } catch (error) {
+        return [];
+      }
+
+      return bindings && typeof bindings === 'object'
+        ? Object.entries(bindings).filter(([, value]) => typeof value === 'string').map(([name, value]) => parseAttribute(name, value))
+        : [];
+    });
   }
 
   /**

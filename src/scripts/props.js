@@ -48,10 +48,11 @@ export function resolvePropSource(expression, data, localVariables = {}) {
  * @param {Object} data - The component's raw data object, mutated in place.
  * @param {import('./component').default} [parent] - This component's own parent, if any.
  * @param {string|null} [providerName] - The `Youla.data()` provider name `rootElement` resolved to, if any.
+ * @param {Function} [resolveBindings] - Returns the attribute descriptors an element's "u-bind" sets resolve to.
  * @returns {Object} `data`, for convenience (it's also mutated directly).
  */
-export function hydrateProps(rootElement, data, parent, providerName = null) {
-  domWalk(rootElement, el => getAttributes(el).filter(({directive}) => directive === 'u-prop').forEach(attribute => {
+export function hydrateProps(rootElement, data, parent, providerName = null, resolveBindings = () => []) {
+  domWalk(rootElement, el => [...getAttributes(el), ...resolveBindings(el)].filter(({directive}) => directive === 'u-prop').forEach(attribute => {
     let {expression, modifiers} = attribute;
 
     // u-prop only binds to form fields

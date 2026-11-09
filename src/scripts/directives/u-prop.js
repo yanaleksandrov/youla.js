@@ -20,7 +20,7 @@ directive('prop', (el, output, attribute, component) => {
   } else if (el.type === 'checkbox') {
     el.checked = Array.isArray(output) ? output.some((val) => val === el.value) : !!output;
   } else {
-    updateAttribute(el, 'value', output);
+    updateAttribute(el, 'value', output ?? '');
   }
 
   if (isStorageModifier(attribute.modifiers)) {

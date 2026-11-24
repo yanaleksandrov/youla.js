@@ -622,10 +622,10 @@ document.addEventListener('youla:init', () => {
         target.dispatchEvent(new Event('input', { bubbles: true }));
         break;
       case 'update':
-        target.innerHTML = value || '';
+        insertMarkup(target, 'replaceChildren', value);
         break;
       case 'replace':
-        target.outerHTML = value || '';
+        insertMarkup(target, 'replaceWith', value);
         break;
       case 'remove':
         target.remove();
@@ -634,12 +634,7 @@ document.addEventListener('youla:init', () => {
       case 'prepend':
       case 'append':
       case 'after':
-        target.insertAdjacentHTML({
-          before: 'beforebegin',
-          prepend: 'afterbegin',
-          append: 'beforeend',
-          after: 'afterend',
-        }[action], value || '');
+        insertMarkup(target, action, value);
         break;
       case 'classList.add':
         target.classList.add(...[].concat(value).filter(Boolean));
@@ -668,5 +663,44 @@ document.addEventListener('youla:init', () => {
         break;
       }
     }
+  }
+
+  /**
+   * Inserts "html" relative to "target" with the given DOM method, then binds the new elements
+   * to the nearest component, which otherwise only picks up a new `u-data` root on its own.
+   *
+   * @param {HTMLElement} target - Element the markup is inserted relative to.
+   * @param {string} method - "replaceChildren", "replaceWith", "before", "prepend", "append" or "after".
+   * @param {string} [html] - Markup to insert.
+   * @returns {void}
+   */
+  function insertMarkup(target, method, html) {
+    const template = document.createElement('template');
+    template.innerHTML = html || '';
+
+    const inserted = Array.from(template.content.children);
+    target[method](template.content);
+
+    inserted.forEach(el => {
+      // A nested `u-data` root is constructed separately with its own scope.
+      if (!el.isConnected || isComponentRoot(el)) {
+        return;
+      }
+
+      let parent = el.parentElement;
+      while (parent && !parent.__x) {
+        parent = parent.parentElement;
+      }
+
+      parent?.__x.initialize(el);
+    });
+  }
+
+  /**
+   * @param {Element} el - Element to check.
+   * @returns {boolean} Whether "el" carries `u-data`, with or without modifiers.
+   */
+  function isComponentRoot(el) {
+    return Array.from(el.attributes).some(({ name }) => name === 'u-data' || name.startsWith('u-data.'));
   }
 });

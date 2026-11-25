@@ -258,6 +258,67 @@
   </div>
 </div>
 
+<h3><code>.self</code></h3>
+
+<p>
+  Вызывает обработчик, только если событие произошло на самом элементе, а не всплыло от вложенного.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" u-data="{ hits: 0 }" @click.self="hits++">
+      Клики по фону: <span u-text="hits"></span>
+      <button type="button">Клик по кнопке не считается</button>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;div u-data=&quot;{ hits: 0 }&quot; @click.self=&quot;hits++&quot;&gt;
+  Клики по фону: &lt;span u-text=&quot;hits&quot;&gt;&lt;/span&gt;
+  &lt;button type=&quot;button&quot;&gt;Клик по кнопке не считается&lt;/button&gt;
+&lt;/div&gt;
+</pre>
+  </div>
+</div>
+
+<h3><code>.form</code></h3>
+
+<p>
+  Слушает событие формы, в которой находится элемент: срабатывает на самой форме и на всех её полях,
+  включая поля, привязанные к ней атрибутом <code>form</code> за её пределами. Удобно для компонентов,
+  которые реагируют на изменения или сброс всей формы, например для автосохранения.
+</p>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <form class="demo">
+      <input type="text" name="title" placeholder="Заголовок">
+      <button type="reset">Сбросить</button>
+      <p u-data="{ status: 'Без изменений' }" @input.form="status = 'Изменено поле ' + $event.target.name" @reset.form="status = 'Форма сброшена'" u-text="status"></p>
+    </form>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;form&gt;
+  &lt;input type=&quot;text&quot; name=&quot;title&quot;&gt;
+  &lt;button type=&quot;reset&quot;&gt;Сбросить&lt;/button&gt;
+  &lt;p u-data=&quot;{ status: &#039;Без изменений&#039; }&quot;
+     @input.form=&quot;status = &#039;Изменено поле &#039; + $event.target.name&quot;
+     @reset.form=&quot;status = &#039;Форма сброшена&#039;&quot;
+     u-text=&quot;status&quot;&gt;&lt;/p&gt;
+&lt;/form&gt;
+</pre>
+  </div>
+</div>
+
 <h3><code>.enter</code>, <code>.esc</code>, <code>.ctrl</code> и другие клавиши</h3>
 
 <p>

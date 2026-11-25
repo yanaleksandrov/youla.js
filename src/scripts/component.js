@@ -829,6 +829,28 @@ export default class Component {
       });
     }
 
+    if (modifiers.includes('self')) {
+      handler = wrapHandler(handler, (next, e) => e.target === el && next(e));
+    }
+
+    // Listens on the document rather than the form, so fields attached by a "form" attribute outside it are caught too.
+    if (modifiers.includes('form')) {
+      const form = el.form ?? el.closest('form');
+
+      if (!form) {
+        console.warn(`Youla.js: "@${event}.form" has no form to listen to.`, el);
+        return;
+      }
+
+      target = el.ownerDocument;
+      handler = wrapHandler(handler, (next, e) => {
+        const node = e.target;
+
+        // "form" is undefined on elements that can't belong to a form, and null on fields outside any form.
+        (node.form === undefined ? form.contains(node) : node.form === form) && next(e);
+      });
+    }
+
     // Key/system-modifier filter (e.g. "@keydown.enter") must be the outermost wrap, so a mismatched key skips prevent/stop/delay too.
     const keyModifiers = edgeModifiers.length ? modifiers.filter(modifier => !edgeModifiers.includes(modifier)) : modifiers;
 

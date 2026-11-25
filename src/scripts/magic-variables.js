@@ -1,5 +1,8 @@
 import { domWalk } from './dom';
-import { resolveVariables } from './variables';
+import { getVariables } from './variables';
+
+// Key of the lazy custom-variable lookup inside a magic-variables bag; a symbol, so spreading the bag never runs a factory.
+export const VARIABLES = Symbol('variables');
 import { storage } from './storage';
 
 /**
@@ -18,19 +21,26 @@ export function getForData(el) {
 }
 
 /**
- * Creates a Proxy standing in for "$refs": each property access walks the DOM to find the
- * element carrying a matching "u-ref" attribute.
+ * Creates a Proxy standing in for "$refs": each property resolves to the element carrying a matching "u-ref".
  *
- * @param {HTMLElement} root - The component's root element ("u-data"), to scope the walk to.
+ * @param {HTMLElement} root - The component's root element ("u-data"), to scope the search to.
+ * @param {Map} [cache] - Found elements by name, kept while they stay connected and keep their "u-ref".
  * @returns {Proxy} An object whose properties resolve to "u-ref" elements.
  */
-export function createRefsProxy(root) {
+export function createRefsProxy(root, cache) {
   return new Proxy({}, {
     get(object, property) {
-      let ref;
+      let ref = cache?.get(property);
+
+      if (ref?.isConnected && ref.getAttribute('u-ref') === property) {
+        return ref;
+      }
+      ref = undefined;
 
       // domWalk instead of querySelector, since querySelector can't easily exclude "u-ref" elements belonging to a nested component.
       domWalk(root, el => (el.getAttribute('u-ref') === property ? (ref = el) : null));
+
+      ref ? cache?.set(property, ref) : cache?.delete(property);
 
       return ref;
     }
@@ -38,23 +48,23 @@ export function createRefsProxy(root) {
 }
 
 /**
- * Builds the "$el"/"$event"/"$refs"/"$root"/"$storage" magic variables, plus one entry per custom
- * variable registered via "Youla.variable()", recomputed from the same "root"/"el"/"event".
+ * Builds the "$el"/"$event"/"$refs"/"$root"/"$storage" magic variables, plus a lazy lookup of the
+ * custom variables registered via "Youla.variable()", computed only when an expression reads one.
  *
  * @param {HTMLElement} root - The component's root element ("u-data"), used for "$root" and to scope "$refs".
  * @param {HTMLElement} el - The element the expression is being evaluated for/against; becomes "$el".
  * @param {Event} [event] - The triggering DOM event, if any; becomes "$event" (undefined otherwise).
+ * @param {Proxy} [refs] - A shared "$refs" proxy, as built by createRefsProxy().
  * @returns {object} The magic variables, ready to merge into "additionalHelperVariables".
  */
-export function createMagicVariables(root, el, event) {
-  // Spread first so a built-in name can never be shadowed by a custom variable, even if the variable registry is poked directly.
+export function createMagicVariables(root, el, event, refs = createRefsProxy(root)) {
   return {
-    ...resolveVariables(root, el, event),
     '$el': el,
     '$event': event,
-    '$refs': createRefsProxy(root),
+    '$refs': refs,
     '$root': root,
-    '$storage': storage
+    '$storage': storage,
+    [VARIABLES]: getVariables(root, el, event),
   };
 }
 
@@ -70,11 +80,16 @@ export function createMagicVariables(root, el, event) {
  */
 export function withMagicVariables(dataContext, magicVariables, methods) {
   // Only "$" names can be methods, so plain data lookups skip the registry entirely.
-  const isMethod = prop => methods !== undefined && typeof prop === 'string' && prop[0] === '$' && methods.has(prop);
-  const isMagic  = prop => prop in magicVariables || isMethod(prop);
+  const variables  = magicVariables[VARIABLES];
+  const isVariable = prop => variables !== undefined && typeof prop === 'string' && prop[0] === '$' && variables.has(prop);
+  const isMethod   = prop => methods !== undefined && typeof prop === 'string' && prop[0] === '$' && methods.has(prop);
+  const isMagic    = prop => prop in magicVariables || isVariable(prop) || isMethod(prop);
 
   return new Proxy(dataContext, {
-    get: (target, prop) => prop in magicVariables ? magicVariables[prop] : isMethod(prop) ? methods.get(prop) : target[prop],
+    get: (target, prop) => prop in magicVariables ? magicVariables[prop]
+      : isVariable(prop) ? variables.get(prop)
+      : isMethod(prop) ? methods.get(prop)
+      : target[prop],
     has: (target, prop) => isMagic(prop) || prop in target,
     set: (target, prop, value) => isMagic(prop) ? true : Reflect.set(target, prop, value)
   });
@@ -93,6 +108,10 @@ export function splitMagicVariables(helperVariables = {}) {
   Object.entries(helperVariables).forEach(([key, value]) => {
     (key[0] === '$' ? magicVariables : otherVariables)[key] = value;
   });
+
+  if (VARIABLES in helperVariables) {
+    magicVariables[VARIABLES] = helperVariables[VARIABLES];
+  }
 
   return { magicVariables, otherVariables };
 }

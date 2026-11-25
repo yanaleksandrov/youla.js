@@ -26,22 +26,25 @@ export function variable(name, callback) {
 }
 
 /**
- * Runs every registered custom variable's factory and collects the results keyed by `$name`, so
- * `createMagicVariables()` can merge them alongside the built-in magic variables.
+ * Returns a lazy lookup of the custom variables: a factory runs on first read and its result is reused within this lookup.
  *
- * @param {HTMLElement} root - The component's root element ("u-data"), forwarded to each factory.
- * @param {HTMLElement} el - The element the expression is being evaluated for/against, forwarded to each factory.
+ * @param {HTMLElement} root - The component's root element, forwarded to each factory.
+ * @param {HTMLElement} el - The element the expression belongs to, forwarded to each factory.
  * @param {Event} [event] - The triggering DOM event, if any, forwarded to each factory.
- * @returns {Object} One entry per registered variable, keyed by `$name`.
+ * @returns {{has: Function, get: Function}} `has(name)`/`get(name)` for a `$name` variable.
  */
-export function resolveVariables(root, el, event) {
+export function getVariables(root, el, event) {
   const resolved = {};
 
-  Object.entries(variables).forEach(([name, callback]) => {
-    resolved[name] = callback(root, el, event);
-  });
-
-  return resolved;
+  return {
+    has: name => Object.hasOwn(variables, name),
+    get: name => {
+      if (!Object.hasOwn(resolved, name)) {
+        resolved[name] = variables[name](root, el, event);
+      }
+      return resolved[name];
+    },
+  };
 }
 
 /**

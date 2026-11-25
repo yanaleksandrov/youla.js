@@ -3,7 +3,7 @@ import { debounce } from './timing';
 import { makeObservable, RAW, toRaw } from './reactivity';
 import { saferEval } from './eval';
 import { createEvent, getNextModifier, isKeyModifier, matchesKeyModifiers, SCROLL_EDGES, SCROLL_EDGE_GROUPS, SCROLL_OFFSET_MODIFIER } from './events';
-import { getForData, createMagicVariables, withMagicVariables, splitMagicVariables } from './magic-variables';
+import { getForData, createMagicVariables, createRefsProxy, withMagicVariables, splitMagicVariables } from './magic-variables';
 import { getAttributes, parseAttribute, updateAttribute } from './attributes';
 import { hydrateProps, generateExpressionForProp, resolvePropSource } from './props';
 import { createDataProviderContext, isDataProvider } from './data';
@@ -639,6 +639,9 @@ export default class Component {
   flush(force, forceElements) {
     const self = this;
 
+    // A render can add, move or remove "u-ref" elements.
+    self.refsCache?.clear();
+
     domWalk(self.root, el => {
       // Set by "u-each" on nodes it reused, whose loop variables just changed.
       const reused = !!el.__x_force_refresh;
@@ -994,7 +997,9 @@ export default class Component {
    * @returns {object} The magic variables, ready to merge into "additionalHelperVariables".
    */
   getMagicVariables(el, event) {
-    return createMagicVariables(this.root, el, event);
+    this.refsProxy ??= createRefsProxy(this.root, this.refsCache = new Map());
+
+    return createMagicVariables(this.root, el, event, this.refsProxy);
   }
 
   /**

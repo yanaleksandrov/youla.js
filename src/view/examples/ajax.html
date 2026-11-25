@@ -121,12 +121,17 @@ document.addEventListener('youla:init', () =&gt; {
 </p>
 
 <pre>
-$ajax.get(route, payload, onProgress, options)
-$ajax.post(route, payload, onProgress, options)
-$ajax.put(route, payload, onProgress, options)
-$ajax.patch(route, payload, onProgress, options)
-$ajax.delete(route, payload, onProgress, options)
+$ajax.get(route, payload, options)
+$ajax.post(route, payload, options)
+$ajax.put(route, payload, options)
+$ajax.patch(route, payload, options)
+$ajax.delete(route, payload, options)
 </pre>
+
+<p>
+  Третьим аргументом можно передать и колбэк прогресса, а настройки — четвёртым:
+  <code>$ajax.post(route, payload, onProgress, options)</code>.
+</p>
 
 <table>
   <tbody>
@@ -157,8 +162,8 @@ $ajax.delete(route, payload, onProgress, options)
     <tr>
       <td><code>options</code></td>
       <td>
-        необязательный объект <code>{ headers, credentials, timeout, clearErrors, el }</code> — настройки
-        одного запроса (см. таблицу ниже)
+        необязательный объект <code>{ headers, credentials, timeout, clearErrors, el, onProgress }</code> —
+        настройки одного запроса (см. таблицу ниже); третий аргумент, если колбэк прогресса не нужен
       </td>
     </tr>
   </tbody>
@@ -204,6 +209,11 @@ $ajax.delete(route, payload, onProgress, options)
         <code>{ el: this.$root }</code> — один поток запросов и индикатор загрузки на весь компонент
       </td>
     </tr>
+    <tr>
+      <td><code>onProgress</code></td>
+      <td>—</td>
+      <td>колбэк прогресса, если он не передан отдельным аргументом; колбэк-аргумент имеет приоритет</td>
+    </tr>
   </tbody>
 </table>
 
@@ -215,7 +225,7 @@ $ajax.delete(route, payload, onProgress, options)
 <pre>
 &lt;form u-data=&quot;{ title: '', slug: '' }&quot;&gt;
   &lt;input name=&quot;title&quot; u-prop=&quot;title&quot;
-    @input.delay.250ms=&quot;$ajax.post('slugs/generate', { text: title }, null, { clearErrors: false })
+    @input.delay.250ms=&quot;$ajax.post('slugs/generate', { text: title }, { clearErrors: false })
       .then(value =&gt; slug = value)&quot;&gt;
   &lt;input name=&quot;slug&quot; u-prop=&quot;slug&quot;&gt;
 &lt;/form&gt;

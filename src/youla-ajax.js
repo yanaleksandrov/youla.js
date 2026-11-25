@@ -41,13 +41,13 @@ document.addEventListener('youla:init', () => {
   let errorId = 0;
 
   /**
-   * Registers `$ajax.get/post/put/patch/delete(route, payload, onProgress, options)`. Dispatches
-   * `ajax:${route}` on success; an array response runs as fragment instructions (see applyFragment).
+   * Registers `$ajax.get/post/put/patch/delete(route, payload, options)`; the third argument may also
+   * be `onProgress`, followed by `options`. Dispatches `ajax:${route}` on success.
    *
    * @param {Event} e - Triggering event (unused).
    * @param {HTMLElement} el - Element `$ajax` was called on.
-   * @returns {Object} `{ get, post, put, patch, delete }`, each `(route, payload?, onProgress?, options?) => Promise`;
-   *   options: `{ headers, credentials, timeout, clearErrors, el }`.
+   * @returns {Object} `{ get, post, put, patch, delete }`, each `(route, payload?, options?) => Promise`;
+   *   options: `{ headers, credentials, timeout, clearErrors, el, onProgress }`.
    */
   Youla.method('ajax', (e, el) => {
     const ajax = (method, route, payload, onProgress, options = {}) => {
@@ -152,7 +152,14 @@ document.addEventListener('youla:init', () => {
 
     return METHODS.reduce((methods, method) => ({
       ...methods,
-      [method.toLowerCase()]: (route, payload, onProgress, options) => ajax(method, route, payload, onProgress, options),
+      [method.toLowerCase()]: (route, payload, onProgress, options) => {
+        // "post(route, payload, { el })": an object in place of the callback is the options.
+        if (onProgress && typeof onProgress === 'object') {
+          options    = onProgress;
+          onProgress = null;
+        }
+        return ajax(method, route, payload, onProgress ?? options?.onProgress, options ?? undefined);
+      },
     }), {});
   });
 

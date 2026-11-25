@@ -110,6 +110,18 @@ describe('an alias shadows parent component data', () => {
     expect(warn).toHaveBeenCalledWith('Youla.js: alias "notice" in u-data="notice as notice" shadows "notice" of a parent component.');
   });
 
+  it('warns when a provider is nested in a component of the same provider without "as"', async () => {
+    Youla.data('tab', () => () => ({ title: 't' }));
+    document.body.innerHTML = `
+      <div u-data="tab()"><div u-data="tab()"><span u-text="tab.title"></span></div></div>
+    `;
+    initAll();
+    await tick();
+
+    expect(texts('span')).toEqual(['t']);
+    expect(warn).toHaveBeenCalledWith('Youla.js: alias "tab" in u-data="tab()" shadows "tab" of a parent component.');
+  });
+
   it('lets an inner alias win over an outer alias of the same name', async () => {
     document.body.innerHTML = `
       <section u-data="{ v: 'outer' } as box">

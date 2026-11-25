@@ -41,7 +41,7 @@ const KEY_ALIASES = {
 const SYSTEM_MODIFIER_KEYS = { ctrl: 'ctrlKey', alt: 'altKey', shift: 'shiftKey', meta: 'metaKey' };
 
 // Behavior modifiers Component#attachListener handles directly; anything else is treated as a key filter.
-const BEHAVIOR_MODIFIERS = new Set(['window', 'document', 'passive', 'capture', 'delay', 'prevent', 'stop', 'outside', 'once', 'lazy']);
+const BEHAVIOR_MODIFIERS = new Set(['window', 'document', 'passive', 'capture', 'delay', 'prevent', 'stop', 'outside', 'once', 'lazy', 'form', 'self']);
 
 // Edge checks for "@scroll.top" and the like; "offset(size)" gives the edge zone in px for the scroll area's size on that axis.
 // In RTL "scrollLeft" runs from 0 down to -max, so left/right flip their bounds.

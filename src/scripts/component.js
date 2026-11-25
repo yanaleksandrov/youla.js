@@ -3,7 +3,7 @@ import { debounce } from './timing';
 import { makeObservable, RAW, toRaw } from './reactivity';
 import { saferEval } from './eval';
 import { createEvent, getNextModifier, isKeyModifier, matchesKeyModifiers, SCROLL_EDGES, SCROLL_EDGE_GROUPS, SCROLL_OFFSET_MODIFIER } from './events';
-import { getForData, createMagicVariables, withMagicVariables, splitMagicVariables } from './magic-variables';
+import { getForData, createMagicVariables, createRefsProxy, withMagicVariables, splitMagicVariables } from './magic-variables';
 import { getAttributes, parseAttribute, updateAttribute } from './attributes';
 import { hydrateProps, generateExpressionForProp, resolvePropSource } from './props';
 import { createDataProviderContext, isDataProvider } from './data';
@@ -17,12 +17,18 @@ import { isUnsafeKey, getNestedObjectValue, parsePropPath } from './object-path'
 let disconnectObserver;
 const disconnectCleanups = new Map();
 
-function cleanupOnDisconnect(el, cleanup) {
+export function cleanupOnDisconnect(el, cleanup) {
   if (!disconnectObserver) {
     disconnectObserver = new MutationObserver(() => {
       disconnectCleanups.forEach((cleanups, target) => {
         if (!target.isConnected) {
-          cleanups.forEach(fn => fn());
+          cleanups.forEach(fn => {
+            try {
+              fn();
+            } catch (error) {
+              console.error('Youla.js: cleanup failed', target, error);
+            }
+          });
           disconnectCleanups.delete(target);
         }
       });
@@ -36,24 +42,37 @@ function cleanupOnDisconnect(el, cleanup) {
   disconnectCleanups.get(el).push(cleanup);
 }
 
-/**
- * Determines whether a function is an arrow function, by inspecting its source text: an
- * arrow's "=>" sits before its body's opening "{" (or there's no "{" at all, for a concise body).
- *
- * @param {Function} fn - The function to inspect.
- * @returns {boolean} True if "fn" is an arrow function.
- */
-function isArrowFunction(fn) {
-  const source = Function.prototype.toString.call(fn);
+// Functions already checked by "warnIfThisArrow()", and the sources already warned about.
+const checkedFunctions = new WeakSet();
+const warnedSources    = new Set();
 
-  if (/^\s*(async\s+)?function/.test(source)) {
-    return false;
+/**
+ * Warns once about a parameterless arrow function using "this", which never gets the component context.
+ *
+ * @param {string} name - The binding key, for the message.
+ * @param {Function} fn - The binding value.
+ */
+function warnIfThisArrow(name, fn) {
+  // A binding with parameters reads the context from its argument, so only parameterless ones are inspected.
+  if (fn.length > 0 || checkedFunctions.has(fn)) {
+    return;
+  }
+  checkedFunctions.add(fn);
+
+  const source = Function.prototype.toString.call(fn);
+  if (/^\s*(async\s+)?function/.test(source) || warnedSources.has(source)) {
+    return;
   }
 
+  // An arrow's "=>" comes before its body's opening "{", or there's no "{" at all.
   const braceIndex = source.indexOf('{');
   const arrowIndex = source.indexOf('=>');
+  const isArrow    = arrowIndex !== -1 && (braceIndex === -1 || arrowIndex < braceIndex);
 
-  return arrowIndex !== -1 && (braceIndex === -1 || arrowIndex < braceIndex);
+  if (isArrow && /\bthis\b/.test(source.slice(arrowIndex))) {
+    warnedSources.add(source);
+    console.warn(`Youla.js: u-bind key "${name}" is an arrow function using "this", which never refers to the component. Take the context as an argument instead: "${name}": $ => ...`);
+  }
 }
 
 /**
@@ -77,6 +96,33 @@ function serialize(value) {
   }
 }
 
+/**
+ * Returns the provider name a `u-data` expression without "as" is aliased to: "password" or "password(...)".
+ *
+ * @param {string} expression - The trimmed `u-data` expression.
+ * @returns {string|null} The provider name, or null for any other expression.
+ */
+function defaultAlias(expression) {
+  const [, name] = expression.match(/^([A-Za-z_$][\w$]*)\s*(?:\(|$)/) || [];
+  return isDataProvider(name) ? name : null;
+}
+
+/**
+ * Checks whether "component" or any of its ancestors uses "alias", which isn't part of their scope.
+ *
+ * @param {Component|null} component
+ * @param {string} alias
+ * @returns {boolean}
+ */
+function hasAncestorAlias(component, alias) {
+  for (; component; component = component.parent) {
+    if (component.alias === alias) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export default class Component {
   /**
    * Builds a component rooted at "el": reads its "u-data" expression and modifiers, builds the
@@ -91,7 +137,7 @@ export default class Component {
     // Modifiers only ever live in the attribute's own name (e.g. "u-data.local"), never in its value, so find the entry by directive root instead of assuming it's literally named "u-data".
     const { expression, modifiers } = getAttributes(el).find(({ directive }) => directive === 'u-data') || { expression: '{}', modifiers: [] };
 
-    // u-data="object as o" gives the whole data object a local alias
+    // u-data="object as o" gives the whole data object a local alias; without "as", a provider is aliased to its own name (see defaultAlias()).
     const [, dataExpression, alias] = expression.trim().match(/^([\s\S]+?)\s+as\s+([A-Za-z_$][\w$]*)$/) || [];
 
     // The nearest ancestor "u-data" component, if any (already initialized — componentDiscover() walks the document in order); see the "scope" getter below.
@@ -106,12 +152,13 @@ export default class Component {
     this.parent?.children.push(this);
     this.watchers      = [];
     this.name          = (dataExpression ?? expression).trim();
-    this.alias         = alias || null;
+    this.alias         = alias || defaultAlias(this.name);
+    this.implicitAlias = !alias && !!this.alias;
     this.storageType   = isStorageModifier(modifiers) ? getStorageType(modifiers) : null;
     // A duration modifier (e.g. "u-data.cookie.30d") sits right after "cookie"/"local" in the modifier list, same convention as "u-prop"; omitting it means a session cookie or no expiration at all.
     this.storageExpire = this.storageType ? getNextModifier(modifiers, this.storageType) : null;
 
-    if (this.alias && this.parent && this.alias in this.parent.scope) {
+    if (this.alias && this.parent && (this.alias in this.parent.scope || hasAncestorAlias(this.parent, this.alias))) {
       console.warn(`Youla.js: alias "${this.alias}" in u-data="${expression.trim()}" shadows "${this.alias}" of a parent component.`);
     }
 
@@ -153,6 +200,37 @@ export default class Component {
     this.data = this.observeData(this.rawData);
 
     this.initialize(el);
+
+    this.mount();
+  }
+
+  /**
+   * Calls the data's "init()" once after the first render, and "destroy()" or the function "init()" returned once the root leaves the DOM.
+   */
+  mount() {
+    const { init, destroy } = this.rawData ?? {};
+    const root = this.root;
+
+    if (typeof destroy === 'function') {
+      cleanupOnDisconnect(root, () => destroy.call(this.createContext(root)));
+    }
+
+    if (typeof init !== 'function') {
+      return;
+    }
+
+    // Deferred like "@load", so components later in the document are already initialized.
+    queueMicrotask(async () => {
+      try {
+        const cleanup = await init.call(this.createContext(root));
+
+        if (typeof cleanup === 'function') {
+          cleanupOnDisconnect(root, cleanup);
+        }
+      } catch (error) {
+        console.error('Youla.js: init() failed', root, error);
+      }
+    });
   }
 
   /**
@@ -247,9 +325,9 @@ export default class Component {
     const methods     = magicVariables.$el ? getElementMethods(magicVariables.$el, this) : undefined;
     const contextData = withMagicVariables(proxiedData, magicVariables, methods);
 
-    // A u-bind entry may hand back a method instead of an expression string — call it with "this" bound to the same context, so property access is tracked exactly like an expression string's.
+    // A u-bind entry may hand back a function — it gets the same tracked context as "this" and as its argument, so an arrow function works too.
     const output = typeof expressionOrFn === 'function'
-      ? expressionOrFn.call(contextData)
+      ? expressionOrFn.call(contextData, contextData)
       : saferEval(expressionOrFn, contextData, trackedHelperVariables);
 
     return { output, deps };
@@ -361,9 +439,8 @@ export default class Component {
       const isFn    = typeof value === 'function';
       const parsed  = parseAttribute(name, value);
 
-      // Arrow functions ignore .call()/.apply() and silently keep their original "this", so detect one from its source text — an arrow's "=>" appears before its body's opening "{" (or there's none), which a function/method never does.
-      if (isFn && isArrowFunction(value)) {
-        console.warn(`Youla.js: u-bind key "${name}" is an arrow function — arrow functions don't bind "this" to the component's data. Use a regular function or method shorthand instead: "${name}"() { ... }.`);
+      if (isFn) {
+        warnIfThisArrow(name, value);
       }
 
       // A key with no u-/@/: prefix (e.g. "type") is a plain HTML attribute, written directly as markup.
@@ -371,7 +448,7 @@ export default class Component {
 
       // A "u-*" key that isn't a registered directive (e.g. "u-ref") is read straight off the element instead (see createRefsProxy), so write it as a real attribute since there's none to read yet.
       if (parsed.directive && !getDirective(parsed.directive)) {
-        el.setAttribute(name, isFn ? value.call(this.scope) : value);
+        el.setAttribute(name, isFn ? value.call(this.scope, this.scope) : value);
         return [];
       }
 
@@ -440,8 +517,7 @@ export default class Component {
       }
     } else if (directive === 'u-prop') {
       // "expression" is a property path, not a JS expression, so it's read straight off "scope" (which falls through to an ancestor component), or off a loop variable that declares its first segment.
-      const { otherVariables } = splitMagicVariables(additionalHelperVariables);
-      output = getNestedObjectValue(resolvePropSource(expression, this.scope, otherVariables), expression);
+      output = getNestedObjectValue(resolvePropSource(expression, this.scope, this.getPropVariables(additionalHelperVariables)), expression);
 
       if (withDeps) {
         const [rootIdentifier] = parsePropPath(expression);
@@ -512,7 +588,7 @@ export default class Component {
 
           let propExpression;
           if (directive === 'u-prop') {
-            propExpression = generateExpressionForProp(el, self.scope, attribute, splitMagicVariables(additionalHelperVariables).otherVariables);
+            propExpression = generateExpressionForProp(el, self.scope, attribute, self.getPropVariables(additionalHelperVariables));
 
             // If the element we are binding to is a select, a radio, or checkbox we'll listen for the change event instead of the "input" event.
             // A single <select> reports type "select-one"; widgets like SlimSelect dispatch only "change".
@@ -561,7 +637,10 @@ export default class Component {
     }
 
     // Built once and reused, not recreated per call — otherwise each write in a fast burst (e.g. a dragged slider) would queue its own full domWalk instead of coalescing.
+    this.refreshPending = true;
     this.scheduleRefresh ??= debounce(() => {
+      self.refreshPending = false;
+
       const force         = self.pendingForceRefresh;
       const forceElements = self.pendingForceElements;
       self.pendingForceRefresh   = false;
@@ -586,6 +665,9 @@ export default class Component {
    */
   flush(force, forceElements) {
     const self = this;
+
+    // A render can add, move or remove "u-ref" elements.
+    self.refsCache?.clear();
 
     domWalk(self.root, el => {
       // Set by "u-each" on nodes it reused, whose loop variables just changed.
@@ -654,6 +736,44 @@ export default class Component {
 
     // After the reset, so a callback's own write isn't dropped from the next refresh.
     self.watchers.forEach(watcher => watcher.check());
+
+    if (self.nextTicks) {
+      self.runNextTicks();
+    }
+  }
+
+  /**
+   * Resolves after the next flush, or in the next microtask if no update is scheduled.
+   *
+   * @param {Function} [callback] - Called at the same moment.
+   * @returns {Promise<void>}
+   */
+  nextTick(callback) {
+    return new Promise(resolve => {
+      (this.nextTicks ??= []).push(() => {
+        callback?.();
+        resolve();
+      });
+
+      // Re-checked in the microtask, so a write made right after the call is still awaited.
+      queueMicrotask(() => this.refreshPending || this.runNextTicks());
+    });
+  }
+
+  /**
+   * Calls every callback queued by "nextTick()".
+   */
+  runNextTicks() {
+    const queue = this.nextTicks ?? [];
+    this.nextTicks = null;
+
+    queue.forEach(fn => {
+      try {
+        fn();
+      } catch (error) {
+        console.error('Youla.js: $nextTick() callback failed', this.root, error);
+      }
+    });
   }
 
   /**
@@ -792,6 +912,28 @@ export default class Component {
       });
     }
 
+    if (modifiers.includes('self')) {
+      handler = wrapHandler(handler, (next, e) => e.target === el && next(e));
+    }
+
+    // Listens on the document rather than the form, so fields attached by a "form" attribute outside it are caught too.
+    if (modifiers.includes('form')) {
+      const form = el.form ?? el.closest('form');
+
+      if (!form) {
+        console.warn(`Youla.js: "@${event}.form" has no form to listen to.`, el);
+        return;
+      }
+
+      target = el.ownerDocument;
+      handler = wrapHandler(handler, (next, e) => {
+        const node = e.target;
+
+        // "form" is undefined on elements that can't belong to a form, and null on fields outside any form.
+        (node.form === undefined ? form.contains(node) : node.form === form) && next(e);
+      });
+    }
+
     // Key/system-modifier filter (e.g. "@keydown.enter") must be the outermost wrap, so a mismatched key skips prevent/stop/delay too.
     const keyModifiers = edgeModifiers.length ? modifiers.filter(modifier => !edgeModifiers.includes(modifier)) : modifiers;
 
@@ -840,16 +982,27 @@ export default class Component {
    * @param {HTMLElement} target - The element the listener is attached to.
    */
   invokeListener(expressionOrFn, e, target) {
-    const contextData = withMagicVariables(this.scope, this.getMagicVariables(target, e), getListenerMethods(e, target, this));
+    const contextData = this.createContext(target, e);
 
-    // A u-bind entry may hand back a method instead of an expression string — call it directly with "this" as the component's reactive data, so writes to it still trigger refresh().
+    // The context is passed after the event too, so an arrow function handler can reach it.
     if (typeof expressionOrFn === 'function') {
-      expressionOrFn.call(contextData, e);
+      expressionOrFn.call(contextData, e, contextData);
       return;
     }
 
     // Methods resolve through "with($data)" rather than as parameters, so only the ones the expression touches are created.
     saferEval(expressionOrFn, contextData, this.getLocalVariables(target), true);
+  }
+
+  /**
+   * Builds the "this" of handlers and lifecycle hooks: the component's scope with magic variables and methods.
+   *
+   * @param {HTMLElement} el - Becomes "$el".
+   * @param {Event} [event] - Becomes "$event".
+   * @returns {Proxy}
+   */
+  createContext(el, event) {
+    return withMagicVariables(this.scope, this.getMagicVariables(el, event), getListenerMethods(event, el, this));
   }
 
   /**
@@ -864,6 +1017,21 @@ export default class Component {
   }
 
   /**
+   * Returns the variables a "u-prop" path may be rooted at: the local variables, minus an alias
+   * implied by the provider name, so a field named after its provider still binds to data.
+   *
+   * @param {object} helperVariables - The bag built by "getHelperVariables()".
+   * @returns {object} The local variables, keyed by name.
+   */
+  getPropVariables(helperVariables) {
+    const { otherVariables } = splitMagicVariables(helperVariables);
+    if (this.implicitAlias && otherVariables[this.alias] === this.data) {
+      delete otherVariables[this.alias];
+    }
+    return otherVariables;
+  }
+
+  /**
    * Builds the "$el"/"$event"/"$refs"/"$root"/"$storage" magic variables for evaluation against/for "el".
    *
    * @param {HTMLElement} el - The element the expression is being evaluated for/against; becomes "$el".
@@ -871,7 +1039,9 @@ export default class Component {
    * @returns {object} The magic variables, ready to merge into "additionalHelperVariables".
    */
   getMagicVariables(el, event) {
-    return createMagicVariables(this.root, el, event);
+    this.refsProxy ??= createRefsProxy(this.root, this.refsCache = new Map());
+
+    return createMagicVariables(this.root, el, event, this.refsProxy);
   }
 
   /**

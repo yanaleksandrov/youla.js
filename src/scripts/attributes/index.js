@@ -85,7 +85,7 @@ export function getAttributes(el) {
 /**
  * Writes a value onto an element for a given attribute/property name — form control values,
  * "class"/"style" (via setClasses/setStyles), boolean attributes — so callers never special-case
- * el.type. Refuses an inline event-handler attribute or a "javascript:" URL, same trust boundary as "u-html".
+ * el.type. A null/undefined value removes any other attribute. Refuses an inline event-handler attribute or a "javascript:" URL, same trust boundary as "u-html".
  *
  * @param {HTMLElement} el - The element to update.
  * @param {string} name - The attribute/property name ("value", "class", "style", or any other HTML attribute).
@@ -124,6 +124,8 @@ export function updateAttribute(el, name, value) {
     el._x_undoAddedStyles = setStyles(el, value)
   } else if (['disabled', 'readonly', 'required', 'checked', 'autofocus', 'autoplay', 'hidden'].includes(name)) {
     !!value ? el.setAttribute(name, '') : el.removeAttribute(name);
+  } else if (value === null || value === undefined) {
+    el.removeAttribute(name)
   } else {
     el.setAttribute(name, value)
   }

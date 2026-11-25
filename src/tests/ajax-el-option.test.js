@@ -171,6 +171,46 @@ describe('$ajax "el" option', () => {
     expect(button.__ajax).toBe(FakeXHR.all[0]);
   });
 
+  it('takes options as the third argument', async () => {
+    const root = mount(`
+      <form u-data>
+        <input name="title">
+        <button type="button" id="submit" @click="track($ajax.post('save'))"></button>
+        <button type="button" id="background" @click="track($ajax.post('slug', null, {el: $root, clearErrors: false}))"></button>
+      </form>
+    `);
+    await tick();
+
+    root.querySelector('#submit').click();
+    FakeXHR.all[0].respond(422, { errors: { title: ['Required.'] } });
+
+    root.querySelector('#background').click();
+
+    expect(root.__ajax).toBe(FakeXHR.all[1]);
+    expect(root.classList.contains('is-loading')).toBe(true);
+    expect(root.querySelector('input').getAttribute('aria-invalid')).toBe('true');
+  });
+
+  it('reads onProgress from options, with a callback argument taking priority', async () => {
+    window.fromOptions = vi.fn();
+    window.fromArgument = vi.fn();
+    const root = mount(`
+      <div u-data>
+        <button id="options" @click="track($ajax.post('a', null, {onProgress: fromOptions}))"></button>
+        <button id="legacy" @click="track($ajax.post('b', null, null, {onProgress: fromOptions}))"></button>
+        <button id="both" @click="track($ajax.post('c', null, fromArgument, {onProgress: fromOptions, el: $root}))"></button>
+      </div>
+    `);
+    await tick();
+
+    ['options', 'legacy', 'both'].forEach(id => root.querySelector(`#${id}`).click());
+    FakeXHR.all.forEach(xhr => xhr.respond(200));
+
+    expect(window.fromOptions).toHaveBeenCalledTimes(2);
+    expect(window.fromArgument).toHaveBeenCalledTimes(1);
+    expect(root.__ajax).toBe(FakeXHR.all[2]);
+  });
+
   it('keeps existing calls without options or with {clearErrors: false} unchanged', async () => {
     const root = mount(`
       <form u-data>

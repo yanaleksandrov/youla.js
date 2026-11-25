@@ -30,6 +30,27 @@ function unwrapTTL(raw) {
   return undefined;
 }
 
+let warned = false;
+
+/**
+ * Wraps a storage method so a blocked "localStorage" or cookie access returns undefined instead of throwing; warns once per page.
+ *
+ * @param {Function} fn - The storage method.
+ * @returns {Function}
+ */
+function safely(fn) {
+  return (...args) => {
+    try {
+      return fn(...args);
+    } catch (error) {
+      if (!warned) {
+        warned = true;
+        console.warn('Youla.js: storage is unavailable.', error);
+      }
+    }
+  };
+}
+
 export const storage = {
   /**
    * Reads a previously stored value. A localStorage entry set with an
@@ -39,7 +60,7 @@ export const storage = {
    * @param {'local'|'cookie'} [type] - Which storage to read from.
    * @returns {*} Parsed value, or undefined if not found or expired.
    */
-  get: (name, type = 'local') => {
+  get: safely((name, type = 'local') => {
     if (!name) return;
 
     if (type === 'cookie') {
@@ -84,7 +105,7 @@ export const storage = {
         return stored;
       }
     }
-  },
+  }),
   /**
    * Persists a value to localStorage or a cookie, JSON-encoding it first if it's an object.
    * Passing a falsy "value" clears the existing entry instead of writing one.
@@ -95,7 +116,7 @@ export const storage = {
    * @param {object} [options] - Cookie attributes; "expires" takes a Date or a duration like "1y"/"30d" (for localStorage it's the only option used, to fake a TTL).
    * @returns {void}
    */
-  set: (name, value, type = 'local', options = {}) => {
+  set: safely((name, value, type = 'local', options = {}) => {
     if (!name) return;
 
     options = { ...options };
@@ -146,7 +167,7 @@ export const storage = {
         localStorage.removeItem(name);
       }
     }
-  },
+  }),
   /**
    * Removes a stored value; a cookie is expired on the default "/" path that set() writes to.
    *

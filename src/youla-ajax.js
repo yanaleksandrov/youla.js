@@ -41,13 +41,13 @@ document.addEventListener('youla:init', () => {
   let errorId = 0;
 
   /**
-   * Registers `$ajax.get/post/put/patch/delete(route, payload, onProgress, options)`. Dispatches
-   * `ajax:${route}` on success; an array response runs as fragment instructions (see applyFragment).
+   * Registers `$ajax.get/post/put/patch/delete(route, payload, options)`; the third argument may also
+   * be `onProgress`, followed by `options`. Dispatches `ajax:${route}` on success.
    *
    * @param {Event} e - Triggering event (unused).
    * @param {HTMLElement} el - Element `$ajax` was called on.
-   * @returns {Object} `{ get, post, put, patch, delete }`, each `(route, payload?, onProgress?, options?) => Promise`;
-   *   options: `{ headers, credentials, timeout, clearErrors, el }`.
+   * @returns {Object} `{ get, post, put, patch, delete }`, each `(route, payload?, options?) => Promise`;
+   *   options: `{ headers, credentials, timeout, clearErrors, el, onProgress }`.
    */
   Youla.method('ajax', (e, el) => {
     const ajax = (method, route, payload, onProgress, options = {}) => {
@@ -152,7 +152,14 @@ document.addEventListener('youla:init', () => {
 
     return METHODS.reduce((methods, method) => ({
       ...methods,
-      [method.toLowerCase()]: (route, payload, onProgress, options) => ajax(method, route, payload, onProgress, options),
+      [method.toLowerCase()]: (route, payload, onProgress, options) => {
+        // "post(route, payload, { el })": an object in place of the callback is the options.
+        if (onProgress && typeof onProgress === 'object') {
+          options    = onProgress;
+          onProgress = null;
+        }
+        return ajax(method, route, payload, onProgress ?? options?.onProgress, options ?? undefined);
+      },
     }), {});
   });
 
@@ -378,14 +385,8 @@ document.addEventListener('youla:init', () => {
    */
   function watchProp(input, callback) {
     const path = [...input.attributes].find(({ name }) => name === 'u-prop' || name.startsWith('u-prop.'))?.value;
-    let host   = input;
 
-    // Not closest('[u-data]'): the attribute name may carry modifiers, e.g. "u-data.local".
-    while (host && !host.__x) {
-      host = host.parentElement;
-    }
-
-    return path ? host?.__x.watch(path, callback) : undefined;
+    return path ? Youla.component(input)?.watch(path, callback) : undefined;
   }
 
   /**
@@ -667,7 +668,7 @@ document.addEventListener('youla:init', () => {
 
   /**
    * Inserts "html" relative to "target" with the given DOM method, then binds the new elements
-   * to the nearest component, which otherwise only picks up a new `u-data` root on its own.
+   * to the nearest component right away rather than in the next microtask.
    *
    * @param {HTMLElement} target - Element the markup is inserted relative to.
    * @param {string} method - "replaceChildren", "replaceWith", "before", "prepend", "append" or "after".
@@ -687,12 +688,7 @@ document.addEventListener('youla:init', () => {
         return;
       }
 
-      let parent = el.parentElement;
-      while (parent && !parent.__x) {
-        parent = parent.parentElement;
-      }
-
-      parent?.__x.initialize(el);
+      Youla.component(el.parentElement)?.initialize(el);
     });
   }
 

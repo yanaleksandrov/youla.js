@@ -140,6 +140,23 @@ describe('updateAttribute', () => {
     expect(el.getAttribute('title')).toBe('hello');
   });
 
+  it('removes a generic attribute for null/undefined and restores it for a value', () => {
+    const a = document.createElement('a');
+    updateAttribute(a, 'href', undefined);
+    expect(a.hasAttribute('href')).toBe(false);
+    updateAttribute(a, 'href', '/x');
+    expect(a.getAttribute('href')).toBe('/x');
+    updateAttribute(a, 'href', null);
+    expect(a.hasAttribute('href')).toBe(false);
+  });
+
+  it('writes false as the string "false" on a generic attribute', () => {
+    updateAttribute(el, 'aria-pressed', false);
+    expect(el.getAttribute('aria-pressed')).toBe('false');
+    updateAttribute(el, 'data-open', true);
+    expect(el.getAttribute('data-open')).toBe('true');
+  });
+
   it('sets "value" on an input element', () => {
     const input = document.createElement('input');
     updateAttribute(input, 'value', 'hi');

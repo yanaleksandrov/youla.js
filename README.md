@@ -52,6 +52,117 @@ Youla.js ships with:
 | `:attr`          | Binds any HTML attribute to an expression (e.g. `:class`, `:style`)  |
 | `@event`         | Listens for a browser event, with modifiers like `.prevent`/`.once`  |
 
+## Component alias
+
+`as` gives a component's data a local name, so bindings show which component a value belongs to. A
+component created from a `Youla.data()` provider gets the provider's name as its alias automatically:
+
+| `u-data` value                | Alias      |
+| ----------------------------- | ---------- |
+| `password`, `password(...)`   | `password` |
+| `password(...) as field`      | `field`    |
+| `{ a: 1 }`, `{...a, ...b}`, any other expression | none |
+
+```html
+<div u-data="password('new-password')">
+  <input u-bind="password.input">
+</div>
+```
+
+An alias that hides a same-named value of a parent component logs a warning, including a provider nested
+in a component of the same provider. For intentionally recursive structures, give the inner component
+its own name with `as`. `u-prop` paths don't resolve against an automatic alias, so
+`u-prop.up="password"` inside `u-data="password"` still writes to the parent's `password` field.
+
+## Attribute values
+
+A `:attr` binding writes the expression's result to the attribute. `class`, `style`, `value` and boolean
+attributes such as `disabled` or `hidden` have their own handling; every other attribute follows this table:
+
+| Value                  | Result                          |
+| ---------------------- | ------------------------------- |
+| String or number       | Written as is                   |
+| `true` / `false`       | `"true"` / `"false"`            |
+| `null` / `undefined`   | The attribute is removed        |
+
+So `<a :href="notice.url">` renders a link without `href` while `url` is missing, and
+`<button :aria-pressed="on">` keeps `aria-pressed="false"` when `on` is `false`.
+
+## Lifecycle
+
+A component's data can define `init()` and `destroy()` to start and stop work that lives outside its
+markup, such as timers, polling or global listeners.
+
+| Method      | Description                                                                                                  |
+| ----------- | ------------------------------------------------------------------------------------------------------------ |
+| `init()`    | Called once after the component's first render, with the same `this` as event handlers. May be `async`; errors are logged to the console |
+| `destroy()` | Called when the component's root element is removed from the document                                       |
+
+If `init()` returns a function, it is called on removal as well, which keeps setup and teardown together.
+Listeners on `document`, `window` or any other event target are best added with `$on`, which removes them
+on its own:
+
+| Method                                   | Description                                                                                         |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `$on(target, event, handler, options?)`  | Calls `target.addEventListener()` and removes the listener when the component is removed. Returns a function that removes it right away |
+
+```js
+Youla.data('inbox', () => ({
+  unread: 0,
+  init() {
+    const timer = setInterval(() => this.check(), 30000);
+    this.$on(document, 'visibilitychange', () => !document.hidden && this.check());
+
+    return () => clearInterval(timer);
+  },
+  async check() {
+    this.unread = await fetch('/api/unread').then(response => response.json());
+  },
+}));
+```
+
+## Waiting for the DOM: `$nextTick`
+
+Data changes reach the DOM in a batch, shortly after the code that made them. `$nextTick` waits for that
+update, so code that reads the rendered markup or notifies other code about the change runs at the right time.
+
+| Method                  | Description                                                                                      |
+| ----------------------- | ------------------------------------------------------------------------------------------------ |
+| `$nextTick(callback?)`  | Returns a promise resolved once the component's pending changes are applied to the DOM; `callback`, if given, is called at the same time |
+
+```js
+async changed() {
+  this.total = this.items.length;
+  await this.$nextTick();
+  this.$dispatch('change');
+},
+```
+
+`$dispatch('change')` fires a bubbling event that ordinary `change` listeners receive, so there is no need to
+create and dispatch the event by hand.
+
+## Inserted markup and `Youla.component()`
+
+Markup added to the page after load is picked up automatically: a new `u-data` element becomes a component,
+and any other element inserted inside an existing component — for example HTML loaded from the server or
+re-rendered table rows — gets that component's data, bindings and event handlers. Content rendered by
+`u-html` is bound the same way, both on the first render and after every update.
+
+`Youla.component(el)` returns the component an element belongs to (the nearest `u-data` at or above it),
+or `null`, for code outside the component that needs its data:
+
+| Member              | Description                                                                 |
+| ------------------- | --------------------------------------------------------------------------- |
+| `data`              | The component's reactive data; writes update the DOM                        |
+| `root`              | The element carrying `u-data`                                               |
+| `refresh(force?)`   | Schedules an update; `true` re-runs every binding                           |
+| `watch(path, callback)` | Calls `callback(value, oldValue)` when the value at `path` changes; returns a function that stops watching |
+| `initialize(el)`    | Binds `el` and its descendants to the component right away, instead of in the next microtask |
+
+```js
+Youla.variable('notice', () => Youla.component(document.querySelector('.notice'))?.data);
+```
+
 ## Storage
 
 `Youla.storage` persists values in `localStorage` or cookies — useful for state that isn't bound to a
@@ -64,6 +175,9 @@ in expressions and as `this.$storage` in data provider methods, and it also powe
 | `get(name, type = 'local')`                    | Returns the stored value, or `undefined` if missing or expired |
 | `set(name, value, type = 'local', options = {})` | Stores a value; objects and arrays are saved as JSON         |
 | `forget(name, type = 'local')`                 | Removes the stored value                                       |
+
+The methods never throw: when the browser blocks storage (private mode, disabled cookies or site data),
+`get` returns `undefined` and `set`/`forget` do nothing, so calls need no `try`/`catch`.
 
 | Parameter         | Description                                                                                  |
 | ----------------- | -------------------------------------------------------------------------------------------- |

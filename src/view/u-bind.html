@@ -317,6 +317,47 @@ Youla.data(&#39;tabs&#39;, () =&gt; ({
   каждом изменении <code>tab</code> — поэтому активная вкладка переключается реактивно.
 </p>
 
+<h2>Стрелочные функции</h2>
+
+<p>
+  Значением привязки может быть функция. Она получает контекст компонента — данные, методы и
+  специальные переменные — и как <code>this</code>, и как аргумент, поэтому короткие привязки удобно
+  записывать стрелочными функциями. Привязка события получает аргументом сначала событие, затем контекст.
+</p>
+
+<table>
+  <tbody>
+    <tr>
+      <th>Привязка</th>
+      <th>Аргументы функции</th>
+    </tr>
+    <tr><td><code>:атрибут</code>, <code>u-*</code></td><td><code>($)</code> — контекст компонента</td></tr>
+    <tr><td><code>@событие</code></td><td><code>(event, $)</code> — событие и контекст компонента</td></tr>
+  </tbody>
+</table>
+
+<pre>
+Youla.data(&#39;board&#39;, () =&gt; ({
+  collapsed: [],
+
+  hint: text =&gt; ({ &#39;u-tooltip.hover&#39;: () =&gt; text }),
+  column: column =&gt; ({ &#39;:class&#39;: $ =&gt; ({ &#39;is-collapsed&#39;: $.collapsed.includes(column) }) }),
+  collapse: column =&gt; ({ &#39;@click&#39;: (e, $) =&gt; $.toggle(column) }),
+
+  toggle(column) {
+    this.collapsed = this.collapsed.includes(column)
+      ? this.collapsed.filter(item =&gt; item !== column)
+      : [...this.collapsed, column];
+  },
+}))
+</pre>
+
+<p>
+  Внутри стрелочной функции <code>this</code> не указывает на компонент — обращайтесь к данным через
+  аргумент <code>$</code>. Чтения через него отслеживаются так же, как через <code>this</code>, и
+  привязка обновляется при изменении данных.
+</p>
+
 <h2>u-bind внутри u-each</h2>
 
 <p>

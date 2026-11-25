@@ -40,6 +40,7 @@ describe('init() and destroy()', () => {
     expect(calls).toEqual([]);
 
     await tick();
+    await root.__x.nextTick();
 
     expect(calls).toEqual([[1, root, '1']]);
     expect(root.querySelector('span').textContent).toBe('2');

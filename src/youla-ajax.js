@@ -378,14 +378,8 @@ document.addEventListener('youla:init', () => {
    */
   function watchProp(input, callback) {
     const path = [...input.attributes].find(({ name }) => name === 'u-prop' || name.startsWith('u-prop.'))?.value;
-    let host   = input;
 
-    // Not closest('[u-data]'): the attribute name may carry modifiers, e.g. "u-data.local".
-    while (host && !host.__x) {
-      host = host.parentElement;
-    }
-
-    return path ? host?.__x.watch(path, callback) : undefined;
+    return path ? Youla.component(input)?.watch(path, callback) : undefined;
   }
 
   /**
@@ -667,7 +661,7 @@ document.addEventListener('youla:init', () => {
 
   /**
    * Inserts "html" relative to "target" with the given DOM method, then binds the new elements
-   * to the nearest component, which otherwise only picks up a new `u-data` root on its own.
+   * to the nearest component right away rather than in the next microtask.
    *
    * @param {HTMLElement} target - Element the markup is inserted relative to.
    * @param {string} method - "replaceChildren", "replaceWith", "before", "prepend", "append" or "after".
@@ -687,12 +681,7 @@ document.addEventListener('youla:init', () => {
         return;
       }
 
-      let parent = el.parentElement;
-      while (parent && !parent.__x) {
-        parent = parent.parentElement;
-      }
-
-      parent?.__x.initialize(el);
+      Youla.component(el.parentElement)?.initialize(el);
     });
   }
 

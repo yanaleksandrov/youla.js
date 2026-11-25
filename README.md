@@ -105,6 +105,28 @@ async changed() {
 `$dispatch('change')` fires a bubbling event that ordinary `change` listeners receive, so there is no need to
 create and dispatch the event by hand.
 
+## Inserted markup and `Youla.component()`
+
+Markup added to the page after load is picked up automatically: a new `u-data` element becomes a component,
+and any other element inserted inside an existing component — for example HTML loaded from the server or
+re-rendered table rows — gets that component's data, bindings and event handlers. Content rendered by
+`u-html` is bound the same way, both on the first render and after every update.
+
+`Youla.component(el)` returns the component an element belongs to (the nearest `u-data` at or above it),
+or `null`, for code outside the component that needs its data:
+
+| Member              | Description                                                                 |
+| ------------------- | --------------------------------------------------------------------------- |
+| `data`              | The component's reactive data; writes update the DOM                        |
+| `root`              | The element carrying `u-data`                                               |
+| `refresh(force?)`   | Schedules an update; `true` re-runs every binding                           |
+| `watch(path, callback)` | Calls `callback(value, oldValue)` when the value at `path` changes; returns a function that stops watching |
+| `initialize(el)`    | Binds `el` and its descendants to the component right away, instead of in the next microtask |
+
+```js
+Youla.variable('notice', () => Youla.component(document.querySelector('.notice'))?.data);
+```
+
 ## Storage
 
 `Youla.storage` persists values in `localStorage` or cookies — useful for state that isn't bound to a

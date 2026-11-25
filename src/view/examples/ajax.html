@@ -579,7 +579,7 @@ document.addEventListener('ajax:/demo/echo', ({ detail }) =&gt; {
 
 <pre>
 document.addEventListener(&#39;youla:init&#39;, () =&gt; {
-  Youla.variable(&#39;notice&#39;, () =&gt; document.querySelector(&#39;.notice&#39;)?.__x?.data);
+  Youla.variable(&#39;notice&#39;, () =&gt; Youla.component(document.querySelector(&#39;.notice&#39;))?.data);
 });
 </pre>
 

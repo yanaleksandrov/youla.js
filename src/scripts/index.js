@@ -1,5 +1,5 @@
 import Component from './component';
-import { domReady, hasDirective } from './dom';
+import { closestDirective, domReady, hasDirective } from './dom';
 import { debounce, pulsate } from './timing';
 import { forceRefresh, reactive } from './reactivity';
 import { createEvent } from './events';
@@ -54,36 +54,52 @@ export const Youla = {
   },
 
   /**
-   * Watches `document.body` for elements added after the initial page load and invokes `callback`
-   * for any new element carrying `u-data`, including a `u-data` nested inside an added subtree
-   * (e.g. `u-each`'s clones), not just the subtree's own root.
+   * Returns the component an element belongs to: the nearest `u-data` at or above it.
+   *
+   * @param {Element} el - Any element.
+   * @returns {Component|null}
+   */
+  component: el => (el && closestDirective(el, 'u-data')?.__x) || null,
+
+  /**
+   * Watches `document.body` for added markup: calls `callback` for every new `u-data` element, and
+   * initializes other added elements as part of the component they were inserted into.
    *
    * @param {Function} callback - Called once per newly-added `u-data` element, in document order.
    * @returns {void}
    */
-  componentWatch: callback => {
-    let observer = new MutationObserver(mutations =>
-      mutations.forEach(mutation =>
-        Array.from(mutation.addedNodes)
-          .filter(node => node.nodeType === 1)
-          .forEach(node => {
-            const descendants = Array.from(node.querySelectorAll('*')).filter(el => hasDirective(el, 'u-data'));
-            const found       = hasDirective(node, 'u-data') ? [node, ...descendants] : descendants;
+  componentWatch(callback) {
+    const observer = new MutationObserver(mutations => {
+      const added = [];
 
-            // "!el.__x" guards against acting twice on an element reported in more than one mutation.
-            found.filter(el => !el.__x).forEach(callback);
-          })
-      )
-    );
+      mutations.forEach(mutation => mutation.addedNodes.forEach(node => node.nodeType === 1 && added.push(node)));
 
-    // "attributes" is deliberately omitted: the callback only looks at "mutation.addedNodes", so watching attribute mutations too would generate a MutationRecord for every reactive attribute write on the page for no benefit.
-    observer.observe(
-      document.querySelector('body'),
-      {
-        childList: true,
-        subtree: true,
-      }
-    )
+      // New components go first, so markup inside them is already initialized by its own component below.
+      added.forEach(node => {
+        const descendants = Array.from(node.querySelectorAll('*')).filter(el => hasDirective(el, 'u-data'));
+        const found       = hasDirective(node, 'u-data') ? [node, ...descendants] : descendants;
+
+        // "!el.__x" guards against acting twice on an element reported in more than one mutation.
+        found.filter(el => !el.__x).forEach(callback);
+      });
+
+      added.forEach(node => {
+        // Initialized nodes cover markup Youla inserted itself during a render, and nested nodes already reached through their added ancestor.
+        if (node.__x_initialized || node.__x_each_clone || !node.isConnected || hasDirective(node, 'u-data')) {
+          return;
+        }
+
+        // A "u-each" template's content is rendered per clone, never in place.
+        if (node.parentElement?.closest('[u-each], template')) {
+          return;
+        }
+
+        this.component(node.parentElement)?.initialize(node);
+      });
+    });
+
+    // "attributes" is deliberately omitted: only added nodes matter, and watching attributes would report every reactive attribute write.
+    observer.observe(document.body, { childList: true, subtree: true });
   },
 
   /**

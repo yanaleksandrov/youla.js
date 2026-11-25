@@ -70,7 +70,6 @@ on its own:
 | ---------------------------------------- | --------------------------------------------------------------------------------------------------- |
 | `$on(target, event, handler, options?)`  | Calls `target.addEventListener()` and removes the listener when the component is removed. Returns a function that removes it right away |
 
-
 ```js
 Youla.data('inbox', () => ({
   unread: 0,
@@ -85,6 +84,26 @@ Youla.data('inbox', () => ({
   },
 }));
 ```
+
+## Waiting for the DOM: `$nextTick`
+
+Data changes reach the DOM in a batch, shortly after the code that made them. `$nextTick` waits for that
+update, so code that reads the rendered markup or notifies other code about the change runs at the right time.
+
+| Method                  | Description                                                                                      |
+| ----------------------- | ------------------------------------------------------------------------------------------------ |
+| `$nextTick(callback?)`  | Returns a promise resolved once the component's pending changes are applied to the DOM; `callback`, if given, is called at the same time |
+
+```js
+async changed() {
+  this.total = this.items.length;
+  await this.$nextTick();
+  this.$dispatch('change');
+},
+```
+
+`$dispatch('change')` fires a bubbling event that ordinary `change` listeners receive, so there is no need to
+create and dispatch the event by hand.
 
 ## Storage
 

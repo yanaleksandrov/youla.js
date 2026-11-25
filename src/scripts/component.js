@@ -598,7 +598,10 @@ export default class Component {
     }
 
     // Built once and reused, not recreated per call — otherwise each write in a fast burst (e.g. a dragged slider) would queue its own full domWalk instead of coalescing.
+    this.refreshPending = true;
     this.scheduleRefresh ??= debounce(() => {
+      self.refreshPending = false;
+
       const force         = self.pendingForceRefresh;
       const forceElements = self.pendingForceElements;
       self.pendingForceRefresh   = false;
@@ -691,6 +694,44 @@ export default class Component {
 
     // After the reset, so a callback's own write isn't dropped from the next refresh.
     self.watchers.forEach(watcher => watcher.check());
+
+    if (self.nextTicks) {
+      self.runNextTicks();
+    }
+  }
+
+  /**
+   * Resolves after the next flush, or in the next microtask if no update is scheduled.
+   *
+   * @param {Function} [callback] - Called at the same moment.
+   * @returns {Promise<void>}
+   */
+  nextTick(callback) {
+    return new Promise(resolve => {
+      (this.nextTicks ??= []).push(() => {
+        callback?.();
+        resolve();
+      });
+
+      // Re-checked in the microtask, so a write made right after the call is still awaited.
+      queueMicrotask(() => this.refreshPending || this.runNextTicks());
+    });
+  }
+
+  /**
+   * Calls every callback queued by "nextTick()".
+   */
+  runNextTicks() {
+    const queue = this.nextTicks ?? [];
+    this.nextTicks = null;
+
+    queue.forEach(fn => {
+      try {
+        fn();
+      } catch (error) {
+        console.error('Youla.js: $nextTick() callback failed', this.root, error);
+      }
+    });
   }
 
   /**

@@ -7,6 +7,7 @@ import './scripts/directives/u-text';
 
 // Methods available to all Youla.js expressions.
 import './scripts/methods/$dispatch';
+import './scripts/methods/$nextTick';
 import './scripts/methods/$on';
 import './scripts/methods/$watch';
 

@@ -8,16 +8,25 @@ import { parseEachExpression } from './directives/u-each';
 
 /**
  * Collects the loop variable names visible to "el": those of an enclosing "u-each" template
- * and those already stored on an enclosing "u-each" clone.
+ * (written as markup or set via "u-bind") and those already stored on an enclosing "u-each" clone.
  *
  * @param {HTMLElement} el - The element to start from.
+ * @param {HTMLElement} rootElement - The component's root element; "u-bind" sets are resolved only up to it.
+ * @param {Function} resolveBindings - Returns the attribute descriptors an element's "u-bind" sets resolve to.
  * @returns {Set<string>} The loop variable names.
  */
-function getLoopVariableNames(el) {
+function getLoopVariableNames(el, rootElement, resolveBindings) {
   const names = new Set(Object.keys(getForData(el) ?? {}));
+  let insideRoot = true;
 
   for (let node = el; node; node = node.parentElement) {
-    getAttributes(node).filter(({directive}) => directive === 'u-each').forEach(({expression}) => {
+    // Ancestors outside the component would have their "u-bind" sets evaluated against the wrong data.
+    const attributes = insideRoot ? [...getAttributes(node), ...resolveBindings(node)] : getAttributes(node);
+    if (node === rootElement) {
+      insideRoot = false;
+    }
+
+    attributes.filter(({directive}) => directive === 'u-each').forEach(({expression}) => {
       const { item, index } = parseEachExpression(expression);
       [item, index].filter(Boolean).forEach(name => names.add(name));
     });
@@ -73,7 +82,7 @@ export function hydrateProps(rootElement, data, parent, providerName = null, res
     }
 
     // A path rooted at a loop variable belongs to the current item, which isn't known until "u-each" renders its clones.
-    if (getLoopVariableNames(el).has(key)) {
+    if (getLoopVariableNames(el, rootElement, resolveBindings).has(key)) {
       return;
     }
 

@@ -42,24 +42,37 @@ export function cleanupOnDisconnect(el, cleanup) {
   disconnectCleanups.get(el).push(cleanup);
 }
 
-/**
- * Determines whether a function is an arrow function, by inspecting its source text: an
- * arrow's "=>" sits before its body's opening "{" (or there's no "{" at all, for a concise body).
- *
- * @param {Function} fn - The function to inspect.
- * @returns {boolean} True if "fn" is an arrow function.
- */
-function isArrowFunction(fn) {
-  const source = Function.prototype.toString.call(fn);
+// Functions already checked by "warnIfThisArrow()", and the sources already warned about.
+const checkedFunctions = new WeakSet();
+const warnedSources    = new Set();
 
-  if (/^\s*(async\s+)?function/.test(source)) {
-    return false;
+/**
+ * Warns once about a parameterless arrow function using "this", which never gets the component context.
+ *
+ * @param {string} name - The binding key, for the message.
+ * @param {Function} fn - The binding value.
+ */
+function warnIfThisArrow(name, fn) {
+  // A binding with parameters reads the context from its argument, so only parameterless ones are inspected.
+  if (fn.length > 0 || checkedFunctions.has(fn)) {
+    return;
+  }
+  checkedFunctions.add(fn);
+
+  const source = Function.prototype.toString.call(fn);
+  if (/^\s*(async\s+)?function/.test(source) || warnedSources.has(source)) {
+    return;
   }
 
+  // An arrow's "=>" comes before its body's opening "{", or there's no "{" at all.
   const braceIndex = source.indexOf('{');
   const arrowIndex = source.indexOf('=>');
+  const isArrow    = arrowIndex !== -1 && (braceIndex === -1 || arrowIndex < braceIndex);
 
-  return arrowIndex !== -1 && (braceIndex === -1 || arrowIndex < braceIndex);
+  if (isArrow && /\bthis\b/.test(source.slice(arrowIndex))) {
+    warnedSources.add(source);
+    console.warn(`Youla.js: u-bind key "${name}" is an arrow function using "this", which never refers to the component. Take the context as an argument instead: "${name}": $ => ...`);
+  }
 }
 
 /**
@@ -284,9 +297,9 @@ export default class Component {
     const methods     = magicVariables.$el ? getElementMethods(magicVariables.$el, this) : undefined;
     const contextData = withMagicVariables(proxiedData, magicVariables, methods);
 
-    // A u-bind entry may hand back a method instead of an expression string — call it with "this" bound to the same context, so property access is tracked exactly like an expression string's.
+    // A u-bind entry may hand back a function — it gets the same tracked context as "this" and as its argument, so an arrow function works too.
     const output = typeof expressionOrFn === 'function'
-      ? expressionOrFn.call(contextData)
+      ? expressionOrFn.call(contextData, contextData)
       : saferEval(expressionOrFn, contextData, trackedHelperVariables);
 
     return { output, deps };
@@ -398,9 +411,8 @@ export default class Component {
       const isFn    = typeof value === 'function';
       const parsed  = parseAttribute(name, value);
 
-      // Arrow functions ignore .call()/.apply() and silently keep their original "this", so detect one from its source text — an arrow's "=>" appears before its body's opening "{" (or there's none), which a function/method never does.
-      if (isFn && isArrowFunction(value)) {
-        console.warn(`Youla.js: u-bind key "${name}" is an arrow function — arrow functions don't bind "this" to the component's data. Use a regular function or method shorthand instead: "${name}"() { ... }.`);
+      if (isFn) {
+        warnIfThisArrow(name, value);
       }
 
       // A key with no u-/@/: prefix (e.g. "type") is a plain HTML attribute, written directly as markup.
@@ -408,7 +420,7 @@ export default class Component {
 
       // A "u-*" key that isn't a registered directive (e.g. "u-ref") is read straight off the element instead (see createRefsProxy), so write it as a real attribute since there's none to read yet.
       if (parsed.directive && !getDirective(parsed.directive)) {
-        el.setAttribute(name, isFn ? value.call(this.scope) : value);
+        el.setAttribute(name, isFn ? value.call(this.scope, this.scope) : value);
         return [];
       }
 
@@ -942,9 +954,9 @@ export default class Component {
   invokeListener(expressionOrFn, e, target) {
     const contextData = this.createContext(target, e);
 
-    // A u-bind entry may hand back a method instead of an expression string — call it directly with "this" as the component's reactive data, so writes to it still trigger refresh().
+    // The context is passed after the event too, so an arrow function handler can reach it.
     if (typeof expressionOrFn === 'function') {
-      expressionOrFn.call(contextData, e);
+      expressionOrFn.call(contextData, e, contextData);
       return;
     }
 

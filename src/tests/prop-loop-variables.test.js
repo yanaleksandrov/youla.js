@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { Youla } from '../scripts/index';
 import '../scripts/directives/u-prop';
 import '../scripts/directives/u-each';
@@ -75,5 +75,23 @@ describe('u-prop rooted at a u-each loop variable', () => {
 
     expect(component.rawData.rows.map(row => row.value)).toEqual(['a', 'changed']);
     expect('row' in component.rawData).toBe(false);
+  });
+
+  // Regression: a "u-each" coming from a "u-bind" set wasn't seen as a loop, so "item" got seeded on the component.
+  it('does not seed the loop variable of a u-each set via u-bind', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    document.body.innerHTML = `
+      <div u-data="{ items: [{ name: 'a' }, { name: 'b' }], row: { 'u-each': '(item, i) in items' } }">
+        <div u-bind="row"><input u-prop="item.name"></div>
+      </div>`;
+    initAll();
+    await tick();
+
+    const component = document.querySelector('[u-data]').__x;
+    expect('item' in component.rawData).toBe(false);
+    expect(warn.mock.calls.some(([message]) => String(message).includes('shadows'))).toBe(false);
+
+    warn.mockRestore();
   });
 });

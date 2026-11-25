@@ -74,6 +74,20 @@ in a component of the same provider. For intentionally recursive structures, giv
 its own name with `as`. `u-prop` paths don't resolve against an automatic alias, so
 `u-prop.up="password"` inside `u-data="password"` still writes to the parent's `password` field.
 
+## Attribute values
+
+A `:attr` binding writes the expression's result to the attribute. `class`, `style`, `value` and boolean
+attributes such as `disabled` or `hidden` have their own handling; every other attribute follows this table:
+
+| Value                  | Result                          |
+| ---------------------- | ------------------------------- |
+| String or number       | Written as is                   |
+| `true` / `false`       | `"true"` / `"false"`            |
+| `null` / `undefined`   | The attribute is removed        |
+
+So `<a :href="notice.url">` renders a link without `href` while `url` is missing, and
+`<button :aria-pressed="on">` keeps `aria-pressed="false"` when `on` is `false`.
+
 ## Lifecycle
 
 A component's data can define `init()` and `destroy()` to start and stop work that lives outside its

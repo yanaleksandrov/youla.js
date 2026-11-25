@@ -62,13 +62,21 @@ markup, such as timers, polling or global listeners.
 | `init()`    | Called once after the component's first render, with the same `this` as event handlers. May be `async`; errors are logged to the console |
 | `destroy()` | Called when the component's root element is removed from the document                                       |
 
-If `init()` returns a function, it is called on removal as well, which keeps setup and teardown together:
+If `init()` returns a function, it is called on removal as well, which keeps setup and teardown together.
+Listeners on `document`, `window` or any other event target are best added with `$on`, which removes them
+on its own:
+
+| Method                                   | Description                                                                                         |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `$on(target, event, handler, options?)`  | Calls `target.addEventListener()` and removes the listener when the component is removed. Returns a function that removes it right away |
+
 
 ```js
 Youla.data('inbox', () => ({
   unread: 0,
   init() {
     const timer = setInterval(() => this.check(), 30000);
+    this.$on(document, 'visibilitychange', () => !document.hidden && this.check());
 
     return () => clearInterval(timer);
   },

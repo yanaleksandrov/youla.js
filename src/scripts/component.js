@@ -17,7 +17,7 @@ import { isUnsafeKey, getNestedObjectValue, parsePropPath } from './object-path'
 let disconnectObserver;
 const disconnectCleanups = new Map();
 
-function cleanupOnDisconnect(el, cleanup) {
+export function cleanupOnDisconnect(el, cleanup) {
   if (!disconnectObserver) {
     disconnectObserver = new MutationObserver(() => {
       disconnectCleanups.forEach((cleanups, target) => {

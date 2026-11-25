@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, afterEach, vi } from 'vitest';
 import { Youla } from '../scripts/index';
 import '../scripts/directives/u-text';
+import '../scripts/methods/$on';
 
 function tick(ms = 20) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -92,5 +93,47 @@ describe('init() and destroy()', () => {
     await tick();
 
     expect(root.querySelector('span').textContent).toBe('true');
+  });
+});
+
+describe('$on()', () => {
+  it('removes the listener when the component root leaves the DOM', async () => {
+    const calls = [];
+
+    Youla.data('onCleanup', () => ({
+      init() {
+        this.$on(document, 'ping', () => calls.push('ping'));
+      },
+    }));
+
+    const root = mount(`<div u-data="onCleanup"></div>`);
+    await tick();
+
+    document.dispatchEvent(new Event('ping'));
+    expect(calls).toEqual(['ping']);
+
+    root.remove();
+    await tick();
+
+    document.dispatchEvent(new Event('ping'));
+    expect(calls).toEqual(['ping']);
+  });
+
+  it('returns a function that removes the listener immediately', async () => {
+    const calls = [];
+
+    Youla.data('onOff', () => ({
+      init() {
+        const off = this.$on(window, 'ping', () => calls.push('ping'));
+        window.dispatchEvent(new Event('ping'));
+        off();
+        window.dispatchEvent(new Event('ping'));
+      },
+    }));
+
+    mount(`<div u-data="onOff"></div>`);
+    await tick();
+
+    expect(calls).toEqual(['ping']);
   });
 });

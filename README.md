@@ -140,6 +140,9 @@ in expressions and as `this.$storage` in data provider methods, and it also powe
 | `set(name, value, type = 'local', options = {})` | Stores a value; objects and arrays are saved as JSON         |
 | `forget(name, type = 'local')`                 | Removes the stored value                                       |
 
+The methods never throw: when the browser blocks storage (private mode, disabled cookies or site data),
+`get` returns `undefined` and `set`/`forget` do nothing, so calls need no `try`/`catch`.
+
 | Parameter         | Description                                                                                  |
 | ----------------- | -------------------------------------------------------------------------------------------- |
 | `type`            | `'local'` for `localStorage`, `'cookie'` for a cookie                                        |

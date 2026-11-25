@@ -52,6 +52,32 @@ Youla.js ships with:
 | `:attr`          | Binds any HTML attribute to an expression (e.g. `:class`, `:style`)  |
 | `@event`         | Listens for a browser event, with modifiers like `.prevent`/`.once`  |
 
+## Lifecycle
+
+A component's data can define `init()` and `destroy()` to start and stop work that lives outside its
+markup, such as timers, polling or global listeners.
+
+| Method      | Description                                                                                                  |
+| ----------- | ------------------------------------------------------------------------------------------------------------ |
+| `init()`    | Called once after the component's first render, with the same `this` as event handlers. May be `async`; errors are logged to the console |
+| `destroy()` | Called when the component's root element is removed from the document                                       |
+
+If `init()` returns a function, it is called on removal as well, which keeps setup and teardown together:
+
+```js
+Youla.data('inbox', () => ({
+  unread: 0,
+  init() {
+    const timer = setInterval(() => this.check(), 30000);
+
+    return () => clearInterval(timer);
+  },
+  async check() {
+    this.unread = await fetch('/api/unread').then(response => response.json());
+  },
+}));
+```
+
 ## Storage
 
 `Youla.storage` persists values in `localStorage` or cookies — useful for state that isn't bound to a

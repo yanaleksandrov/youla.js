@@ -22,7 +22,13 @@ function cleanupOnDisconnect(el, cleanup) {
     disconnectObserver = new MutationObserver(() => {
       disconnectCleanups.forEach((cleanups, target) => {
         if (!target.isConnected) {
-          cleanups.forEach(fn => fn());
+          cleanups.forEach(fn => {
+            try {
+              fn();
+            } catch (error) {
+              console.error('Youla.js: cleanup failed', target, error);
+            }
+          });
           disconnectCleanups.delete(target);
         }
       });
@@ -153,6 +159,37 @@ export default class Component {
     this.data = this.observeData(this.rawData);
 
     this.initialize(el);
+
+    this.mount();
+  }
+
+  /**
+   * Calls the data's "init()" once after the first render, and "destroy()" or the function "init()" returned once the root leaves the DOM.
+   */
+  mount() {
+    const { init, destroy } = this.rawData ?? {};
+    const root = this.root;
+
+    if (typeof destroy === 'function') {
+      cleanupOnDisconnect(root, () => destroy.call(this.createContext(root)));
+    }
+
+    if (typeof init !== 'function') {
+      return;
+    }
+
+    // Deferred like "@load", so components later in the document are already initialized.
+    queueMicrotask(async () => {
+      try {
+        const cleanup = await init.call(this.createContext(root));
+
+        if (typeof cleanup === 'function') {
+          cleanupOnDisconnect(root, cleanup);
+        }
+      } catch (error) {
+        console.error('Youla.js: init() failed', root, error);
+      }
+    });
   }
 
   /**
@@ -840,7 +877,7 @@ export default class Component {
    * @param {HTMLElement} target - The element the listener is attached to.
    */
   invokeListener(expressionOrFn, e, target) {
-    const contextData = withMagicVariables(this.scope, this.getMagicVariables(target, e), getListenerMethods(e, target, this));
+    const contextData = this.createContext(target, e);
 
     // A u-bind entry may hand back a method instead of an expression string — call it directly with "this" as the component's reactive data, so writes to it still trigger refresh().
     if (typeof expressionOrFn === 'function') {
@@ -850,6 +887,17 @@ export default class Component {
 
     // Methods resolve through "with($data)" rather than as parameters, so only the ones the expression touches are created.
     saferEval(expressionOrFn, contextData, this.getLocalVariables(target), true);
+  }
+
+  /**
+   * Builds the "this" of handlers and lifecycle hooks: the component's scope with magic variables and methods.
+   *
+   * @param {HTMLElement} el - Becomes "$el".
+   * @param {Event} [event] - Becomes "$event".
+   * @returns {Proxy}
+   */
+  createContext(el, event) {
+    return withMagicVariables(this.scope, this.getMagicVariables(el, event), getListenerMethods(event, el, this));
   }
 
   /**

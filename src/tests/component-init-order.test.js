@@ -21,7 +21,7 @@ describe('component initialization order', () => {
   it('@load on an ancestor can reach a component that is initialized after it', async () => {
     Youla.data('dialog', () => ({
       options: null,
-      init(options) {
+      open(options) {
         this.options = options;
       },
     }));
@@ -32,7 +32,7 @@ describe('component initialization order', () => {
     document.body.setAttribute('u-data', '');
     document.body.innerHTML = `
       <div u-data="dialog"></div>
-      <template @load="$dialog.init({ title: 'Hello' })"></template>
+      <template @load="$dialog.open({ title: 'Hello' })"></template>
     `;
 
     Youla.componentDiscover(el => Youla.componentInitialize(el));

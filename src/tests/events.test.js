@@ -50,12 +50,16 @@ describe('getNextModifier', () => {
 });
 
 describe('isKeyModifier', () => {
-  it.each(['window', 'document', 'passive', 'capture', 'delay', 'prevent', 'stop', 'outside', 'once'])(
+  it.each(['window', 'document', 'passive', 'capture', 'delay', 'prevent', 'stop', 'outside', 'once', 'lazy'])(
     'treats "%s" as a behavior modifier, not a key filter',
     (modifier) => {
       expect(isKeyModifier(modifier)).toBe(false);
     }
   );
+
+  it.each(['200px', '50%'])('treats a scroll offset like "%s" as not a key filter', (modifier) => {
+    expect(isKeyModifier(modifier)).toBe(false);
+  });
 
   it.each(['250ms', '100s'])('treats a ms/s duration like "%s" (the ".delay" argument) as not a key filter', (modifier) => {
     expect(isKeyModifier(modifier)).toBe(false);

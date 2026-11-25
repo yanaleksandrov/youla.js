@@ -58,6 +58,46 @@ describe('u-prop from a u-bind set', () => {
     expect(form.data.user.password).toBe('secret');
   });
 
+  it('aliases a provider call to the provider name without "as"', async () => {
+    Youla.data('passwordNoAlias', () => (label) => ({
+      label,
+      input: { 'u-prop.up': 'user.password' },
+    }));
+
+    document.body.innerHTML = `
+      <form u-data="{ submitted: false } as form">
+        <div u-data=" passwordNoAlias ('x') ">
+          <input id="password" u-bind="passwordNoAlias.input">
+        </div>
+      </form>
+    `;
+
+    initAll();
+    await tick();
+
+    const input = document.getElementById('password');
+    const form  = document.querySelector('form').__x;
+
+    expect(document.querySelector('div[u-data]').__x.alias).toBe('passwordNoAlias');
+    type(input, 'secret');
+    await tick();
+
+    expect(form.data.user.password).toBe('secret');
+  });
+
+  it('leaves object and spread expressions without an alias', async () => {
+    document.body.innerHTML = `
+      <div id="a" u-data="{ a: 1 }"></div>
+      <div id="b" u-data="{ ...{ a: 1 }, ...{ b: 2 } }"></div>
+    `;
+
+    initAll();
+    await tick();
+
+    expect(document.getElementById('a').__x.alias).toBeNull();
+    expect(document.getElementById('b').__x.alias).toBeNull();
+  });
+
   it('seeds a plain path on the component itself', async () => {
     document.body.innerHTML = `
       <div u-data="{ field: { 'u-prop': 'profile.name' } }">

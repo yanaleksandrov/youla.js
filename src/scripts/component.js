@@ -96,6 +96,33 @@ function serialize(value) {
   }
 }
 
+/**
+ * Returns the provider name a `u-data` expression without "as" is aliased to: "password" or "password(...)".
+ *
+ * @param {string} expression - The trimmed `u-data` expression.
+ * @returns {string|null} The provider name, or null for any other expression.
+ */
+function defaultAlias(expression) {
+  const [, name] = expression.match(/^([A-Za-z_$][\w$]*)\s*(?:\(|$)/) || [];
+  return isDataProvider(name) ? name : null;
+}
+
+/**
+ * Checks whether "component" or any of its ancestors uses "alias", which isn't part of their scope.
+ *
+ * @param {Component|null} component
+ * @param {string} alias
+ * @returns {boolean}
+ */
+function hasAncestorAlias(component, alias) {
+  for (; component; component = component.parent) {
+    if (component.alias === alias) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export default class Component {
   /**
    * Builds a component rooted at "el": reads its "u-data" expression and modifiers, builds the
@@ -110,7 +137,7 @@ export default class Component {
     // Modifiers only ever live in the attribute's own name (e.g. "u-data.local"), never in its value, so find the entry by directive root instead of assuming it's literally named "u-data".
     const { expression, modifiers } = getAttributes(el).find(({ directive }) => directive === 'u-data') || { expression: '{}', modifiers: [] };
 
-    // u-data="object as o" gives the whole data object a local alias
+    // u-data="object as o" gives the whole data object a local alias; without "as", a provider is aliased to its own name (see defaultAlias()).
     const [, dataExpression, alias] = expression.trim().match(/^([\s\S]+?)\s+as\s+([A-Za-z_$][\w$]*)$/) || [];
 
     // The nearest ancestor "u-data" component, if any (already initialized — componentDiscover() walks the document in order); see the "scope" getter below.
@@ -125,12 +152,13 @@ export default class Component {
     this.parent?.children.push(this);
     this.watchers      = [];
     this.name          = (dataExpression ?? expression).trim();
-    this.alias         = alias || null;
+    this.alias         = alias || defaultAlias(this.name);
+    this.implicitAlias = !alias && !!this.alias;
     this.storageType   = isStorageModifier(modifiers) ? getStorageType(modifiers) : null;
     // A duration modifier (e.g. "u-data.cookie.30d") sits right after "cookie"/"local" in the modifier list, same convention as "u-prop"; omitting it means a session cookie or no expiration at all.
     this.storageExpire = this.storageType ? getNextModifier(modifiers, this.storageType) : null;
 
-    if (this.alias && this.parent && this.alias in this.parent.scope) {
+    if (this.alias && this.parent && (this.alias in this.parent.scope || hasAncestorAlias(this.parent, this.alias))) {
       console.warn(`Youla.js: alias "${this.alias}" in u-data="${expression.trim()}" shadows "${this.alias}" of a parent component.`);
     }
 
@@ -489,8 +517,7 @@ export default class Component {
       }
     } else if (directive === 'u-prop') {
       // "expression" is a property path, not a JS expression, so it's read straight off "scope" (which falls through to an ancestor component), or off a loop variable that declares its first segment.
-      const { otherVariables } = splitMagicVariables(additionalHelperVariables);
-      output = getNestedObjectValue(resolvePropSource(expression, this.scope, otherVariables), expression);
+      output = getNestedObjectValue(resolvePropSource(expression, this.scope, this.getPropVariables(additionalHelperVariables)), expression);
 
       if (withDeps) {
         const [rootIdentifier] = parsePropPath(expression);
@@ -561,7 +588,7 @@ export default class Component {
 
           let propExpression;
           if (directive === 'u-prop') {
-            propExpression = generateExpressionForProp(el, self.scope, attribute, splitMagicVariables(additionalHelperVariables).otherVariables);
+            propExpression = generateExpressionForProp(el, self.scope, attribute, self.getPropVariables(additionalHelperVariables));
 
             // If the element we are binding to is a select, a radio, or checkbox we'll listen for the change event instead of the "input" event.
             // A single <select> reports type "select-one"; widgets like SlimSelect dispatch only "change".
@@ -987,6 +1014,21 @@ export default class Component {
    */
   getLocalVariables(el) {
     return {...(this.alias ? { [this.alias]: this.data } : {}), ...getForData(el)};
+  }
+
+  /**
+   * Returns the variables a "u-prop" path may be rooted at: the local variables, minus an alias
+   * implied by the provider name, so a field named after its provider still binds to data.
+   *
+   * @param {object} helperVariables - The bag built by "getHelperVariables()".
+   * @returns {object} The local variables, keyed by name.
+   */
+  getPropVariables(helperVariables) {
+    const { otherVariables } = splitMagicVariables(helperVariables);
+    if (this.implicitAlias && otherVariables[this.alias] === this.data) {
+      delete otherVariables[this.alias];
+    }
+    return otherVariables;
   }
 
   /**

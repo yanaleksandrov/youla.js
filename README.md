@@ -52,6 +52,28 @@ Youla.js ships with:
 | `:attr`          | Binds any HTML attribute to an expression (e.g. `:class`, `:style`)  |
 | `@event`         | Listens for a browser event, with modifiers like `.prevent`/`.once`  |
 
+## Component alias
+
+`as` gives a component's data a local name, so bindings show which component a value belongs to. A
+component created from a `Youla.data()` provider gets the provider's name as its alias automatically:
+
+| `u-data` value                | Alias      |
+| ----------------------------- | ---------- |
+| `password`, `password(...)`   | `password` |
+| `password(...) as field`      | `field`    |
+| `{ a: 1 }`, `{...a, ...b}`, any other expression | none |
+
+```html
+<div u-data="password('new-password')">
+  <input u-bind="password.input">
+</div>
+```
+
+An alias that hides a same-named value of a parent component logs a warning, including a provider nested
+in a component of the same provider. For intentionally recursive structures, give the inner component
+its own name with `as`. `u-prop` paths don't resolve against an automatic alias, so
+`u-prop.up="password"` inside `u-data="password"` still writes to the parent's `password` field.
+
 ## Lifecycle
 
 A component's data can define `init()` and `destroy()` to start and stop work that lives outside its

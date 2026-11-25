@@ -164,6 +164,71 @@
   </div>
 </div>
 
+<h3><code>.top</code>, <code>.bottom</code>, <code>.left</code>, <code>.right</code> для <code>@scroll</code></h3>
+
+<p>
+  Модификаторы края вызывают обработчик <code>@scroll</code>, только когда прокрутка находится у
+  указанного края или ближе заданного отступа к нему. Это удобно для бесконечных списков, подгрузки
+  данных в обе стороны и отметки о том, что пользователь дочитал страницу.
+</p>
+
+<table>
+  <tbody>
+    <tr>
+      <th>Модификатор</th>
+      <th>Когда срабатывает</th>
+    </tr>
+    <tr><td><code>.top</code></td><td>У верхнего края</td></tr>
+    <tr><td><code>.bottom</code></td><td>У нижнего края</td></tr>
+    <tr><td><code>.left</code></td><td>У левого края</td></tr>
+    <tr><td><code>.right</code></td><td>У правого края</td></tr>
+    <tr><td><code>.block</code></td><td>У верхнего или нижнего края</td></tr>
+    <tr><td><code>.inline</code></td><td>У левого или правого края</td></tr>
+    <tr><td><code>.&lt;число&gt;px</code></td><td>Ширина зоны края в пикселях: <code>.bottom.200px</code></td></tr>
+    <tr><td><code>.lazy</code></td><td>Отключает начальный вызов: обработчик ждёт первой прокрутки</td></tr>
+    <tr><td><code>.&lt;число&gt;%</code></td><td>Ширина зоны края в процентах от высоты области прокрутки (<code>top</code>, <code>bottom</code>) или её ширины (<code>left</code>, <code>right</code>): <code>.bottom.50%</code></td></tr>
+  </tbody>
+</table>
+
+<p>
+  Без отступа допуск — 1px. Отступ один на обработчик и действует на все его края. Несколько краёв
+  объединяются через «или»: <code>@scroll.top.bottom</code> — то же, что <code>@scroll.block</code>.
+  Модификаторы работают вместе с <code>.window</code>, <code>.document</code>, <code>.passive</code>,
+  <code>.delay</code> и <code>.once</code>, а также в наборах <a href="/u-bind"><code>u-bind</code></a>.
+</p>
+
+<blockquote>
+  Обработчик вызывается на каждом событии <code>scroll</code> в зоне края, поэтому защиту от
+  повторных вызовов (например, флаг загрузки) нужно делать в самом обработчике. Кроме того, сразу после
+  подключения он вызывается один раз, если прокрутка уже в зоне края — например, когда содержимое
+  помещается целиком. С <code>.once</code> этот начальный вызов тоже считается, а <code>.lazy</code>
+  его отключает — например, для <code>.top</code>, который в начале прокрутки почти всегда в зоне края.
+</blockquote>
+
+<div class="example">
+  <div class="example__tabs">
+    <button type="button" class="example__tab is-active" data-tab="preview">Пример</button>
+    <button type="button" class="example__tab" data-tab="html">HTML</button>
+  </div>
+  <div class="example__panel is-active" data-panel="preview">
+    <div class="demo" u-data="{ rows: Array.from({ length: 10 }, (_, i) => i + 1), loading: false }">
+      <div style="height: 150px; overflow: auto" @scroll.passive.bottom.50px="if (!loading) { loading = true; setTimeout(() => { rows.push(...Array.from({ length: 10 }, (_, i) => rows.length + i + 1)); loading = false }, 300) }">
+        <div u-each="row in rows" u-text="'Строка ' + row"></div>
+      </div>
+      Строк: <span u-text="rows.length"></span>
+    </div>
+  </div>
+  <div class="example__panel" data-panel="html">
+    <pre>
+&lt;div class=&quot;list&quot; @scroll.passive.bottom.200px=&quot;loadMore()&quot;&gt;...&lt;/div&gt;
+
+&lt;div class=&quot;grid&quot; @scroll.passive.top.50%=&quot;load(&#039;before&#039;)&quot; @scroll.passive.bottom.50%=&quot;load(&#039;after&#039;)&quot;&gt;...&lt;/div&gt;
+
+&lt;body @scroll.window.passive.bottom.once=&quot;footerReached = true&quot;&gt;...&lt;/body&gt;
+</pre>
+  </div>
+</div>
+
 <h3><code>.window</code></h3>
 
 <p>

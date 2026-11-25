@@ -148,6 +148,9 @@ item in items join ', '        — со вставкой текстового р
     <tr><td><code>.capture</code></td><td>Регистрирует слушатель с <code>{ capture: true }</code></td></tr>
     <tr><td><code>.once</code></td><td>Обработчик срабатывает только один раз</td></tr>
     <tr><td><code>.delay.250ms</code></td><td>Откладывает вызов обработчика на указанное время</td></tr>
+    <tr><td><code>.top</code>, <code>.bottom</code>, <code>.left</code>, <code>.right</code>, <code>.block</code>, <code>.inline</code></td><td>Для <code>@scroll</code>: срабатывает, пока прокрутка у указанного края</td></tr>
+    <tr><td><code>.lazy</code></td><td>Для <code>@scroll</code> с модификатором края: без начального вызова, только после прокрутки</td></tr>
+    <tr><td><code>.200px</code>, <code>.50%</code></td><td>Для <code>@scroll</code>: ширина зоны края в пикселях или в процентах от размера области прокрутки</td></tr>
     <tr><td><code>.enter</code>, <code>.esc</code>, <code>.tab</code>, <code>.space</code>, <code>.up</code>/<code>.down</code>/<code>.left</code>/<code>.right</code>, <code>.delete</code>, <code>.backspace</code></td><td>Срабатывает только на эту клавишу (по <code>event.key</code>); любая другая клавиша, например <code>.s</code>, подставляется по названию напрямую</td></tr>
     <tr><td><code>.ctrl</code>, <code>.alt</code>, <code>.shift</code>, <code>.meta</code></td><td>Требует, чтобы клавиша была зажата в момент события; сочетается с модификатором клавиши, например <code>.ctrl.s</code></td></tr>
   </tbody>

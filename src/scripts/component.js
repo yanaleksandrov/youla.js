@@ -2,7 +2,7 @@ import { domWalk, isNode, closestDirective } from './dom';
 import { debounce } from './timing';
 import { makeObservable, RAW, toRaw } from './reactivity';
 import { saferEval } from './eval';
-import { createEvent, getNextModifier, isKeyModifier, matchesKeyModifiers } from './events';
+import { createEvent, getNextModifier, isKeyModifier, matchesKeyModifiers, SCROLL_EDGES, SCROLL_EDGE_GROUPS, SCROLL_OFFSET_MODIFIER } from './events';
 import { getForData, createMagicVariables, withMagicVariables, splitMagicVariables } from './magic-variables';
 import { getAttributes, parseAttribute, updateAttribute } from './attributes';
 import { hydrateProps, generateExpressionForProp, resolvePropSource } from './props';
@@ -691,8 +691,8 @@ export default class Component {
 
   /**
    * Builds and attaches a DOM listener for "@event" (or u-prop's synthetic event), applying its
-   * modifiers (retargeting, passive/capture, delay, prevent, stop, outside, key filters, once,
-   * load/intersect).
+   * modifiers (retargeting, passive/capture, delay, prevent, stop, scroll edges, outside, key filters,
+   * once, load/intersect).
    *
    * @param {HTMLElement} el - The element the listener conceptually belongs to.
    * @param {string} event - The event name to listen for (e.g. "click", "load", "intersect").
@@ -736,6 +736,40 @@ export default class Component {
       handler = wrapHandler(handler, (next, e) => { e.stopPropagation(); next(e); });
     }
 
+    // "left"/"right" are also key aliases, so on "scroll" edge modifiers are pulled out before the key filter below.
+    const edgeModifiers = event === 'scroll' ? modifiers.filter(modifier => modifier in SCROLL_EDGES || modifier in SCROLL_EDGE_GROUPS) : [];
+
+    if (edgeModifiers.length) {
+      const edges    = [...new Set(edgeModifiers.flatMap(modifier => SCROLL_EDGE_GROUPS[modifier] || modifier))];
+      const match    = modifiers.map(modifier => modifier.match(SCROLL_OFFSET_MODIFIER)).find(Boolean);
+      const offset   = !match ? () => 1 : match[2] === '%' ? size => size * match[1] / 100 : () => Number(match[1]);
+      const doc      = el.ownerDocument;
+      const scroller = target === el ? el : doc.scrollingElement || doc.documentElement;
+      const rtl      = edges.some(edge => edge === 'left' || edge === 'right') && doc.defaultView.getComputedStyle(scroller).direction === 'rtl';
+      const once     = modifiers.includes('once');
+
+      let done = false;
+
+      handler = wrapHandler(handler, (next, e) => {
+        if (done || !edges.some(edge => SCROLL_EDGES[edge](scroller, offset, rtl))) {
+          return;
+        }
+
+        // The initial check bypasses addEventListener, so ".once" can't rely on its "once" option and removes the listener itself.
+        if (once) {
+          done = true;
+          target.removeEventListener(event, handler, options);
+        }
+
+        next(e);
+      });
+
+      // Deferred like "@load", so the initial check sees the finished markup (e.g. content that already fits the area); ".lazy" waits for a real scroll instead.
+      if (!modifiers.includes('lazy')) {
+        queueMicrotask(() => handler(createEvent(event, {})));
+      }
+    }
+
     if (modifiers.includes('outside')) {
       target = el.ownerDocument;
 
@@ -759,11 +793,13 @@ export default class Component {
     }
 
     // Key/system-modifier filter (e.g. "@keydown.enter") must be the outermost wrap, so a mismatched key skips prevent/stop/delay too.
-    if (modifiers.some(isKeyModifier)) {
-      handler = wrapHandler(handler, (next, e) => matchesKeyModifiers(e, modifiers) && next(e));
+    const keyModifiers = edgeModifiers.length ? modifiers.filter(modifier => !edgeModifiers.includes(modifier)) : modifiers;
+
+    if (keyModifiers.some(isKeyModifier)) {
+      handler = wrapHandler(handler, (next, e) => matchesKeyModifiers(e, keyModifiers) && next(e));
     }
 
-    if (modifiers.includes('once')) {
+    if (modifiers.includes('once') && !edgeModifiers.length) {
       options.once = true;
     }
 

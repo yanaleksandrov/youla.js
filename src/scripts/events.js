@@ -41,17 +41,33 @@ const KEY_ALIASES = {
 const SYSTEM_MODIFIER_KEYS = { ctrl: 'ctrlKey', alt: 'altKey', shift: 'shiftKey', meta: 'metaKey' };
 
 // Behavior modifiers Component#attachListener handles directly; anything else is treated as a key filter.
-const BEHAVIOR_MODIFIERS = new Set(['window', 'document', 'passive', 'capture', 'delay', 'prevent', 'stop', 'outside', 'once']);
+const BEHAVIOR_MODIFIERS = new Set(['window', 'document', 'passive', 'capture', 'delay', 'prevent', 'stop', 'outside', 'once', 'lazy']);
+
+// Edge checks for "@scroll.top" and the like; "offset(size)" gives the edge zone in px for the scroll area's size on that axis.
+// In RTL "scrollLeft" runs from 0 down to -max, so left/right flip their bounds.
+export const SCROLL_EDGES = {
+  top: (el, offset) => el.scrollTop <= offset(el.clientHeight),
+  bottom: (el, offset) => el.scrollTop + el.clientHeight >= el.scrollHeight - offset(el.clientHeight),
+  left: (el, offset, rtl) => el.scrollLeft <= (rtl ? el.clientWidth - el.scrollWidth : 0) + offset(el.clientWidth),
+  right: (el, offset, rtl) => el.scrollLeft >= (rtl ? 0 : el.scrollWidth - el.clientWidth) - offset(el.clientWidth),
+};
+
+export const SCROLL_EDGE_GROUPS = {
+  block: ['top', 'bottom'],
+  inline: ['left', 'right'],
+};
+
+export const SCROLL_OFFSET_MODIFIER = /^(\d+)(px|%)$/;
 
 /**
  * Checks whether a modifier is a key filter (e.g. "enter", "ctrl", "s") rather than one of
- * Component#attachListener's own behavior modifiers (".prevent", ".delay.250ms", etc.).
+ * Component#attachListener's own behavior modifiers (".prevent", ".delay.250ms", ".200px", etc.).
  *
  * @param {string} modifier - A single modifier segment.
  * @returns {boolean} True if the modifier should be treated as a key filter.
  */
 export function isKeyModifier(modifier) {
-  return !BEHAVIOR_MODIFIERS.has(modifier) && !/^\d+m?s$/.test(modifier);
+  return !BEHAVIOR_MODIFIERS.has(modifier) && !/^\d+(m?s|px|%)$/.test(modifier);
 }
 
 /**
